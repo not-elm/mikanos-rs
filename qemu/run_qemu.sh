@@ -3,4 +3,5 @@
 qemu-system-x86_64 \
   -m 512 \
   -bios 'OVMF.fd' \
-  -hda 'disk.img'
+  -hda 'disk.img' \
+  -monitor stdio
