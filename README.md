@@ -19,3 +19,11 @@ qemu> q
 現在は使用していません。
 一応Dockerfileとdocker-compose.ymlは残しています。
 
+## Day02b
+
+メモリーマップを取得し、mem_mapという名前のファイルに書き込むプログラムを書きます  
+書き込んだファイルはdisk.imgをmntディレクトリにマウントし、そこから確認します。  
+上記の確認する処理はqemu/cat_mem_map.shで宣言しています
+
+
+

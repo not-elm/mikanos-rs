@@ -1,6 +1,7 @@
 use uefi::{CStr16, Handle};
 use uefi::proto::media::file::{Directory, File, FileAttribute, FileHandle, FileMode, RegularFile};
 use uefi::table::{Boot, SystemTable};
+use common::kib;
 
 
 /// SimpleFileSystemについてはUEFI.mdを参照
@@ -22,10 +23,26 @@ pub(crate) fn open_file(mut dir: Directory) -> Result<FileHandle, uefi::Error> {
 }
 
 
-pub(crate) fn save_memory_map(mut file: RegularFile, &mut system_table: SystemTable<Boot>) -> uefi::Result {
+pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTable<Boot>) -> uefi::Result {
     let header = b"Index, Type, Type(name), PhysicalStart, NumberOfPages, Attribute\n";
     file.write(header).unwrap();
 
+    // 余裕を持たせるために16KiB
+    const MEMORY_MAP_BUFF_SIZE: usize = kib!(16);
+    let mut buff = [0u8; MEMORY_MAP_BUFF_SIZE];
+    let (_, iter) = system_table
+        .boot_services()
+        .memory_map(&mut buff)
+        .unwrap();
+
+    for memory_descriptor in iter.into_iter(){
+        let mut phys_start_buff = memory_descriptor.phys_start.to_be_bytes();
+        let mut memory_type_buff =  memory_descriptor.ty.0.to_be_bytes();
+        let mut page_count_buff = memory_descriptor.page_count.to_be_bytes();
+        file.write(&mut page_count_buff).unwrap();
+        file.write(&mut memory_type_buff).unwrap();
+        file.write(&mut phys_start_buff).unwrap();
+    }
     file.flush()
 }
 

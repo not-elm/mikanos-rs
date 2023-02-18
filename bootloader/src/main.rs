@@ -15,7 +15,7 @@ use core::fmt::Write;
 use uefi::prelude::*;
 
 use common::assembly::{hlt_forever};
-use common::kib_from_mb;
+use common::kib;
 use crate::memory_map::{open_file, open_root_dir, save_memory_map};
 
 
@@ -25,11 +25,11 @@ fn main(_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
 
     // Uefi-rs側でfmt::Writeトレートを実装しているため、writelnマクロが使えます。
     writeln!(system_table.stdout(), "Hello, Mikan Rust World!").unwrap();
-    writeln!(system_table.stdout(), "1KIB={}", kib_from_mb!(1)).unwrap();
+    writeln!(system_table.stdout(), "1KIB={}", kib!(1)).unwrap();
 
     let root_dir = open_root_dir(_handle.clone(), &system_table).unwrap();
     let file_handle = open_file(root_dir);
-    let res = save_memory_map(file_handle.unwrap().into_regular_file().unwrap());
+    let res = save_memory_map(file_handle.unwrap().into_regular_file().unwrap(), &mut system_table);
     writeln!(system_table.stdout(), "1KIB={}", res.is_ok()).unwrap();
 
     hlt_forever();
