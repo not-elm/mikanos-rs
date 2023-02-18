@@ -29,7 +29,7 @@ fn main(_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
 
     let valid_save_memory_map_file = save_memory_map(file_handle.unwrap().into_regular_file().unwrap(), &mut system_table).is_ok();
     writeln!(system_table.stdout(), "Valid save Memory map={}", valid_save_memory_map_file).unwrap();
-
+    
     hlt_forever();
     Status::SUCCESS
 }
