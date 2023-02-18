@@ -6,7 +6,12 @@ setup.shを実行してください。
 
 ## Build and run
 
-run.shを実行してください
+run.shを実行してください  
+実行するとQemu Monitorが実行されます。  
+下記コマンドで終了できます。
+```qemu
+qemu> q
+```
 
 ## About Docker
 
