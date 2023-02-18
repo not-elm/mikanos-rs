@@ -1,10 +1,11 @@
 use alloc::format;
+use alloc::vec::Vec;
+
 use uefi::{CStr16, Handle};
 use uefi::proto::media::file::{Directory, File, FileAttribute, FileHandle, FileMode, RegularFile};
 use uefi::table::{Boot, SystemTable};
+
 use common::error::Error;
-
-
 use common::kib;
 use common::result::from_sfs_write_result;
 
@@ -16,13 +17,13 @@ pub(crate) fn open_root_dir(image_handle: Handle, system_table: &SystemTable<Boo
         .map(|mut sfs| sfs.open_volume())?;
 }
 
-pub(crate) fn open_file(mut dir: Directory) -> Result<FileHandle, uefi::Error> {
-    const FILE_NAME: &str = "mem_map";
+pub(crate) fn open_file(mut dir: Directory, file_name: &str) -> Result<FileHandle, uefi::Error> {
     // CStr16はすべての文字を16bitで表します。
     // ファイル名が7文字なのに対し、配列長が8なのは、十分な配列の長さを確保する必要があると
     // ドキュメントに記載されていたためです。
-    let mut buff = [0u16; 8];
-    let file_name_c_str = CStr16::from_str_with_buf(FILE_NAME, &mut buff).unwrap();
+    let mut buff = Vec::<u16>::new();
+    buff.resize(file_name.chars().count() + 1, 0);
+    let file_name_c_str = CStr16::from_str_with_buf(file_name, buff.as_mut_slice()).unwrap();
     dir.open(file_name_c_str, FileMode::CreateReadWrite, FileAttribute::empty())
 }
 
@@ -30,7 +31,7 @@ pub(crate) fn open_file(mut dir: Directory) -> Result<FileHandle, uefi::Error> {
 pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTable<Boot>) -> common::result::Result<()> {
     let header = b"Index, Type, PhysicalStart, NumberOfPages, Attribute\n";
     file.write(header).unwrap();
-    
+
     // 余裕を持たせるために16KiB
     const MEMORY_MAP_BUFF_SIZE: usize = kib!(16);
     let mut buff = [0u8; MEMORY_MAP_BUFF_SIZE];
@@ -38,7 +39,7 @@ pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTa
         .boot_services()
         .memory_map(&mut buff)
         .unwrap();
-    
+
     unsafe {
         for (i, memory_descriptor) in iter.into_iter().enumerate() {
             let mut index = format!("{} ", i);
@@ -54,7 +55,7 @@ pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTa
         }
     }
     file.flush()
-        .map_err(|_|Error::Void)
+        .map_err(|_| Error::Void)
 }
 
 

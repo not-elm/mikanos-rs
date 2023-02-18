@@ -1,11 +1,11 @@
-cargo-features = ["per-package-target"]
+#cargo-features = ["per-package-target"]
 
 
 [package]
 name = "bootloader"
 version = "0.1.0"
 edition = "2021"
-forced-target = "x86_64-unknown-uefi"
+#forced-target = "x86_64-unknown-uefi"
 
 
 [dependencies]
