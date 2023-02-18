@@ -1,0 +1,10 @@
+version: '3'
+services:
+  mikan-os-rs:
+    container_name: mikan-os-rs
+    build: .
+    image: mikan-os-rs
+    tty: true
+    privileged: true
+    volumes:
+      - ./works:/works
