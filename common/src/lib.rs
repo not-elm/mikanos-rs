@@ -7,4 +7,8 @@ pub mod unit;
 pub mod assembly;
 
 
+pub mod result;
+pub mod error;
+
+
 

@@ -1,10 +1,12 @@
 use alloc::format;
-
 use uefi::{CStr16, Handle};
 use uefi::proto::media::file::{Directory, File, FileAttribute, FileHandle, FileMode, RegularFile};
 use uefi::table::{Boot, SystemTable};
+use common::error::Error;
+
 
 use common::kib;
+use common::result::from_sfs_write_result;
 
 /// SimpleFileSystemについてはUEFI.mdを参照
 pub(crate) fn open_root_dir(image_handle: Handle, system_table: &SystemTable<Boot>) -> uefi::Result<Directory> {
@@ -25,7 +27,7 @@ pub(crate) fn open_file(mut dir: Directory) -> Result<FileHandle, uefi::Error> {
 }
 
 
-pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTable<Boot>) -> uefi::Result {
+pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTable<Boot>) -> common::result::Result<()> {
     let header = b"Index, Type, PhysicalStart, NumberOfPages, Attribute\n";
     file.write(header).unwrap();
     
@@ -44,14 +46,16 @@ pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTa
             let mut phys_start = format!("{} ", memory_descriptor.phys_start);
             let mut page_count = format!("{} ", memory_descriptor.page_count);
             let mut attribute = format!("{:?}\n", memory_descriptor.att);
-            file.write(index.as_bytes_mut()).unwrap();
-            file.write(memory_type.as_bytes_mut()).unwrap();
-            file.write(phys_start.as_bytes_mut()).unwrap();
-            file.write(page_count.as_bytes_mut()).unwrap();
-            file.write(attribute.as_bytes_mut()).unwrap();
+            from_sfs_write_result(file.write(index.as_bytes_mut()))?;
+            from_sfs_write_result(file.write(memory_type.as_bytes_mut()))?;
+            from_sfs_write_result(file.write(phys_start.as_bytes_mut()))?;
+            from_sfs_write_result(file.write(page_count.as_bytes_mut()))?;
+            from_sfs_write_result(file.write(attribute.as_bytes_mut()))?;
         }
     }
     file.flush()
+        .map_err(|_|Error::Void)
 }
+
 
 
