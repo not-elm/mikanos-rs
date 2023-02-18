@@ -1,14 +1,14 @@
-# MikanOs-rs
+# MikanOS_rs
 
 ## Setup
 
 setup.shを実行してください。
 
-## BuildAndRun
+## Build and run
 
 run.shを実行してください
 
-## Dockerについて
+## About Docker
 
 開発環境構築用に、Dockerコンテナを起動し、コンテナ内にCargo Workspaceをボリュームするような方法を検討していましたが、
 現在は使用していません。
