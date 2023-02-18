@@ -18,10 +18,9 @@ pub(crate) fn open_root_dir(image_handle: Handle, system_table: &SystemTable<Boo
 }
 
 pub(crate) fn open_file(mut dir: Directory, file_name: &str) -> Result<FileHandle, uefi::Error> {
-    // CStr16はすべての文字を16bitで表します。
-    // ファイル名が7文字なのに対し、配列長が8なのは、十分な配列の長さを確保する必要があると
-    // ドキュメントに記載されていたためです。
+    // CStr16はすべての文字を16bitで表します
     let mut buff = Vec::<u16>::new();
+    // 配列長の+1はバッファに十分なサイズを持たせる必要があるためです。
     buff.resize(file_name.chars().count() + 1, 0);
     let file_name_c_str = CStr16::from_str_with_buf(file_name, buff.as_mut_slice()).unwrap();
     dir.open(file_name_c_str, FileMode::CreateReadWrite, FileAttribute::empty())
