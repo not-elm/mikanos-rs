@@ -1,9 +1,7 @@
-use uefi::{CStr16, Error, Handle, Status};
-use uefi::data_types::FromStrWithBufError;
+use uefi::{CStr16, Handle};
 use uefi::proto::media::file::{Directory, File, FileAttribute, FileHandle, FileMode, RegularFile};
-use uefi::proto::media::fs::SimpleFileSystem;
 use uefi::table::{Boot, SystemTable};
-use uefi::table::boot::ScopedProtocol;
+
 
 /// SimpleFileSystemについてはUEFI.mdを参照
 pub(crate) fn open_root_dir(image_handle: Handle, system_table: &SystemTable<Boot>) -> uefi::Result<Directory> {
@@ -24,9 +22,11 @@ pub(crate) fn open_file(mut dir: Directory) -> Result<FileHandle, uefi::Error> {
 }
 
 
-pub(crate) fn save_memory_map(mut file: RegularFile) -> uefi::Result<(), usize> {
+pub(crate) fn save_memory_map(mut file: RegularFile, &mut system_table: SystemTable<Boot>) -> uefi::Result {
     let header = b"Index, Type, Type(name), PhysicalStart, NumberOfPages, Attribute\n";
-    file.write(header)
+    file.write(header).unwrap();
+
+    file.flush()
 }
 
 
