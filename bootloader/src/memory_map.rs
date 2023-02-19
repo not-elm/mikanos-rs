@@ -17,13 +17,13 @@ pub(crate) fn open_root_dir(image_handle: Handle, system_table: &SystemTable<Boo
         .map(|mut sfs| sfs.open_volume())?;
 }
 
-pub(crate) fn open_file(mut dir: Directory, file_name: &str) -> Result<FileHandle, uefi::Error> {
+pub(crate) fn open_file(dir: &mut Directory, file_name: &str, open_mode: FileMode) -> Result<FileHandle, uefi::Error> {
     // CStr16はすべての文字を16bitで表します
     let mut buff = Vec::<u16>::new();
     // 配列長の+1はバッファに十分なサイズを持たせる必要があるためです。
     buff.resize(file_name.chars().count() + 1, 0);
     let file_name_c_str = CStr16::from_str_with_buf(file_name, buff.as_mut_slice()).unwrap();
-    dir.open(file_name_c_str, FileMode::CreateReadWrite, FileAttribute::empty())
+    dir.open(file_name_c_str, open_mode, FileAttribute::empty())
 }
 
 

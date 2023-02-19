@@ -1,5 +1,5 @@
 [build]
-target = "target.json"
+target = "kernel.json"
 
 [unstable]
 build-std = ["std", "panic_abort", "core", "compiler_builtins"]

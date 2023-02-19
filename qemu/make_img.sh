@@ -20,4 +20,5 @@ sudo mkdir -p mnt
 sudo mount -o loop ${img} mnt
 sudo mkdir -p mnt/EFI/BOOT
 sudo cp ../target/x86_64-unknown-uefi/debug/bootloader.efi mnt/EFI/BOOT/BOOTX64.EFI
+sudo cp ../target/kernel/debug/kernel mnt/kernel.elf
 sudo umount mnt

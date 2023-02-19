@@ -12,7 +12,9 @@
       "--image-base=0x100000",
       "--static",
       "-z",
-      "norelro"
+      "norelro",
+      "-z",
+      "separate-code"
     ]
   },
   "linker": "rust-lld",
