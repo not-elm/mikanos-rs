@@ -6,5 +6,4 @@ sudo mount -o loop disk.img mnt
 sudo readelf -h ./mnt/kernel.elf
 # アンマウントするのを忘れないこと！
 sudo umount mnt
-0x101120
-0x101010
+
