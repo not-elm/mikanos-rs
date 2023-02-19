@@ -1,44 +1,41 @@
-# MikanOS_rs
+# MikanOS-rs
 
-## Setup
+## 環境構築
 
 setup.shを実行してください。
 
-## Build and run
+## ブートローダーの実行方法
 
-run.shを実行してください  
-実行するとQemu Monitorが実行されます。  
+bootloaderディレクトリ直下でcargo runを実行することでqemuが立ち上がります。  
+実行されたshell上でQemuMonitorが実行されます。  
 下記コマンドで終了できます。
 
 ```qemu
 qemu> q
 ```
 
-## About Docker
+## Dockerfileについて
 
-開発環境構築用に、Dockerコンテナを起動し、コンテナ内にCargo Workspaceをボリュームするような方法を検討していましたが、
-現在は使用していません。
+開発環境構築用に、Dockerコンテナを起動し、コンテナ内で開発する方法を検討していましたが、
+Clionでは VscodeのDevContainerのような拡張機能が見つからなかっため、使用していません。  
 一応Dockerfileとdocker-compose.ymlは残しています。
 
 ## MikanOsのビルドメモ
 
-```shell
+この項目はMikanOSのビルド方法をメモしただけなので、MikanOS-rsとは関係ありません。
 
+```shell
 #edk2
 source edksetup.sh
 build
 
 $HOME/osbook/devenv/qemu.sh $HOME/edk2/Build/MikanLoaderX64/DEBUG_CLANG38/X64/Loader.efi
-
-# osbook/devenv
-
 ```
 
-## Day02b
+## Day02a
 
-メモリーマップを取得し、mem_mapという名前のファイルに書き込むプログラムを書きます  
-書き込んだファイルはdisk.imgをmntディレクトリにマウントし、そこから確認します。  
-上記の確認する処理はqemu/cat_mem_map.shで宣言しています
+Qemu上でHelloWorldをする!
+
 
 
 
