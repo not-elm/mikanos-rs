@@ -1,8 +1,7 @@
 #![no_main]
 #![no_std]
 #![feature(abi_efiapi)]
-#![allow(stable_features)]
-
+#![allow(stamible_features)]
 
 use core::fmt::Write;
 

@@ -3,3 +3,5 @@
 /.idea/
 /**/mnt/
 /**/*.img
+*.bkp
+*.dtmp

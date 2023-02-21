@@ -20,7 +20,7 @@ qemu> q
 Clionでは VscodeのDevContainerのような拡張機能が見つからなかっため、使用していません。  
 一応Dockerfileとdocker-compose.ymlは残しています。
 
-## MikanOsのビルドメモ
+## MikanOSのビルドメモ
 
 この項目はMikanOSのビルド方法をメモしただけなので、MikanOS-rsとは関係ありません。
 
