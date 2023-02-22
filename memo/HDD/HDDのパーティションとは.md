@@ -20,6 +20,10 @@ MBRは(Master Boot Record)の略です。
 
 ## Gpt
 
+MBRと同じように図を書こうかと思っていましたが、下記サイトがわかりやすかったのでURLだけ載せておきます。
+
+<https://www.diskpart.com/jp/gpt-mbr/gpt-guid-partition-table-disk.html>
+
 ## 参考
 
 下記のサイトを参考にしました。
@@ -29,3 +33,6 @@ MBRは(Master Boot Record)の略です。
 
 MBR（マスターブートレコード）とは  
 <https://jisaku-pc.net/words/mbr.html>
+
+GPT（GUIDパーティションテーブル）ディスクの概念および利点
+<https://www.diskpart.com/jp/gpt-mbr/gpt-guid-partition-table-disk.html>

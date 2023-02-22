@@ -5,6 +5,7 @@
 #-R 32            予約セクタ数
 #-F 32            ファイルアロケーションテーブルのタイプを指定(12,16,32ビットのどれか)
 #disk.img         このデバイスにファイルシステムを構築する
+# 1. ディスクイメージを作成します。
 img=disk.img
 qemu-img create -f raw ${img} 200M
 
@@ -16,6 +17,7 @@ mkfs.fat        \
   -F 32         \
   ${img}
 
+# 2. EFIファイルシステムをディスクイメージ内にコピーします。
 sudo mkdir -p mnt
 sudo mount -o loop ${img} mnt
 sudo mkdir -p mnt/EFI/BOOT
