@@ -1,13 +1,9 @@
 #![no_main]
 #![no_std]
-#![feature(abi_efiapi)]
-#![allow(stamible_features)]
 
-use core::fmt::Write;
 
 use uefi::prelude::*;
-
-use crate::assembly::hlt_forever;
+use uefi_services::println;
 
 mod assembly;
 
@@ -16,11 +12,10 @@ mod assembly;
 fn main(_handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     uefi_services::init(&mut system_table).unwrap();
 
-    // Uefi-rs側でfmt::Writeトレートを実装しているため、writelnマクロが使えます。
-    writeln!(system_table.stdout(), "Hello, Mikan Rust World!").unwrap();
+    println!("Hello, Mikan Rust World!");
 
+    assembly::hlt_forever();
 
-    hlt_forever();
     #[allow(unreachable_code)]
     Status::SUCCESS
 }

@@ -1,0 +1,17 @@
+@startuml uefi
+package bios{
+    class Bios1
+
+    class Bios2
+
+    package uefi{
+        interface Uefi
+
+        class UefiBios
+
+        UefiBios .up.|> Uefi
+    }
+}
+
+
+@enduml
