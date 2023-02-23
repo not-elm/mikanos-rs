@@ -36,6 +36,11 @@ $HOME/osbook/devenv/qemu.sh $HOME/edk2/Build/MikanLoaderX64/DEBUG_CLANG38/X64/Lo
 
 Qemu上でHelloWorldをする!
 
+## Day02b
+
+メモリーマップの情報をファイルに出力する！
+
+
 
 
 

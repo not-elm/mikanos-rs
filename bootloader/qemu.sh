@@ -7,5 +7,4 @@ qemu-system-x86_64 \
   -monitor stdio
 
 
-sudo rm -r -f mnt
-rm disk.img
+sh cat_mem_map.sh
