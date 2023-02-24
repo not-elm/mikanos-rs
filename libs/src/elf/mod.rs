@@ -1,9 +1,10 @@
 pub mod ehdr;
-
+pub mod phdr;
+pub mod ehdr_iter;
 
 /// プログラムアドレス(64bitアーキテクチャ)
-pub type ELF64_Addr = u64;
+pub type Elf64Addr = u64;
 
 
 /// ファイルオフセット(64bitアーキテクチャ)
-pub type ELF64_Off = u64;
+pub type Elf64Off = u64;

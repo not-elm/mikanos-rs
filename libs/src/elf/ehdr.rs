@@ -1,11 +1,13 @@
-use crate::elf::{ELF64_Addr, ELF64_Off};
+use crate::elf::{Elf64Addr, Elf64Off};
 
 const EI_NIDENT: usize = 16;
 
+
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Ehdr {
     pub e_indent: [u8; EI_NIDENT],
-    
+
     /// オブジェクトファイルの種類を表します。
     pub e_type: EType,
 
@@ -17,15 +19,15 @@ pub struct Ehdr {
     pub e_version: u32,
 
     /// エントリーポイントのアドレス
-    pub e_entry: ELF64_Addr,
+    pub e_entry: Elf64Addr,
 
     /// プログラムヘッダのオフセット
     /// 存在しない場合は0になります。
-    pub e_phoff: ELF64_Off,
+    pub e_phoff: Elf64Off,
 
     /// セクションヘッダのオフセット
     /// 存在しない場合は、0になります。
-    pub e_shoff: ELF64_Off,
+    pub e_shoff: Elf64Off,
 
     /// ファイルに関連付けられたプロセッサ固有のフラグ
     /// 現在のところはこのフラグは定義されていない。
@@ -45,7 +47,20 @@ pub struct Ehdr {
     pub e_shstrndx: u16,
 }
 
+impl Ehdr {
+    pub fn from_file_buff(file_buff: &mut [u8]) -> Self {
+        let buff_ptr = file_buff.as_mut_ptr();
+        let ehdr_ptr = (buff_ptr) as *mut Ehdr;
+        Self::from_ptr(ehdr_ptr)
+    }
+
+    pub fn from_ptr(edhr_ptr: *mut Ehdr) -> Self {
+        unsafe { *edhr_ptr }
+    }
+}
+
 #[repr(u16)]
+#[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Copy, Clone)]
 pub enum EType {
     /// No File Type
     ETNone = 0,
@@ -72,11 +87,29 @@ pub enum EType {
 
 #[cfg(test)]
 mod tests {
-    use crate::elf::ehdr::Ehdr;
+    use std::io::Read;
+
+    use crate::elf::ehdr::{Ehdr, EType};
 
     #[test]
     fn it_size() {
         let size = core::mem::size_of::<Ehdr>();
         assert_eq!(size, 0x40);
+    }
+
+    #[test]
+    fn it_cast_to_ehdr() {
+        let path = env!("CARGO_MANIFEST_DIR");
+        let path = format!("{}/resources/test/kernel.elf", path);
+
+
+        let mut kernel_file = ::std::fs::File::open(path).unwrap();
+
+        let mut buff = Vec::<u8>::new();
+        kernel_file
+            .read_to_end(&mut buff)
+            .unwrap();
+        let ehdr = Ehdr::from_file_buff(&mut buff);
+        assert_eq!(ehdr.e_type, EType::EtExec);
     }
 }
