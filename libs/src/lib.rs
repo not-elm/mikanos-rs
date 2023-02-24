@@ -1,6 +1,8 @@
 #![feature(pointer_byte_offsets)]
 #![cfg_attr(not(test), no_std)]
 
+extern crate alloc;
+
 pub mod elf;
 
 pub fn add(left: usize, right: usize) -> usize {

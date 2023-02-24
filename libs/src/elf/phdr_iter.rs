@@ -1,4 +1,8 @@
+use alloc::vec::Vec;
+
 use crate::elf::phdr::Phdr;
+
+use super::phdr::PType;
 
 pub struct PhdrIter {
     phdr_ptr: *mut Phdr,
@@ -13,6 +17,15 @@ impl PhdrIter {
             current_num: 1,
             e_phnum,
         }
+    }
+
+    pub fn calc_load_address_range(self) -> (u64, u64) {
+        let v: Vec<Phdr> = self.filter(|p| p.p_type == PType::PtLoad).collect();
+
+        let start_addr = v.first().unwrap().p_vaddr;
+        let last_phdr = v.last().unwrap();
+        let last_addr = last_phdr.p_vaddr + last_phdr.p_memsz;
+        (start_addr, last_addr)
     }
 
     fn dref(&self) -> Phdr {
@@ -46,6 +59,7 @@ mod tests {
     use crate::elf::elf_header::ehdr_ptr::EhdrPtr;
     use crate::elf::load_ehdr;
     use crate::elf::phdr::{PType, Phdr};
+    use alloc::vec::Vec;
 
     #[test]
     fn it_cast_to_ehdr() {
@@ -73,5 +87,15 @@ mod tests {
         let v: Vec<Phdr> = phdr_iter.filter(|p| p.p_type == PType::PtLoad).collect();
 
         assert_eq!(v.len(), 2)
+    }
+
+    #[test]
+    fn it_success_calc_start_and_last_load_addresses() {
+        let ehdr_ptr = EhdrPtr::new(load_ehdr());
+        let phdr_iter = ehdr_ptr.phdr_iter();
+
+        let (start, last) = phdr_iter.calc_load_address_range();
+        assert_eq!(start, 0x100000u64);
+        assert_eq!(last, 0x102000);
     }
 }

@@ -19,8 +19,10 @@ impl EhdrPtr {
     pub fn ph_offset(&self) -> u64 {
         unsafe { *self.0 }.e_phoff
     }
-
-    pub fn phdr_iter(&self) -> PhdrIter{
+    pub fn phdr_ptr_from(&self, p_offset: u64) -> *const u8 {
+        unsafe { self.0.byte_add(p_offset as usize) as *const u8 }
+    }
+    pub fn phdr_iter(&self) -> PhdrIter {
         PhdrIter::new(self.phdr_ptr(), self.ph_num())
     }
 
@@ -31,7 +33,6 @@ impl EhdrPtr {
         phdr_start_addr as *mut Phdr
     }
 }
-
 
 #[cfg(test)]
 pub mod tests {
@@ -46,13 +47,11 @@ pub mod tests {
         assert_eq!(ptr.ph_offset(), 64);
     }
 
-
     #[test]
     fn it_obtain_program_headers_num() {
         let ptr = EhdrPtr(load_ehdr());
         assert_eq!(ptr.ph_num(), 4);
     }
-
 
     #[test]
     fn it_obtain_program_header_ptr() {
@@ -61,5 +60,16 @@ pub mod tests {
 
         println!("{:?}", unsafe { *phdr });
         assert_ne!(phdr, null_mut());
+    }
+
+    #[test]
+    fn it_obtain_program_header_ptr_from_p_offset() {
+        let ptr = EhdrPtr::new(load_ehdr());
+        let phdr = ptr.phdr_ptr();
+        let p_offset = unsafe { (*phdr).p_offset };
+        let expect = unsafe { *(phdr as *const u64) };
+        let actual = unsafe { *(ptr.phdr_ptr_from(p_offset) as *const u64) };
+
+        assert_eq!(actual, expect);
     }
 }
