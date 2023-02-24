@@ -2,7 +2,6 @@ use crate::elf::{Elf64Addr, Elf64Off};
 
 const EI_NIDENT: usize = 16;
 
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Ehdr {
@@ -50,8 +49,8 @@ pub struct Ehdr {
 impl Ehdr {
     pub fn from_file_buff(file_buff: &mut [u8]) -> *mut Self {
         let buff_ptr = file_buff.as_mut_ptr();
-        let ehdr_ptr = (buff_ptr) as *mut Ehdr;
-        ehdr_ptr
+
+        (buff_ptr) as *mut Ehdr
     }
 }
 
@@ -80,10 +79,9 @@ pub enum EType {
     EiHiproc = 0xffff,
 }
 
-
 #[cfg(test)]
 mod tests {
-    use crate::elf::elf_header::ehdr::{Ehdr, EType};
+    use crate::elf::elf_header::ehdr::{EType, Ehdr};
     use crate::elf::load_ehdr;
 
     #[test]

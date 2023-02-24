@@ -28,7 +28,7 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
 
     let mut root_dir = open_root_dir(handle, &system_table).unwrap();
     kernel::start_kernel(&mut root_dir,
-                         &"kernel.libs",
+                         &"kernel.elf",
                          &mut KernelElfLoader {},
                          &mut system_table).unwrap();
 
