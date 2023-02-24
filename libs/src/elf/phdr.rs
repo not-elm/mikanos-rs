@@ -2,6 +2,7 @@ use crate::elf::{Elf64Addr, Elf64Off};
 
 /// ELFファイルのプログラムヘッダ
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct Phdr {
     pub p_type: PType,
     //TODO
@@ -15,7 +16,7 @@ pub struct Phdr {
 }
 
 #[repr(u32)]
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum PType {
     /// この配列要素は指定されていません。
     /// Phdrのその他のメンバの値は未定義になります。
@@ -32,8 +33,17 @@ pub enum PType {
     /// 位置とサイズを指定します。
     PtInterp = 3,
 
-    /// このライブラリで実装されていません
-    Undefined,
+    PtNote = 4,
+
+    PtShlib = 5,
+    PtPhdr = 6,
+    PtLosunw = 0x6ffffffa,
+    PtSunWbss = 0x6ffffffb,
+    PtSunWdTrace = 0x6ffffffc,
+    PtSunWCap = 0x6ffffffd,
+    PtHiSun = 0x6fffffff,
+    PtLoproc = 0x70000000,
+    PtHiproc = 0x7fffffff,
 }
 
 

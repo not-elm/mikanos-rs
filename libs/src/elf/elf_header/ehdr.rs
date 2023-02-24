@@ -48,14 +48,10 @@ pub struct Ehdr {
 }
 
 impl Ehdr {
-    pub fn from_file_buff(file_buff: &mut [u8]) -> Self {
+    pub fn from_file_buff(file_buff: &mut [u8]) -> *mut Self {
         let buff_ptr = file_buff.as_mut_ptr();
         let ehdr_ptr = (buff_ptr) as *mut Ehdr;
-        Self::from_ptr(ehdr_ptr)
-    }
-
-    pub fn from_ptr(edhr_ptr: *mut Ehdr) -> Self {
-        unsafe { *edhr_ptr }
+        ehdr_ptr
     }
 }
 
@@ -87,9 +83,8 @@ pub enum EType {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Read;
-
-    use crate::elf::ehdr::{Ehdr, EType};
+    use crate::elf::elf_header::ehdr::{Ehdr, EType};
+    use crate::elf::load_ehdr;
 
     #[test]
     fn it_size() {
@@ -99,17 +94,7 @@ mod tests {
 
     #[test]
     fn it_cast_to_ehdr() {
-        let path = env!("CARGO_MANIFEST_DIR");
-        let path = format!("{}/resources/test/kernel.elf", path);
-
-
-        let mut kernel_file = ::std::fs::File::open(path).unwrap();
-
-        let mut buff = Vec::<u8>::new();
-        kernel_file
-            .read_to_end(&mut buff)
-            .unwrap();
-        let ehdr = Ehdr::from_file_buff(&mut buff);
-        assert_eq!(ehdr.e_type, EType::EtExec);
+        let ehdr = load_ehdr();
+        assert_eq!(unsafe { (*ehdr).e_type }, EType::EtExec);
     }
 }
