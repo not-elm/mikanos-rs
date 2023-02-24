@@ -1,0 +1,1 @@
+readelf -l target/kernel/debug/kernel.elf >> kernel.txt

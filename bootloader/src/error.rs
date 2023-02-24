@@ -23,11 +23,12 @@ impl From<uefi::Error<()>> for Error {
     }
 }
 
-
+#[allow(dead_code)]
 pub fn from_sfs_write_result<T>(result: uefi::Result<T, usize>) -> crate::error::Result<T> {
     match result {
         Ok(data) => Ok(data),
         Err(uefi_error) => Err(Error::SfsFileWrite(*uefi_error.data()))
     }
 }
+
 

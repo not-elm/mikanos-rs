@@ -22,4 +22,5 @@ sudo mkdir -p mnt
 sudo mount -o loop ${img} mnt
 sudo mkdir -p mnt/EFI/BOOT
 sudo cp ./target/x86_64-unknown-uefi/debug/bootloader.efi ./mnt/EFI/BOOT/BOOTX64.EFI
+sudo cp "$HOME"/workspace/mikanos_rs/kernel/target/kernel/debug/kernel.elf ./mnt/kernel.elf
 sudo umount mnt
