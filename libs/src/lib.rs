@@ -1,5 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 
+pub mod elf;
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
