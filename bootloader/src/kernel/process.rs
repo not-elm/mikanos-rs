@@ -1,3 +1,4 @@
+use alloc::vec;
 use alloc::vec::Vec;
 
 use libs::error::LibResult;
@@ -20,16 +21,11 @@ pub fn execute_kernel(
         .unwrap();
 
     let kernel_file_size = get_kernel_file_size(&mut kernel_file) as usize;
-    const KERNEL_BASE_ADDR: u64 = 0x100_000u64;
-    let entry_point = KERNEL_BASE_ADDR as *mut u8;
-
-    let buff: &mut [u8] =
-        unsafe { core::slice::from_raw_parts_mut(entry_point, kernel_file_size as usize) };
     allocator.allocate_pool(kernel_file_size);
 
-    read_kernel_buff(&mut kernel_file, buff);
+    let mut kernel_vec = read_kernel_buff(&mut kernel_file, kernel_file_size);
 
-    let entry_point = ElfLoader::new().load(buff, allocator)?;
+    let entry_point = ElfLoader::new().load(kernel_vec.as_mut_slice(), allocator)?;
 
     println!("kernel_entry_point_addr = {:#08x}", entry_point);
     entry_point.execute();
@@ -49,6 +45,8 @@ fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
     info.file_size()
 }
 
-fn read_kernel_buff(kernel_file: &mut RegularFile, buff: &mut [u8]) {
-    kernel_file.read(buff).unwrap();
+fn read_kernel_buff(kernel_file: &mut RegularFile, kernel_file_size: usize) -> Vec<u8> {
+    let mut v = vec![0; kernel_file_size];
+    kernel_file.read(v.as_mut_slice()).unwrap();
+    v
 }
