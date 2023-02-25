@@ -59,20 +59,20 @@ impl Iterator for ProgramHeaderTable {
 mod tests {
     use alloc::vec::Vec;
 
-    use crate::elf::ehdr::elf_header_ptr::EhdrPtr;
+    use crate::elf::ehdr::elf_header_ptr::ElfHeaderPtr;
     use crate::elf::load_ehdr;
     use crate::elf::phdr::program_header::{ProgramHeader, PType};
 
     #[test]
     fn it_cast_to_ehdr() {
-        let mut phdr_iter = EhdrPtr::new(load_ehdr()).phdr_iter();
+        let mut phdr_iter = ElfHeaderPtr::new(load_ehdr()).phdr_iter();
         let phdr = phdr_iter.next();
         assert!(phdr.is_some());
     }
 
     #[test]
     fn it_obtain_phdr_ptr() {
-        let ehdr_ptr = EhdrPtr::new(load_ehdr());
+        let ehdr_ptr = ElfHeaderPtr::new(load_ehdr());
         let phdr_page_num = ehdr_ptr.ph_num();
         let phdr_iter = ehdr_ptr.phdr_iter();
 
@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn it_contains_two_load_segment() {
-        let ehdr_ptr = EhdrPtr::new(load_ehdr());
+        let ehdr_ptr = ElfHeaderPtr::new(load_ehdr());
         let phdr_iter = ehdr_ptr.phdr_iter();
 
         let v: Vec<ProgramHeader> = phdr_iter.filter(|p| p.p_type == PType::PtLoad).collect();
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn it_success_calc_start_and_last_load_addresses() {
-        let ehdr_ptr = EhdrPtr::new(load_ehdr());
+        let ehdr_ptr = ElfHeaderPtr::new(load_ehdr());
         let phdr_iter = ehdr_ptr.phdr_iter();
 
         let (start, last) = phdr_iter.calc_load_address_range();

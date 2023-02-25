@@ -4,9 +4,9 @@ use crate::elf::phdr::program_header_table::ProgramHeaderTable;
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct EhdrPtr(*mut ElfHeader);
+pub struct ElfHeaderPtr(*mut ElfHeader);
 
-impl EhdrPtr {
+impl ElfHeaderPtr {
     pub fn new(ehdr_ptr: *mut ElfHeader) -> Self {
         Self(ehdr_ptr)
     }
@@ -38,24 +38,24 @@ impl EhdrPtr {
 pub mod tests {
     use core::ptr::null_mut;
 
-    use crate::elf::ehdr::elf_header_ptr::EhdrPtr;
+    use crate::elf::ehdr::elf_header_ptr::ElfHeaderPtr;
     use crate::elf::load_ehdr;
 
     #[test]
     fn it_obtain_program_header_offset() {
-        let ptr = EhdrPtr(load_ehdr());
+        let ptr = ElfHeaderPtr(load_ehdr());
         assert_eq!(ptr.ph_offset(), 64);
     }
 
     #[test]
     fn it_obtain_program_headers_num() {
-        let ptr = EhdrPtr(load_ehdr());
+        let ptr = ElfHeaderPtr(load_ehdr());
         assert_eq!(ptr.ph_num(), 4);
     }
 
     #[test]
     fn it_obtain_program_header_ptr() {
-        let ptr = EhdrPtr::new(load_ehdr());
+        let ptr = ElfHeaderPtr::new(load_ehdr());
         let phdr = ptr.phdr_ptr();
 
         println!("{:?}", unsafe { *phdr });
@@ -64,7 +64,7 @@ pub mod tests {
 
     #[test]
     fn it_obtain_program_header_ptr_from_p_offset() {
-        let ptr = EhdrPtr::new(load_ehdr());
+        let ptr = ElfHeaderPtr::new(load_ehdr());
         let phdr = ptr.phdr_ptr();
         let p_offset = unsafe { (*phdr).p_offset };
         let expect = unsafe { *(phdr as *const u64) };
