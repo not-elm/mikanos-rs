@@ -1,0 +1,5 @@
+[build]
+target = "kernel.json"
+
+[unstable]
+build-std = ["core"]
