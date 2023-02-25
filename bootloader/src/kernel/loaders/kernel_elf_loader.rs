@@ -1,13 +1,14 @@
 use alloc::vec::Vec;
 
-use libs::elf::elf_header::ehdr_ptr::EhdrPtr;
-use libs::elf::phdr::{PType, Phdr};
-use libs::elf::phdr_iter::{self, PhdrIter};
 use uefi::data_types::PhysicalAddress;
 use uefi::prelude::{Boot, SystemTable};
 use uefi::proto::media::file::{File, FileInfo, RegularFile};
 use uefi::table::boot::{AllocateType, MemoryType};
 use uefi_services::println;
+
+use libs::elf::ehdr::elf_header_ptr::EhdrPtr;
+use libs::elf::phdr::program_header::{ProgramHeader, PType};
+use libs::elf::phdr::program_header_table::ProgramHeaderTable;
 
 use crate::kernel::loaders::KernelLoadable;
 
@@ -41,11 +42,11 @@ impl KernelLoadable for KernelElfLoader {
             load_segment_start_addr,
             load_segment_last_addr,
         )
-        .unwrap();
+            .unwrap();
         let phdr_iter = ehdr.phdr_iter();
         copy_segments(&ehdr, phdr_iter, system_table);
         let entry_point_addr_ptr = (load_segment_start_addr + 24) as *const u64;
-        Ok(unsafe{*entry_point_addr_ptr})
+        Ok(unsafe { *entry_point_addr_ptr })
     }
 }
 
@@ -62,7 +63,7 @@ fn get_kernel_page_size(kernel_file: &mut RegularFile) -> u64 {
     info.file_size()
 }
 
-fn copy_segments(ehdr: &EhdrPtr, phdr_iter: PhdrIter, system_table: &mut SystemTable<Boot>) {
+fn copy_segments(ehdr: &EhdrPtr, phdr_iter: ProgramHeaderTable, system_table: &mut SystemTable<Boot>) {
     let loads = phdr_iter.filter(|p| p.p_type == PType::PtLoad);
 
     for phdr in loads {
@@ -72,7 +73,7 @@ fn copy_segments(ehdr: &EhdrPtr, phdr_iter: PhdrIter, system_table: &mut SystemT
     }
 }
 
-fn copy_mem(ehdr: &EhdrPtr, phdr: &Phdr, system_table: &mut SystemTable<Boot>) {
+fn copy_mem(ehdr: &EhdrPtr, phdr: &ProgramHeader, system_table: &mut SystemTable<Boot>) {
     let load_to_addr = phdr.p_vaddr as *mut u8;
     let src = ehdr.phdr_ptr_from(phdr.p_offset);
     unsafe {
@@ -81,7 +82,8 @@ fn copy_mem(ehdr: &EhdrPtr, phdr: &Phdr, system_table: &mut SystemTable<Boot>) {
             .memmove(load_to_addr, src, phdr.p_filesz as usize);
     }
 }
-fn set_mem(ehdr: &EhdrPtr, phdr: &Phdr, system_table: &mut SystemTable<Boot>) {
+
+fn set_mem(ehdr: &EhdrPtr, phdr: &ProgramHeader, system_table: &mut SystemTable<Boot>) {
     let remain_bytes = phdr.p_memsz - phdr.p_filesz;
     let buff = (phdr.p_vaddr + phdr.p_filesz) as *mut u8;
     unsafe {
@@ -90,6 +92,7 @@ fn set_mem(ehdr: &EhdrPtr, phdr: &Phdr, system_table: &mut SystemTable<Boot>) {
             .set_mem(buff, remain_bytes as usize, 0);
     }
 }
+
 fn calc_kernel_page_size(file_size: u64) -> usize {
     ((file_size + 0xfff) / 0x1000) as usize
 }

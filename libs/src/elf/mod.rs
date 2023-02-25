@@ -1,6 +1,5 @@
-pub mod elf_header;
+pub mod ehdr;
 pub mod phdr;
-pub mod phdr_iter;
 
 /// プログラムアドレス(64bitアーキテクチャ)
 pub type Elf64Addr = u64;
@@ -11,7 +10,9 @@ pub type Elf64Off = u64;
 
 
 #[cfg(test)]
-pub(crate) fn load_ehdr() -> *mut crate::elf::elf_header::ehdr::Ehdr {
+pub(crate) fn load_ehdr() -> *mut crate::elf::ehdr::elf_header::ElfHeader {
+    use alloc::format;
+    use alloc::vec::Vec;
     use std::io::Read;
     let path = env!("CARGO_MANIFEST_DIR");
     let path = format!("{}/resources/test/kernel.elf", path);
@@ -23,6 +24,6 @@ pub(crate) fn load_ehdr() -> *mut crate::elf::elf_header::ehdr::Ehdr {
     kernel_file
         .read_to_end(&mut buff)
         .unwrap();
-    let ehdr = crate::elf::elf_header::ehdr::Ehdr::from_file_buff(&mut buff);
+    let ehdr = crate::elf::ehdr::elf_header::ElfHeader::from_file_buff(&mut buff);
     ehdr
 }

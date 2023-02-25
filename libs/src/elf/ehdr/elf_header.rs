@@ -2,9 +2,10 @@ use crate::elf::{Elf64Addr, Elf64Off};
 
 const EI_NIDENT: usize = 16;
 
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct Ehdr {
+pub struct ElfHeader {
     pub e_indent: [u8; EI_NIDENT],
 
     /// オブジェクトファイルの種類を表します。
@@ -46,11 +47,11 @@ pub struct Ehdr {
     pub e_shstrndx: u16,
 }
 
-impl Ehdr {
+impl ElfHeader {
     pub fn from_file_buff(file_buff: &mut [u8]) -> *mut Self {
         let buff_ptr = file_buff.as_mut_ptr();
 
-        (buff_ptr) as *mut Ehdr
+        (buff_ptr) as *mut ElfHeader
     }
 }
 
@@ -81,12 +82,12 @@ pub enum EType {
 
 #[cfg(test)]
 mod tests {
-    use crate::elf::elf_header::ehdr::{EType, Ehdr};
+    use crate::elf::ehdr::elf_header::{ElfHeader, EType};
     use crate::elf::load_ehdr;
 
     #[test]
     fn it_size() {
-        let size = core::mem::size_of::<Ehdr>();
+        let size = core::mem::size_of::<ElfHeader>();
         assert_eq!(size, 0x40);
     }
 

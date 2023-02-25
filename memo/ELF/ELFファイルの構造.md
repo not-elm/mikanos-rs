@@ -10,3 +10,6 @@ ELFファイルの構造を図にしたもの
 
 このページを確認中...
 <https://linuxjm.osdn.jp/html/LDP_man-pages/man5/elf.5.html>
+
+このページもわかりやすい！
+<https://www.hazymoon.jp/OpenBSD/annex/elf.html>

@@ -3,7 +3,7 @@ use crate::elf::{Elf64Addr, Elf64Off};
 /// ELFファイルのプログラムヘッダ
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub struct Phdr {
+pub struct ProgramHeader {
     pub p_type: PType,
     //TODO
     pub p_flags: u32,

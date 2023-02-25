@@ -1,17 +1,17 @@
-use crate::elf::elf_header::ehdr::Ehdr;
-use crate::elf::phdr::Phdr;
-use crate::elf::phdr_iter::PhdrIter;
+use crate::elf::ehdr::elf_header::ElfHeader;
+use crate::elf::phdr::program_header::ProgramHeader;
+use crate::elf::phdr::program_header_table::ProgramHeaderTable;
 
 #[repr(C)]
 #[derive(Debug)]
-pub struct EhdrPtr(*mut Ehdr);
+pub struct EhdrPtr(*mut ElfHeader);
 
 impl EhdrPtr {
-    pub fn new(ehdr_ptr: *mut Ehdr) -> Self {
+    pub fn new(ehdr_ptr: *mut ElfHeader) -> Self {
         Self(ehdr_ptr)
     }
     pub fn from_file_buff(file_buff: &mut [u8]) -> Self {
-        Self(Ehdr::from_file_buff(file_buff))
+        Self(ElfHeader::from_file_buff(file_buff))
     }
     pub fn ph_num(&self) -> u16 {
         unsafe { *self.0 }.e_phnum
@@ -22,23 +22,23 @@ impl EhdrPtr {
     pub fn phdr_ptr_from(&self, p_offset: u64) -> *const u8 {
         unsafe { self.0.byte_add(p_offset as usize) as *const u8 }
     }
-    pub fn phdr_iter(&self) -> PhdrIter {
-        PhdrIter::new(self.phdr_ptr(), self.ph_num())
+    pub fn phdr_iter(&self) -> ProgramHeaderTable {
+        ProgramHeaderTable::new(self.phdr_ptr(), self.ph_num())
     }
 
-    fn phdr_ptr(&self) -> *mut Phdr {
+    fn phdr_ptr(&self) -> *mut ProgramHeader {
         let ph_offset = self.ph_offset();
         let ptr = self.0 as *mut u8;
         let phdr_start_addr = unsafe { ptr.byte_add(ph_offset as usize) };
-        phdr_start_addr as *mut Phdr
+        phdr_start_addr as *mut ProgramHeader
     }
 }
 
 #[cfg(test)]
 pub mod tests {
-    use std::ptr::null_mut;
+    use core::ptr::null_mut;
 
-    use crate::elf::elf_header::ehdr_ptr::EhdrPtr;
+    use crate::elf::ehdr::elf_header_ptr::EhdrPtr;
     use crate::elf::load_ehdr;
 
     #[test]

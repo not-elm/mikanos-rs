@@ -1,17 +1,18 @@
 use alloc::vec::Vec;
 
-use crate::elf::phdr::Phdr;
+use crate::elf::phdr::program_header::ProgramHeader;
+use crate::elf::phdr::program_header::PType;
 
-use super::phdr::PType;
-
-pub struct PhdrIter {
-    phdr_ptr: *mut Phdr,
+/// プログラムヘッダのヘッダテーブルはe_phnum個のphdrから構成される配列です。
+/// e_phnumは、ElfHeader(Ehdr)内に宣言されています。
+pub struct ProgramHeaderTable {
+    phdr_ptr: *mut ProgramHeader,
     current_num: u16,
     e_phnum: u16,
 }
 
-impl PhdrIter {
-    pub fn new(phdr_ptr: *mut Phdr, e_phnum: u16) -> Self {
+impl ProgramHeaderTable {
+    pub fn new(phdr_ptr: *mut ProgramHeader, e_phnum: u16) -> Self {
         Self {
             phdr_ptr,
             current_num: 1,
@@ -20,7 +21,7 @@ impl PhdrIter {
     }
 
     pub fn calc_load_address_range(self) -> (u64, u64) {
-        let v: Vec<Phdr> = self.filter(|p| p.p_type == PType::PtLoad).collect();
+        let v: Vec<ProgramHeader> = self.filter(|p| p.p_type == PType::PtLoad).collect();
 
         let start_addr = v.first().unwrap().p_vaddr;
         let last_phdr = v.last().unwrap();
@@ -28,13 +29,13 @@ impl PhdrIter {
         (start_addr, last_addr)
     }
 
-    fn dref(&self) -> Phdr {
+    fn dref(&self) -> ProgramHeader {
         unsafe { *(self.phdr_ptr) }
     }
 }
 
-impl Iterator for PhdrIter {
-    type Item = Phdr;
+impl Iterator for ProgramHeaderTable {
+    type Item = ProgramHeader;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current_num < self.e_phnum {
@@ -56,10 +57,11 @@ impl Iterator for PhdrIter {
 
 #[cfg(test)]
 mod tests {
-    use crate::elf::elf_header::ehdr_ptr::EhdrPtr;
-    use crate::elf::load_ehdr;
-    use crate::elf::phdr::{PType, Phdr};
     use alloc::vec::Vec;
+
+    use crate::elf::ehdr::elf_header_ptr::EhdrPtr;
+    use crate::elf::load_ehdr;
+    use crate::elf::phdr::program_header::{ProgramHeader, PType};
 
     #[test]
     fn it_cast_to_ehdr() {
@@ -74,7 +76,7 @@ mod tests {
         let phdr_page_num = ehdr_ptr.ph_num();
         let phdr_iter = ehdr_ptr.phdr_iter();
 
-        let v: Vec<Phdr> = phdr_iter.collect();
+        let v: Vec<ProgramHeader> = phdr_iter.collect();
         assert_eq!(phdr_page_num, 0x04);
         assert_eq!(v.len(), phdr_page_num as usize)
     }
@@ -84,7 +86,7 @@ mod tests {
         let ehdr_ptr = EhdrPtr::new(load_ehdr());
         let phdr_iter = ehdr_ptr.phdr_iter();
 
-        let v: Vec<Phdr> = phdr_iter.filter(|p| p.p_type == PType::PtLoad).collect();
+        let v: Vec<ProgramHeader> = phdr_iter.filter(|p| p.p_type == PType::PtLoad).collect();
 
         assert_eq!(v.len(), 2)
     }
