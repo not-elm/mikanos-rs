@@ -26,13 +26,16 @@ impl Allocatable for BootAllocator<'_> {
         };
     }
 
-    fn allocate_pool(&self, size: usize) {
+    fn allocate_pool(&self, size: usize) -> *mut u8 {
         self.0
             .boot_services()
             .allocate_pool(MemoryType::LOADER_DATA, size)
-            .unwrap();
+            .unwrap()
     }
 
+    fn free_pool(&self, addr: *mut u8) {
+        self.0.boot_services().free_pool(addr).unwrap();
+    }
     fn allocate_pages(&mut self, phys_addr: u64, count: usize) -> LibResult {
         self.0
             .boot_services()
@@ -40,7 +43,8 @@ impl Allocatable for BootAllocator<'_> {
                 AllocateType::Address(phys_addr),
                 MemoryType::LOADER_DATA,
                 count,
-            ).map_err(|_| LibError::FailedToAllocatePages(phys_addr))?;
+            )
+            .map_err(|_| LibError::FailedToAllocatePages(phys_addr))?;
         Ok(())
     }
 }
