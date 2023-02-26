@@ -1,12 +1,15 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
+use uefi::Handle;
+use uefi::prelude::{Boot, SystemTable};
 use uefi::proto::media::file::{Directory, File, FileInfo, FileMode, RegularFile};
+use uefi::table::boot::MemoryDescriptor;
 
 use libs::error::LibResult;
 use libs::kernel::entry_point::EntryPoint;
-use libs::kernel::loaders::elf_loader::ElfLoader;
 use libs::kernel::loaders::{Allocatable, KernelLoadable};
+use libs::kernel::loaders::elf_loader::ElfLoader;
 
 use crate::file::open_file;
 
@@ -31,6 +34,18 @@ pub fn load_kernel(
     result
 }
 
+pub fn execute_kernel(entry_point: EntryPoint, handle: Handle, system_table: SystemTable<Boot>) -> Result<(), ()> {
+    let mut memory_map_vec = new_memory_map_vec(&system_table);
+
+    if let Ok(_) = system_table.exit_boot_services(handle, memory_map_vec.as_mut_slice()) {
+        core::mem::forget(memory_map_vec);
+        entry_point.execute();
+        Ok(())
+    } else {
+        Err(())
+    }
+}
+
 fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
     // カーネルファイルの大きさを知るため、ファイル情報を読み取る
     const FILE_INFO_SIZE: usize = 4000;
@@ -48,4 +63,13 @@ fn read_kernel_buff(kernel_file: &mut RegularFile, kernel_file_size: usize) -> V
     let mut v = vec![0; kernel_file_size];
     kernel_file.read(v.as_mut_slice()).unwrap();
     v
+}
+
+
+fn new_memory_map_vec(
+    system_table: &SystemTable<Boot>,
+) -> Vec<u8> {
+    let memory_map_size = system_table.boot_services().memory_map_size().map_size;
+    let descriptor_size = core::mem::size_of::<MemoryDescriptor>();
+    vec![0u8; memory_map_size + descriptor_size * 12]
 }
