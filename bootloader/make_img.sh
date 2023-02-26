@@ -7,6 +7,7 @@
 #disk.img         このデバイスにファイルシステムを構築する
 # 1. ディスクイメージを作成します。
 img=disk.img
+sudo rm -f ${img}
 qemu-img create -f raw ${img} 200M
 
 mkfs.fat        \
@@ -18,6 +19,7 @@ mkfs.fat        \
   ${img}
 
 # 2. EFIファイルシステムをディスクイメージ内にコピーします。
+sudo rm -r -f
 sudo mkdir -p mnt
 sudo mount -o loop ${img} mnt
 sudo mkdir -p mnt/EFI/BOOT

@@ -10,6 +10,8 @@
   "exe-suffix": ".elf",
   "pre-link-args": {
     "ld": [
+      "--entry",
+      "kernel_main",
       "--image-base=0x100000",
       "--static",
       "-z",

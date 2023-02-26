@@ -12,6 +12,7 @@ use libs::kernel::loaders::{Allocatable, KernelLoadable};
 use libs::kernel::loaders::elf_loader::ElfLoader;
 
 use crate::file::open_file;
+use crate::gop::{obtain_frame_buffer_base_addr_and_size, open_gop};
 
 pub fn load_kernel(
     root_dir: &mut Directory,
@@ -37,14 +38,18 @@ pub fn load_kernel(
 pub fn execute_kernel(entry_point: EntryPoint, handle: Handle, system_table: SystemTable<Boot>) -> Result<(), ()> {
     let mut memory_map_vec = new_memory_map_vec(&system_table);
 
+
+    let (frame_buffer_base_addr, frame_buffer_size) = obtain_frame_buffer_base_addr_and_size(&mut open_gop(&system_table).unwrap());
+
     if let Ok(_) = system_table.exit_boot_services(handle, memory_map_vec.as_mut_slice()) {
         core::mem::forget(memory_map_vec);
-        entry_point.execute();
+        entry_point.execute(frame_buffer_base_addr, frame_buffer_size);
         Ok(())
     } else {
         Err(())
     }
 }
+
 
 fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
     // カーネルファイルの大きさを知るため、ファイル情報を読み取る

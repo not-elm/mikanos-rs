@@ -13,6 +13,16 @@ pub fn open_gop(system_table: &SystemTable<Boot>) -> uefi::Result<ScopedProtocol
         .open_protocol_exclusive::<GraphicsOutput>(gop)
 }
 
+pub fn obtain_frame_buffer_base_addr_and_size(gop: &mut ScopedProtocol<GraphicsOutput>) -> (u64, usize) {
+    let mut frame_buffer = gop.frame_buffer();
+    let buffer_size = frame_buffer.size();
+
+    let base_addr = frame_buffer.as_mut_ptr().addr() as u64;
+
+    (base_addr, buffer_size)
+}
+
+#[allow(dead_code)]
 pub unsafe fn write_all_pixels_with_same(gop: &mut ScopedProtocol<GraphicsOutput>, pixel_value: u8) {
     let mut frame_buffer = gop.frame_buffer();
     let buffer_size = frame_buffer.size();
