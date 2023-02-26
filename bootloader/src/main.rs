@@ -8,6 +8,7 @@ use uefi::{prelude::*};
 use uefi_services::println;
 
 use crate::file::open_root_dir;
+use crate::gop::{open_gop, write_all_pixels_with_same};
 
 mod assembly;
 mod error;
@@ -15,6 +16,7 @@ mod file;
 mod kernel;
 mod memory_map;
 mod unit;
+mod gop;
 
 #[entry]
 fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
@@ -24,6 +26,8 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
 
     println!("Hello, Mikan Rust World!");
 
+    fill_display_with_white(&system_table).unwrap();
+    
     let mut root_dir = open_root_dir(handle, &system_table).unwrap();
     let entry_point = kernel::process::load_kernel(
         &mut root_dir,
@@ -40,3 +44,9 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     Status::SUCCESS
 }
 
+fn fill_display_with_white(system_table: &SystemTable<Boot>) -> uefi::Result<()> {
+    let mut gop = open_gop(&system_table)?;
+    const WHITE_COLOR: u8 = 0xFF;
+    unsafe { write_all_pixels_with_same(&mut gop, WHITE_COLOR); };
+    Ok(())
+}
