@@ -44,6 +44,9 @@ Qemu上でHelloWorldをする!
 
 カーネルファイルをロードして、エントリーポイントを呼び出す！
 
+## Day03b
+
+GraphicOutputProtocolを使い、ブートローダーからピクセルを描画する！
 
 
 
