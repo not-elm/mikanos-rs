@@ -27,8 +27,8 @@ pub(crate) fn open_root_dir(
 ) -> uefi::Result<Directory> {
     return system_table
         .boot_services()
-        .get_image_file_system(image_handle)
-        .map(|mut sfs| sfs.open_volume())?;
+        .get_image_file_system(image_handle) // EfiImageHandleを元にSFSPを取得します。
+        .map(|mut sfs| sfs.open_volume())?; // SFSPを用いてルートディレクトリを開きます。
 }
 
 #[allow(dead_code)]

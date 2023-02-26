@@ -9,7 +9,7 @@ use crate::error::from_sfs_write_result;
 
 #[allow(dead_code)]
 pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTable<Boot>) -> error::Result<()> {
-    let header = b"Index | Type | PhysicalStart | VirtualStart | NumberOfPages | Attribute\n";
+    let header = b"Index,Type,PhysicalStart,NumberOfPages,Attribute\n";
     file.write(header).unwrap();
 
     // 余裕を持たせるために16KiB
@@ -22,7 +22,16 @@ pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTa
 
     unsafe {
         for (i, memory_descriptor) in iter.enumerate() {
-            write_memory_descriptor_info(i, &mut file, memory_descriptor)?;
+            let mut index = format!("{},", i);
+            let mut memory_type = format!("{:?},", memory_descriptor.ty);
+            let mut phys_start = format!("{},", memory_descriptor.phys_start);
+            let mut page_count = format!("{},", memory_descriptor.page_count);
+            let mut attribute = format!("{:?}\n", memory_descriptor.att);
+            from_sfs_write_result(file.write(index.as_bytes_mut()))?;
+            from_sfs_write_result(file.write(memory_type.as_bytes_mut()))?;
+            from_sfs_write_result(file.write(phys_start.as_bytes_mut()))?;
+            from_sfs_write_result(file.write(page_count.as_bytes_mut()))?;
+            from_sfs_write_result(file.write(attribute.as_bytes_mut()))?;
         }
     }
     file.flush()
