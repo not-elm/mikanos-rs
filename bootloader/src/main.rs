@@ -5,25 +5,23 @@
 
 extern crate alloc;
 
-use uefi::{prelude::*};
+use uefi::prelude::*;
 use uefi_services::println;
 
 use crate::file::open_root_dir;
 use crate::gop::{open_gop, write_all_pixels_with_same};
 use crate::kernel::boot_allocator::BootAllocator;
 
-mod assembly;
 mod error;
 mod file;
+mod gop;
 mod kernel;
 mod memory_map;
 mod unit;
-mod gop;
 
 #[entry]
 fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     uefi_services::init(&mut system_table).unwrap();
-
 
     println!("Hello, Mikan Rust World!");
 
@@ -33,12 +31,11 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
         &"kernel.elf",
         &mut BootAllocator::new(&mut system_table),
     )
-        .unwrap();
-
+    .unwrap();
 
     kernel::process::execute_kernel(entry_point, handle.clone(), system_table).unwrap();
 
-    assembly::hlt_forever();
+    common_lib::assembly::hlt_forever();
 
     #[allow(unreachable_code)]
     Status::SUCCESS
@@ -48,6 +45,8 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
 fn fill_display_with_white(system_table: &SystemTable<Boot>) -> uefi::Result<()> {
     let mut gop = open_gop(&system_table)?;
     const WHITE_COLOR: u8 = 0xFF;
-    unsafe { write_all_pixels_with_same(&mut gop, WHITE_COLOR); };
+    unsafe {
+        write_all_pixels_with_same(&mut gop, WHITE_COLOR);
+    };
     Ok(())
 }

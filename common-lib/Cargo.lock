@@ -5,10 +5,3 @@ version = 3
 [[package]]
 name = "common-lib"
 version = "0.1.0"
-
-[[package]]
-name = "kernel"
-version = "0.1.0"
-dependencies = [
- "common-lib",
-]

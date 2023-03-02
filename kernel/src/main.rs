@@ -2,18 +2,14 @@
 #![no_main]
 #![no_std]
 
-
-use core::arch::asm;
 use core::panic::PanicInfo;
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_base_addr: u64, frame_buffer_size: usize) -> () {
-    unsafe { fill_display_with_white(frame_buffer_base_addr, frame_buffer_size); };
     unsafe {
-        loop {
-            asm!("hlt");
-        }
-    }
+        fill_display_with_white(frame_buffer_base_addr, frame_buffer_size);
+    };
+    common_lib::assembly::hlt_forever();
 }
 
 unsafe fn fill_display_with_white(frame_buffer_base_addr: u64, frame_buffer_size: usize) {

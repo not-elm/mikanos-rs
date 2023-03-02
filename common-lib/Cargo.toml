@@ -1,13 +1,8 @@
 [package]
-name = "kernel"
+name = "common-lib"
 version = "0.1.0"
 edition = "2021"
-[profile.dev]
-panic = "abort"
 
-[profile.release]
-panic = "abort"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-common-lib = {path = "../common-lib"}
