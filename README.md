@@ -48,6 +48,8 @@ Qemu上でHelloWorldをする!
 
 GraphicOutputProtocolを使い、ブートローダーからピクセルを描画する！
 
+## Day03c
 
+カーネルからピクセルを描画する！
 
 
