@@ -1,15 +1,15 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use uefi::Handle;
 use uefi::prelude::{Boot, SystemTable};
 use uefi::proto::media::file::{Directory, File, FileInfo, FileMode, RegularFile};
 use uefi::table::boot::MemoryDescriptor;
+use uefi::Handle;
 
-use libs::error::LibResult;
-use libs::kernel::entry_point::EntryPoint;
-use libs::kernel::loaders::{Allocatable, KernelLoadable};
-use libs::kernel::loaders::elf_loader::ElfLoader;
+use bootloader_lib::kernel::loaders::elf_loader::ElfLoader;
+use bootloader_lib::error::LibResult;
+use bootloader_lib::kernel::entry_point::EntryPoint;
+use bootloader_lib::kernel::loaders::{Allocatable, KernelLoadable};
 
 use crate::file::open_file;
 use crate::gop::{obtain_frame_buffer_base_addr_and_size, open_gop};
@@ -35,11 +35,15 @@ pub fn load_kernel(
     result
 }
 
-pub fn execute_kernel(entry_point: EntryPoint, handle: Handle, system_table: SystemTable<Boot>) -> Result<(), ()> {
+pub fn execute_kernel(
+    entry_point: EntryPoint,
+    handle: Handle,
+    system_table: SystemTable<Boot>,
+) -> Result<(), ()> {
     let mut memory_map_vec = new_memory_map_vec(&system_table);
 
-
-    let (frame_buffer_base_addr, frame_buffer_size) = obtain_frame_buffer_base_addr_and_size(&mut open_gop(&system_table).unwrap());
+    let (frame_buffer_base_addr, frame_buffer_size) =
+        obtain_frame_buffer_base_addr_and_size(&mut open_gop(&system_table).unwrap());
 
     if let Ok(_) = system_table.exit_boot_services(handle, memory_map_vec.as_mut_slice()) {
         core::mem::forget(memory_map_vec);
@@ -49,7 +53,6 @@ pub fn execute_kernel(entry_point: EntryPoint, handle: Handle, system_table: Sys
         Err(())
     }
 }
-
 
 fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
     // カーネルファイルの大きさを知るため、ファイル情報を読み取る
@@ -70,10 +73,7 @@ fn read_kernel_buff(kernel_file: &mut RegularFile, kernel_file_size: usize) -> V
     v
 }
 
-
-fn new_memory_map_vec(
-    system_table: &SystemTable<Boot>,
-) -> Vec<u8> {
+fn new_memory_map_vec(system_table: &SystemTable<Boot>) -> Vec<u8> {
     let memory_map_size = system_table.boot_services().memory_map_size().map_size;
     let descriptor_size = core::mem::size_of::<MemoryDescriptor>();
     vec![0u8; memory_map_size + descriptor_size * 12]

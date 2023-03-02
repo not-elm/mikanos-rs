@@ -2,8 +2,8 @@ use uefi::prelude::Boot;
 use uefi::table::boot::{AllocateType, MemoryType};
 use uefi::table::SystemTable;
 
-use libs::error::{LibError, LibResult};
-use libs::kernel::loaders::Allocatable;
+use bootloader_lib::error::{LibError, LibResult};
+use bootloader_lib::kernel::loaders::Allocatable;
 
 pub struct BootAllocator<'a>(&'a mut SystemTable<Boot>);
 

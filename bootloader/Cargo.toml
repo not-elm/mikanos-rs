@@ -9,6 +9,6 @@ edition = "2021"
 
 [dependencies]
 common-lib = { path = "../common-lib"}
-libs = { path = "../libs" }
+bootloader-lib = { path = "../bootloader-lib" }
 uefi = { version = "0.19.0", features = ["alloc"] }
 uefi-services = "0.16.0"
