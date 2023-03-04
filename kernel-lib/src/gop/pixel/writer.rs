@@ -1,4 +1,4 @@
-use crate::frame::pixel::color::Color;
+use crate::gop::pixel::color::Color;
 use common_lib::frame_buffer::FrameBufferConfig;
 
 pub trait PixelWritable {

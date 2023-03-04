@@ -1,3 +1,4 @@
+#[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct FrameBufferConfig {
     pub frame_buffer_base: u64,
@@ -8,6 +9,7 @@ pub struct FrameBufferConfig {
     pub pixel_format: PixelFormat,
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum PixelFormat {
     Rgb,

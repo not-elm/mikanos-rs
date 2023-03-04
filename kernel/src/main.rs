@@ -5,8 +5,6 @@
 use core::panic::PanicInfo;
 
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::frame::pixel::color::Color;
-use kernel_lib::frame::pixel::writer::{write_pixel, RgbPixelWriter};
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
