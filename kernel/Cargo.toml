@@ -2,6 +2,8 @@
 name = "kernel"
 version = "0.1.0"
 edition = "2021"
+
+
 [profile.dev]
 panic = "abort"
 
@@ -10,9 +12,8 @@ panic = "abort"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
 common-lib = { path = "../common-lib" }
 kernel-lib = { path = "../kernel-lib" }
 
 
-[build-dependencies]
-cc = { version = "1.0", features = ["parallel"] }

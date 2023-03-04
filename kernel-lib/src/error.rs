@@ -4,4 +4,5 @@ pub type KernelResult<T = ()> = core::result::Result<T, KernelError>;
 #[derive(Debug)]
 pub enum KernelError {
     ExceededFrameBufferSize,
+    NotSupportCharacter
 }

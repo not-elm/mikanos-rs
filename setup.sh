@@ -8,6 +8,7 @@ sudo apt-get install -y curl  \
     build-essential \
     util-linux \
     dosfstools \
+    gdb \
     ovmf
 
 
@@ -15,5 +16,5 @@ RUST_VERSION=nightly
 # rustup,rustc,cargoをインストールできる
 sudo curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION}
 source "${HOME}"/.cargo/env
-
+rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
 
