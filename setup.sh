@@ -3,14 +3,10 @@
 # 環境構築用のスクリプトが列挙されたファイルです
 
 sudo apt-get update
-sudo apt-get install -y \
-    # http client
-    curl  \
-    # エミュレータ
+sudo apt-get install -y curl  \
     qemu-kvm \
-    # C言語系のビルドツールなど
     build-essential \
-    #util-linux \
+    util-linux \
     dosfstools \
     ovmf
 
