@@ -1,7 +1,8 @@
-use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 use uefi::proto::console::gop::GraphicsOutput;
 use uefi::table::boot::ScopedProtocol;
 use uefi::table::{Boot, SystemTable};
+
+use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 
 pub fn open_gop(system_table: &SystemTable<Boot>) -> uefi::Result<ScopedProtocol<GraphicsOutput>> {
     let gop = {
@@ -13,6 +14,7 @@ pub fn open_gop(system_table: &SystemTable<Boot>) -> uefi::Result<ScopedProtocol
         .boot_services()
         .open_protocol_exclusive::<GraphicsOutput>(gop)
 }
+
 pub fn obtain_frame_buffer_config(gop: &mut ScopedProtocol<GraphicsOutput>) -> FrameBufferConfig {
     let (frame_buffer_base, frame_buffer_size) = obtain_frame_buffer_base_addr_and_size(gop);
     let mode = gop.current_mode_info();
@@ -27,8 +29,8 @@ pub fn obtain_frame_buffer_config(gop: &mut ScopedProtocol<GraphicsOutput>) -> F
         frame_buffer_base,
         frame_buffer_size,
         mode.stride(),
-        vertical_resolution,
         horizontal_resolution,
+        vertical_resolution,
         pixel_format,
     )
 }
