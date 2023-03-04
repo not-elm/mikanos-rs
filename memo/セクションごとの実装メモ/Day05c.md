@@ -73,7 +73,7 @@ pub fn get_font_from(mut c: char) -> Option<*mut u8>{
     /// Asciiの文字コード表はMikanOSの書籍の付録に記載されています。
    #[test]
     fn it_get_printable_ascii_codes() {
-        let get_all_printable_ascii_codes = (0x20..0x7Eu8).all(|code| get_font_from(char::from(code)).is_some());
+        let get_all_printable_ascii_codes = (0x20..=0x7Eu8).all(|code| get_font_from(char::from(code)).is_some());
         assert!(get_all_printable_ascii_codes);
     }
 

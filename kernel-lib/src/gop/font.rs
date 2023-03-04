@@ -32,7 +32,7 @@ mod tests {
     #[test]
     fn it_get_printable_ascii_codes() {
         let get_all_printable_ascii_codes =
-            (0x20..0x7Eu8).all(|code| get_font_from(char::from(code)).is_some());
+            (0x20..=0x7Eu8).all(|code| get_font_from(char::from(code)).is_some());
 
         assert!(get_all_printable_ascii_codes);
     }
