@@ -15,8 +15,8 @@ impl AscIICharWriter {
 impl CharWritable for AscIICharWriter {
     fn write(
         &mut self,
-        c: char,
-        pos: Vector2D,
+        _c: char,
+        _pos: Vector2D,
         color: &PixelColor,
         pixel_writer: &mut impl PixelWritable,
     ) {
@@ -38,10 +38,10 @@ impl CharWritable for AscIICharWriter {
             0b00000000,
             0b00000000,
         ];
-        for dy in 0..16 {
+        for (dy, line) in a.iter().enumerate() {
             for dx in 0..8 {
-                let v = (a[dy] << dx) & 0x80u8;
-                if v != 0 {
+                let is_need_write_bit = ((line << dx) & 0x80u8) != 0;
+                if is_need_write_bit {
                     unsafe { pixel_writer.write(dx, dy, color).unwrap() };
                 }
             }
