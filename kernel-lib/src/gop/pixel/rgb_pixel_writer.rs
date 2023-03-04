@@ -1,7 +1,14 @@
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 
+#[derive(Default)]
 pub struct RgbPixelWriter {}
+
+impl RgbPixelWriter {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 impl PixelWritable for RgbPixelWriter {
     unsafe fn write(

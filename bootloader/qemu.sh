@@ -6,5 +6,3 @@ qemu-system-x86_64 \
   -hda 'disk.img' \
   -monitor stdio
 
-
-sh cat_mem_map.sh

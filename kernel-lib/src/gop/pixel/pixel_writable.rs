@@ -24,8 +24,8 @@ impl PixelWritable for PixelFormat {
         color: &PixelColor,
     ) {
         match self {
-            Self::Rgb => RgbPixelWriter {}.write(frame_buffer_ptr, pixel_pos, color),
-            Self::Bgr => GbrPixelWriter {}.write(frame_buffer_ptr, pixel_pos, color),
+            Self::Rgb => RgbPixelWriter::new().write(frame_buffer_ptr, pixel_pos, color),
+            Self::Bgr => GbrPixelWriter::new().write(frame_buffer_ptr, pixel_pos, color),
         }
     }
 }

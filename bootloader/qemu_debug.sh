@@ -8,4 +8,3 @@ qemu-system-x86_64 \
   -s \
   -S \
 
-sh cat_mem_map.sh
