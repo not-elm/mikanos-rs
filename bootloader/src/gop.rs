@@ -1,6 +1,7 @@
+use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 use uefi::proto::console::gop::GraphicsOutput;
-use uefi::table::{Boot, SystemTable};
 use uefi::table::boot::ScopedProtocol;
+use uefi::table::{Boot, SystemTable};
 
 pub fn open_gop(system_table: &SystemTable<Boot>) -> uefi::Result<ScopedProtocol<GraphicsOutput>> {
     let gop = {
@@ -12,9 +13,31 @@ pub fn open_gop(system_table: &SystemTable<Boot>) -> uefi::Result<ScopedProtocol
         .boot_services()
         .open_protocol_exclusive::<GraphicsOutput>(gop)
 }
+pub fn obtain_frame_buffer_config(gop: &mut ScopedProtocol<GraphicsOutput>) -> FrameBufferConfig {
+    let (frame_buffer_base, frame_buffer_size) = obtain_frame_buffer_base_addr_and_size(gop);
+    let mode = gop.current_mode_info();
+    let (vertical_resolution, horizontal_resolution) = mode.resolution();
+    let pixel_format = match mode.pixel_format() {
+        uefi::proto::console::gop::PixelFormat::Rgb => PixelFormat::Rgb,
+        uefi::proto::console::gop::PixelFormat::Bgr => PixelFormat::Bgr,
+        _ => PixelFormat::Bgr,
+    };
 
-pub fn obtain_frame_buffer_base_addr_and_size(gop: &mut ScopedProtocol<GraphicsOutput>) -> (u64, usize) {
+    FrameBufferConfig::new(
+        frame_buffer_base,
+        frame_buffer_size,
+        mode.stride(),
+        vertical_resolution,
+        horizontal_resolution,
+        pixel_format,
+    )
+}
+
+fn obtain_frame_buffer_base_addr_and_size(
+    gop: &mut ScopedProtocol<GraphicsOutput>,
+) -> (u64, usize) {
     let mut frame_buffer = gop.frame_buffer();
+
     let buffer_size = frame_buffer.size();
 
     let base_addr = frame_buffer.as_mut_ptr().addr() as u64;
@@ -23,7 +46,10 @@ pub fn obtain_frame_buffer_base_addr_and_size(gop: &mut ScopedProtocol<GraphicsO
 }
 
 #[allow(dead_code)]
-pub unsafe fn write_all_pixels_with_same(gop: &mut ScopedProtocol<GraphicsOutput>, pixel_value: u8) {
+pub unsafe fn write_all_pixels_with_same(
+    gop: &mut ScopedProtocol<GraphicsOutput>,
+    pixel_value: u8,
+) {
     let mut frame_buffer = gop.frame_buffer();
     let buffer_size = frame_buffer.size();
 

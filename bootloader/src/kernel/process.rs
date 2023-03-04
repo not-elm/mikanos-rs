@@ -6,13 +6,13 @@ use uefi::proto::media::file::{Directory, File, FileInfo, FileMode, RegularFile}
 use uefi::table::boot::MemoryDescriptor;
 use uefi::Handle;
 
-use bootloader_lib::kernel::loaders::elf_loader::ElfLoader;
 use bootloader_lib::error::LibResult;
 use bootloader_lib::kernel::entry_point::EntryPoint;
+use bootloader_lib::kernel::loaders::elf_loader::ElfLoader;
 use bootloader_lib::kernel::loaders::{Allocatable, KernelLoadable};
 
 use crate::file::open_file;
-use crate::gop::{obtain_frame_buffer_base_addr_and_size, open_gop};
+use crate::gop::{obtain_frame_buffer_config, open_gop};
 
 pub fn load_kernel(
     root_dir: &mut Directory,
@@ -42,12 +42,11 @@ pub fn execute_kernel(
 ) -> Result<(), ()> {
     let mut memory_map_vec = new_memory_map_vec(&system_table);
 
-    let (frame_buffer_base_addr, frame_buffer_size) =
-        obtain_frame_buffer_base_addr_and_size(&mut open_gop(&system_table).unwrap());
+    let frame_buffer_config = obtain_frame_buffer_config(&mut open_gop(&system_table).unwrap());
 
     if let Ok(_) = system_table.exit_boot_services(handle, memory_map_vec.as_mut_slice()) {
         core::mem::forget(memory_map_vec);
-        entry_point.execute(frame_buffer_base_addr, frame_buffer_size);
+        entry_point.execute(frame_buffer_config);
         Ok(())
     } else {
         Err(())
