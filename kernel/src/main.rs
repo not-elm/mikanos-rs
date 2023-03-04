@@ -10,6 +10,13 @@ use kernel_lib::gop::{
     pixel::{pixel_color::PixelColor, select_writer_from},
 };
 
+//
+// extern "C" {
+//     static _binary_hankaku_bin_start: u8;
+//     static _binary_hankaku_bin_end: u8;
+//     static _binary_hankaku_bin_size: u8;
+// }
+
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
     let color = PixelColor::new(0xFF, 0xFF, 00);

@@ -12,3 +12,7 @@ panic = "abort"
 [dependencies]
 common-lib = { path = "../common-lib" }
 kernel-lib = { path = "../kernel-lib" }
+
+
+[build-dependencies]
+cc = { version = "1.0", features = ["parallel"] }

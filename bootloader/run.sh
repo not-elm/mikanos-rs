@@ -1,2 +1,2 @@
 sh make_img.sh
-sh qemu.sh
+sh qemu_debug.sh
