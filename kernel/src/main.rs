@@ -5,14 +5,17 @@
 use core::panic::PanicInfo;
 
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::gop::pixel::{pixel_color::PixelColor, write_pixel};
+use kernel_lib::gop::pixel::{pixel_color::PixelColor, select_writer_from, write_pixel};
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
     let color = PixelColor::new(0xFF, 0xFF, 00);
+    let mut writer = select_writer_from(
+        frame_buffer_config.pixel_format,
+        frame_buffer_config.frame_buffer_base_addr,
+    );
     for x in 0..frame_buffer_config.horizontal_resolution {
         for y in 0..frame_buffer_config.vertical_resolution {
-            let mut writer = frame_buffer_config.pixel_format.clone();
             unsafe {
                 write_pixel(&mut writer, &frame_buffer_config, x, y, &color)
                     .expect("should be write pixel")

@@ -1,8 +1,9 @@
-use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::rgb_pixel_writer::RgbPixelWriter;
 
 pub mod gbr_pixel_writer;
 pub mod pixel_color;
@@ -23,10 +24,18 @@ pub unsafe fn write_pixel(
 ) -> crate::error::KernelResult {
     let pixel_pos = calc_pixel_pos(frame_buffer_config, x, y)?;
 
-    let mut frame_buffer_ptr = frame_buffer_config.frame_buffer_base_ptr();
-
-    writer.write(&mut frame_buffer_ptr, pixel_pos, color);
+    writer.write(pixel_pos, color);
     Ok(())
+}
+
+pub fn select_writer_from(
+    pixel_format: PixelFormat,
+    frame_buffer_base_addr: u64,
+) -> impl PixelWritable {
+    match pixel_format {
+        PixelFormat::Rgb => RgbPixelWriter::new(frame_buffer_base_addr),
+        PixelFormat::Bgr => RgbPixelWriter::new(frame_buffer_base_addr),
+    }
 }
 
 fn calc_pixel_pos(
