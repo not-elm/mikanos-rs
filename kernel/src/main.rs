@@ -4,20 +4,18 @@
 
 use core::panic::PanicInfo;
 
-use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::gop::pixel::{
-    pixel_color::PixelColor, pixel_writable::PixelWritable, select_writer_from,
+use common_lib::{frame_buffer::FrameBufferConfig, vector::Vector2D};
+use kernel_lib::gop::{
+    char::{ascii_char_writer::AscIICharWriter, char_writable::CharWritable},
+    pixel::{pixel_color::PixelColor, select_writer_from},
 };
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
     let color = PixelColor::new(0xFF, 0xFF, 00);
     let mut writer = select_writer_from(frame_buffer_config);
-    for x in 0..frame_buffer_config.horizontal_resolution {
-        for y in 0..frame_buffer_config.vertical_resolution {
-            unsafe { writer.write(x, y, &color).expect("should be write pixel") };
-        }
-    }
+    let mut c_writer = AscIICharWriter::new();
+    c_writer.write('A', Vector2D::new(0, 0), &color, &mut writer);
 
     common_lib::assembly::hlt_forever();
 }
