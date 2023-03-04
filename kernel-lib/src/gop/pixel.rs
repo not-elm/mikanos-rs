@@ -1,19 +1,20 @@
 use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 
 use crate::error::KernelError::ExceededFrameBufferSize;
+use crate::gop::pixel::enum_pixel_writer::EnumPixelWriter;
 
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::gop::pixel::rgb_pixel_writer::RgbPixelWriter;
 
-pub mod gbr_pixel_writer;
+pub mod bgr_pixel_writer;
+mod enum_pixel_writer;
 pub mod pixel_color;
 pub mod pixel_writable;
 pub mod rgb_pixel_writer;
 
 pub fn select_writer_from(frame_buffer_config: FrameBufferConfig) -> impl PixelWritable {
     match frame_buffer_config.pixel_format {
-        PixelFormat::Rgb => RgbPixelWriter::new(frame_buffer_config),
-        PixelFormat::Bgr => RgbPixelWriter::new(frame_buffer_config),
+        PixelFormat::Rgb => EnumPixelWriter::Rgb(frame_buffer_config),
+        PixelFormat::Bgr => EnumPixelWriter::Bgr(frame_buffer_config),
     }
 }
 
