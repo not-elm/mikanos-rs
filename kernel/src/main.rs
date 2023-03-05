@@ -6,16 +6,15 @@ use common_lib::frame_buffer::FrameBufferConfig;
 use core::panic::PanicInfo;
 
 use kernel_lib::gop::console::init_console;
-use kernel_lib::{print, println};
+use kernel_lib::println;
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
     init_console(frame_buffer_config);
+    for _ in 0..25 {
+        println!("Hello Rust World!");
+    }
 
-    print!("hello!");
-    println!();
-    println!("hello! world!");
-    println!("hello!");
     common_lib::assembly::hlt_forever();
 }
 

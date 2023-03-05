@@ -7,6 +7,7 @@ edition = "2021"
 [dependencies]
 common-lib = { path = "../common-lib" }
 once = "0.3.4"
+spin = "0.9.5"
 
 
 [build-dependencies]
