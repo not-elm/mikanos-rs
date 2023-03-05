@@ -1,4 +1,4 @@
-use crate::error::{KernelError, KernelResult};
+use crate::error::KernelResult;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 
@@ -6,8 +6,6 @@ use crate::gop::char::char_writable::CharWritable;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 use crate::gop::pixel::{fill_rect, select_pixel_writer};
-
-use super::font::convert_to_ascii;
 
 type ImplCharWritable = impl CharWritable;
 pub type ImplPixelWritable = impl PixelWritable;

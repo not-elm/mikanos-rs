@@ -9,7 +9,7 @@ use kernel_lib::gop::console_builder::ConsoleBuilder;
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
     let mut console = ConsoleBuilder::new().build(frame_buffer_config);
-    for _ in 0..230 {
+    for _ in 0..30 {
         console.write_str("Hello !Mikan Rust World!\n").unwrap();
     }
 
