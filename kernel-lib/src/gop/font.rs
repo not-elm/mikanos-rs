@@ -4,7 +4,7 @@ extern "C" {
     fn get_font(c: c_char) -> *mut u8;
 }
 
-pub fn get_font_from(mut c: char) -> Option<*mut u8> {
+pub fn convert_to_ascii(mut c: char) -> Option<char> {
     if !c.is_ascii() {
         return None;
     }
@@ -15,12 +15,19 @@ pub fn get_font_from(mut c: char) -> Option<*mut u8> {
         c.make_ascii_uppercase();
     }
 
-    let char_ptr = unsafe { get_font(c as c_char) };
+    Some(c)
+}
+
+pub fn get_font_from(mut c: char) -> Option<*mut u8> {
+
+    let char_ptr = unsafe { get_font(convert_to_ascii(c)? as c_char) };
     if char_ptr == core::ptr::null_mut() {
-        return None;
+        return None
+    } else {
+        Some(char_ptr)
     }
 
-    Some(char_ptr)
+    
 }
 
 #[cfg(test)]

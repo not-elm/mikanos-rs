@@ -6,6 +6,7 @@ use crate::gop::pixel::rgb_pixel_writer::RgbPixelWriter;
 use common_lib::frame_buffer::FrameBufferConfig;
 
 #[derive(Clone, Debug)]
+#[cfg_attr(test, allow(dead_code))]
 pub enum EnumPixelWriter {
     Rgb(FrameBufferConfig),
     Bgr(FrameBufferConfig),

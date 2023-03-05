@@ -35,6 +35,16 @@ impl FrameBufferConfig {
         }
     }
 
+    pub fn mock() -> Self {
+        Self {
+            frame_buffer_base_addr: 0,
+            frame_buffer_size: 0,
+            pixel_per_scanline: 0,
+            horizontal_resolution: 0,
+            vertical_resolution: 0,
+            pixel_format: PixelFormat::Rgb,
+        }
+    }
     pub fn frame_buffer_base_ptr(&self) -> *mut u8 {
         self.frame_buffer_base_addr as *mut u8
     }

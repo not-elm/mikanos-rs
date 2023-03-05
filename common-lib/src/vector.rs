@@ -1,22 +1,19 @@
 #[derive(Debug, Copy, Clone)]
-pub struct Vector2D{
-    x: isize,
-    y: isize
+pub struct Vector2D<T> {
+    x: T,
+    y: T,
 }
 
-impl Vector2D{
-    pub fn new(x: isize, y: isize) -> Self{
-        Self{
-            x,
-            y
-        }
+impl<T: Copy + Clone + core::fmt::Debug> Vector2D<T> {
+    pub fn new(x: T, y: T) -> Self {
+        Self { x, y }
     }
 
-    pub fn x(&self) -> isize{
+    pub fn x(&self) -> T {
         self.x
     }
 
-    pub fn y(&self) -> isize{
+    pub fn y(&self) -> T {
         self.y
     }
 }

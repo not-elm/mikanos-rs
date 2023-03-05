@@ -1,21 +1,44 @@
-use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
-
 use crate::error::KernelError::ExceededFrameBufferSize;
-use crate::gop::pixel::enum_pixel_writer::EnumPixelWriter;
-
+use crate::error::KernelResult;
+use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
+use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::vector::Vector2D;
 
 pub mod bgr_pixel_writer;
 mod enum_pixel_writer;
+pub(crate) mod mock_pixel_writer;
 pub mod pixel_color;
 pub mod pixel_writable;
 pub mod rgb_pixel_writer;
 
-pub fn select_writer_from(frame_buffer_config: FrameBufferConfig) -> impl PixelWritable {
+pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl PixelWritable {
+    #[cfg(not(test))]
     match frame_buffer_config.pixel_format {
-        PixelFormat::Rgb => EnumPixelWriter::Rgb(frame_buffer_config),
-        PixelFormat::Bgr => EnumPixelWriter::Bgr(frame_buffer_config),
+        common_lib::frame_buffer::PixelFormat::Rgb => {
+            crate::gop::pixel::enum_pixel_writer::EnumPixelWriter::Rgb(frame_buffer_config)
+        }
+        common_lib::frame_buffer::PixelFormat::Bgr => {
+            crate::gop::pixel::enum_pixel_writer::EnumPixelWriter::Bgr(frame_buffer_config)
+        }
     }
+
+    #[cfg(test)]
+    crate::gop::pixel::mock_pixel_writer::MockPixelWriter::new(frame_buffer_config)
+}
+
+pub fn fill_rect(
+    pixel_writer: &mut impl PixelWritable,
+    origin: Vector2D<usize>,
+    end: Vector2D<usize>,
+    color: &PixelColor,
+) -> KernelResult {
+    for y in origin.y()..=end.y() {
+        for x in origin.x()..=end.x() {
+            unsafe { pixel_writer.write(x, y, color) }?;
+        }
+    }
+    Ok(())
 }
 
 fn calc_pixel_pos(
