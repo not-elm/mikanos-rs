@@ -1,3 +1,5 @@
+use core::fmt::Error;
+
 use crate::error::KernelResult;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
@@ -24,6 +26,14 @@ pub struct ConsoleWriter {
     chars: [[char; CONSOLE_COLUMN + 1]; CONSOLE_ROW],
 }
 
+impl core::fmt::Write for ConsoleWriter {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        match self.write_str(s) {
+            Ok(()) => Ok(()),
+            Err(_) => Err(Error::default()),
+        }
+    }
+}
 impl ConsoleWriter {
     pub(crate) fn new(frame_buffer_config: FrameBufferConfig, color: PixelColor) -> Self {
         Self {

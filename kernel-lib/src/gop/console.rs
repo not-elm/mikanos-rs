@@ -1,3 +1,5 @@
+use core::fmt::Write;
+
 use crate::gop::console::console_builder::ConsoleBuilder;
 use crate::gop::console::console_writer::ConsoleWriter;
 use common_lib::frame_buffer::FrameBufferConfig;
@@ -25,4 +27,28 @@ pub fn init_console(frame_buffer_config: FrameBufferConfig) {
 
 pub fn get_mut_console() -> &'static mut ConsoleWriter {
     unsafe { CONSOLE.get_mut() }
+}
+
+#[doc(hidden)]
+pub fn _print(s: core::fmt::Arguments) {
+    get_mut_console().write_fmt(s).unwrap();
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($args:tt)*) => ($crate::gop::console::_print(format_args!($($args)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+        () => {
+            $crate::print!("\n");
+        };
+        ($fmt: expr) => {
+
+           $crate::print!(concat!($fmt, "\n"));
+       };
+       ($fmt: expr, $($args:tt)*) => {
+           $crate::print!("{}\n", format_args!($($args)*));
+       };
 }
