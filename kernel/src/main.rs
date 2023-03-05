@@ -4,11 +4,15 @@
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use core::panic::PanicInfo;
-use kernel_lib::gop::console::console_builder::ConsoleBuilder;
+
+use kernel_lib::gop::console::{get_mut_console, init_console};
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
-    let mut console = ConsoleBuilder::new().build(frame_buffer_config);
+    init_console(frame_buffer_config);
+
+    let console = get_mut_console();
+
     for _ in 0..30 {
         console.write_str("Hello !Mikan Rust World!\n").unwrap();
     }

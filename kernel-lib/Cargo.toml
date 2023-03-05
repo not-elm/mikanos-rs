@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 common-lib = { path = "../common-lib" }
-once_cell = {version = "1.17.1"}
+once = "0.3.4"
 
 
 [build-dependencies]
