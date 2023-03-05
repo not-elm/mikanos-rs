@@ -4,7 +4,7 @@
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use core::panic::PanicInfo;
-use kernel_lib::gop::console_builder::ConsoleBuilder;
+use kernel_lib::gop::console::console_builder::ConsoleBuilder;
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {

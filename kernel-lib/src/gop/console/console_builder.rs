@@ -1,4 +1,4 @@
-use crate::gop::console::Console;
+use crate::gop::console::console_writer::ConsoleWriter;
 use crate::gop::pixel::pixel_color::PixelColor;
 use common_lib::frame_buffer::FrameBufferConfig;
 
@@ -16,8 +16,8 @@ impl ConsoleBuilder {
         self
     }
 
-    pub fn build(self, frame_buffer_config: FrameBufferConfig) -> Console {
-        Console::new(
+    pub fn build(self, frame_buffer_config: FrameBufferConfig) -> ConsoleWriter {
+        ConsoleWriter::new(
             frame_buffer_config,
             self.color.unwrap_or(PixelColor::new(0xFF, 0xFF, 0xFF)),
         )
