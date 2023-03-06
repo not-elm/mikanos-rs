@@ -53,9 +53,9 @@ fn copy_load_segments(
     phdr_table: ProgramHeaderTable,
     system_table: &mut impl Allocatable,
 ) {
-    let loads = phdr_table.filter(|p| p.p_type == PType::PtLoad);
+    let phdr_iter_hold_loadable = phdr_table.filter(|p| p.p_type == PType::PtLoad);
 
-    for phdr in loads {
+    for phdr in phdr_iter_hold_loadable {
         copy_mem(ehdr, &phdr, system_table);
         set_zeros_if_over_file_size(&phdr, system_table);
     }
