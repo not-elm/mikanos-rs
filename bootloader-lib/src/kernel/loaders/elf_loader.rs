@@ -27,11 +27,11 @@ impl KernelLoadable for ElfLoader {
     ) -> LibResult<EntryPoint> {
         let ehdr = ElfHeaderPtr::from_file_buff(kernel_buff);
         let (load_segment_start_addr, load_segment_last_addr) =
-            ehdr.phdr_iter().calc_load_address_range();
+            ehdr.phdr_table().calc_load_address_range();
 
         allocate_pages(allocator, load_segment_start_addr, load_segment_last_addr)?;
-        let phdr_iter = ehdr.phdr_iter();
-        copy_segments(&ehdr, phdr_iter, allocator);
+        let phdr_table = ehdr.phdr_table();
+        copy_load_segments(&ehdr, phdr_table, allocator);
         let entry_point_addr_ptr = (load_segment_start_addr + 24) as *const u64;
         let entry_point_addr = unsafe { *entry_point_addr_ptr };
         Ok(EntryPoint::new(entry_point_addr))
@@ -48,12 +48,12 @@ fn allocate_pages(
     system_table.allocate_pages(load_segment_start_addr, kernel_page_size)
 }
 
-fn copy_segments(
+fn copy_load_segments(
     ehdr: &ElfHeaderPtr,
-    phdr_iter: ProgramHeaderTable,
+    phdr_table: ProgramHeaderTable,
     system_table: &mut impl Allocatable,
 ) {
-    let loads = phdr_iter.filter(|p| p.p_type == PType::PtLoad);
+    let loads = phdr_table.filter(|p| p.p_type == PType::PtLoad);
 
     for phdr in loads {
         copy_mem(ehdr, &phdr, system_table);

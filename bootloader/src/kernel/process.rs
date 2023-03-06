@@ -25,12 +25,11 @@ pub fn load_kernel(
         .unwrap();
 
     let kernel_file_size = get_kernel_file_size(&mut kernel_file) as usize;
-    let tmp_buff_addr = allocator.allocate_pool(kernel_file_size);
 
     let mut kernel_vec = read_kernel_buff(&mut kernel_file, kernel_file_size);
 
     let result = ElfLoader::new().load(kernel_vec.as_mut_slice(), allocator);
-    allocator.free_pool(tmp_buff_addr);
+
     kernel_file.close();
     result
 }
@@ -57,8 +56,7 @@ fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
     // カーネルファイルの大きさを知るため、ファイル情報を読み取る
     const FILE_INFO_SIZE: usize = 4000;
 
-    let mut buff = Vec::<u8>::new();
-    buff.resize(FILE_INFO_SIZE, 0);
+    let mut buff = vec![0u8; FILE_INFO_SIZE];
     let info = kernel_file
         .get_info::<FileInfo>(buff.as_mut_slice())
         .expect("should obtain kernel libs info");

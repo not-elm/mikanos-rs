@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 
-use crate::elf::phdr::program_header::ProgramHeader;
 use crate::elf::phdr::program_header::PType;
+use crate::elf::phdr::program_header::ProgramHeader;
 
 /// プログラムヘッダのヘッダテーブルはe_phnum個のphdrから構成される配列です。
 /// e_phnumは、ElfHeader(Ehdr)内に宣言されています。
@@ -20,6 +20,9 @@ impl ProgramHeaderTable {
         }
     }
 
+    /// ロード可能セグメント群の先頭アドレスと最終アドレス(最後のセグメントの終点)を取得します。
+    /// 最初のセグメントのが示すアドレスがロード先の先頭アドレス、
+    /// 最後のセグメントの先頭アドレス + メモリサイズがロード先の最終アドレスに対応します。
     pub fn calc_load_address_range(self) -> (u64, u64) {
         let v: Vec<ProgramHeader> = self.filter(|p| p.p_type == PType::PtLoad).collect();
 
@@ -61,11 +64,11 @@ mod tests {
 
     use crate::elf::ehdr::elf_header_ptr::ElfHeaderPtr;
     use crate::elf::load_ehdr;
-    use crate::elf::phdr::program_header::{ProgramHeader, PType};
+    use crate::elf::phdr::program_header::{PType, ProgramHeader};
 
     #[test]
     fn it_cast_to_ehdr() {
-        let mut phdr_iter = ElfHeaderPtr::new(load_ehdr()).phdr_iter();
+        let mut phdr_iter = ElfHeaderPtr::new(load_ehdr()).phdr_table();
         let phdr = phdr_iter.next();
         assert!(phdr.is_some());
     }
@@ -74,7 +77,7 @@ mod tests {
     fn it_obtain_phdr_ptr() {
         let ehdr_ptr = ElfHeaderPtr::new(load_ehdr());
         let phdr_page_num = ehdr_ptr.ph_num();
-        let phdr_iter = ehdr_ptr.phdr_iter();
+        let phdr_iter = ehdr_ptr.phdr_table();
 
         let v: Vec<ProgramHeader> = phdr_iter.collect();
         assert_eq!(phdr_page_num, 0x04);
@@ -84,7 +87,7 @@ mod tests {
     #[test]
     fn it_contains_two_load_segment() {
         let ehdr_ptr = ElfHeaderPtr::new(load_ehdr());
-        let phdr_iter = ehdr_ptr.phdr_iter();
+        let phdr_iter = ehdr_ptr.phdr_table();
 
         let v: Vec<ProgramHeader> = phdr_iter.filter(|p| p.p_type == PType::PtLoad).collect();
 
@@ -94,7 +97,7 @@ mod tests {
     #[test]
     fn it_success_calc_start_and_last_load_addresses() {
         let ehdr_ptr = ElfHeaderPtr::new(load_ehdr());
-        let phdr_iter = ehdr_ptr.phdr_iter();
+        let phdr_iter = ehdr_ptr.phdr_table();
 
         let (start, last) = phdr_iter.calc_load_address_range();
         assert_eq!(start, 0x100000u64);

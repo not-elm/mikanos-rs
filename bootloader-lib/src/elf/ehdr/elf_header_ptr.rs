@@ -22,7 +22,7 @@ impl ElfHeaderPtr {
     pub fn phdr_ptr_from(&self, p_offset: u64) -> *const u8 {
         unsafe { self.0.byte_add(p_offset as usize) as *const u8 }
     }
-    pub fn phdr_iter(&self) -> ProgramHeaderTable {
+    pub fn phdr_table(&self) -> ProgramHeaderTable {
         ProgramHeaderTable::new(self.phdr_ptr(), self.ph_num())
     }
 
