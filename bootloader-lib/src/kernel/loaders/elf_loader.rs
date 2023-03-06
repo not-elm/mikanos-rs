@@ -57,7 +57,7 @@ fn copy_load_segments(
 
     for phdr in loads {
         copy_mem(ehdr, &phdr, system_table);
-        set_mem(&phdr, system_table);
+        set_zeros_if_over_file_size(&phdr, system_table);
     }
 }
 
@@ -71,7 +71,8 @@ fn copy_mem(ehdr: &ElfHeaderPtr, phdr: &ProgramHeader, system_table: &mut impl A
     );
 }
 
-fn set_mem(phdr: &ProgramHeader, system_table: &mut impl Allocatable) {
+/// セグメントのメモリ上のサイズがファイルサイズを超えている場合、超えた分だけ0を設定する必要があります。
+fn set_zeros_if_over_file_size(phdr: &ProgramHeader, system_table: &mut impl Allocatable) {
     let remain_bytes = phdr.p_memsz - phdr.p_filesz;
     let buff = (phdr.p_vaddr + phdr.p_filesz) as *mut u8;
     system_table.set_mem(buff, remain_bytes as usize, 0);
