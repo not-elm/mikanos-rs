@@ -62,9 +62,13 @@ fn copy_load_segments(
 }
 
 fn copy_mem(ehdr: &ElfHeaderPtr, phdr: &ProgramHeader, system_table: &mut impl Allocatable) {
-    let load_to_addr = phdr.p_vaddr as *mut u8;
-    let src = ehdr.phdr_ptr_from(phdr.p_offset);
-    system_table.copy_mem(load_to_addr, src, phdr.p_filesz as usize);
+    let load_destination_addr = phdr.p_vaddr as *mut u8;
+    let loadable_segment = ehdr.segment_at(phdr.p_offset);
+    system_table.copy_mem(
+        load_destination_addr,
+        loadable_segment,
+        phdr.p_filesz as usize,
+    );
 }
 
 fn set_mem(phdr: &ProgramHeader, system_table: &mut impl Allocatable) {

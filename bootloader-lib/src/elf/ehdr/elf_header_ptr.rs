@@ -19,7 +19,7 @@ impl ElfHeaderPtr {
     pub fn ph_offset(&self) -> u64 {
         unsafe { *self.0 }.e_phoff
     }
-    pub fn phdr_ptr_from(&self, p_offset: u64) -> *const u8 {
+    pub fn segment_at(&self, p_offset: u64) -> *const u8 {
         unsafe { self.0.byte_add(p_offset as usize) as *const u8 }
     }
     pub fn phdr_table(&self) -> ProgramHeaderTable {
@@ -68,7 +68,7 @@ pub mod tests {
         let phdr = ptr.phdr_ptr();
         let p_offset = unsafe { (*phdr).p_offset };
         let expect = unsafe { *(phdr as *const u64) };
-        let actual = unsafe { *(ptr.phdr_ptr_from(p_offset) as *const u64) };
+        let actual = unsafe { *(ptr.segment_at(p_offset) as *const u64) };
 
         assert_eq!(actual, expect);
     }
