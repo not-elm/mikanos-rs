@@ -6,10 +6,24 @@ setup.shを実行してください。
 
 ## ブートローダーの実行方法
 
-bootloaderディレクトリ直下でcargo runを実行することでqemuが立ち上がります。  
-実行されたshell上でQemuMonitorが実行されます。  
-下記コマンドで終了できます。
+makeコマンドでビルドと実行ができます。
+```shell
+make
+```
 
+make debugでGBDを使用したデバッグ実行ができます。
+```shell
+make debug
+```
+Clionの場合、実行設定でRemoteDebugを追加し、下記項目の通り設定することでデバッグ実行の設定ができます。
+- Debugger
+  - GBDのbinaryがあるディレクトリのパス(WSL上で実行する場合、WSL内のGBDを指定する必要があります。)
+- Target remote args
+  - tcp::1234
+- Symbol file
+  - kernel.elfへのパス
+
+終了する際はQemuモニタ上で下記コマンドを使用してください。
 ```qemu
 qemu> q
 ```
