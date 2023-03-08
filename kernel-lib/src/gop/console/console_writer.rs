@@ -47,6 +47,10 @@ impl ConsoleWriter {
         }
     }
 
+    pub fn pixel_writer(&mut self) -> &mut ImplPixelWritable {
+        &mut self.pixel_writer
+    }
+
     pub fn current_row(&self) -> usize {
         self.current_row
     }
@@ -130,7 +134,7 @@ impl ConsoleWriter {
             &mut self.pixel_writer,
             Vector2D::new(0, 0),
             Vector2D::new(CONSOLE_COLUMN * 8, CONSOLE_ROW * 16),
-            &PixelColor::new(0x00, 0x00, 0x00),
+            PixelColor::new(0x00, 0x00, 0x00),
         )
     }
 }

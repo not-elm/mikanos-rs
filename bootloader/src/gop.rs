@@ -18,7 +18,7 @@ pub fn open_gop(system_table: &SystemTable<Boot>) -> uefi::Result<ScopedProtocol
 pub fn obtain_frame_buffer_config(gop: &mut ScopedProtocol<GraphicsOutput>) -> FrameBufferConfig {
     let (frame_buffer_base, frame_buffer_size) = obtain_frame_buffer_base_addr_and_size(gop);
     let mode = gop.current_mode_info();
-    let (vertical_resolution, horizontal_resolution) = mode.resolution();
+    let (horizontal_resolution, vertical_resolution) = mode.resolution();
     let pixel_format = match mode.pixel_format() {
         uefi::proto::console::gop::PixelFormat::Rgb => PixelFormat::Rgb,
         uefi::proto::console::gop::PixelFormat::Bgr => PixelFormat::Bgr,

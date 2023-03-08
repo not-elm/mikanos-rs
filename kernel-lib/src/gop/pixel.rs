@@ -30,12 +30,12 @@ pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl Pixel
 pub fn fill_rect(
     pixel_writer: &mut impl PixelWritable,
     origin: Vector2D<usize>,
-    end: Vector2D<usize>,
-    color: &PixelColor,
+    to: Vector2D<usize>,
+    color: PixelColor,
 ) -> KernelResult {
-    for y in origin.y()..=end.y() {
-        for x in origin.x()..=end.x() {
-            unsafe { pixel_writer.write(x, y, color) }?;
+    for y in origin.y()..=to.y() {
+        for x in origin.x()..=to.x() {
+            unsafe { pixel_writer.write(x, y, &color) }?;
         }
     }
     Ok(())
@@ -46,8 +46,7 @@ fn calc_pixel_pos(
     x: usize,
     y: usize,
 ) -> crate::error::KernelResult<usize> {
-    if x >= frame_buffer_config.horizontal_resolution
-        || y >= frame_buffer_config.vertical_resolution
+    if x > frame_buffer_config.horizontal_resolution || y > frame_buffer_config.vertical_resolution
     {
         return Err(ExceededFrameBufferSize);
     }

@@ -3,6 +3,7 @@ use core::fmt::Write;
 use crate::error::KernelResult;
 use crate::gop::console::console_builder::ConsoleBuilder;
 use crate::gop::console::console_writer::ConsoleWriter;
+use crate::gop::pixel::fill_rect;
 use crate::gop::pixel::pixel_color::PixelColor;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
@@ -76,6 +77,20 @@ pub fn draw_cursor() -> KernelResult {
 
     Ok(())
 }
+
+pub fn fill_rect_using_global(
+    origin: Vector2D<usize>,
+    to: Vector2D<usize>,
+    color: PixelColor,
+) -> KernelResult {
+    fill_rect(
+        unsafe { CONSOLE.get_mut().pixel_writer() },
+        origin,
+        to,
+        color,
+    )
+}
+
 pub fn get_mut_console() -> &'static mut ConsoleWriter {
     unsafe { CONSOLE.get_mut() }
 }
