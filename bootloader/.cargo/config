@@ -3,6 +3,3 @@ target = "x86_64-unknown-uefi"
 
 [unstable]
 build-std = ["std", "panic_abort", "core", "compiler_builtins"]
-
-[target.x86_64-unknown-uefi]
-runner = "sh run.sh"

@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "common-lib",
+    "bootloader",
+    "bootloader-lib",
+    "kernel",
+    "kernel-lib"
+]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
