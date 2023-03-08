@@ -1,7 +1,7 @@
 subdirs := kernel bootloader
 
 .PHONY: all
-all: clean build run
+all:  build run
 
 .PHONY: debug
 debug: clean build run_debug

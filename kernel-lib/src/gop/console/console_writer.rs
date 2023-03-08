@@ -102,13 +102,7 @@ impl ConsoleWriter {
         self.chars[pos.y()][pos.x()]
     }
     fn up_shift_lines(&mut self) -> KernelResult {
-        // Clear Display
-        fill_rect(
-            &mut self.pixel_writer,
-            Vector2D::new(0, 0),
-            Vector2D::new(CONSOLE_COLUMN, CONSOLE_ROW),
-            &PixelColor::new(0x00, 0x00, 0x00),
-        )?;
+        self.clear_display()?;
 
         for y in 1..CONSOLE_ROW {
             for x in 0..=CONSOLE_COLUMN {
@@ -128,12 +122,22 @@ impl ConsoleWriter {
 
         Ok(())
     }
+
+    fn clear_display(&mut self) -> KernelResult {
+        fill_rect(
+            &mut self.pixel_writer,
+            Vector2D::new(0, 0),
+            Vector2D::new(CONSOLE_COLUMN * 8, CONSOLE_ROW * 16),
+            &PixelColor::new(0x00, 0x00, 0x00),
+        )
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::gop::console::console_builder::ConsoleBuilder;
     use crate::gop::console::console_writer::CONSOLE_ROW;
+    use alloc::format;
     use common_lib::frame_buffer::FrameBufferConfig;
     use common_lib::vector::Vector2D;
 
