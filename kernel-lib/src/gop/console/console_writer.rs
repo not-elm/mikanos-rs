@@ -54,7 +54,9 @@ impl ConsoleWriter {
     pub fn current_column(&self) -> usize {
         self.current_column
     }
-
+    pub fn write_pixel(&mut self, pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
+        unsafe { self.pixel_writer.write(pos.x(), pos.y(), &color) }
+    }
     pub fn write_str(&mut self, s: &str) -> KernelResult {
         for c in s.chars() {
             self.next_write_char(c)?;
