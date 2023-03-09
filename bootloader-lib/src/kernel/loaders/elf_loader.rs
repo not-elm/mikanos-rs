@@ -1,4 +1,5 @@
 use crate::elf::ehdr::elf_header_ptr::ElfHeaderPtr;
+
 use crate::elf::phdr::program_header::{PType, ProgramHeader};
 use crate::elf::phdr::program_header_table::ProgramHeaderTable;
 use crate::error::LibResult;
@@ -31,6 +32,10 @@ impl KernelLoadable for ElfLoader {
 
         allocate_pages(allocator, load_segment_start_addr, load_segment_last_addr)?;
         let phdr_table = ehdr.phdr_table();
+        for p in ehdr.phdr_table(){
+            uefi_services::println!("{:?}", p)
+        }
+
         copy_load_segments(&ehdr, phdr_table, allocator);
         let entry_point_addr_ptr = (load_segment_start_addr + 24) as *const u64;
         let entry_point_addr = unsafe { *entry_point_addr_ptr };
@@ -53,6 +58,7 @@ fn copy_load_segments(
     phdr_table: ProgramHeaderTable,
     system_table: &mut impl Allocatable,
 ) {
+
     let phdr_iter_hold_loadable = phdr_table.filter(|p| p.p_type == PType::PtLoad);
 
     for phdr in phdr_iter_hold_loadable {

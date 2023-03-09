@@ -29,6 +29,7 @@ name = "bootloader-lib"
 version = "0.1.0"
 dependencies = [
  "common-lib",
+ "uefi-services",
 ]
 
 [[package]]

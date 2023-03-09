@@ -11,13 +11,13 @@ makeコマンドでビルドと実行ができます。
 make
 ```
 
-make debugでGBDを使用したデバッグ実行ができます。
+make debugでGDBを使用したデバッグ実行ができます。
 ```shell
 make debug
 ```
 Clionの場合、実行設定でRemoteDebugを追加し、下記項目の通り設定することでデバッグ実行の設定ができます。
 - Debugger
-  - GBDのbinaryがあるディレクトリのパス(WSL上で実行する場合、WSL内のGBDを指定する必要があります。)
+  - GBDのbinaryがあるディレクトリのパス(WSL上で実行する場合、WSL内のGDBを指定する必要があります。)
 - Target remote args
   - tcp::1234
 - Symbol file

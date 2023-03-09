@@ -1,19 +1,24 @@
-subdirs := kernel bootloader
+subdirs :=  kernel bootloader
 
 .PHONY: all
-all:  build run
+all:
+	make build
+	make run
 
 .PHONY: debug
-debug: clean build run_debug
+debug:
+	make build
+	make run-debug
 
 .PHONY: build $(subdirs)
 build: $(subdirs)
 
+.PHONY: clean $(subdirs)
+clean: $(subdirs)
+	cargo clean
+
 $(subdirs):
 	make build -C $@
-
-clean:
-	cargo clean
 
 make-img:
 	sh make_img.sh
@@ -21,6 +26,6 @@ make-img:
 run: make-img
 	sh qemu.sh
 
-run_debug: make-img
-	sh qemu_debug.sh
+run-debug: make-img
+	sh qemu_debug.sh "debug"
 

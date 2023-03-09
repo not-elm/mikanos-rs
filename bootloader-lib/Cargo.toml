@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 common-lib = {path = "../common-lib"}
+uefi-services = "0.16.0"
