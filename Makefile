@@ -3,17 +3,17 @@ subdirs :=  kernel bootloader
 .PHONY: all
 all:
 	make build
-	make run KERNEL="target/kernel/debug/kernel.elf"
+	make run
 
 .PHONY: debug
 debug:
 	make build
-	make run-debug KERNEL="target/kernel/debug/kernel.elf"
+	make run-debug
 
 .PHONY: test
 test:
 	make test-build
-	make run KERNEL=$(shell find target/kernel/debug/deps/ -name '*.elf')
+	make run KERNEL="test"
 
 .PHONY: test-build $(subdirs)
 test-build: $(subdirs)

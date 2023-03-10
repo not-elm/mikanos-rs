@@ -17,7 +17,9 @@ mkfs.fat        \
   -R 32         \
   -F 32         \
   ${img}
-kernel=$1
+
+[ "$1" = "test" ] && kernel=$(find target/kernel/debug/deps/ -name '*.elf') || kernel="target/kernel/debug/kernel.elf"
+
 echo "path to kernel.elf=$kernel"
 # 2. EFIファイルシステムをディスクイメージ内にコピーします。
 sudo rm -r -f
