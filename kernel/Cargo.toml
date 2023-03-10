@@ -1,17 +1,11 @@
-cargo-features = ["per-package-target"]
-
 [package]
 name = "kernel"
 version = "0.1.0"
 edition = "2021"
-#forced-target = "./kernel.json"
 
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
-common-lib = { path = "../common-lib" }
-kernel-lib = { path = "../kernel-lib" }
-
+common-lib = {path = "../common-lib"}
+kernel-lib = {path = "../kernel-lib"}
 

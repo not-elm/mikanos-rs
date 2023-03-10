@@ -17,13 +17,14 @@ mkfs.fat        \
   -R 32         \
   -F 32         \
   ${img}
-
+kernel=$1
+echo "path to kernel.elf=$kernel"
 # 2. EFIファイルシステムをディスクイメージ内にコピーします。
 sudo rm -r -f
 sudo mkdir -p mnt
 sudo mount -o loop ${img} mnt
 sudo mkdir -p mnt/EFI/BOOT
 sudo cp "$HOME"/workspace/mikanos-rs/target/x86_64-unknown-uefi/debug/bootloader.efi ./mnt/EFI/BOOT/BOOTX64.EFI
-sudo cp "$HOME"/workspace/mikanos-rs/target/kernel/debug/kernel.elf ./mnt/kernel.elf
+sudo cp "$kernel" ./mnt/kernel.elf
 sudo umount mnt
 rm -r -f mnt

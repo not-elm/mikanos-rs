@@ -32,9 +32,7 @@ impl KernelLoadable for ElfLoader {
 
         allocate_pages(allocator, load_segment_start_addr, load_segment_last_addr)?;
         let phdr_table = ehdr.phdr_table();
-        for p in ehdr.phdr_table(){
-            uefi_services::println!("{:?}", p)
-        }
+   
 
         copy_load_segments(&ehdr, phdr_table, allocator);
         let entry_point_addr_ptr = (load_segment_start_addr + 24) as *const u64;

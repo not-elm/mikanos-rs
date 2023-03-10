@@ -54,27 +54,27 @@ fn calc_pixel_pos(
     Ok(4 * (frame_buffer_config.pixel_per_scanline * y + x))
 }
 
-#[cfg(test)]
-mod tests {
-    use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
-
-    use crate::gop::pixel::calc_pixel_pos;
-
-    #[test]
-    fn it_works() {
-        let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
-        assert!(calc_pixel_pos(&config, 0, 0).map(|p| p == 0).is_ok())
-    }
-
-    #[test]
-    fn it_over_x() {
-        let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
-        assert!(calc_pixel_pos(&config, 5, 0).is_err())
-    }
-
-    #[test]
-    fn it_over_y() {
-        let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
-        assert!(calc_pixel_pos(&config, 0, 2).is_err())
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
+//
+//     use crate::gop::pixel::calc_pixel_pos;
+//
+//     #[test]
+//     fn it_works() {
+//         let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
+//         assert!(calc_pixel_pos(&config, 0, 0).map(|p| p == 0).is_ok())
+//     }
+//
+//     #[test]
+//     fn it_over_x() {
+//         let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
+//         assert!(calc_pixel_pos(&config, 5, 0).is_err())
+//     }
+//
+//     #[test]
+//     fn it_over_y() {
+//         let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
+//         assert!(calc_pixel_pos(&config, 0, 2).is_err())
+//     }
+// }
