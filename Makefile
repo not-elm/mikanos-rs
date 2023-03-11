@@ -12,6 +12,7 @@ debug:
 
 .PHONY: test
 test:
+	make clean
 	make test-build
 	make run KERNEL="test"
 
@@ -25,6 +26,7 @@ build: $(subdirs)
 .PHONY: clean $(subdirs)
 clean: $(subdirs)
 	cargo clean
+	rm -r -f target
 
 $(subdirs):
 	make $(MAKECMDGOALS) -C $@

@@ -1,9 +1,10 @@
+use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::vector::Vector2D;
+
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::vector::Vector2D;
 
 pub mod bgr_pixel_writer;
 mod enum_pixel_writer;
@@ -22,7 +23,7 @@ pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl Pixel
             crate::gop::pixel::enum_pixel_writer::EnumPixelWriter::Bgr(frame_buffer_config)
         }
     }
-
+    
     #[cfg(test)]
     crate::gop::pixel::mock_pixel_writer::MockPixelWriter::new(frame_buffer_config)
 }
@@ -50,31 +51,31 @@ fn calc_pixel_pos(
     {
         return Err(ExceededFrameBufferSize);
     }
-
+    
     Ok(4 * (frame_buffer_config.pixel_per_scanline * y + x))
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
-//
-//     use crate::gop::pixel::calc_pixel_pos;
-//
-//     #[test]
-//     fn it_works() {
-//         let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
-//         assert!(calc_pixel_pos(&config, 0, 0).map(|p| p == 0).is_ok())
-//     }
-//
-//     #[test]
-//     fn it_over_x() {
-//         let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
-//         assert!(calc_pixel_pos(&config, 5, 0).is_err())
-//     }
-//
-//     #[test]
-//     fn it_over_y() {
-//         let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
-//         assert!(calc_pixel_pos(&config, 0, 2).is_err())
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
+    
+    use crate::gop::pixel::calc_pixel_pos;
+    
+    #[test]
+    fn it_works() {
+        let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
+        assert!(calc_pixel_pos(&config, 0, 0).map(|p| p == 0).is_ok())
+    }
+    
+    #[test]
+    fn it_over_x() {
+        let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
+        assert!(calc_pixel_pos(&config, 5, 0).is_err())
+    }
+    
+    #[test]
+    fn it_over_y() {
+        let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
+        assert!(calc_pixel_pos(&config, 0, 3).is_err())
+    }
+}

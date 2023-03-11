@@ -28,7 +28,18 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
 
 /// この関数はパニック時に呼ばれる
 #[panic_handler]
+#[cfg(not(test))]
 fn panic(info: &PanicInfo) -> ! {
     println!("{:?}", info);
     common_lib::assembly::hlt_forever();
 }
+
+
+#[panic_handler]
+#[cfg(test)]
+fn panic(info: &PanicInfo) -> ! {
+    println!("[test failed!]");
+    println!("{:?}", info);
+    common_lib::assembly::hlt_forever();
+}
+
