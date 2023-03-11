@@ -16,5 +16,4 @@ RUST_VERSION=nightly
 # rustup,rustc,cargoをインストールできる
 sudo curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION}
 source "${HOME}"/.cargo/env
-rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
-
+rustup target add x86_64-unknown-none
