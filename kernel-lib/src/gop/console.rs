@@ -1,18 +1,21 @@
 use core::fmt::Write;
 
+use spin::Mutex;
+
+use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::vector::Vector2D;
+
 use crate::error::KernelResult;
 use crate::gop::console::console_builder::ConsoleBuilder;
 use crate::gop::console::console_writer::ConsoleWriter;
 use crate::gop::pixel::fill_rect;
 use crate::gop::pixel::pixel_color::PixelColor;
-use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::vector::Vector2D;
-use spin::Mutex;
 
 pub mod console_builder;
 pub mod console_writer;
 
 pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
+
 pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
 
 const CURSOR_WIDTH: usize = 15;
@@ -46,10 +49,10 @@ const CURSOR_SHAPE: [&'static [u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
 
 impl GlobalConsole {
     pub fn init(&mut self, frame_buffer_config: FrameBufferConfig) {
-        let console = ConsoleBuilder::new().build(frame_buffer_config);
+        let console = ConsoleBuilder::new().color(PixelColor::new(0xFF, 0xFF, 0x00)).build(frame_buffer_config);
         self.0 = Some(Mutex::new(console));
     }
-
+    
     pub fn get_mut(&mut self) -> &mut ConsoleWriter {
         self.0.as_mut().unwrap().get_mut()
     }
@@ -74,7 +77,7 @@ pub fn draw_cursor() -> KernelResult {
             }
         }
     }
-
+    
     Ok(())
 }
 

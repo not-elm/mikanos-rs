@@ -27,7 +27,9 @@ pub fn my_runner(tests: &[&dyn Testable]) {
 }
 
 #[test_case]
-fn it_should() {}
+fn it_should() {
+    assert_eq!(0, 0)
+}
 
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // #[repr(u32)]
