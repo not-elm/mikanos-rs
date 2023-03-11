@@ -5,15 +5,15 @@ pub trait Testable {
     fn run(&self) -> ();
 }
 
-
 impl<T> Testable for T
-    where
-        T: Fn(),
+where
+    T: Fn(),
 {
     fn run(&self) {
         println!("test name={}", core::any::type_name::<T>());
         self();
         println!("[ok]");
+        println!();
     }
 }
 
@@ -39,7 +39,7 @@ pub enum QemuExitCode {
 
 pub fn exit_qemu(exit_code: QemuExitCode) {
     use x86_64::instructions::port::Port;
-    
+
     unsafe {
         let mut port = Port::new(0xf4);
         port.write(exit_code as u32);
