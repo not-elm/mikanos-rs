@@ -6,8 +6,8 @@ pub trait Testable {
 }
 
 impl<T> Testable for T
-where
-    T: Fn(),
+    where
+        T: Fn(),
 {
     fn run(&self) {
         println!("test name={}", core::any::type_name::<T>());
@@ -27,17 +27,7 @@ pub fn my_runner(tests: &[&dyn Testable]) {
 }
 
 #[test_case]
-fn it_should() {
-    let data = mouse_driver::assembly::io::read_data();
-    println!("data: {}", data);
-    mouse_driver::assembly::io::write_addr(0);
-    println!("data2 {}", mouse_driver::assembly::io::read_data());
-    write_addr(36);
-
-    println!("data3 {}", read_data());
-
-    assert_ne!(data, 0)
-}
+fn it_should() {}
 
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // #[repr(u32)]

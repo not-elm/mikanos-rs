@@ -5,9 +5,17 @@
 #-R 32            予約セクタ数
 #-F 32            ファイルアロケーションテーブルのタイプを指定(12,16,32ビットのどれか)
 #disk.img         このデバイスにファイルシステムを構築する
-# 1. ディスクイメージを作成します。
+
+[ "$1" = "test" ] && kernel=$(find target/kernel/debug/deps/ -name '*.elf') || kernel="target/kernel/debug/ernel.elf"
+if [ ! -e $kernel ];then
+  echo "Not found Kernel file"
+  exit 1
+fi
+
 img=disk.img
 sudo rm -f ${img}
+
+# 1. ディスクイメージを作成します。
 qemu-img create -f raw ${img} 200M
 
 mkfs.fat        \
@@ -18,8 +26,6 @@ mkfs.fat        \
   -F 32         \
   ${img}
 
-# TODD ファイルの存在確認
-[ "$1" = "test" ] && kernel=$(find target/kernel/debug/deps/ -name '*.elf') || kernel="target/kernel/debug/kernel.elf"
 
 echo "path to kernel.elf=$kernel"
 # 2. EFIファイルシステムをディスクイメージ内にコピーします。

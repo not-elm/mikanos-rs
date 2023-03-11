@@ -8,4 +8,4 @@ build:
 	cargo build
 
 test-build:
-	cargo build --tests
+	cargo test --no-run
