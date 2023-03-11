@@ -9,6 +9,7 @@ if [ "$IS_DEBUG" = "debug" ]
     -bios 'OVMF.fd' \
     -hda 'disk.img' \
     -monitor stdio \
+    -usbdevice mouse \
     -s \
     -S \
 
@@ -17,6 +18,7 @@ else
     -m 512 \
     -bios 'OVMF.fd' \
     -hda 'disk.img' \
-    -monitor stdio
+    -monitor stdio \
+    -usbdevice mouse
 fi
 

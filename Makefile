@@ -12,6 +12,7 @@ debug:
 
 .PHONY: test
 test:
+	make test -C kernel-lib
 	make clean
 	make test-build
 	make run KERNEL="test"
@@ -42,5 +43,5 @@ run:
 
 run-debug:
 	make make-img KERNEL=$(KERNEL)
-	sh qemu_debug.sh "debug"
+	sh qemu.sh "debug"
 

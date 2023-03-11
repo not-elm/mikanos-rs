@@ -139,75 +139,77 @@ impl ConsoleWriter {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use crate::gop::console::console_builder::ConsoleBuilder;
-//     use crate::gop::console::console_writer::CONSOLE_ROW;
-//     use alloc::format;
-//     use common_lib::frame_buffer::FrameBufferConfig;
-//     use common_lib::vector::Vector2D;
-//
-//     #[test]
-//     fn it_new_line() {
-//         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-//         assert!(console.write_str("\n").is_ok());
-//         assert_eq!(console.current_row(), 1)
-//     }
-//
-//     #[test]
-//     fn it_not_new_line() {
-//         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-//         assert!(console.write_str("test").is_ok());
-//         assert_eq!(console.current_row(), 0)
-//     }
-//
-//     #[test]
-//     fn it_over_column() {
-//         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-//         assert!(console
-//             .write_str(
-//                 "012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-//             )
-//             .is_ok());
-//         assert_eq!(console.current_row(), 1);
-//         assert_eq!(console.current_column(), 1);
-//     }
-//     #[test]
-//     fn it_get_0() {
-//         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-//         assert!(console
-//             .write_str(
-//                 "012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-//             )
-//             .is_ok());
-//         assert_eq!(console.current_row(), 1);
-//         assert_eq!(console.chart_at(Vector2D::new(0, 1)), '0');
-//     }
-//     #[test]
-//     fn it_scroll_display() {
-//         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-//         for i in 0..=CONSOLE_ROW {
-//             assert!(console.write_str(&format!("{}\n", i)).is_ok());
-//         }
-//
-//         assert_eq!(console.chart_at(Vector2D::new(0, 0)), '1');
-//     }
-//     #[test]
-//     fn it_end_when_scroll_display() {
-//         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-//         for i in 0..=CONSOLE_ROW {
-//             assert!(console.write_str(&format!("{}\n", i)).is_ok());
-//         }
-//
-//         assert_eq!(console.chart_at(Vector2D::new(1, 0)), '\n');
-//         assert_eq!(console.chart_at(Vector2D::new(2, 24)), '\n');
-//     }
-//     #[test]
-//     fn it_two_new_line() {
-//         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-//         assert!(console.write_str("test\n").is_ok());
-//         assert!(console.write_str("test\n").is_ok());
-//         assert_eq!(console.current_row(), 2);
-//         assert_eq!(console.current_column(), 0);
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use crate::gop::console::console_builder::ConsoleBuilder;
+    use alloc::format;
+
+    use crate::gop::console::console_writer::CONSOLE_ROW;
+    use common_lib::frame_buffer::FrameBufferConfig;
+    use common_lib::vector::Vector2D;
+
+    #[test]
+    fn it_new_line() {
+        let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
+        assert!(console.write_str("\n").is_ok());
+        assert_eq!(console.current_row(), 1)
+    }
+
+    #[test]
+    fn it_not_new_line() {
+        let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
+        assert!(console.write_str("test").is_ok());
+        assert_eq!(console.current_row(), 0)
+    }
+
+    #[test]
+    fn it_over_column() {
+        let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
+        assert!(console
+            .write_str(
+                "012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+            )
+            .is_ok());
+        assert_eq!(console.current_row(), 1);
+        assert_eq!(console.current_column(), 1);
+    }
+
+    #[test]
+    fn it_get_0() {
+        let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
+        assert!(console
+            .write_str(
+                "012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+            )
+            .is_ok());
+        assert_eq!(console.current_row(), 1);
+        assert_eq!(console.chart_at(Vector2D::new(0, 1)), '0');
+    }
+    #[test]
+    fn it_scroll_display() {
+        let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
+        for i in 0..=CONSOLE_ROW {
+            assert!(console.write_str(&format!("{}\n", i)).is_ok());
+        }
+
+        assert_eq!(console.chart_at(Vector2D::new(0, 0)), '1');
+    }
+    #[test]
+    fn it_end_when_scroll_display() {
+        let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
+        for i in 0..=CONSOLE_ROW {
+            assert!(console.write_str(&format!("{}\n", i)).is_ok());
+        }
+
+        assert_eq!(console.chart_at(Vector2D::new(1, 0)), '\n');
+        assert_eq!(console.chart_at(Vector2D::new(2, 24)), '\n');
+    }
+    #[test]
+    fn it_two_new_line() {
+        let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
+        assert!(console.write_str("test\n").is_ok());
+        assert!(console.write_str("test\n").is_ok());
+        assert_eq!(console.current_row(), 2);
+        assert_eq!(console.current_column(), 0);
+    }
+}

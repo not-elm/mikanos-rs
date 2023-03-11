@@ -18,6 +18,7 @@ mkfs.fat        \
   -F 32         \
   ${img}
 
+# TODD ファイルの存在確認
 [ "$1" = "test" ] && kernel=$(find target/kernel/debug/deps/ -name '*.elf') || kernel="target/kernel/debug/kernel.elf"
 
 echo "path to kernel.elf=$kernel"
