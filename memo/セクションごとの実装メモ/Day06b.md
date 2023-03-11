@@ -3,18 +3,20 @@
 ## qemuからテストできるようにする
 
 ### テストビルド
+
 stdのテストは使えないため、カスタムテストフレームワークを使用します。  
 カーネルのメインファイルに以下３行を追加しました。
 
 ```rust
-// main.rs
+// lib
 #![feature(custom_test_frameworks)] // カスタムフレームワークの使用を宣言
 #![test_runner(my_runner)] // テストランナーとなる関数名を指定
 #![reexport_test_harness_main = "test_main"] // テストのエントリーポイントとなる関数名を指定
 ```
 
 さらにランナーとテストケースを追加  
-ちなにみにほぼ[The Rust Unstable Book](https://doc.rust-lang.org/beta/unstable-book/language-features/custom-test-frameworks.html)から
+ちなにみにほぼ[The Rust Unstable Book](https://doc.rust-lang.org/beta/unstable-book/language-features/custom-test-frameworks.html)
+から
 
 ```rust 
 
@@ -42,6 +44,7 @@ cargo test --no-run
 ```
 
 しかし、以下のようなエラーが発生
+
 ```
 language item required, but not found: `eh_personality`
 ```
@@ -51,6 +54,7 @@ workspaceのcargo.tomlにpanic=abortをすでに指定しているため、な�
 
 ターゲットを指定しているkernel.jsonに以下を追加し、cargo.tomlのpanic=abortを削除したところ
 ビルドできるように！
+
 ```
 "panic-strategy": "abort",
 ```
@@ -68,5 +72,12 @@ find target/kernel/debug/deps/ -name *.elf
 
 Makefileにテスト用のルールを追加してビルドスクリプトの対応完了！
 
+## IOアドレス
+
+## In/Out命令
+
+[I/O instr](https://docs.oracle.com/cd/E19455-01/806-3773/6jct9o0aj/index.html)
+
 ## 参考文献
+
 [The Rust Unstable Book](https://doc.rust-lang.org/beta/unstable-book/language-features/custom-test-frameworks.html)

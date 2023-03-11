@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 common-lib = { path = "../common-lib" }
 kernel-lib = { path = "../kernel-lib" }
+mouse-driver = { path = "../mouse-driver" }
 x86_64 = "0.14.10"
 

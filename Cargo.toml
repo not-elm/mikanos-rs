@@ -4,7 +4,8 @@ members = [
     "bootloader",
     "bootloader-lib",
     "kernel",
-    "kernel-lib"
+    "kernel-lib",
+    "mouse-driver"
 ]
 
 [profile.release]

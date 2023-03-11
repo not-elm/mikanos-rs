@@ -9,10 +9,11 @@ Aのようなパスになっていたため、2.のように記載したら通�
 
 ```rust
 // A
-// kernel/src/main.rs
+// kernel/src/lib
 
 use kernel_lib::{print, pritnln};
 ```
+
 ```rust
 // B
 

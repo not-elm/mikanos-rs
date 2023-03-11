@@ -1,4 +1,5 @@
 use kernel_lib::println;
+use mouse_driver::assembly::io::{read_data, write_addr};
 
 pub trait Testable {
     fn run(&self) -> ();
@@ -22,11 +23,20 @@ pub fn my_runner(tests: &[&dyn Testable]) {
     for t in tests {
         t.run();
     }
+    common_lib::assembly::hlt_forever();
 }
 
 #[test_case]
 fn it_should() {
-    assert_eq!(0, 0);
+    let data = mouse_driver::assembly::io::read_data();
+    println!("data: {}", data);
+    mouse_driver::assembly::io::write_addr(0);
+    println!("data2 {}", mouse_driver::assembly::io::read_data());
+    write_addr(36);
+
+    println!("data3 {}", read_data());
+
+    assert_ne!(data, 0)
 }
 
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]

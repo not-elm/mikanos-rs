@@ -6,9 +6,9 @@ Consoleを作ったのはいいのですが、興味本位で230回改行して�
 取り合えず一旦置いておくことにします...。
 
 ```rust
-// kernel/main.rs
+// kernel/lib
 
 for _ in 0..230 {
-   console.write_str("Hello !Mikan Rust World!\n").unwrap();
+console.write_str("Hello !Mikan Rust World!\n").unwrap();
 }
 ```
