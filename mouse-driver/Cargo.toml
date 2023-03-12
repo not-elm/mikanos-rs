@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 bitfield-struct = "0.3.2"
+enum-try-from = "0.0.1"

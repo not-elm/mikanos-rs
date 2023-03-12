@@ -5,14 +5,15 @@ use crate::pci::config_space::devices::common_header_loadable::exists_device;
 pub mod config_address_register;
 pub mod intel_x86_io;
 
-pub(crate) struct ConfigurationSpace {
+#[derive(Clone, Debug)]
+pub struct ConfigurationSpace {
     bus: u8,
     device_slot: u8,
     function: u8,
 }
 
 impl ConfigurationSpace {
-    pub fn check_new(bus: u8, device_slot: u8, function: u8) -> Option<Self> {
+    pub fn try_new(bus: u8, device_slot: u8, function: u8) -> Option<Self> {
         if exists_device(0) {
             return Some(ConfigurationSpace::new(bus, device_slot, function));
         } else {

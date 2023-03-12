@@ -1,12 +1,27 @@
-use crate::pci::config_space::access::config_address_register::ConfigAddrRegister;
+use crate::pci::config_space::access::ConfigurationSpace;
+use crate::pci::config_space::devices::class_code::ClassCode;
+use crate::pci::config_space::devices::sub_class::Subclass;
 
 pub trait CommonHeaderHoldable {
-    fn device_id(&self) -> u16;
-    fn vendor_id(&self) -> u16;
-    fn status(&self) -> u16;
-    fn class_code(&self) -> u16;
-    fn sub_class(&self) -> u16;
-    fn config_address_register(&self) -> &ConfigAddrRegister;
+    fn device_id(&self) -> u16 {
+        convert_to_device_id(self.config_space().fetch_data_offset_at(0))
+    }
+    fn vendor_id(&self) -> u16 {
+        convert_to_device_id(self.config_space().fetch_data_offset_at(0))
+    }
+
+    fn class_code(&self) -> Option<ClassCode> {
+        ClassCode::try_from(convert_to_class_code(
+            self.config_space().fetch_data_offset_at(0x8),
+        ))
+        .ok()
+    }
+    fn sub_class(&self) -> Option<Subclass> {
+        let offset_8 = self.config_space().fetch_data_offset_at(0x08);
+        let sub_class = convert_to_sub_class(offset_8);
+        Subclass::try_new(self.class_code()?, sub_class)
+    }
+    fn config_space(&self) -> &ConfigurationSpace;
 }
 
 /// コンフィグデータレジスタから取得したデバイスのデータが有効なものか確認します。
@@ -19,12 +34,44 @@ pub(crate) fn convert_to_vendor_id(data_offset_0: u32) -> u16 {
     (data_offset_0 & 0xFF) as u16
 }
 
+pub(crate) fn convert_to_device_id(data_offset_0: u32) -> u16 {
+    (data_offset_0 >> 8) as u16
+}
+
+pub(crate) fn convert_to_class_code(data_offset_8: u32) -> u8 {
+    (data_offset_8 >> 24) as u8
+}
+
+pub(crate) fn convert_to_sub_class(data_offset_8: u32) -> u8 {
+    ((data_offset_8 >> 16) & 0b11111111) as u8
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::devices::common_header_loadable::convert_to_vendor_id;
+    use crate::pci::config_space::devices::common_header_loadable::{
+        convert_to_class_code, convert_to_device_id, convert_to_sub_class, convert_to_vendor_id,
+    };
 
     #[test]
     fn it_convert_to_vendor_id() {
         assert_eq!(convert_to_vendor_id(0xFFFC), 0xFC);
+    }
+
+    #[test]
+    fn it_convert_to_device_id() {
+        assert_eq!(convert_to_device_id(0xFC32), 0xFC);
+    }
+
+    #[test]
+    fn it_convert_to_class_code() {
+        assert_eq!(convert_to_class_code((0xC << 24) | 0xABC), 0xC);
+    }
+
+    #[test]
+    fn it_convert_to_sub_class() {
+        assert_eq!(
+            convert_to_sub_class(0b00000000_11110000_00000000_00000000),
+            0b11110000
+        );
     }
 }

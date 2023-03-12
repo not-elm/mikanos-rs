@@ -1,12 +1,11 @@
-use crate::pci::config_space::access::config_address_register::ConfigAddrRegister;
+use crate::pci::config_space::access::ConfigurationSpace;
 
 /// Header Type 0x0のデバイスを表します。
-pub struct GeneralDevice {
-    config_address: ConfigAddrRegister,
-}
+#[derive(Debug, Clone)]
+pub struct GeneralDevice(ConfigurationSpace);
 
 impl GeneralDevice {
-    pub fn new(config_address: ConfigAddrRegister) -> Self {
-        Self { config_address }
+    pub fn new(config_space: ConfigurationSpace) -> Self {
+        Self(config_space)
     }
 }

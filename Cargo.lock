@@ -66,6 +66,12 @@ name = "common-lib"
 version = "0.1.0"
 
 [[package]]
+name = "enum-try-from"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2834b37e663ed8feababf536696a8495fff40a398ba68cafc94dc0a47bd737c3"
+
+[[package]]
 name = "kernel"
 version = "0.1.0"
 dependencies = [
@@ -109,6 +115,7 @@ name = "mouse-driver"
 version = "0.1.0"
 dependencies = [
  "bitfield-struct",
+ "enum-try-from",
 ]
 
 [[package]]
