@@ -1,13 +1,12 @@
 use kernel_lib::println;
-use mouse_driver::assembly::io::{read_data, write_addr};
 
 pub trait Testable {
     fn run(&self) -> ();
 }
 
 impl<T> Testable for T
-    where
-        T: Fn(),
+where
+    T: Fn(),
 {
     fn run(&self) {
         println!("test name={}", core::any::type_name::<T>());
@@ -27,7 +26,8 @@ pub fn my_runner(tests: &[&dyn Testable]) {
 }
 
 #[test_case]
-fn it_should() {
+fn it_fetch_mouse_device() {
+    let mouse = Device::()//
     assert_eq!(0, 0)
 }
 

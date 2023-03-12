@@ -1,3 +1,3 @@
 #![no_std]
 
-pub mod assembly;
+pub mod pci;
