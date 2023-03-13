@@ -20,7 +20,7 @@ else
     -bios 'OVMF.fd' \
     -hda 'disk.img' \
     -device nec-usb-xhci,id=xhci \
-    -device usb-mouse -device usb-kbd \
+    -device usb-mouse \
     -monitor stdio
 fi
 

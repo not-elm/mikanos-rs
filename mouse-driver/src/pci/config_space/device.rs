@@ -1,5 +1,6 @@
+use kernel_lib::println;
 use crate::pci::config_space::common_header::class_code::ClassCode;
-use crate::pci::config_space::common_header::class_code::ClassCode::MassStorage;
+use crate::pci::config_space::common_header::class_code::ClassCode::{MassStorage, NoSupport};
 use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::pci::config_space::common_header::sub_class::Subclass;
 use crate::pci::config_space::device::device_base::DeviceBase;
@@ -20,7 +21,7 @@ pub enum PciDevice {
     MultipleFunction(MultipleFunctionDevice),
 }
 
-pub fn find_mouse() -> Option<DeviceBase> {
+pub fn find_usb_mouse() -> Option<DeviceBase> {
     (0..8)
         .map(|i| DeviceSlots::new(i))
         .find_map(|device_slots| find_mouse_from_device_slots(device_slots))
@@ -37,6 +38,7 @@ fn find_mouse_from_device_slots(mut device_slot: DeviceSlots) -> Option<DeviceBa
 }
 
 fn find_mouse_from_pci(pci_device: PciDevice) -> Option<DeviceBase> {
+
     match pci_device {
         PciDevice::General(device) => some_if_mouse_class(&device),
         PciDevice::Bridge(bridge) => find_within_bridge(bridge),
@@ -48,17 +50,20 @@ fn find_mouse_from_pci(pci_device: PciDevice) -> Option<DeviceBase> {
 
 fn find_within_bridge(bridge: PciBrideDevice) -> Option<DeviceBase> {
     if let Some(device) = some_if_mouse_class(&bridge) {
+
         return Some(device);
     }
 
     bridge
         .children()
         .find_map(|device_slots| find_mouse_from_pci(device_slots))
+
 }
 
 fn some_if_mouse_class(device: &impl CommonHeaderHoldable) -> Option<DeviceBase> {
-    if device.class_code().unwrap_or(MassStorage) == ClassCode::InputDevice
-        && device.sub_class().unwrap_or(Subclass::Scanner) == Subclass::Mouse
+
+    if device.class_code().unwrap_or(NoSupport) == ClassCode::SerialBus
+        && device.sub_class().unwrap_or(Subclass::Bridge) == Subclass::Usb
     {
         return Some(device.to_device_base());
     }
