@@ -22,13 +22,15 @@ pub fn my_runner(tests: &[&dyn Testable]) {
     for t in tests {
         t.run();
     }
+    println!("============= end test! ================");
     common_lib::assembly::hlt_forever();
 }
 
 #[test_case]
 fn it_fetch_mouse_device() {
-    let mouse = Device::()//
-    assert_eq!(0, 0)
+   for i in 0..100{
+       println!("{}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", i);
+   }
 }
 
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -9,21 +9,22 @@ use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 use crate::gop::pixel::{fill_rect, select_pixel_writer};
 
+
 type ImplCharWritable = impl CharWritable;
 pub type ImplPixelWritable = impl PixelWritable;
 /// コンソールの縦幅(MikanOSに合わせています。)
-const CONSOLE_ROW: usize = 25;
+const HEIGHT: usize = 11;
 
 /// コンソールの横幅(MikanOSに合わせています)
-const CONSOLE_COLUMN: usize = 80;
+const WIDTH: usize = 81;
 
 pub struct ConsoleWriter {
     char_writer: ImplCharWritable,
     pixel_writer: ImplPixelWritable,
-    current_row: usize,
-    current_column: usize,
+    y: usize,
+    x: usize,
     color: PixelColor,
-    chars: [[char; CONSOLE_COLUMN + 1]; CONSOLE_ROW],
+    chars: [[char; WIDTH]; HEIGHT],
 }
 
 impl core::fmt::Write for ConsoleWriter {
@@ -39,11 +40,11 @@ impl ConsoleWriter {
         Self {
             char_writer: crate::gop::char::new_char_writer(),
             pixel_writer: select_pixel_writer(frame_buffer_config),
-            current_row: 0,
-            current_column: 0,
+            y: 0,
+            x: 0,
 
             color,
-            chars: [[char::default(); CONSOLE_COLUMN + 1]; CONSOLE_ROW],
+            chars: [[char::default(); WIDTH]; HEIGHT],
         }
     }
 
@@ -51,12 +52,12 @@ impl ConsoleWriter {
         &mut self.pixel_writer
     }
 
-    pub fn current_row(&self) -> usize {
-        self.current_row
+    pub fn y(&self) -> usize {
+        self.y
     }
 
-    pub fn current_column(&self) -> usize {
-        self.current_column
+    pub fn x(&self) -> usize {
+        self.x
     }
     pub fn write_pixel(&mut self, pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
         unsafe { self.pixel_writer.write(pos.x(), pos.y(), &color) }
@@ -70,15 +71,17 @@ impl ConsoleWriter {
     }
 
     fn next_write_char(&mut self, c: char) -> KernelResult {
-        if c == '\n' {
+
+        if c == '\n' || c == char::default() {
             return self.new_line();
         }
 
-        if self.current_column >= CONSOLE_COLUMN || self.current_row() >= CONSOLE_ROW {
+        if self.x >= self.max_x() {
             self.new_line()?;
         }
-        self.write_char(c, Vector2D::new(self.current_column(), self.current_row()))?;
-        self.current_column += 1;
+
+        self.write_char(c, Vector2D::new(self.x, self.y))?;
+        self.x += 1;
         Ok(())
     }
 
@@ -86,56 +89,87 @@ impl ConsoleWriter {
         let write_pos = Vector2D::new(pos.x() * 8, pos.y() * 16);
         self.char_writer
             .write(c, write_pos, &(self.color), &mut self.pixel_writer)?;
+
         self.chars[pos.y()][pos.x()] = c;
         Ok(())
     }
 
     fn new_line(&mut self) -> KernelResult {
-        if self.current_row < CONSOLE_ROW {
-            self.chars[self.current_row][self.current_column] = '\n';
-            self.current_row += 1;
-            self.current_column = 0;
+        if self.y < self.max_y() {
+            self.y += 1;
+            self.x = 0;
         } else {
-            self.chars[self.current_row - 1][self.current_column] = '\n';
             self.up_shift_lines()?;
         }
 
         Ok(())
     }
 
-    #[cfg(test)]
+
     fn chart_at(&self, pos: Vector2D<usize>) -> char {
         self.chars[pos.y()][pos.x()]
     }
     fn up_shift_lines(&mut self) -> KernelResult {
-        self.clear_display()?;
 
-        for y in 1..CONSOLE_ROW {
-            for x in 0..=CONSOLE_COLUMN {
-                let c = self.chars[y][x];
-                self.chars[y - 1][x] = c;
-                if c == '\n' {
-                    break;
-                }
-                self.write_char(c, Vector2D::new(x, y - 1))?;
-            }
-        }
-        self.current_row = CONSOLE_ROW - 1;
-        self.current_column = 0;
+        // self.clear_display()?;
+        self.shift_chars();
+        self.flush()?;
 
-        let end_line = self.chars.last_mut().unwrap();
-        end_line.fill(char::default());
+        self.y = self.chars.len() - 1;
+        self.x = 0;
 
         Ok(())
     }
 
+    fn shift_chars(&mut self){
+        for y in 1..=self.max_y(){
+           for x in 0..=self.max_x(){
+               self.chars[y-1][x] = self.chart_at(Vector2D::new(x, y));
+           }
+        }
+
+        let end_line = self.chars.last_mut().unwrap();
+        end_line.fill(char::default());
+    }
+
+    fn flush(&mut self) -> KernelResult{
+        for y in 0..=self.max_y(){
+            self.clear_line(y)?;
+            for x in 0..=self.max_x(){
+                let c =self.chart_at(Vector2D::new(x, y));
+                if c == char::default() || c == '\n'{
+                    break;
+                }
+                self.write_char(c, Vector2D::new(x, y))?;
+            }
+        }
+        Ok(())
+    }
+    fn clear_line(&mut self, y: usize) -> KernelResult {
+        let to = Vector2D::new(self.max_x() * 8, (y * 16)  + 16);
+        fill_rect(
+            &mut self.pixel_writer,
+            Vector2D::new(0, (y * 16)),
+            to,
+            PixelColor::new(0x00, 0x00, 0x00),
+        )
+    }
     fn clear_display(&mut self) -> KernelResult {
+        let to = Vector2D::new(self.max_x() * 8, HEIGHT* 16);
         fill_rect(
             &mut self.pixel_writer,
             Vector2D::new(0, 0),
-            Vector2D::new(CONSOLE_COLUMN * 8, CONSOLE_ROW * 16),
+            to,
             PixelColor::new(0x00, 0x00, 0x00),
         )
+    }
+
+    fn max_y(&self) -> usize{
+        self.chars.len() - 1
+    }
+
+    fn max_x(&self) -> usize{
+        self.chars[0].len()-1
     }
 }
 
@@ -144,7 +178,7 @@ mod tests {
     use crate::gop::console::console_builder::ConsoleBuilder;
     use alloc::format;
 
-    use crate::gop::console::console_writer::CONSOLE_ROW;
+    use crate::gop::console::console_writer::{HEIGHT};
     use common_lib::frame_buffer::FrameBufferConfig;
     use common_lib::vector::Vector2D;
 
@@ -152,14 +186,14 @@ mod tests {
     fn it_new_line() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
         assert!(console.write_str("\n").is_ok());
-        assert_eq!(console.current_row(), 1)
+        assert_eq!(console.y(), 1)
     }
 
     #[test]
     fn it_not_new_line() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
         assert!(console.write_str("test").is_ok());
-        assert_eq!(console.current_row(), 0)
+        assert_eq!(console.y(), 0)
     }
 
     #[test]
@@ -170,8 +204,8 @@ mod tests {
                 "012345678901234567890123456789012345678901234567890123456789012345678901234567890"
             )
             .is_ok());
-        assert_eq!(console.current_row(), 1);
-        assert_eq!(console.current_column(), 1);
+        assert_eq!(console.y(), 1);
+        assert_eq!(console.x(), 1);
     }
 
     #[test]
@@ -182,13 +216,13 @@ mod tests {
                 "012345678901234567890123456789012345678901234567890123456789012345678901234567890"
             )
             .is_ok());
-        assert_eq!(console.current_row(), 1);
+        assert_eq!(console.y(), 1);
         assert_eq!(console.chart_at(Vector2D::new(0, 1)), '0');
     }
     #[test]
     fn it_scroll_display() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-        for i in 0..=CONSOLE_ROW {
+        for i in 0..HEIGHT {
             assert!(console.write_str(&format!("{}\n", i)).is_ok());
         }
 
@@ -197,19 +231,19 @@ mod tests {
     #[test]
     fn it_end_when_scroll_display() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-        for i in 0..=CONSOLE_ROW {
+        for i in 0..HEIGHT{
             assert!(console.write_str(&format!("{}\n", i)).is_ok());
         }
 
-        assert_eq!(console.chart_at(Vector2D::new(1, 0)), '\n');
-        assert_eq!(console.chart_at(Vector2D::new(2, 24)), '\n');
+        assert_eq!(console.chart_at(Vector2D::new(1, 0)), '\0');
+        assert_eq!(console.chart_at(Vector2D::new(2, HEIGHT-1)), '\0');
     }
     #[test]
     fn it_two_new_line() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
         assert!(console.write_str("test\n").is_ok());
         assert!(console.write_str("test\n").is_ok());
-        assert_eq!(console.current_row(), 2);
-        assert_eq!(console.current_column(), 0);
+        assert_eq!(console.y(), 2);
+        assert_eq!(console.x(), 0);
     }
 }
