@@ -6,7 +6,7 @@
 #-F 32            ファイルアロケーションテーブルのタイプを指定(12,16,32ビットのどれか)
 #disk.img         このデバイスにファイルシステムを構築する
 
-[ "$1" = "test" ] && kernel=$(find target/kernel/debug/deps/ -name '*.elf') || kernel="target/kernel/debug/ernel.elf"
+[ "$1" = "test" ] && kernel=$(find target/kernel/debug/deps/ -name '*.elf') || kernel="target/kernel/debug/kernel.elf"
 if [ ! -e $kernel ];then
   echo "Not found Kernel file"
   exit 1

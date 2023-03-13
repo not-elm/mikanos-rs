@@ -4,7 +4,7 @@ impl_enum_try_from_be! {
     #[repr(u8)]
     #[derive(Debug,PartialEq, Eq)]
     pub enum ClassCode {
-        MassStorageController = 0x01,
+        MassStorage = 0x01,
         NetworkController = 0x02,
         DisplayController = 0x03,
         MultimediaDevice = 0x04,
@@ -23,13 +23,13 @@ impl_enum_try_from_be! {
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::devices::class_code::ClassCode;
+    use crate::pci::config_space::common_header::class_code::ClassCode;
 
     #[test]
     fn it_new_mass_controller() {
         assert_eq!(
             ClassCode::try_from(01).unwrap_or(ClassCode::NoSupport),
-            ClassCode::MassStorageController
+            ClassCode::MassStorage
         );
     }
 }

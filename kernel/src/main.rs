@@ -30,6 +30,9 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
 
     draw_cursor().unwrap();
 
+    let mouse = mouse_driver::pci::config_space::device::find_mouse();
+    println!("find mouse = {:?}", mouse);
+
     common_lib::assembly::hlt_forever();
 }
 

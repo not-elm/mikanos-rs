@@ -35,13 +35,13 @@ extern "C" {
 }
 
 pub fn write_config_addr(config_addr_register: ConfigAddrRegister) {
-    const CONFIG_ADDR_REGISTER_ADDR: u16 = 0x0cF8;
+    const CONFIG_ADDR_REGISTER_ADDR: u16 = 0x0CF8;
 
-    io_out32(CONFIG_ADDR_REGISTER_ADDR, *config_addr_register)
+    io_out32(CONFIG_ADDR_REGISTER_ADDR, config_addr_register.to_addr())
 }
 
 pub fn fetch_config_data() -> u32 {
-    const CONFIG_DATA_REGISTER_ADDR: u16 = 0x0cFC;
+    const CONFIG_DATA_REGISTER_ADDR: u16 = 0x0CFC;
 
     io_in32(CONFIG_DATA_REGISTER_ADDR)
 }

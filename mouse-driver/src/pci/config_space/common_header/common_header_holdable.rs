@@ -1,25 +1,33 @@
 use crate::pci::config_space::access::ConfigurationSpace;
-use crate::pci::config_space::devices::class_code::ClassCode;
-use crate::pci::config_space::devices::sub_class::Subclass;
+use crate::pci::config_space::common_header::class_code::ClassCode;
+use crate::pci::config_space::common_header::sub_class::Subclass;
+use crate::pci::config_space::device::device_base::DeviceBase;
 
 pub trait CommonHeaderHoldable {
     fn device_id(&self) -> u16 {
         convert_to_device_id(self.config_space().fetch_data_offset_at(0))
     }
     fn vendor_id(&self) -> u16 {
-        convert_to_device_id(self.config_space().fetch_data_offset_at(0))
+        convert_to_vendor_id(self.config_space().fetch_data_offset_at(0))
     }
 
     fn class_code(&self) -> Option<ClassCode> {
-        ClassCode::try_from(convert_to_class_code(
-            self.config_space().fetch_data_offset_at(0x8),
-        ))
-        .ok()
+        let code = self.config_space().fetch_data_offset_at(0x8);
+
+        ClassCode::try_from(convert_to_class_code(code)).ok()
     }
     fn sub_class(&self) -> Option<Subclass> {
         let offset_8 = self.config_space().fetch_data_offset_at(0x08);
+
         let sub_class = convert_to_sub_class(offset_8);
+
         Subclass::try_new(self.class_code()?, sub_class)
+    }
+    fn header_type(&self) -> u8 {
+        convert_to_header_type(self.config_space().fetch_data_offset_at(0x0C))
+    }
+    fn to_device_base(&self) -> DeviceBase {
+        DeviceBase::new(self.config_space().clone())
     }
     fn config_space(&self) -> &ConfigurationSpace;
 }
@@ -39,17 +47,22 @@ pub(crate) fn convert_to_device_id(data_offset_0: u32) -> u16 {
 }
 
 pub(crate) fn convert_to_class_code(data_offset_8: u32) -> u8 {
-    (data_offset_8 >> 24) as u8
+    ((data_offset_8 >> 24) & 0b1111_1111) as u8
 }
 
 pub(crate) fn convert_to_sub_class(data_offset_8: u32) -> u8 {
-    ((data_offset_8 >> 16) & 0b11111111) as u8
+    ((data_offset_8 >> 16) & 0b1111_1111) as u8
+}
+
+pub(crate) fn convert_to_header_type(data_offset_c: u32) -> u8 {
+    ((data_offset_c >> 16) & 0xff) as u8
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::devices::common_header_loadable::{
-        convert_to_class_code, convert_to_device_id, convert_to_sub_class, convert_to_vendor_id,
+    use crate::pci::config_space::common_header::common_header_holdable::{
+        convert_to_class_code, convert_to_device_id, convert_to_header_type, convert_to_sub_class,
+        convert_to_vendor_id,
     };
 
     #[test]
@@ -72,6 +85,14 @@ mod tests {
         assert_eq!(
             convert_to_sub_class(0b00000000_11110000_00000000_00000000),
             0b11110000
+        );
+    }
+
+    #[test]
+    fn it_convert_to_header_type() {
+        assert_eq!(
+            convert_to_header_type(0b00000000_11110000_00000000_00000000),
+            1
         );
     }
 }

@@ -8,8 +8,9 @@ if [ "$IS_DEBUG" = "debug" ]
     -m 512 \
     -bios 'OVMF.fd' \
     -hda 'disk.img' \
+    -device nec-usb-xhci,id=xhci \
+    -device usb-mouse -device usb-kbd \
     -monitor stdio \
-    -usbdevice mouse \
     -s \
     -S \
 
@@ -18,7 +19,8 @@ else
     -m 512 \
     -bios 'OVMF.fd' \
     -hda 'disk.img' \
-    -monitor stdio \
-    -usbdevice mouse
+    -device nec-usb-xhci,id=xhci \
+    -device usb-mouse -device usb-kbd \
+    -monitor stdio
 fi
 

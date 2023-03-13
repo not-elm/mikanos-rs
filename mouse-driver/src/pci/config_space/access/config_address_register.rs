@@ -1,40 +1,48 @@
 use core::ops::Deref;
 
-use bitfield_struct::bitfield;
-
 /// コンフィグアドレスレジスタに書き込むためのデータ
-#[bitfield(u32)]
+
 pub struct ConfigAddrRegister {
-    #[bits(2)]
-    _preserve1: usize,
-    #[bits(6)]
-    pub register_offset: u8,
-    #[bits(3)]
-    pub function: u8,
-    #[bits(5)]
-    pub device_slot: u8,
-    pub bus: u8,
-    #[bits(7)]
-    _preserve2: u8,
-    pub enabled: bool,
+    register_offset: u32,
+    function: u32,
+    device_slot: u32,
+    bus: u32,
 }
 
 impl ConfigAddrRegister {
-    pub(crate) fn new_first_offset(bus: u8, device_slot: u8, function: u8) -> Self {
-        ConfigAddrRegister::new()
-            .with_enabled(true)
-            .with_bus(bus)
-            .with_device_slot(device_slot)
-            .with_function(function)
-            .with_register_offset(0)
+    pub fn new(register_offset: u8, function: u8, device_slot: u8, bus: u8) -> Self {
+        Self {
+            register_offset: register_offset as u32,
+            function: function as u32,
+            device_slot: device_slot as u32,
+            bus: bus as u32,
+        }
     }
-}
 
-impl Deref for ConfigAddrRegister {
-    type Target = u32;
+    pub fn bus(&self) -> u32 {
+        self.bus
+    }
+    pub fn device_slot(&self) -> u32 {
+        self.device_slot
+    }
+    pub fn function(&self) -> u32 {
+        self.function
+    }
+    pub fn register_offset(&self) -> u32 {
+        self.register_offset
+    }
+    pub fn register_offset_with_mask(&self) -> u32 {
+        self.register_offset() & 0xFC
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    pub fn to_addr(&self) -> u32 {
+        let shift = |d: u32, shift_size: usize| (d << shift_size);
+
+        shift(1, 31)
+            | shift(self.bus(), 16)
+            | shift(self.device_slot(), 11)
+            | shift(self.function(), 8)
+            | self.register_offset_with_mask()
     }
 }
 
