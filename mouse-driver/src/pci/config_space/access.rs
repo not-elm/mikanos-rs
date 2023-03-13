@@ -1,8 +1,12 @@
 use crate::pci::config_space::access::config_address_register::ConfigAddrRegister;
 use crate::pci::config_space::access::intel_x86_io::{fetch_config_data, write_config_addr};
+use crate::pci::config_space::common_header::class_code::ClassCode;
+use crate::pci::config_space::common_header::class_code::ClassCode::InputDevice;
 use crate::pci::config_space::common_header::common_header_holdable::{
     exists_device, CommonHeaderHoldable,
 };
+use crate::pci::config_space::common_header::sub_class::Subclass;
+use crate::pci::config_space::common_header::sub_class::Subclass::Mouse;
 use crate::pci::config_space::device::general_device::GeneralDevice;
 use crate::pci::config_space::device::multiple_function_device::MultipleFunctionDevice;
 use crate::pci::config_space::device::pci_bridge_device::PciBrideDevice;
@@ -76,7 +80,7 @@ impl CommonHeaderHoldable for ConfigurationSpace {
 }
 
 fn select_pci_device(config_space: ConfigurationSpace, header_type: u8) -> Option<PciDevice> {
-    return if (header_type & 0b11) == 0x1 {
+    return if (config_space.class_code().unwrap_or(InputDevice) == ClassCode::BridgeDevice) &&  (config_space.sub_class()).unwrap_or(Mouse) == Subclass::Bridge{
         Some(PciDevice::Bridge(PciBrideDevice::new(config_space)))
     } else {
         Some(PciDevice::General(GeneralDevice::new(config_space)))

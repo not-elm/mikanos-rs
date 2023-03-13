@@ -13,7 +13,7 @@ use crate::gop::pixel::{fill_rect, select_pixel_writer};
 type ImplCharWritable = impl CharWritable;
 pub type ImplPixelWritable = impl PixelWritable;
 /// コンソールの縦幅(MikanOSに合わせています。)
-const HEIGHT: usize = 11;
+const HEIGHT: usize = 26;
 
 /// コンソールの横幅(MikanOSに合わせています)
 const WIDTH: usize = 81;

@@ -1,3 +1,4 @@
+use kernel_lib::println;
 use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::common_header::class_code::ClassCode;
 use crate::pci::config_space::common_header::sub_class::Subclass;
@@ -47,11 +48,12 @@ pub(crate) fn convert_to_device_id(data_offset_0: u32) -> u16 {
 }
 
 pub(crate) fn convert_to_class_code(data_offset_8: u32) -> u8 {
-    ((data_offset_8 >> 24) & 0b1111_1111) as u8
+
+    ((data_offset_8 >> 24) & 0xFF) as u8
 }
 
 pub(crate) fn convert_to_sub_class(data_offset_8: u32) -> u8 {
-    ((data_offset_8 >> 16) & 0b1111_1111) as u8
+    ((data_offset_8 >> 16) & 0xFF) as u8
 }
 
 pub(crate) fn convert_to_header_type(data_offset_c: u32) -> u8 {

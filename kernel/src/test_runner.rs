@@ -1,4 +1,5 @@
 use kernel_lib::println;
+use mouse_driver::pci::config_space::device::find_usb_mouse;
 
 pub trait Testable {
     fn run(&self) -> ();
@@ -27,12 +28,16 @@ pub fn my_runner(tests: &[&dyn Testable]) {
 }
 
 #[test_case]
-fn it_fetch_mouse_device() {
+fn it_not_over_flow_frame_buffer() {
    for i in 0..100{
        println!("{}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", i);
    }
 }
 
+#[test_case]
+fn it_fetch_mouse_device() {
+    assert!(find_usb_mouse().is_some())
+}
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // #[repr(u32)]
 // pub enum QemuExitCode {

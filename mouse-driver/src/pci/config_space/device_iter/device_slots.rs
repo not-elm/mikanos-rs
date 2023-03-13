@@ -3,6 +3,7 @@ use kernel_lib::println;
 use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::device::PciDevice;
 
+#[derive(Debug)]
 pub struct DeviceSlots {
     bus: u8,
     device_slot: u8,
@@ -27,7 +28,7 @@ impl DeviceSlots {
         let device = config.and_then(|c| c.cast_device());
         self.device_slot += 1;
         if let Some(device) = device {
-            println!("deive {:?}", device);
+
             return Some(device);
         }
 

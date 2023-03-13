@@ -1,4 +1,3 @@
-use kernel_lib::println;
 
 use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
@@ -12,9 +11,10 @@ pub struct MultipleFunctionDevice {
 
 impl MultipleFunctionDevice {
     pub(crate) fn new(config_space: ConfigurationSpace) -> Self {
+        let function = config_space.function() + 1;
         Self {
             config_space,
-            function: 1,
+            function
         }
     }
 }
@@ -35,24 +35,25 @@ impl Iterator for MultipleFunctionDevice {
 
 impl MultipleFunctionDevice {
     fn next_sequence(&mut self) -> Option<PciDevice> {
-        println!("start {:?}", self.function);
-        const MAX_FUNCTION_SIZE: u8 = 8;
-        if MAX_FUNCTION_SIZE <= self.function {
-            return None;
+        loop {
+            const MAX_FUNCTION_SIZE: u8 = 8;
+            if MAX_FUNCTION_SIZE <= self.function {
+                return None;
+            }
+
+
+            let next_config_space = ConfigurationSpace::try_new(
+                self.config_space.bus(),
+                self.config_space.device_slot(),
+                self.function,
+            );
+
+            self.function += 1;
+            if let Some(next_config_space) = next_config_space.and_then(|c| c.cast_device()) {
+                return Some(next_config_space);
+            }
         }
 
-        let next_config_space = ConfigurationSpace::try_new(
-            self.config_space.bus(),
-            self.config_space.device_slot(),
-            self.function,
-        );
-        println!("next{:?}", next_config_space);
-        println!("end {:?}", self.function);
-        self.function += 1;
-        if let Some(next_config_space) = next_config_space.and_then(|c| c.cast_device()) {
-            return Some(next_config_space);
-        }
 
-        return self.next_sequence();
     }
 }

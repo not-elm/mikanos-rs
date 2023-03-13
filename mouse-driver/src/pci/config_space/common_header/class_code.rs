@@ -14,6 +14,8 @@ impl_enum_try_from_be! {
         BaseSystemPeripherals = 0x08,
         /// マウスなど
         InputDevice = 0x09,
+
+        SerialBus = 0x0C,
         NoSupport,
     },
     u8,
