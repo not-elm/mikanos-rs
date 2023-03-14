@@ -1,6 +1,5 @@
-
-use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::device::PciDevice;
+use crate::pci::config_space::io::ConfigurationSpace;
 
 #[derive(Debug)]
 pub struct DeviceSlots {
@@ -21,7 +20,6 @@ impl Iterator for DeviceSlots {
         let device = config.map(|c| c.cast_device());
         self.device_slot += 1;
         if let Some(device) = device {
-
             return Some(device);
         }
 
@@ -30,12 +28,10 @@ impl Iterator for DeviceSlots {
 }
 
 impl DeviceSlots {
-
     pub(crate) fn new(bus: u8) -> Self {
         Self {
             bus,
             device_slot: 0,
         }
     }
-
 }

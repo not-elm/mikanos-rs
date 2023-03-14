@@ -1,6 +1,6 @@
-use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::pci::config_space::device::PciDevice;
+use crate::pci::config_space::io::ConfigurationSpace;
 
 #[derive(Debug)]
 pub struct MultipleFunctionDevice {
@@ -47,5 +47,3 @@ impl Iterator for MultipleFunctionDevice {
         self.next()
     }
 }
-
-

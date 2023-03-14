@@ -56,13 +56,17 @@ impl ConfigAddrRegister {
 #[cfg(test)]
 mod test {
     extern crate alloc;
+
     use alloc::format;
 
-    use crate::pci::config_space::access::config_address_register::ConfigAddrRegister;
+    use crate::pci::config_space::io::config_address_register::ConfigAddrRegister;
 
     #[test]
     fn it_new_default() {
         let p = ConfigAddrRegister::new(1, 0, 0, 0);
-        assert_eq!(format!("{p:?}"), "config_addr=0b10000000000000000000000000000000");
+        assert_eq!(
+            format!("{p:?}"),
+            "config_addr=0b10000000000000000000000000000000"
+        );
     }
 }

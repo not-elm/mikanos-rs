@@ -1,5 +1,3 @@
-use crate::pci::config_space::access::config_address_register::ConfigAddrRegister;
-use crate::pci::config_space::access::intel_x86_io::{fetch_config_data, write_config_addr};
 use crate::pci::config_space::common_header::class_code::ClassCode;
 use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::pci::config_space::common_header::sub_class::Subclass;
@@ -7,9 +5,11 @@ use crate::pci::config_space::device::general_device::GeneralDevice;
 use crate::pci::config_space::device::multiple_function_device::MultipleFunctionDevice;
 use crate::pci::config_space::device::pci_bridge_device::PciBrideDevice;
 use crate::pci::config_space::device::PciDevice;
+use crate::pci::config_space::io::asm::{fetch_config_data, write_config_addr};
+use crate::pci::config_space::io::config_address_register::ConfigAddrRegister;
 
+pub mod asm;
 pub mod config_address_register;
-pub mod intel_x86_io;
 
 #[derive(Clone, Debug)]
 #[repr(C)]
@@ -84,7 +84,7 @@ fn select_pci_device(config_space: ConfigurationSpace) -> PciDevice {
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::access::ConfigurationSpace;
+    use crate::pci::config_space::io::ConfigurationSpace;
 
     #[test]
     fn it_new_first_offset() {

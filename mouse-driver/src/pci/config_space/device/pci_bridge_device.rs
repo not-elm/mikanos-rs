@@ -1,6 +1,6 @@
-use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::pci::config_space::device_iter::device_slots::DeviceSlots;
+use crate::pci::config_space::io::ConfigurationSpace;
 
 #[derive(Debug)]
 pub struct PciBrideDevice(ConfigurationSpace);

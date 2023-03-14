@@ -1,10 +1,10 @@
-use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::common_header::class_code::ClassCode;
 use crate::pci::config_space::common_header::class_code::ClassCode::NoSupport;
 use crate::pci::config_space::common_header::header_type::HeaderType;
 use crate::pci::config_space::common_header::sub_class::Subclass;
 use crate::pci::config_space::common_header::vendor_id::VendorId;
 use crate::pci::config_space::device::device_base::DeviceBase;
+use crate::pci::config_space::io::ConfigurationSpace;
 
 pub trait CommonHeaderHoldable {
     fn device_id(&self) -> u16 {

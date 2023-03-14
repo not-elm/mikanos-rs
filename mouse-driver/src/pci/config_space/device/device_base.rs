@@ -1,5 +1,5 @@
-use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
+use crate::pci::config_space::io::ConfigurationSpace;
 
 #[repr(transparent)]
 #[derive(Debug, Clone)]
