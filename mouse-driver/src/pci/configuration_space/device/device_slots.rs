@@ -1,5 +1,5 @@
-use crate::pci::config_space::device::PciDevice;
-use crate::pci::config_space::io::ConfigurationSpace;
+use crate::pci::configuration_space::device::function::Function;
+use crate::pci::configuration_space::ConfigurationSpace;
 
 #[derive(Debug)]
 pub struct DeviceSlots {
@@ -8,7 +8,7 @@ pub struct DeviceSlots {
 }
 
 impl Iterator for DeviceSlots {
-    type Item = PciDevice;
+    type Item = Function;
 
     fn next(&mut self) -> Option<Self::Item> {
         const DEVICE_SLOT_SIZE: u8 = 32;

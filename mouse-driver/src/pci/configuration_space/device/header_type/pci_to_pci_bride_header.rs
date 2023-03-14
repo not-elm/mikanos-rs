@@ -1,17 +1,17 @@
-use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
-use crate::pci::config_space::device_iter::device_slots::DeviceSlots;
-use crate::pci::config_space::io::ConfigurationSpace;
+use crate::pci::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
+use crate::pci::configuration_space::device::device_slots::DeviceSlots;
+use crate::pci::configuration_space::ConfigurationSpace;
 
 #[derive(Debug)]
-pub struct PciBrideDevice(ConfigurationSpace);
+pub struct PciToPciBridgeHeader(ConfigurationSpace);
 
-impl PciBrideDevice {
+impl PciToPciBridgeHeader {
     pub fn new(config_space: ConfigurationSpace) -> Self {
         Self(config_space)
     }
 }
 
-impl PciBrideDevice {
+impl PciToPciBridgeHeader {
     pub fn children(&self) -> DeviceSlots {
         DeviceSlots::new(self.bus_numbers())
     }
@@ -24,15 +24,15 @@ fn convert_to_bus_numbers(offset_18: u32) -> u8 {
     ((offset_18 >> 8) & 0xFF) as u8
 }
 
-impl CommonHeaderHoldable for PciBrideDevice {
-    fn config_space(&self) -> &ConfigurationSpace {
+impl CommonHeaderHoldable for PciToPciBridgeHeader {
+    fn as_config_space(&self) -> &ConfigurationSpace {
         &self.0
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::device::pci_bridge_device::convert_to_bus_numbers;
+    use crate::pci::configuration_space::device::header_type::pci_to_pci_bride_header::convert_to_bus_numbers;
 
     #[test]
     fn it_sub_numbers() {

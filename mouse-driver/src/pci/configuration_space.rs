@@ -1,15 +1,18 @@
-use crate::pci::config_space::common_header::class_code::ClassCode;
-use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
-use crate::pci::config_space::common_header::sub_class::Subclass;
-use crate::pci::config_space::device::general_device::GeneralDevice;
-use crate::pci::config_space::device::multiple_function_device::MultipleFunctionDevice;
-use crate::pci::config_space::device::pci_bridge_device::PciBrideDevice;
-use crate::pci::config_space::device::PciDevice;
-use crate::pci::config_space::io::asm::{fetch_config_data, write_config_addr};
-use crate::pci::config_space::io::config_address_register::ConfigAddrRegister;
+use crate::pci::configuration_space::common_header::class_code::ClassCode;
+use crate::pci::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
+use crate::pci::configuration_space::common_header::sub_class::Subclass;
+use crate::pci::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
+use crate::pci::configuration_space::device::function::single_function_device::SingleFunctionDevice;
+use crate::pci::configuration_space::device::function::Function;
+use crate::pci::configuration_space::device::function::Function::Single;
+use crate::pci::configuration_space::device::header_type::general_header::GeneralHeader;
+use crate::pci::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
+use crate::pci::configuration_space::io::asm::{fetch_config_data, write_config_addr};
+use crate::pci::configuration_space::io::config_address_register::ConfigAddrRegister;
 
-pub mod asm;
-pub mod config_address_register;
+pub mod common_header;
+pub mod device;
+pub mod io;
 
 #[derive(Clone, Debug)]
 #[repr(C)]
@@ -29,11 +32,11 @@ impl ConfigurationSpace {
         }
     }
 
-    pub fn cast_device(self) -> PciDevice {
+    pub fn cast_device(self) -> Function {
         if self.header_type().is_multiple_function() {
-            PciDevice::MultipleFunction(MultipleFunctionDevice::new(self))
+            Function::Multiple(MultipleFunctionDevice::new(self))
         } else {
-            select_pci_device(self)
+            select_single_function_device(self)
         }
     }
     pub fn bus(&self) -> u8 {
@@ -67,24 +70,26 @@ impl ConfigurationSpace {
 }
 
 impl CommonHeaderHoldable for ConfigurationSpace {
-    fn config_space(&self) -> &ConfigurationSpace {
+    fn as_config_space(&self) -> &ConfigurationSpace {
         self
     }
 }
 
-fn select_pci_device(config_space: ConfigurationSpace) -> PciDevice {
-    return if (config_space.class_code() == ClassCode::BridgeDevice)
+fn select_single_function_device(config_space: ConfigurationSpace) -> Function {
+    let device_header = if (config_space.class_code() == ClassCode::BridgeDevice)
         && (config_space.sub_class()) == Subclass::PciToPciBridge
     {
-        PciDevice::PciToPciBridge(PciBrideDevice::new(config_space))
+        SingleFunctionDevice::PciToPciBride(PciToPciBridgeHeader::new(config_space))
     } else {
-        PciDevice::General(GeneralDevice::new(config_space))
+        SingleFunctionDevice::General(GeneralHeader::new(config_space))
     };
+
+    Single(device_header)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::io::ConfigurationSpace;
+    use crate::pci::configuration_space::ConfigurationSpace;
 
     #[test]
     fn it_new_first_offset() {

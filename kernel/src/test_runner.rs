@@ -1,5 +1,5 @@
 use kernel_lib::println;
-use mouse_driver::pci::config_space::device::find_usb_mouse;
+use mouse_driver::pci::configuration_space::device::find_usb_mouse;
 
 pub trait Testable {
     fn run(&self) -> ();
@@ -29,9 +29,9 @@ pub fn my_runner(tests: &[&dyn Testable]) {
 
 #[test_case]
 fn it_not_over_flow_frame_buffer() {
-   for i in 0..30{
-       println!("{}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", i);
-   }
+    for i in 0..30 {
+        println!("{}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", i);
+    }
 }
 
 #[test_case]

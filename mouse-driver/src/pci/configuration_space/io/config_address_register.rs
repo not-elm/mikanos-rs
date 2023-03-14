@@ -59,7 +59,7 @@ mod test {
 
     use alloc::format;
 
-    use crate::pci::config_space::io::config_address_register::ConfigAddrRegister;
+    use crate::pci::configuration_space::io::config_address_register::ConfigAddrRegister;
 
     #[test]
     fn it_new_default() {

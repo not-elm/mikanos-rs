@@ -1,6 +1,6 @@
-use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
-use crate::pci::config_space::device::PciDevice;
-use crate::pci::config_space::io::ConfigurationSpace;
+use crate::pci::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
+use crate::pci::configuration_space::device::function::Function;
+use crate::pci::configuration_space::ConfigurationSpace;
 
 #[derive(Debug)]
 pub struct MultipleFunctionDevice {
@@ -19,13 +19,13 @@ impl MultipleFunctionDevice {
 }
 
 impl CommonHeaderHoldable for MultipleFunctionDevice {
-    fn config_space(&self) -> &ConfigurationSpace {
+    fn as_config_space(&self) -> &ConfigurationSpace {
         &self.config_space
     }
 }
 
 impl Iterator for MultipleFunctionDevice {
-    type Item = PciDevice;
+    type Item = Function;
 
     fn next(&mut self) -> Option<Self::Item> {
         const MAX_FUNCTION_SIZE: u8 = 8;

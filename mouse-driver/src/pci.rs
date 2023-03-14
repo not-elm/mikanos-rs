@@ -1,1 +1,1 @@
-pub mod config_space;
+pub mod configuration_space;

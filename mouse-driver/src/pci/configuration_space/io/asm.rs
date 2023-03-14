@@ -1,6 +1,6 @@
 use core::arch::global_asm;
 
-use crate::pci::config_space::io::config_address_register::ConfigAddrRegister;
+use crate::pci::configuration_space::io::config_address_register::ConfigAddrRegister;
 
 global_asm!(
     r#"

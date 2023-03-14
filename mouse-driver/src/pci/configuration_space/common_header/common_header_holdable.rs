@@ -1,28 +1,26 @@
-use crate::pci::config_space::common_header::class_code::ClassCode;
-use crate::pci::config_space::common_header::class_code::ClassCode::NoSupport;
-use crate::pci::config_space::common_header::header_type::HeaderType;
-use crate::pci::config_space::common_header::sub_class::Subclass;
-use crate::pci::config_space::common_header::vendor_id::VendorId;
-use crate::pci::config_space::device::device_base::DeviceBase;
-use crate::pci::config_space::io::ConfigurationSpace;
+use crate::pci::configuration_space::common_header::class_code::ClassCode;
+use crate::pci::configuration_space::common_header::header_type::HeaderType;
+use crate::pci::configuration_space::common_header::sub_class::Subclass;
+use crate::pci::configuration_space::common_header::vendor_id::VendorId;
+use crate::pci::configuration_space::ConfigurationSpace;
 
 pub trait CommonHeaderHoldable {
     fn device_id(&self) -> u16 {
-        convert_to_device_id(self.config_space().fetch_data_offset_at(0))
+        convert_to_device_id(self.as_config_space().fetch_data_offset_at(0))
     }
     fn vendor_id(&self) -> VendorId {
         VendorId::new(convert_to_vendor_id(
-            self.config_space().fetch_data_offset_at(0),
+            self.as_config_space().fetch_data_offset_at(0),
         ))
     }
 
     fn class_code(&self) -> ClassCode {
-        let code = self.config_space().fetch_data_offset_at(0x8);
+        let code = self.as_config_space().fetch_data_offset_at(0x8);
 
-        ClassCode::try_from(convert_to_class_code(code)).unwrap_or(NoSupport)
+        ClassCode::try_from(convert_to_class_code(code)).unwrap_or(ClassCode::NoSupport)
     }
     fn sub_class(&self) -> Subclass {
-        let offset_8 = self.config_space().fetch_data_offset_at(0x08);
+        let offset_8 = self.as_config_space().fetch_data_offset_at(0x08);
 
         let sub_class = convert_to_sub_class(offset_8);
 
@@ -30,13 +28,11 @@ pub trait CommonHeaderHoldable {
     }
     fn header_type(&self) -> HeaderType {
         HeaderType::new(convert_to_header_type(
-            self.config_space().fetch_data_offset_at(0x0C),
+            self.as_config_space().fetch_data_offset_at(0x0C),
         ))
     }
-    fn to_device_base(&self) -> DeviceBase {
-        DeviceBase::new(self.config_space().clone())
-    }
-    fn config_space(&self) -> &ConfigurationSpace;
+
+    fn as_config_space(&self) -> &ConfigurationSpace;
 }
 
 pub(crate) fn convert_to_vendor_id(data_offset_0: u32) -> u16 {
@@ -61,7 +57,7 @@ pub(crate) fn convert_to_header_type(data_offset_c: u32) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::common_header::common_header_holdable::{
+    use crate::pci::configuration_space::common_header::common_header_holdable::{
         convert_to_class_code, convert_to_device_id, convert_to_sub_class, convert_to_vendor_id,
     };
 
