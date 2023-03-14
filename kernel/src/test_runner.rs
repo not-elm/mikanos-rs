@@ -1,5 +1,7 @@
 use kernel_lib::println;
-use mouse_driver::pci::configuration_space::device::find_usb_mouse;
+use mouse_driver::pci::configuration_space::common_header::class_code::ClassCode;
+use mouse_driver::pci::configuration_space::common_header::sub_class::Subclass;
+use mouse_driver::pci::pci_device_searcher::PciDeviceSearcher;
 
 pub trait Testable {
     fn run(&self) -> ();
@@ -36,7 +38,11 @@ fn it_not_over_flow_frame_buffer() {
 
 #[test_case]
 fn it_fetch_mouse_device() {
-    assert!(find_usb_mouse().is_some())
+    assert!(PciDeviceSearcher::new()
+        .class_code(ClassCode::SerialBus)
+        .sub_class(Subclass::Usb)
+        .search()
+        .is_some())
 }
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // #[repr(u32)]

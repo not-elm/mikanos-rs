@@ -1,7 +1,8 @@
+use core::ops::Deref;
+
 #[repr(transparent)]
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct VendorId(u16);
-
 
 impl VendorId {
     pub fn new(vendor_id: u16) -> Self {
@@ -12,3 +13,10 @@ impl VendorId {
     }
 }
 
+impl Deref for VendorId {
+    type Target = u16;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}

@@ -5,7 +5,7 @@ use crate::pci::configuration_space::common_header::vendor_id::VendorId;
 use crate::pci::configuration_space::ConfigurationSpace;
 
 pub trait CommonHeaderHoldable {
-    fn device_id(&self) -> u16 {
+    fn device_slot(&self) -> u16 {
         convert_to_device_id(self.as_config_space().fetch_data_offset_at(0))
     }
     fn vendor_id(&self) -> VendorId {
