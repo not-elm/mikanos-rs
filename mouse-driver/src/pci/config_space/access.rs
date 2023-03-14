@@ -2,9 +2,7 @@ use crate::pci::config_space::access::config_address_register::ConfigAddrRegiste
 use crate::pci::config_space::access::intel_x86_io::{fetch_config_data, write_config_addr};
 use crate::pci::config_space::common_header::class_code::ClassCode;
 use crate::pci::config_space::common_header::class_code::ClassCode::InputDevice;
-use crate::pci::config_space::common_header::common_header_holdable::{
-    CommonHeaderHoldable, exists_device,
-};
+use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::pci::config_space::common_header::sub_class::Subclass;
 use crate::pci::config_space::common_header::sub_class::Subclass::Mouse;
 use crate::pci::config_space::device::general_device::GeneralDevice;
@@ -26,7 +24,7 @@ pub struct ConfigurationSpace {
 impl ConfigurationSpace {
     pub fn try_new(bus: u8, device_slot: u8, function: u8) -> Option<Self> {
         let me = ConfigurationSpace::new(bus, device_slot, function);
-        if exists_device(me.fetch_data_offset_at(0)) {
+        if me.vendor_id().valid_device() {
             return Some(me);
         } else {
             None
@@ -35,9 +33,7 @@ impl ConfigurationSpace {
 
     pub fn cast_device(self) -> PciDevice {
         if self.header_type().is_multiple_function() {
-            PciDevice::MultipleFunction(MultipleFunctionDevice::new(
-                self,
-            ))
+            PciDevice::MultipleFunction(MultipleFunctionDevice::new(self))
         } else {
             select_pci_device(self)
         }
@@ -79,7 +75,9 @@ impl CommonHeaderHoldable for ConfigurationSpace {
 }
 
 fn select_pci_device(config_space: ConfigurationSpace) -> PciDevice {
-    return if (config_space.class_code().unwrap_or(InputDevice) == ClassCode::BridgeDevice) && (config_space.sub_class()).unwrap_or(Mouse) == Subclass::Bridge {
+    return if (config_space.class_code().unwrap_or(InputDevice) == ClassCode::BridgeDevice)
+        && (config_space.sub_class()).unwrap_or(Mouse) == Subclass::Bridge
+    {
         PciDevice::Bridge(PciBrideDevice::new(config_space))
     } else {
         PciDevice::General(GeneralDevice::new(config_space))

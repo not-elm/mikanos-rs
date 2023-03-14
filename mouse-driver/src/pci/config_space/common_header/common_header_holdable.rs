@@ -10,7 +10,9 @@ pub trait CommonHeaderHoldable {
         convert_to_device_id(self.config_space().fetch_data_offset_at(0))
     }
     fn vendor_id(&self) -> VendorId {
-        VendorId::new( convert_to_vendor_id(self.config_space().fetch_data_offset_at(0)))
+        VendorId::new(convert_to_vendor_id(
+            self.config_space().fetch_data_offset_at(0),
+        ))
     }
 
     fn class_code(&self) -> Option<ClassCode> {
@@ -26,18 +28,14 @@ pub trait CommonHeaderHoldable {
         Subclass::try_new(self.class_code()?, sub_class)
     }
     fn header_type(&self) -> HeaderType {
-        HeaderType::new(convert_to_header_type(self.config_space().fetch_data_offset_at(0x0C)))
+        HeaderType::new(convert_to_header_type(
+            self.config_space().fetch_data_offset_at(0x0C),
+        ))
     }
     fn to_device_base(&self) -> DeviceBase {
         DeviceBase::new(self.config_space().clone())
     }
     fn config_space(&self) -> &ConfigurationSpace;
-}
-
-/// コンフィグデータレジスタから取得したデバイスのデータが有効なものか確認します。
-/// 無効なデバイスである場合、CommonHeaderのオフセットデータは0xFFFFになります。
-pub(crate) fn exists_device(data_offset_0: u32) -> bool {
-    data_offset_0 != 0xFFFF
 }
 
 pub(crate) fn convert_to_vendor_id(data_offset_0: u32) -> u16 {
@@ -56,14 +54,15 @@ pub(crate) fn convert_to_sub_class(data_offset_8: u32) -> u8 {
     ((data_offset_8 >> 16) & 0xFF) as u8
 }
 
-
 pub(crate) fn convert_to_header_type(data_offset_c: u32) -> u8 {
     ((data_offset_c >> 16) & 0xff) as u8
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::common_header::common_header_holdable::{convert_to_class_code, convert_to_device_id, convert_to_sub_class, convert_to_vendor_id};
+    use crate::pci::config_space::common_header::common_header_holdable::{
+        convert_to_class_code, convert_to_device_id, convert_to_sub_class, convert_to_vendor_id,
+    };
 
     #[test]
     fn it_convert_to_vendor_id() {
