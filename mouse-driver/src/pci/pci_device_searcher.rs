@@ -52,27 +52,27 @@ impl PciDeviceSearcher {
 }
 
 fn find_pci_device_with(target: &PciDeviceSearcher) -> Option<ConfigurationSpace> {
-    find_mouse_from_device_slots(DeviceSlots::new(0), target)
+    find_from_device_slots(DeviceSlots::new(0), target)
 }
 
-fn find_mouse_from_device_slots(
+fn find_from_device_slots(
     mut device_slot: DeviceSlots,
     target: &PciDeviceSearcher,
 ) -> Option<ConfigurationSpace> {
-    device_slot.find_map(|function| find_mouse_from_function(target, function))
+    device_slot.find_map(|function| find_from_function(target, function))
 }
 
-fn find_mouse_from_function(
+fn find_from_function(
     target: &PciDeviceSearcher,
     function: Function,
 ) -> Option<ConfigurationSpace> {
     match function {
-        Function::Single(single) => find_mouse_from_single(target, single),
-        Function::Multiple(multiple) => find_mouse_from_multiple(target, multiple),
+        Function::Single(single) => find_from_single(target, single),
+        Function::Multiple(multiple) => find_from_multiple(target, multiple),
     }
 }
 
-fn find_mouse_from_single(
+fn find_from_single(
     target: &PciDeviceSearcher,
     single: SingleFunctionDevice,
 ) -> Option<ConfigurationSpace> {
@@ -82,11 +82,11 @@ fn find_mouse_from_single(
     }
 }
 
-fn find_mouse_from_multiple(
+fn find_from_multiple(
     target: &PciDeviceSearcher,
     mut multiple_function_device: MultipleFunctionDevice,
 ) -> Option<ConfigurationSpace> {
-    multiple_function_device.find_map(|function| find_mouse_from_function(target, function))
+    multiple_function_device.find_map(|function| find_from_function(target, function))
 }
 
 fn find_within_bridge(
@@ -99,7 +99,7 @@ fn find_within_bridge(
 
     bridge
         .children()
-        .find_map(|device_slots| find_mouse_from_function(target, device_slots))
+        .find_map(|device_slots| find_from_function(target, device_slots))
 }
 
 fn get_if_target_device(
