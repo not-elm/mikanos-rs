@@ -1,4 +1,4 @@
-use core::ops::Deref;
+use core::fmt::{Debug, Formatter};
 
 /// コンフィグアドレスレジスタに書き込むためのデータ
 
@@ -7,6 +7,12 @@ pub struct ConfigAddrRegister {
     function: u32,
     device_slot: u32,
     bus: u32,
+}
+
+impl Debug for ConfigAddrRegister {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "config_addr=0b{:b}", self.as_data())
+    }
 }
 
 impl ConfigAddrRegister {
@@ -32,10 +38,11 @@ impl ConfigAddrRegister {
         self.register_offset
     }
     pub fn register_offset_with_mask(&self) -> u32 {
+        // 下位2Bitは0である必要があるためビットマスク
         self.register_offset() & 0xFC
     }
 
-    pub fn to_addr(&self) -> u32 {
+    pub fn as_data(&self) -> u32 {
         let shift = |d: u32, shift_size: usize| (d << shift_size);
 
         shift(1, 31)
@@ -48,18 +55,18 @@ impl ConfigAddrRegister {
 
 #[cfg(test)]
 mod test {
-    use crate::pci::config_space::access::config_address_register::ConfigAddrRegister;
+    extern crate alloc;
+
+    use alloc::format;
+
+    use crate::pci::configuration_space::io::config_address_register::ConfigAddrRegister;
 
     #[test]
     fn it_new_default() {
-        let p = ConfigAddrRegister::new();
-        assert_eq!(p.register_offset(), 0);
-        assert_eq!(0, p.0);
-    }
-
-    #[test]
-    fn it_deref() {
-        let p = ConfigAddrRegister::new().with_register_offset(1);
-        assert_eq!((*p >> 2), 1);
+        let p = ConfigAddrRegister::new(1, 0, 0, 0);
+        assert_eq!(
+            format!("{p:?}"),
+            "config_addr=0b10000000000000000000000000000000"
+        );
     }
 }

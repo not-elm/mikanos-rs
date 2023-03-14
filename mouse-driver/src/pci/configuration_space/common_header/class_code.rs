@@ -25,7 +25,7 @@ impl_enum_try_from_be! {
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::config_space::common_header::class_code::ClassCode;
+    use crate::pci::configuration_space::common_header::class_code::ClassCode;
 
     #[test]
     fn it_new_mass_controller() {
