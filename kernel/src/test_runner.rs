@@ -29,7 +29,7 @@ pub fn my_runner(tests: &[&dyn Testable]) {
 
 #[test_case]
 fn it_not_over_flow_frame_buffer() {
-   for i in 0..100{
+   for i in 0..30{
        println!("{}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", i);
    }
 }

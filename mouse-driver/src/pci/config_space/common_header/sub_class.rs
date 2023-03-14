@@ -1,4 +1,3 @@
-use kernel_lib::println;
 use crate::pci::config_space::common_header::class_code::ClassCode;
 use crate::pci::config_space::common_header::sub_class::Subclass::{Digitizer, Keyboard, Mouse, Scanner, Usb};
 
@@ -19,20 +18,19 @@ impl Subclass {
     pub(crate) fn try_new(class_code: ClassCode, sub_class: u8) -> Option<Subclass> {
         match class_code {
             ClassCode::InputDevice => from_input_device(sub_class),
-            ClassCode::BridgeDevice  =>{
-
-                if sub_class == 0x04{
+            ClassCode::BridgeDevice => {
+                if sub_class == 0x04 {
                     Some(Self::Bridge)
-                }else{
+                } else {
                     None
                 }
-
-            },
+            }
             ClassCode::SerialBus => from_serial_bus(sub_class),
             _ => None,
         }
     }
 }
+
 
 fn from_serial_bus(sub_class: u8) -> Option<Subclass> {
     Some(match sub_class {

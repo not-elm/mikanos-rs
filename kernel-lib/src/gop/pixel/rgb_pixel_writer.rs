@@ -31,9 +31,9 @@ impl PixelWritable for RgbPixelWriter {
     unsafe fn write(&mut self, x: usize, y: usize, color: &PixelColor) -> KernelResult {
         let pixel_pos = calc_pixel_pos(&self.frame_buffer_config, x, y)?;
         let write_base_ptr = self.frame_buffer_ptr.add(pixel_pos);
-        write_base_ptr.write_volatile(color.r());
-        write_base_ptr.add(1).write_volatile(color.g());
-        write_base_ptr.add(2).write_volatile(color.b());
+        write_base_ptr.write(color.r());
+        write_base_ptr.add(1).write(color.g());
+        write_base_ptr.add(2).write(color.b());
         Ok(())
     }
 }

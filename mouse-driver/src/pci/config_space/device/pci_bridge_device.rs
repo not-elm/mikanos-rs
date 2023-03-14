@@ -1,4 +1,3 @@
-use kernel_lib::println;
 use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::pci::config_space::device_iter::device_slots::DeviceSlots;
@@ -14,18 +13,15 @@ impl PciBrideDevice {
 
 impl PciBrideDevice {
     pub fn children(&self) -> DeviceSlots {
-
         DeviceSlots::new(self.bus_numbers())
     }
     pub fn bus_numbers(&self) -> u8 {
-
         convert_to_bus_numbers(self.0.fetch_data_offset_at(0x18))
     }
 }
 
 fn convert_to_bus_numbers(offset_18: u32) -> u8 {
-    println!("bus_numbers {:b}", offset_18);
-    ((offset_18 >> 8) & 0b1111_1111) as u8
+    ((offset_18 >> 8) & 0xFF) as u8
 }
 
 impl CommonHeaderHoldable for PciBrideDevice {
@@ -40,7 +36,7 @@ mod tests {
 
     #[test]
     fn it_sub_numbers() {
-        let offset_18 = 0b1111 << 16;
-        assert_eq!(convert_to_bus_numbers(offset_18), 0b1111);
+        let offset_18 = 0xFF_FC;
+        assert_eq!(convert_to_bus_numbers(offset_18), 0xFF);
     }
 }

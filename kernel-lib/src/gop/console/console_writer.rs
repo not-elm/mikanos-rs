@@ -1,17 +1,17 @@
 use core::fmt::Error;
 
-use crate::error::KernelResult;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 
+use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
+use crate::gop::pixel::{fill_rect, select_pixel_writer};
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::gop::pixel::{fill_rect, select_pixel_writer};
-
 
 type ImplCharWritable = impl CharWritable;
 pub type ImplPixelWritable = impl PixelWritable;
+
 /// コンソールの縦幅(MikanOSに合わせています。)
 const HEIGHT: usize = 26;
 
@@ -35,6 +35,7 @@ impl core::fmt::Write for ConsoleWriter {
         }
     }
 }
+
 impl ConsoleWriter {
     pub(crate) fn new(frame_buffer_config: FrameBufferConfig, color: PixelColor) -> Self {
         Self {
@@ -71,7 +72,6 @@ impl ConsoleWriter {
     }
 
     fn next_write_char(&mut self, c: char) -> KernelResult {
-
         if c == '\n' || c == char::default() {
             return self.new_line();
         }
@@ -121,23 +121,23 @@ impl ConsoleWriter {
         Ok(())
     }
 
-    fn shift_chars(&mut self){
-        for y in 1..=self.max_y(){
-           for x in 0..=self.max_x(){
-               self.chars[y-1][x] = self.chart_at(Vector2D::new(x, y));
-           }
+    fn shift_chars(&mut self) {
+        for y in 1..=self.max_y() {
+            for x in 0..=self.max_x() {
+                self.chars[y - 1][x] = self.chart_at(Vector2D::new(x, y));
+            }
         }
 
         let end_line = self.chars.last_mut().unwrap();
         end_line.fill(char::default());
     }
 
-    fn flush(&mut self) -> KernelResult{
-        for y in 0..=self.max_y(){
+    fn flush(&mut self) -> KernelResult {
+        for y in 0..=self.max_y() {
             self.clear_line(y)?;
-            for x in 0..=self.max_x(){
-                let c =self.chart_at(Vector2D::new(x, y));
-                if c == char::default() || c == '\n'{
+            for x in 0..=self.max_x() {
+                let c = self.chart_at(Vector2D::new(x, y));
+                if c == char::default() || c == '\n' {
                     break;
                 }
                 self.write_char(c, Vector2D::new(x, y))?;
@@ -146,41 +146,34 @@ impl ConsoleWriter {
         Ok(())
     }
     fn clear_line(&mut self, y: usize) -> KernelResult {
-        let to = Vector2D::new(self.max_x() * 8, (y * 16)  + 16);
+        let to = Vector2D::new(self.max_x() * 8, (y * 16) + 16);
         fill_rect(
             &mut self.pixel_writer,
-            Vector2D::new(0, (y * 16)),
-            to,
-            PixelColor::new(0x00, 0x00, 0x00),
-        )
-    }
-    fn clear_display(&mut self) -> KernelResult {
-        let to = Vector2D::new(self.max_x() * 8, HEIGHT* 16);
-        fill_rect(
-            &mut self.pixel_writer,
-            Vector2D::new(0, 0),
+            Vector2D::new(0, y * 16),
             to,
             PixelColor::new(0x00, 0x00, 0x00),
         )
     }
 
-    fn max_y(&self) -> usize{
+
+    fn max_y(&self) -> usize {
         self.chars.len() - 1
     }
 
-    fn max_x(&self) -> usize{
-        self.chars[0].len()-1
+    fn max_x(&self) -> usize {
+        self.chars[0].len() - 1
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::gop::console::console_builder::ConsoleBuilder;
     use alloc::format;
 
-    use crate::gop::console::console_writer::{HEIGHT};
     use common_lib::frame_buffer::FrameBufferConfig;
     use common_lib::vector::Vector2D;
+
+    use crate::gop::console::console_builder::ConsoleBuilder;
+    use crate::gop::console::console_writer::HEIGHT;
 
     #[test]
     fn it_new_line() {
@@ -219,6 +212,7 @@ mod tests {
         assert_eq!(console.y(), 1);
         assert_eq!(console.chart_at(Vector2D::new(0, 1)), '0');
     }
+
     #[test]
     fn it_scroll_display() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
@@ -228,16 +222,18 @@ mod tests {
 
         assert_eq!(console.chart_at(Vector2D::new(0, 0)), '1');
     }
+
     #[test]
     fn it_end_when_scroll_display() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-        for i in 0..HEIGHT{
+        for i in 0..HEIGHT {
             assert!(console.write_str(&format!("{}\n", i)).is_ok());
         }
 
         assert_eq!(console.chart_at(Vector2D::new(1, 0)), '\0');
-        assert_eq!(console.chart_at(Vector2D::new(2, HEIGHT-1)), '\0');
+        assert_eq!(console.chart_at(Vector2D::new(2, HEIGHT - 1)), '\0');
     }
+
     #[test]
     fn it_two_new_line() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());

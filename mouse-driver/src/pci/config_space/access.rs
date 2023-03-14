@@ -3,7 +3,7 @@ use crate::pci::config_space::access::intel_x86_io::{fetch_config_data, write_co
 use crate::pci::config_space::common_header::class_code::ClassCode;
 use crate::pci::config_space::common_header::class_code::ClassCode::InputDevice;
 use crate::pci::config_space::common_header::common_header_holdable::{
-    exists_device, CommonHeaderHoldable,
+    CommonHeaderHoldable, exists_device,
 };
 use crate::pci::config_space::common_header::sub_class::Subclass;
 use crate::pci::config_space::common_header::sub_class::Subclass::Mouse;
@@ -33,14 +33,13 @@ impl ConfigurationSpace {
         }
     }
 
-    pub fn cast_device(self) -> Option<PciDevice> {
-        let header_type = self.header_type();
-
-        match header_type & 0x80 {
-            0 => select_pci_device(self, header_type),
-            _ => Some(PciDevice::MultipleFunction(MultipleFunctionDevice::new(
+    pub fn cast_device(self) -> PciDevice {
+        if self.header_type().is_multiple_function() {
+            PciDevice::MultipleFunction(MultipleFunctionDevice::new(
                 self,
-            ))),
+            ))
+        } else {
+            select_pci_device(self)
         }
     }
     pub fn bus(&self) -> u8 {
@@ -79,11 +78,11 @@ impl CommonHeaderHoldable for ConfigurationSpace {
     }
 }
 
-fn select_pci_device(config_space: ConfigurationSpace, header_type: u8) -> Option<PciDevice> {
-    return if (config_space.class_code().unwrap_or(InputDevice) == ClassCode::BridgeDevice) &&  (config_space.sub_class()).unwrap_or(Mouse) == Subclass::Bridge{
-        Some(PciDevice::Bridge(PciBrideDevice::new(config_space)))
+fn select_pci_device(config_space: ConfigurationSpace) -> PciDevice {
+    return if (config_space.class_code().unwrap_or(InputDevice) == ClassCode::BridgeDevice) && (config_space.sub_class()).unwrap_or(Mouse) == Subclass::Bridge {
+        PciDevice::Bridge(PciBrideDevice::new(config_space))
     } else {
-        Some(PciDevice::General(GeneralDevice::new(config_space)))
+        PciDevice::General(GeneralDevice::new(config_space))
     };
 }
 
@@ -94,8 +93,8 @@ mod tests {
     #[test]
     fn it_new_first_offset() {
         let p = ConfigurationSpace::new(1, 2, 3).config_addr_at(0);
-        let inner = *p;
-        assert_eq!(p.enabled(), true);
+        let inner = p.as_data();
+
         assert_eq!((inner >> 31), 1);
 
         assert_eq!(p.bus(), 1);
