@@ -1,5 +1,4 @@
 use crate::pci::config_space::common_header::class_code::ClassCode;
-use crate::pci::config_space::common_header::class_code::ClassCode::NoSupport;
 use crate::pci::config_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::pci::config_space::common_header::sub_class::Subclass;
 use crate::pci::config_space::device::device_base::DeviceBase;
@@ -16,7 +15,7 @@ pub mod pci_bridge_device;
 #[derive(Debug)]
 pub enum PciDevice {
     General(GeneralDevice),
-    Bridge(PciBrideDevice),
+    PciToPciBridge(PciBrideDevice),
     MultipleFunction(MultipleFunctionDevice),
 }
 
@@ -37,7 +36,7 @@ fn find_mouse_from_device_slots(mut device_slot: DeviceSlots) -> Option<DeviceBa
 fn find_mouse_from_pci(pci_device: PciDevice) -> Option<DeviceBase> {
     match pci_device {
         PciDevice::General(device) => some_if_mouse_class(&device),
-        PciDevice::Bridge(bridge) => find_within_bridge(bridge),
+        PciDevice::PciToPciBridge(bridge) => find_within_bridge(bridge),
         PciDevice::MultipleFunction(multiple_function_device) => {
             find_mouse_from_multiple_function_device(multiple_function_device)
         }
@@ -55,9 +54,7 @@ fn find_within_bridge(bridge: PciBrideDevice) -> Option<DeviceBase> {
 }
 
 fn some_if_mouse_class(device: &impl CommonHeaderHoldable) -> Option<DeviceBase> {
-    if device.class_code().unwrap_or(NoSupport) == ClassCode::SerialBus
-        && device.sub_class().unwrap_or(Subclass::Bridge) == Subclass::Usb
-    {
+    if device.class_code() == ClassCode::SerialBus && device.sub_class() == Subclass::Usb {
         return Some(device.to_device_base());
     }
 

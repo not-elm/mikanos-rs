@@ -1,5 +1,6 @@
 use crate::pci::config_space::access::ConfigurationSpace;
 use crate::pci::config_space::common_header::class_code::ClassCode;
+use crate::pci::config_space::common_header::class_code::ClassCode::NoSupport;
 use crate::pci::config_space::common_header::header_type::HeaderType;
 use crate::pci::config_space::common_header::sub_class::Subclass;
 use crate::pci::config_space::common_header::vendor_id::VendorId;
@@ -15,17 +16,17 @@ pub trait CommonHeaderHoldable {
         ))
     }
 
-    fn class_code(&self) -> Option<ClassCode> {
+    fn class_code(&self) -> ClassCode {
         let code = self.config_space().fetch_data_offset_at(0x8);
 
-        ClassCode::try_from(convert_to_class_code(code)).ok()
+        ClassCode::try_from(convert_to_class_code(code)).unwrap_or(NoSupport)
     }
-    fn sub_class(&self) -> Option<Subclass> {
+    fn sub_class(&self) -> Subclass {
         let offset_8 = self.config_space().fetch_data_offset_at(0x08);
 
         let sub_class = convert_to_sub_class(offset_8);
 
-        Subclass::try_new(self.class_code()?, sub_class)
+        Subclass::from_class_code(self.class_code(), sub_class)
     }
     fn header_type(&self) -> HeaderType {
         HeaderType::new(convert_to_header_type(
