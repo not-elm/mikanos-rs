@@ -2,4 +2,4 @@
 #![feature(type_alias_impl_trait)]
 
 pub mod pci;
-pub mod xhci_lib;
+pub mod xhci;
