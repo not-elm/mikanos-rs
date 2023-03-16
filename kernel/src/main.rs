@@ -2,6 +2,7 @@
 #![no_main]
 #![no_std]
 #![feature(custom_test_frameworks)]
+#![feature(strict_provenance)]
 #![test_runner(test_runner::my_runner)]
 #![reexport_test_harness_main = "test_main"]
 

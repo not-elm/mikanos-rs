@@ -1,0 +1,12 @@
+pub mod capability_registers;
+pub mod doorbell_registers;
+pub mod operation_registers;
+pub mod runtime_registers;
+
+pub struct Registers {}
+
+impl Registers {
+    pub fn new(_mmio_base_addr: usize) -> Self {
+        Self {}
+    }
+}
