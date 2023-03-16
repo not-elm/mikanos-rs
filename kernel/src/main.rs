@@ -34,12 +34,19 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
 
     draw_cursor().unwrap();
 
-    let mouse = PciDeviceSearcher::new()
+    let mmio_base_addr = PciDeviceSearcher::new()
         .class_code(ClassCode::SerialBus)
         .sub_class(Subclass::Usb)
-        .search();
+        .search()
+        .unwrap()
+        .cast_device()
+        .expect_single()
+        .unwrap()
+        .expect_general()
+        .unwrap()
+        .mmio_base_addr();
 
-    println!("find mouse = {:?}", mouse);
+    println!("mmio_base_addr = {:x}", mmio_base_addr);
 
     common_lib::assembly::hlt_forever();
 }

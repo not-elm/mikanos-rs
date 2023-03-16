@@ -8,4 +8,6 @@ pub enum KernelError {
     ExceededFrameBufferSize,
     NotSupportCharacter,
     TryFromIntError(TryFromIntError),
+    NotSingleFunction,
+    NotGeneralHeader,
 }

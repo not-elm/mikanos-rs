@@ -28,7 +28,7 @@ pub fn get_font_from(c: char) -> Option<*mut u8> {
 }
 
 // #[cfg(test)]
-// mod tests {
+// mod test_runner {
 //     use crate::gop::font::get_font_from;
 //
 //     /// 印字可能文字をすべて取得できるかのテスト

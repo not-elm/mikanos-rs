@@ -133,6 +133,7 @@ dependencies = [
  "bitfield-struct",
  "enum-try-from",
  "kernel-lib",
+ "macros",
  "xhci",
 ]
 

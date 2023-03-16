@@ -4,6 +4,8 @@ use mouse_driver::pci::configuration_space::common_header::class_code::ClassCode
 use mouse_driver::pci::configuration_space::common_header::sub_class::Subclass;
 use mouse_driver::pci::pci_device_searcher::PciDeviceSearcher;
 
+mod xhci;
+
 pub trait Testable {
     fn run(&self) -> ();
 }
@@ -30,28 +32,21 @@ pub fn my_runner(tests: &[&dyn Testable]) {
     common_lib::assembly::hlt_forever();
 }
 
-// #[test_case]
-// fn it_not_over_flow_frame_buffer() {
-//     for i in 0..30 {
-//         println!("{}AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", i);
-//     }
-// }
-
 #[test_case]
 fn it_fetch_mouse_device() {
     assert!(PciDeviceSearcher::new()
         .class_code(ClassCode::SerialBus)
         .sub_class(Subclass::Usb)
         .search()
-        .is_some())
+        .is_some());
 }
+
+#[derive(Volatile)]
+#[volatile_type(u64)]
+struct VolatileStruct(usize);
 
 #[test_case]
 fn it_impl_write_volatile() {
-    #[derive(Volatile)]
-    #[volatile_type(u64)]
-    struct VolatileStruct(usize);
-
     let addr = [0x00u64; 3].as_ptr().addr();
     let v = VolatileStruct(addr);
     assert_eq!(v.read_volatile(), 0x00);
@@ -59,6 +54,7 @@ fn it_impl_write_volatile() {
 
     assert_eq!(v.read_volatile(), 0xFF);
 }
+
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 // #[repr(u32)]
 // pub enum QemuExitCode {
