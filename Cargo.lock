@@ -78,7 +78,7 @@ dependencies = [
  "common-lib",
  "kernel-lib",
  "macros",
- "mouse-driver",
+ "pci",
  "x86_64",
 ]
 
@@ -121,7 +121,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "mouse-driver"
+name = "once"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60bfe75a40f755f162b794140436c57845cb106fd1467598631c76c6fff08e28"
+
+[[package]]
+name = "pci"
 version = "0.1.0"
 dependencies = [
  "bitfield-struct",
@@ -129,12 +135,6 @@ dependencies = [
  "kernel-lib",
  "macros",
 ]
-
-[[package]]
-name = "once"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60bfe75a40f755f162b794140436c57845cb106fd1467598631c76c6fff08e28"
 
 [[package]]
 name = "proc-macro2"

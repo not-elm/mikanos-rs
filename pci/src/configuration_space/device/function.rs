@@ -1,7 +1,7 @@
 use kernel_lib::error::{KernelError, KernelResult};
 use multiple_function_device::MultipleFunctionDevice;
 
-use crate::pci::configuration_space::device::function::single_function_device::SingleFunctionDevice;
+use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
 
 pub mod multiple_function_device;
 pub mod single_function_device;

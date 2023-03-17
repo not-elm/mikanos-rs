@@ -1,5 +1,5 @@
-use crate::pci::configuration_space::device::function::Function;
-use crate::pci::configuration_space::ConfigurationSpace;
+use crate::configuration_space::device::function::Function;
+use crate::configuration_space::ConfigurationSpace;
 
 #[derive(Debug)]
 pub struct DeviceSlots {

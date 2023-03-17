@@ -5,7 +5,7 @@ members = [
     "bootloader-lib",
     "kernel",
     "kernel-lib",
-    "mouse-driver",
+    "pci",
     "macros"
 ]
 

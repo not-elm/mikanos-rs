@@ -17,7 +17,7 @@ fn last_bit(header_type: u8) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::configuration_space::common_header::header_type::last_bit;
+    use crate::configuration_space::common_header::header_type::last_bit;
 
     #[test]
     fn it_convert_to_header_type() {

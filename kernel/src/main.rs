@@ -14,9 +14,9 @@ use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{draw_cursor, fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::println;
-use mouse_driver::pci::configuration_space::common_header::class_code::ClassCode;
-use mouse_driver::pci::configuration_space::common_header::sub_class::Subclass;
-use mouse_driver::pci::pci_device_searcher::PciDeviceSearcher;
+use pci::configuration_space::common_header::class_code::ClassCode;
+use pci::configuration_space::common_header::sub_class::Subclass;
+use pci::pci_device_searcher::PciDeviceSearcher;
 
 #[cfg(test)]
 mod test_runner;

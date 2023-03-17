@@ -1,6 +1,6 @@
-use crate::pci::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
-use crate::pci::configuration_space::device::device_slots::DeviceSlots;
-use crate::pci::configuration_space::ConfigurationSpace;
+use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
+use crate::configuration_space::device::device_slots::DeviceSlots;
+use crate::configuration_space::ConfigurationSpace;
 
 #[derive(Debug)]
 pub struct PciToPciBridgeHeader(ConfigurationSpace);
@@ -32,7 +32,7 @@ impl CommonHeaderHoldable for PciToPciBridgeHeader {
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::configuration_space::device::header_type::pci_to_pci_bride_header::convert_to_bus_numbers;
+    use crate::configuration_space::device::header_type::pci_to_pci_bride_header::convert_to_bus_numbers;
 
     #[test]
     fn it_sub_numbers() {

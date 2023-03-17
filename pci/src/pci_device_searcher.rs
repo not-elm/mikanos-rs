@@ -1,13 +1,13 @@
-use crate::pci::configuration_space::common_header::class_code::ClassCode;
-use crate::pci::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
-use crate::pci::configuration_space::common_header::sub_class::Subclass;
-use crate::pci::configuration_space::common_header::vendor_id::VendorId;
-use crate::pci::configuration_space::device::device_slots::DeviceSlots;
-use crate::pci::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
-use crate::pci::configuration_space::device::function::single_function_device::SingleFunctionDevice;
-use crate::pci::configuration_space::device::function::Function;
-use crate::pci::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
-use crate::pci::configuration_space::ConfigurationSpace;
+use crate::configuration_space::common_header::class_code::ClassCode;
+use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
+use crate::configuration_space::common_header::sub_class::Subclass;
+use crate::configuration_space::common_header::vendor_id::VendorId;
+use crate::configuration_space::device::device_slots::DeviceSlots;
+use crate::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
+use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
+use crate::configuration_space::device::function::Function;
+use crate::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
+use crate::configuration_space::ConfigurationSpace;
 
 pub struct PciDeviceSearcher {
     vendor_id: Option<VendorId>,

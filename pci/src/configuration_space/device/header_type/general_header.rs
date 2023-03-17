@@ -1,5 +1,5 @@
-use crate::pci::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
-use crate::pci::configuration_space::ConfigurationSpace;
+use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
+use crate::configuration_space::ConfigurationSpace;
 
 /// Header Type 0x0のデバイスを表します。
 #[derive(Debug, Clone)]

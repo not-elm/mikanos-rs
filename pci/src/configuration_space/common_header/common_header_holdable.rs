@@ -1,8 +1,8 @@
-use crate::pci::configuration_space::common_header::class_code::ClassCode;
-use crate::pci::configuration_space::common_header::header_type::HeaderType;
-use crate::pci::configuration_space::common_header::sub_class::Subclass;
-use crate::pci::configuration_space::common_header::vendor_id::VendorId;
-use crate::pci::configuration_space::ConfigurationSpace;
+use crate::configuration_space::common_header::class_code::ClassCode;
+use crate::configuration_space::common_header::header_type::HeaderType;
+use crate::configuration_space::common_header::sub_class::Subclass;
+use crate::configuration_space::common_header::vendor_id::VendorId;
+use crate::configuration_space::ConfigurationSpace;
 
 pub trait CommonHeaderHoldable {
     fn device_slot(&self) -> u16 {
@@ -57,7 +57,7 @@ pub(crate) fn convert_to_header_type(data_offset_c: u32) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::configuration_space::common_header::common_header_holdable::{
+    use crate::configuration_space::common_header::common_header_holdable::{
         convert_to_class_code, convert_to_device_id, convert_to_sub_class, convert_to_vendor_id,
     };
 

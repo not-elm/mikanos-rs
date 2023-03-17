@@ -1,8 +1,8 @@
 use kernel_lib::println;
 use macros::Volatile;
-use mouse_driver::pci::configuration_space::common_header::class_code::ClassCode;
-use mouse_driver::pci::configuration_space::common_header::sub_class::Subclass;
-use mouse_driver::pci::pci_device_searcher::PciDeviceSearcher;
+use pci::configuration_space::common_header::class_code::ClassCode;
+use pci::configuration_space::common_header::sub_class::Subclass;
+use pci::pci_device_searcher::PciDeviceSearcher;
 
 mod xhci;
 

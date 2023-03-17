@@ -1,5 +1,5 @@
-use crate::pci::configuration_space::common_header::class_code::ClassCode;
-use crate::pci::configuration_space::common_header::sub_class::Subclass::{
+use crate::configuration_space::common_header::class_code::ClassCode;
+use crate::configuration_space::common_header::sub_class::Subclass::{
     Digitizer, Keyboard, Mouse, PciToPciBridge, Scanner, Usb,
 };
 
@@ -57,9 +57,9 @@ fn from_input_device(sub_class: u8) -> Subclass {
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::configuration_space::common_header::class_code::ClassCode;
-    use crate::pci::configuration_space::common_header::sub_class::Subclass;
-    use crate::pci::configuration_space::common_header::sub_class::Subclass::Mouse;
+    use crate::configuration_space::common_header::class_code::ClassCode;
+    use crate::configuration_space::common_header::sub_class::Subclass;
+    use crate::configuration_space::common_header::sub_class::Subclass::Mouse;
 
     #[test]
     fn it_get_input_device() {

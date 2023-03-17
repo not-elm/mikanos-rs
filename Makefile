@@ -13,6 +13,7 @@ debug:
 .PHONY: test
 test:
 	make test -C kernel-lib
+	make test -C pci
 	make clean
 	make test-build
 	make run KERNEL="test"

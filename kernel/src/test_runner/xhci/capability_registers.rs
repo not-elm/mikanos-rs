@@ -1,5 +1,4 @@
-use mouse_driver::xhci::registers::capability_registers::CapabilityRegisters;
-
+use pci::xhci::registers::capability_registers::CapabilityRegisters;
 use crate::test_runner::xhci::mmio_base_addr;
 
 #[test_case]

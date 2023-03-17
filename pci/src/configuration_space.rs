@@ -1,14 +1,13 @@
-use crate::pci::configuration_space::common_header::class_code::ClassCode;
-use crate::pci::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
-use crate::pci::configuration_space::common_header::sub_class::Subclass;
-use crate::pci::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
-use crate::pci::configuration_space::device::function::single_function_device::SingleFunctionDevice;
-use crate::pci::configuration_space::device::function::Function;
-use crate::pci::configuration_space::device::function::Function::Single;
-use crate::pci::configuration_space::device::header_type::general_header::GeneralHeader;
-use crate::pci::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
-use crate::pci::configuration_space::io::asm::{fetch_config_data, write_config_addr};
-use crate::pci::configuration_space::io::config_address_register::ConfigAddrRegister;
+use crate::configuration_space::common_header::class_code::ClassCode;
+use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
+use crate::configuration_space::common_header::sub_class::Subclass;
+use crate::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
+use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
+use crate::configuration_space::device::function::Function;
+use crate::configuration_space::device::header_type::general_header::GeneralHeader;
+use crate::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
+use crate::configuration_space::io::asm::{fetch_config_data, write_config_addr};
+use crate::configuration_space::io::config_address_register::ConfigAddrRegister;
 
 pub mod common_header;
 pub mod device;
@@ -84,12 +83,12 @@ fn select_single_function_device(config_space: ConfigurationSpace) -> Function {
         SingleFunctionDevice::General(GeneralHeader::new(config_space))
     };
 
-    Single(device_header)
+    Function::Single(device_header)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::pci::configuration_space::ConfigurationSpace;
+    use crate::configuration_space::ConfigurationSpace;
 
     #[test]
     fn it_new_first_offset() {
