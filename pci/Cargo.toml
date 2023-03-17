@@ -5,7 +5,7 @@ edition = "2021"
 
 
 [dependencies]
-kernel-lib = { path = "../kernel-lib" }
+
 bitfield-struct = "0.3.2"
 enum-try-from = "0.0.1"
 macros = { path = "../macros" }

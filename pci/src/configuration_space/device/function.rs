@@ -1,7 +1,7 @@
-use kernel_lib::error::{KernelError, KernelResult};
 use multiple_function_device::MultipleFunctionDevice;
 
 use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
+use crate::error::{PciError, PciResult};
 
 pub mod multiple_function_device;
 pub mod single_function_device;
@@ -13,11 +13,11 @@ pub enum Function {
 }
 
 impl Function {
-    pub fn expect_single(self) -> KernelResult<SingleFunctionDevice> {
+    pub fn expect_single(self) -> PciResult<SingleFunctionDevice> {
         if let Function::Single(single) = self {
             Ok(single)
         } else {
-            Err(KernelError::NotSingleFunction)
+            Err(PciError::NotSingleFunction)
         }
     }
 }
