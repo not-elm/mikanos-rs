@@ -1,9 +1,10 @@
 #![feature(type_name_of_val)]
 #![feature(strict_provenance)]
+#![feature(is_some_and)]
 
 #[cfg(test)]
 mod tests {
-    use macros::Volatile;
+    use macros::{Volatile, VolatileFlag};
 
     #[test]
     fn it_impl_read_volatile() {
@@ -63,5 +64,49 @@ mod tests {
         let v = VolatileStruct::new(addr);
 
         assert_eq!(v.read_volatile(), 0b11);
+    }
+
+    #[test]
+    fn it_is_true() {
+        #[derive(VolatileFlag)]
+        struct VolatileStruct(usize);
+
+        let addr = [0b1000u64; 1].as_ptr().addr();
+        let v = VolatileStruct::new(addr);
+
+        assert!(!v.read_volatile());
+    }
+
+    #[test]
+    fn it_is_false() {
+        #[derive(VolatileFlag)]
+        struct VolatileStruct(usize);
+
+        let addr = [0b1001u64; 1].as_ptr().addr();
+        let v = VolatileStruct::new(addr);
+
+        assert!(v.read_volatile());
+    }
+
+    #[test]
+    fn it_is_some() {
+        #[derive(VolatileFlag)]
+        struct VolatileStruct(usize);
+
+        let addr = [0b1001u64; 1].as_ptr().addr();
+        let v = VolatileStruct::new_expect_to_be(true, addr);
+
+        assert!(v.is_some_and(|x| x.read_volatile()));
+    }
+
+    #[test]
+    fn it_is_none_flag() {
+        #[derive(VolatileFlag)]
+        struct VolatileStruct(usize);
+
+        let addr = [0b1000u64; 1].as_ptr().addr();
+        let v = VolatileStruct::new_expect_to_be(true, addr);
+
+        assert!(v.is_none());
     }
 }

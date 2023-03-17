@@ -1,17 +1,62 @@
 #![feature(proc_macro_quote)]
 #![feature(trace_macros)]
+
 #[cfg_attr(not(test), no_std)]
 #[cfg(test)]
 extern crate alloc;
 
 use proc_macro::TokenStream;
 
-use proc_macro2::Ident;
+use proc_macro2::{Ident, Span};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::{
     parse_macro_input, Attribute, ItemStruct, Lit, Meta, MetaList, MetaNameValue, NestedMeta,
 };
+
+mod flag;
+
+#[proc_macro_derive(VolatileFlag)]
+pub fn flag(input: TokenStream) -> TokenStream {
+    let item = parse_macro_input!(input as ItemStruct);
+    let struct_name = item.clone().ident;
+    let ty = item
+        .fields
+        .iter()
+        .next()
+        .expect("フィールドが宣言されていません。");
+    let out_ty = proc_macro2::Ident::new("bool", Span::call_site());
+    let read_volatile = read_volatile(out_ty.clone(), None);
+
+    let write_volatile = write_volatile(out_ty.clone(), None);
+    let gen = quote::quote! {
+        impl #struct_name{
+            pub fn new(t: #ty) -> Self{
+                Self(t)
+            }
+            pub fn new_expect_to_be(is_true: bool, t: #ty) -> core::option::Option<Self>{
+                let me = Self::new(t);
+                if is_true == me.read_volatile(){
+                    core::option::Option::Some(me)
+                }else{
+                    core::option::Option::None
+                }
+            }
+
+            pub fn read_volatile(&self) -> #out_ty{
+                #read_volatile
+            }
+
+            pub fn write_volatile(&self, value: #out_ty){
+                #write_volatile
+            }
+
+        }
+
+    };
+
+    gen.into()
+}
 
 #[proc_macro_derive(Volatile, attributes(volatile_type))]
 pub fn impl_volatile(input: TokenStream) -> TokenStream {
@@ -26,15 +71,7 @@ pub fn impl_volatile(input: TokenStream) -> TokenStream {
 
     let (out_ty, right_shift) = parse_attr_each(attribute);
 
-    let read_volatile = if let Some(right_shift) = right_shift.clone() {
-        quote::quote! {
-            unsafe{core::ptr::read_volatile(self.0 as *const #out_ty) >> #right_shift}
-        }
-    } else {
-        quote::quote! {
-            unsafe{core::ptr::read_volatile(self.0 as *const #out_ty)}
-        }
-    };
+    let read_volatile = read_volatile(out_ty.clone(), right_shift.clone());
 
     let write_volatile = write_volatile(out_ty.clone(), right_shift.clone());
 
@@ -67,6 +104,21 @@ pub fn impl_volatile(input: TokenStream) -> TokenStream {
     };
 
     gen.into()
+}
+
+fn read_volatile(
+    out_ty: Ident,
+    right_shift: Option<proc_macro2::Literal>,
+) -> proc_macro2::TokenStream {
+    if let Some(right_shift) = right_shift {
+        quote::quote! {
+            unsafe{core::ptr::read_volatile(self.0 as *const #out_ty) >> #right_shift}
+        }
+    } else {
+        quote::quote! {
+            unsafe{core::ptr::read_volatile(self.0 as *const #out_ty)}
+        }
+    }
 }
 
 fn write_volatile(
