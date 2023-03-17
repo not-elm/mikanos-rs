@@ -1,6 +1,6 @@
 use macros::Volatile;
 
-use crate::error::PciResult;
+use crate::error::{PciError, PciResult};
 use crate::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use crate::xhci::registers::capability_registers::capability_parameters1::CapabilityParameters1;
 use crate::xhci::registers::capability_registers::capability_parameters2::CapabilityParameters2;
@@ -41,7 +41,8 @@ impl CapabilityRegisters {
         let offset = |addr: usize| mmio_base_addr + addr;
         let cap_length = CapabilityLength::new_with_check(offset(0))?;
         let db_off = DoorbellOffset::new_with_check(offset(0x14), cap_length.read_volatile())?;
-        let rts_off = RuntimeRegisterSpaceOffset::new(offset(0x18));
+        let rts_off = RuntimeRegisterSpaceOffset::new_non_zero(offset(0x18))
+            .ok_or(PciError::ZeroRegister("rts_offset"))?;
         Ok(Self {
             cap_length,
             hci_version: HciVersion::new(offset(0x02)),

@@ -74,7 +74,7 @@ fn fill_bottom_bar(color: PixelColor, config: &FrameBufferConfig) -> KernelResul
 #[panic_handler]
 #[cfg(not(test))]
 fn panic(info: &PanicInfo) -> ! {
-    println!("{:?}", info);
+    println!("{}", info);
     common_lib::assembly::hlt_forever();
 }
 
@@ -82,6 +82,6 @@ fn panic(info: &PanicInfo) -> ! {
 #[cfg(test)]
 fn panic(info: &PanicInfo) -> ! {
     println!("[test failed!]");
-    println!("{:?}", info);
+    println!("{}", info);
     common_lib::assembly::hlt_forever();
 }

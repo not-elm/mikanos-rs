@@ -3,7 +3,7 @@ use macros::Volatile;
 use crate::error::{PciError, PciResult};
 
 #[derive(Debug, Clone, Volatile)]
-#[volatile_type(u32)]
+#[volatile_type(u32, right_shift = 2)]
 pub struct DoorbellOffset(usize);
 
 impl DoorbellOffset {

@@ -2,7 +2,7 @@ use crate::error::{PciError, PciResult};
 use macros::Volatile;
 
 #[derive(Debug, Clone, Volatile)]
-#[volatile_type(u32)]
+#[volatile_type(u32, right_shift = 5)]
 pub struct RuntimeRegisterSpaceOffset(usize);
 impl RuntimeRegisterSpaceOffset {
     pub(crate) fn new_with_check(addr: usize, db_off: u32) -> PciResult<Self> {
