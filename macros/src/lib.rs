@@ -1,5 +1,6 @@
 #![feature(proc_macro_quote)]
 #![feature(trace_macros)]
+#![no_std]
 
 #[cfg(test)]
 extern crate alloc;
@@ -13,9 +14,11 @@ use syn::{
     parse_macro_input, Attribute, ItemStruct, Lit, Meta, MetaList, MetaNameValue, NestedMeta,
 };
 
-use crate::volatile::{parse_inner_type, parse_volatile_bits_attributes};
+use crate::volatile_bits::{parse_inner_type, parse_volatile_bits_attributes};
+use crate::volatile_impls::{impl_clone, impl_hex_debug};
 
-mod volatile;
+mod volatile_bits;
+mod volatile_impls;
 
 #[proc_macro_derive(VolatileBits, attributes(volatile_type, bits))]
 pub fn volatile_bits(input: TokenStream) -> TokenStream {
@@ -25,7 +28,9 @@ pub fn volatile_bits(input: TokenStream) -> TokenStream {
 
     let (volatile_type, bits) = parse_volatile_bits_attributes(item_struct.clone());
     let volatile_type = volatile_type.unwrap_or(quote::quote! {u32});
-    let read_volatile = volatile::read_volatile(volatile_type, bits);
+    let read_volatile = volatile_bits::read_volatile(volatile_type, bits);
+    let impl_debug = impl_hex_debug(struct_name.clone());
+    let impl_clone = impl_clone(struct_name.clone());
 
     let expand = quote::quote! {
         impl #struct_name{
@@ -35,6 +40,9 @@ pub fn volatile_bits(input: TokenStream) -> TokenStream {
 
             #read_volatile
         }
+
+        #impl_debug
+        #impl_clone
     };
 
     expand.into()
