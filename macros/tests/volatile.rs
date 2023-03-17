@@ -109,4 +109,15 @@ mod tests {
 
         assert!(v.is_none());
     }
+
+    #[test]
+    fn it_clone() {
+        #[derive(VolatileFlag)]
+        struct VolatileStruct(usize);
+
+        let addr = [0b1000u64; 1].as_ptr().addr();
+        let v = VolatileStruct::new(addr).clone();
+
+        assert!(!v.read_volatile());
+    }
 }

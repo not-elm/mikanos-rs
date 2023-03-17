@@ -53,6 +53,17 @@ pub fn flag(input: TokenStream) -> TokenStream {
 
         }
 
+         impl core::fmt::Debug for #struct_name{
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    f.write_fmt(format_args!("{:?}", self.0))
+                }
+         }
+
+        impl Clone for #struct_name {
+            fn clone(&self) -> Self {
+                Self(self.0)
+            }
+        }
     };
 
     gen.into()
