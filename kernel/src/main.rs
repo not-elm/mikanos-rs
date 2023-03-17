@@ -46,7 +46,7 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
         .unwrap()
         .mmio_base_addr();
 
-    println!("mmio_base_addr = {:x}", mmio_base_addr);
+    println!("mmio_base_addr = {:?}", mmio_base_addr);
 
     common_lib::assembly::hlt_forever();
 }

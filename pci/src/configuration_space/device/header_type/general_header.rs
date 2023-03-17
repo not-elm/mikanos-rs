@@ -1,5 +1,6 @@
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::ConfigurationSpace;
+use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 
 /// Header Type 0x0のデバイスを表します。
 #[derive(Debug, Clone)]
@@ -10,10 +11,10 @@ impl GeneralHeader {
         Self(config_space)
     }
 
-    pub fn mmio_base_addr(&self) -> usize {
+    pub fn mmio_base_addr(&self) -> MemoryMappedAddr {
         let bar0 = self.as_config_space().fetch_data_offset_at(0x10) as usize;
         let bar1 = self.as_config_space().fetch_data_offset_at(0x14) as usize;
-        (bar1 << 32) | (bar0 & 0xFF_FF_FF_F0)
+        MemoryMappedAddr::new((bar1 << 32) | (bar0 & 0xFF_FF_FF_F0))
     }
 }
 

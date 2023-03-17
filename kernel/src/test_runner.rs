@@ -1,3 +1,6 @@
+use common_lib::vector::Vector2D;
+use kernel_lib::gop::console::fill_rect_using_global;
+use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::println;
 
 use pci::configuration_space::common_header::class_code::ClassCode;
@@ -25,6 +28,12 @@ where
 
 #[cfg(test)]
 pub fn my_runner(tests: &[&dyn Testable]) {
+    fill_rect_using_global(
+        Vector2D::new(0, 0),
+        Vector2D::new(500, 500),
+        PixelColor::new(0x00, 0x00, 0x00),
+    )
+    .unwrap();
     println!("start test! num={}", tests.len());
     for t in tests {
         t.run();

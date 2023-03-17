@@ -8,4 +8,7 @@ pub enum PciError {
     CapLengthInvalid(u8),
     DoorbellOffsetInvalid(u32),
     RuntimeOffsetInvalid(u32),
+    XhcStoped,
+    HostControllerNotHalted,
+    HostControllerResetInvalid,
 }

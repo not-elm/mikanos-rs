@@ -55,7 +55,7 @@ pub fn flag(input: TokenStream) -> TokenStream {
 
          impl core::fmt::Debug for #struct_name{
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                    f.write_fmt(format_args!("{:?}", self.0))
+                    f.write_fmt(format_args!("{:?}", self.0 & 0b1))
                 }
          }
 
