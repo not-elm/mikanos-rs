@@ -41,7 +41,7 @@ impl CapabilityRegisters {
         let offset = |addr: usize| mmio_base_addr + addr;
         let cap_length = CapabilityLength::new_with_check(offset(0))?;
         let db_off = DoorbellOffset::new_with_check(offset(0x14), cap_length.read_volatile())?;
-
+        let rts_off = RuntimeRegisterSpaceOffset::new(offset(0x18));
         Ok(Self {
             cap_length,
             hci_version: HciVersion::new(offset(0x02)),
@@ -50,7 +50,7 @@ impl CapabilityRegisters {
             hcs_params3: StructuralParameters3::new(offset(0x0C)),
             hcc_params1: CapabilityParameters1::new(offset(0x10)),
             db_off,
-            rts_off: RuntimeRegisterSpaceOffset::new(offset(0x18)),
+            rts_off,
             hcc_params2: CapabilityParameters2::new(offset(0x1C)),
         })
     }

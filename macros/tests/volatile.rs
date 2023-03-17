@@ -52,4 +52,16 @@ mod tests {
 
         assert!(v.is_none());
     }
+
+    #[test]
+    fn it_twice_shift() {
+        #[derive(Volatile)]
+        #[volatile_type(u64, right_shift = 2)]
+        struct VolatileStruct(usize);
+
+        let addr = [0b1100u64; 1].as_ptr().addr();
+        let v = VolatileStruct::new(addr);
+
+        assert_eq!(v.read_volatile(), 0b11);
+    }
 }

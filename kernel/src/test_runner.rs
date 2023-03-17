@@ -1,9 +1,10 @@
 use kernel_lib::println;
-use macros::Volatile;
+
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
 
+mod macros_test;
 mod xhci;
 
 pub trait Testable {
@@ -39,20 +40,6 @@ fn it_fetch_mouse_device() {
         .sub_class(Subclass::Usb)
         .search()
         .is_some());
-}
-
-#[derive(Volatile)]
-#[volatile_type(u64)]
-struct VolatileStruct(usize);
-
-#[test_case]
-fn it_impl_write_volatile() {
-    let addr = [0x00u64; 3].as_ptr().addr();
-    let v = VolatileStruct(addr);
-    assert_eq!(v.read_volatile(), 0x00);
-    v.write_volatile(0xFF);
-
-    assert_eq!(v.read_volatile(), 0xFF);
 }
 
 // #[derive(Debug, Clone, Copy, PartialEq, Eq)]

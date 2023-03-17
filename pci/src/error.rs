@@ -7,4 +7,5 @@ pub enum PciError {
     ZeroRegister(&'static str),
     CapLengthInvalid(u8),
     DoorbellOffsetInvalid(u32),
+    RuntimeOffsetInvalid(u32),
 }
