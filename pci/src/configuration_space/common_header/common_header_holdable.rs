@@ -26,6 +26,9 @@ pub trait CommonHeaderHoldable {
 
         Subclass::from_class_code(self.class_code(), sub_class)
     }
+    fn status(&self) -> u16 {
+        (self.as_config_space().fetch_data_offset_at(0x04) >> 16) as u16
+    }
     fn header_type(&self) -> HeaderType {
         HeaderType::new(convert_to_header_type(
             self.as_config_space().fetch_data_offset_at(0x0C),

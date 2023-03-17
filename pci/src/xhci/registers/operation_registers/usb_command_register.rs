@@ -9,6 +9,7 @@ use crate::xhci::registers::operation_registers::usb_command_register::run_stop:
 pub mod controller_save_state;
 pub mod host_controller_reset;
 pub mod host_system_error_enable;
+
 pub mod interrupter_enable;
 pub mod light_host_controller_reset;
 pub mod run_stop;
@@ -28,12 +29,12 @@ impl UsbCommandRegister {
         let offset = |addr: usize| base_offset + addr;
 
         Ok(Self {
-            run_stop: RunStop::new(base_offset),
-            hcr: HostControllerReset::new(offset(1)),
-            inte: InterrupterEnable::new(offset(2)),
-            hsee: HostSystemErrorEnable::new(offset(3)),
-            lhcrst: LightHostControllerReset::new(offset(7)),
-            css: ControllerSaveState::new(offset(8)),
+            run_stop: RunStop::new_uncheck(base_offset),
+            hcr: HostControllerReset::new_uncheck(offset(1)),
+            inte: InterrupterEnable::new_uncheck(offset(2)),
+            hsee: HostSystemErrorEnable::new_uncheck(offset(3)),
+            lhcrst: LightHostControllerReset::new_uncheck(offset(7)),
+            css: ControllerSaveState::new_uncheck(offset(8)),
         })
     }
 }

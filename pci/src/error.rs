@@ -1,5 +1,8 @@
+use bitfield_struct::bitfield;
+
 pub type PciResult<T = ()> = Result<T, PciError>;
 
+#[bitfield]
 #[derive(Debug)]
 pub enum PciError {
     NotSingleFunction,

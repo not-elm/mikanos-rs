@@ -1,6 +1,5 @@
 use macros::Volatile;
 
-use crate::error::{PciError, PciResult};
 use crate::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use crate::xhci::registers::capability_registers::capability_parameters1::CapabilityParameters1;
 use crate::xhci::registers::capability_registers::capability_parameters2::CapabilityParameters2;
@@ -9,7 +8,6 @@ use crate::xhci::registers::capability_registers::runtime_register_space_offset:
 use crate::xhci::registers::capability_registers::structural_parameters1::StructuralParameters1;
 use crate::xhci::registers::capability_registers::structural_parameters2::StructuralParameters2;
 use crate::xhci::registers::capability_registers::structural_parameters3::StructuralParameters3;
-use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 
 pub mod capability_length;
 pub mod capability_parameters1;

@@ -61,7 +61,7 @@ mod tests {
         struct VolatileStruct(usize);
 
         let addr = [0b1100u64; 1].as_ptr().addr();
-        let v = VolatileStruct::new(addr);
+        let v = VolatileStruct::new_uncheck(addr);
 
         assert_eq!(v.read_volatile(), 0b11);
     }
@@ -72,7 +72,7 @@ mod tests {
         struct VolatileStruct(usize);
 
         let addr = [0b1000u64; 1].as_ptr().addr();
-        let v = VolatileStruct::new(addr);
+        let v = VolatileStruct::new_uncheck(addr);
 
         assert!(!v.read_volatile());
     }
@@ -83,7 +83,7 @@ mod tests {
         struct VolatileStruct(usize);
 
         let addr = [0b1001u64; 1].as_ptr().addr();
-        let v = VolatileStruct::new(addr);
+        let v = VolatileStruct::new_uncheck(addr);
 
         assert!(v.read_volatile());
     }
@@ -116,7 +116,7 @@ mod tests {
         struct VolatileStruct(usize);
 
         let addr = [0b1000u64; 1].as_ptr().addr();
-        let v = VolatileStruct::new(addr).clone();
+        let v = VolatileStruct::new_uncheck(addr).clone();
 
         assert!(!v.read_volatile());
     }

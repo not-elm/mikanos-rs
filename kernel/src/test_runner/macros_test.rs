@@ -21,7 +21,7 @@ fn it_twice_shift_write() {
     struct VolatileStruct(usize);
 
     let addr = [0b00u64; 1].as_ptr().addr();
-    let v = VolatileStruct::new(addr);
+    let v = VolatileStruct::new_uncheck(addr);
     v.write_volatile(0b11);
 
     assert_eq!(v.read_volatile(), 0b11);

@@ -1,7 +1,6 @@
 #![feature(proc_macro_quote)]
 #![feature(trace_macros)]
 
-#[cfg_attr(not(test), no_std)]
 #[cfg(test)]
 extern crate alloc;
 
@@ -14,7 +13,32 @@ use syn::{
     parse_macro_input, Attribute, ItemStruct, Lit, Meta, MetaList, MetaNameValue, NestedMeta,
 };
 
-mod flag;
+use crate::volatile::{parse_inner_type, parse_volatile_bits_attributes};
+
+mod volatile;
+
+#[proc_macro_derive(VolatileBits, attributes(volatile_type, bits))]
+pub fn volatile_bits(input: TokenStream) -> TokenStream {
+    let item_struct = parse_macro_input!(input as ItemStruct);
+    let struct_name = item_struct.clone().ident;
+    let inner_ty = parse_inner_type(item_struct.clone());
+
+    let (volatile_type, bits) = parse_volatile_bits_attributes(item_struct.clone());
+    let volatile_type = volatile_type.unwrap_or(quote::quote! {u32});
+    let read_volatile = volatile::read_volatile(volatile_type, bits);
+
+    let expand = quote::quote! {
+        impl #struct_name{
+            pub fn new_uncheck(v: #inner_ty) -> Self{
+                Self(v)
+            }
+
+            #read_volatile
+        }
+    };
+
+    expand.into()
+}
 
 #[proc_macro_derive(VolatileFlag)]
 pub fn flag(input: TokenStream) -> TokenStream {
@@ -31,11 +55,11 @@ pub fn flag(input: TokenStream) -> TokenStream {
     let write_volatile = write_volatile(out_ty.clone(), None);
     let gen = quote::quote! {
         impl #struct_name{
-            pub fn new(t: #ty) -> Self{
+            pub(crate) fn new_uncheck(t: #ty) -> Self{
                 Self(t)
             }
-            pub fn new_expect_to_be(is_true: bool, t: #ty) -> core::option::Option<Self>{
-                let me = Self::new(t);
+            pub(crate) fn new_expect_to_be(is_true: bool, t: #ty) -> core::option::Option<Self>{
+                let me = Self::new_uncheck(t);
                 if is_true == me.read_volatile(){
                     core::option::Option::Some(me)
                 }else{
@@ -90,11 +114,11 @@ pub fn impl_volatile(input: TokenStream) -> TokenStream {
 
     let gen = quote::quote! {
         impl #struct_name{
-            pub fn new(t: #ty) -> Self{
+            pub fn new_uncheck(t: #ty) -> Self{
                 Self(t)
             }
             pub fn new_non_zero(t: #ty) -> core::option::Option<Self>{
-                let me = Self::new(t);
+                let me = Self::new_uncheck(t);
                 if 0 < me.read_volatile(){
                     core::option::Option::Some(me)
                 }else{
