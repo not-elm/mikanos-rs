@@ -1,5 +1,7 @@
 use macros::Volatile;
 
+use crate::error::PciResult;
+use crate::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use crate::xhci::registers::capability_registers::capability_parameters1::CapabilityParameters1;
 use crate::xhci::registers::capability_registers::capability_parameters2::CapabilityParameters2;
 use crate::xhci::registers::capability_registers::doorbell_offset::DoorbellOffset;
@@ -8,6 +10,7 @@ use crate::xhci::registers::capability_registers::structural_parameters1::Struct
 use crate::xhci::registers::capability_registers::structural_parameters2::StructuralParameters2;
 use crate::xhci::registers::capability_registers::structural_parameters3::StructuralParameters3;
 
+pub mod capability_length;
 pub mod capability_parameters1;
 pub mod capability_parameters2;
 pub mod doorbell_offset;
@@ -30,26 +33,25 @@ pub struct CapabilityRegisters {
 }
 
 #[derive(Debug, Clone, Volatile)]
-#[volatile_type(u8)]
-pub struct CapabilityLength(usize);
-
-#[derive(Debug, Clone, Volatile)]
 #[volatile_type(u16)]
 pub struct HciVersion(usize);
 
 impl CapabilityRegisters {
-    pub fn new(mmio_base_addr: usize) -> Self {
+    pub fn new(mmio_base_addr: usize) -> PciResult<Self> {
         let offset = |addr: usize| mmio_base_addr + addr;
-        Self {
-            cap_length: CapabilityLength::new(offset(0)),
+        let cap_length = CapabilityLength::new_with_check(offset(0))?;
+        let db_off = DoorbellOffset::new_with_check(offset(0x14), cap_length.read_volatile())?;
+
+        Ok(Self {
+            cap_length,
             hci_version: HciVersion::new(offset(0x02)),
             hcs_params1: StructuralParameters1::new(offset(0x04)),
             hcs_params2: StructuralParameters2::new(offset(0x08)),
             hcs_params3: StructuralParameters3::new(offset(0x0C)),
             hcc_params1: CapabilityParameters1::new(offset(0x10)),
-            db_off: DoorbellOffset::new(offset(0x14)),
+            db_off,
             rts_off: RuntimeRegisterSpaceOffset::new(offset(0x18)),
             hcc_params2: CapabilityParameters2::new(offset(0x1C)),
-        }
+        })
     }
 }
