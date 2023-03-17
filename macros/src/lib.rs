@@ -9,11 +9,6 @@ use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use syn::{parse_macro_input, Attribute, ItemStruct, Meta, MetaList, NestedMeta};
 
-#[proc_macro_attribute]
-pub fn return_as_is(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    item
-}
-
 #[proc_macro_derive(Volatile, attributes(volatile_type))]
 pub fn impl_volatile(input: TokenStream) -> TokenStream {
     let item = parse_macro_input!(input as ItemStruct);
@@ -34,6 +29,15 @@ pub fn impl_volatile(input: TokenStream) -> TokenStream {
             pub fn new(t: #ty) -> Self{
                 Self(t)
             }
+            pub fn new_non_zero(t: #ty) -> core::option::Option<Self>{
+                let me = Self::new(t);
+                if 0 < me.read_volatile(){
+                    core::option::Option::Some(me)
+                }else{
+                    core::option::Option::None
+                }
+            }
+
             pub fn read_volatile(&self) -> #out_ty{
                 unsafe{core::ptr::read_volatile(self.0 as *const #out_ty)}
             }
