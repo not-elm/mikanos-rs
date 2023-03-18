@@ -1,6 +1,7 @@
 use macros::VolatileBits;
 
 use crate::error::{InvalidRegisterReason, PciError, PciResult};
+use crate::xhci::registers::operational_registers::command_ring_control_register::crcr_field::CrcrField;
 use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
 use crate::xhci::registers::operational_registers::usb_command_register::run_stop::RunStop;
 
@@ -17,10 +18,6 @@ use crate::xhci::registers::operational_registers::usb_command_register::run_sto
 pub struct CommandRingRunning(usize);
 
 impl CommandRingRunning {
-    pub fn new(offset: CommandRingControlRegisterOffset) -> Self {
-        Self::new_uncheck(offset.offset())
-    }
-
     pub fn new_with_check(
         offset: CommandRingControlRegisterOffset,
         run_stop: &RunStop,

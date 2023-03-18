@@ -1,3 +1,4 @@
+use crate::VolatileAccessible;
 use crate::xhci::registers::operational_registers::device_context_base_address_array_pointer::dcbaap_hi::DcbaapHi;
 use crate::xhci::registers::operational_registers::device_context_base_address_array_pointer::dcbaap_lo::DcbaapLo;
 use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;

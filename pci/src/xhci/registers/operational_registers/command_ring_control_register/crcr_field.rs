@@ -1,3 +1,4 @@
+use crate::error::{InvalidRegisterReason, PciError, PciResult};
 use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
 use crate::VolatileAccessible;
 
@@ -6,6 +7,7 @@ where
     T: VolatileAccessible<VolatileType, Addr>,
 {
     fn new(offset: CommandRingControlRegisterOffset) -> T;
+    fn new_check_flag_false(offset: CommandRingControlRegisterOffset) -> PciResult<T>;
 }
 
 impl<T, VolatileType> CrcrField<T, VolatileType, usize> for T
@@ -15,14 +17,15 @@ where
     fn new(offset: CommandRingControlRegisterOffset) -> T {
         T::new_uncheck(offset.offset())
     }
+
+    fn new_check_flag_false(offset: CommandRingControlRegisterOffset) -> PciResult<T> {
+        let s = T::new(offset);
+        if s.read_flag_volatile() {
+            Err(PciError::InvalidRegister(
+                InvalidRegisterReason::IllegalBitFlag { expect: false },
+            ))
+        } else {
+            Ok(s)
+        }
+    }
 }
-// pub fn new(offset: CommandRingControlRegisterOffset) -> PciResult<Self> {
-//      let s = Self::new_uncheck(offset.offset());
-//      if s.read_flag_volatile() {
-//          Err(PciError::InvalidRegister(
-//              InvalidRegisterReason::IllegalBitFlag { expect: false },
-//          ))
-//      } else {
-//          Ok(s)
-//      }
-//  }

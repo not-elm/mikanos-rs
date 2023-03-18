@@ -10,6 +10,7 @@ use crate::xhci::registers::operational_registers::usb_command_register::host_co
 use crate::xhci::registers::operational_registers::usb_command_register::run_stop::RunStop;
 use crate::xhci::registers::operational_registers::usb_status_register::controller_not_ready::ControllerNotReady;
 use crate::xhci::registers::operational_registers::usb_status_register::host_controller_halted::HostControllerHalted;
+use crate::VolatileAccessible;
 
 pub mod allocator;
 pub mod registers;

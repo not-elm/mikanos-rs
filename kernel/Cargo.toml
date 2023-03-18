@@ -10,4 +10,4 @@ common-lib = { path = "../common-lib" }
 kernel-lib = { path = "../kernel-lib" }
 pci = { path = "../pci" }
 x86_64 = "0.14.10"
-macros = { path = "../macros" }
+macros = { path = "../macros", features = ["extra-traits"] }

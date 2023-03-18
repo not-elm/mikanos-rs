@@ -1,9 +1,7 @@
-use common_lib::volatile_accessible::VolatileAccessible;
 use macros::VolatileBits;
 
 use crate::error::{PciError, PciResult};
 use crate::error::OperationReason::MustBeCommandRingStopped;
-use crate::VolatileAccessible;
 use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_running::CommandRingRunning;
 
 /// CA

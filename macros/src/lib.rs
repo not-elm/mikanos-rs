@@ -91,6 +91,7 @@ fn impl_volatile_accessible(
     write_volatile: proc_macro2::TokenStream,
 ) -> proc_macro2::TokenStream {
     quote::quote! {
+        use crate::VolatileAccessible;
         impl crate::VolatileAccessible<#volatile_type, #addr_type> for #struct_name{
             fn new_uncheck(v: #addr_type) -> Self{
                 Self(v)

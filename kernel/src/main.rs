@@ -23,6 +23,7 @@ use pci::xhci::registers::capability_registers::structural_parameters1::Structur
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
+use pci::VolatileAccessible;
 
 #[cfg(test)]
 mod test_runner;

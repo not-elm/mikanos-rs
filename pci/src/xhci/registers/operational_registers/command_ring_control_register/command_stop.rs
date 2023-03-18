@@ -1,8 +1,7 @@
 use macros::VolatileBits;
 
 use crate::error::{OperationReason, PciError, PciResult};
-use crate::VolatileAccessible;
-use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_running::{CommandRingRunning, VolatileAccessible};
+use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_running::CommandRingRunning;
 
 /// CS
 ///

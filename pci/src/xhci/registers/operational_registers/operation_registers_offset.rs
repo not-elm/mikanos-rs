@@ -1,5 +1,6 @@
 use crate::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
+use crate::VolatileAccessible;
 
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]

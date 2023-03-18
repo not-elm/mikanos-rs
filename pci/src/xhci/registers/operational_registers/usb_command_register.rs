@@ -1,4 +1,5 @@
 use crate::error::PciResult;
+use crate::VolatileAccessible;
 use crate::xhci::registers::operational_registers::usb_command_register::controller_save_state::ControllerSaveState;
 use crate::xhci::registers::operational_registers::usb_command_register::host_controller_reset::HostControllerReset;
 use crate::xhci::registers::operational_registers::usb_command_register::host_system_error_enable::HostSystemErrorEnable;
