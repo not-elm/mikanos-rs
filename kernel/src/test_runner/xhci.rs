@@ -11,8 +11,7 @@ use pci::xhci::registers::operational_registers::usb_status_register::usb_status
 
 pub mod capability_registers;
 mod initialize;
-mod usb_command_register;
-mod usb_status_register;
+mod operational_registers;
 
 pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
     let mouse = PciDeviceSearcher::new()

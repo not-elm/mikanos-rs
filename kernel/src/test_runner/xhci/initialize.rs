@@ -9,7 +9,9 @@ use pci::xhci::registers::operational_registers::usb_command_register::run_stop:
 use pci::xhci::registers::operational_registers::usb_command_register::usb_command_register_field::UsbCommandRegisterField;
 use pci::xhci::registers::operational_registers::usb_status_register::controller_not_ready::ControllerNotReady;
 use pci::xhci::registers::operational_registers::usb_status_register::host_controller_halted::HostControllerHalted;
+use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_field::UsbStatusRegisterField;
 use pci::xhci::{allocate_command_ring, allocate_device_context_array, reset_controller};
+use pci::VolatileAccessible;
 
 use crate::hcs1_offset;
 use crate::test_runner::xhci::{
@@ -19,7 +21,7 @@ use crate::test_runner::xhci::{
 
 #[test_case]
 fn it_reset_xhc_host_controller() {
-    reset_host_controller().unwrap();
+    execute_reset_host_controller().unwrap();
 }
 
 #[test_case]
@@ -29,7 +31,7 @@ fn it_set_device_contexts_enabled() {
 
 #[test_case]
 fn it_allocate_device_context_array_address_and_set_to_dcbaap() {
-    reset_host_controller().unwrap();
+    execute_reset_host_controller().unwrap();
     set_device_context_max_slot().unwrap();
 
     unsafe {
@@ -44,7 +46,7 @@ fn it_allocate_device_context_array_address_and_set_to_dcbaap() {
 
 #[test_case]
 fn it_allocate_command_ring() {
-    reset_host_controller().unwrap();
+    execute_reset_host_controller().unwrap();
     set_device_context_max_slot().unwrap();
     unsafe {
         allocate_command_ring(
@@ -55,12 +57,16 @@ fn it_allocate_command_ring() {
     }
 }
 
-fn reset_host_controller() -> PciResult {
+pub(crate) fn execute_reset_host_controller() -> PciResult {
     reset_controller(
-        &HostControllerHalted::new(usb_status_register_offset()).unwrap(),
+        &HostControllerHalted::new(usb_status_register_offset()),
+        &RunStop::new(operation_registers_offset()),
         &HostControllerReset::new(operation_registers_offset()),
-        &ControllerNotReady::new(usb_status_register_offset()).unwrap(),
-    )
+        &ControllerNotReady::new(usb_status_register_offset()),
+    )?;
+
+    RunStop::new(operation_registers_offset()).write_flag_volatile(false);
+    Ok(())
 }
 
 fn set_device_context_max_slot() -> PciResult {

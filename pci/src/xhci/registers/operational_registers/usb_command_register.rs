@@ -19,7 +19,7 @@ pub mod usb_command_register_field;
 #[derive(Debug, Clone)]
 pub struct UsbCommandRegister {
     pub run_stop: RunStop,
-    pub hcr: HostControllerReset,
+    pub hcrst: HostControllerReset,
     pub inte: InterrupterEnable,
     pub hsee: HostSystemErrorEnable,
     pub lhcrst: LightHostControllerReset,
@@ -30,7 +30,7 @@ impl UsbCommandRegister {
     pub fn new(operational_offset: OperationalRegistersOffset) -> Self {
         Self {
             run_stop: RunStop::new(operational_offset),
-            hcr: HostControllerReset::new(operational_offset),
+            hcrst: HostControllerReset::new(operational_offset),
             inte: InterrupterEnable::new(operational_offset),
             hsee: HostSystemErrorEnable::new(operational_offset),
             lhcrst: LightHostControllerReset::new(operational_offset),

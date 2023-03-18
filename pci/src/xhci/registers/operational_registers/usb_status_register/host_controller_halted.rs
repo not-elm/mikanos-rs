@@ -1,21 +1,23 @@
-use macros::VolatileBits;
+use core::marker::PhantomData;
 
-use crate::error::{InvalidRegisterReason, PciError, PciResult};
+use macros::VolatileBits;
 use crate::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 
+/// HCH
+///
+/// Default = 1
+///
+/// RunStopが1の間、0になります。
 #[derive(VolatileBits)]
 #[bits(1)]
-pub struct HostControllerHalted(usize);
+pub struct HostControllerHalted(usize, PhantomData<UsbStatusRegisterOffset>);
 
 impl HostControllerHalted {
-    pub fn new(offset: UsbStatusRegisterOffset) -> PciResult<Self> {
-        let s = HostControllerHalted::new_uncheck(offset.offset());
-        if s.read_flag_volatile() {
-            Ok(s)
-        } else {
-            Err(PciError::InvalidRegister(
-                InvalidRegisterReason::HostControllerNotHalted,
-            ))
-        }
+    pub fn until_not_halted(&self) {
+        while self.read_flag_volatile() {}
+    }
+
+    pub fn until_halted(&self) {
+        while !self.read_flag_volatile() {}
     }
 }

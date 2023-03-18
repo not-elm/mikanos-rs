@@ -1,7 +1,7 @@
 use allocator::memory_allocatable::MemoryAllocatable;
 use kernel_lib::println;
 
-use crate::error::OperationReason::{FailedAllocate, HostControllerNotHalted, NotReflectedValue};
+use crate::error::OperationReason::{FailedAllocate, NotReflectedValue};
 use crate::error::{OperationReason, PciError, PciResult};
 use crate::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegister;
@@ -23,17 +23,20 @@ pub fn init() -> PciResult {
     // reset_controller()?;
     // set_device_context()?;
     // allocate_device_context_array()?
+    // USBCOMMAND RUN
     Ok(())
 }
 
 pub fn reset_controller(
     hch: &HostControllerHalted,
+    run_stop: &RunStop,
     hcrst: &HostControllerReset,
     cnr: &ControllerNotReady,
 ) -> PciResult {
     if !hch.read_flag_volatile() {
-        return Err(PciError::FailedOperateToRegister(HostControllerNotHalted));
+        run_stop.write_flag_volatile(false);
     }
+    hch.until_halted();
     println!("start write true -> host controller reset");
 
     hcrst.reset();
