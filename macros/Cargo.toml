@@ -6,8 +6,14 @@ edition = "2021"
 [lib]
 proc-macro = true
 
+
 [dependencies]
 quote = "1.0.23"
 proc-macro2 = "1.0.51"
 syn = { version = "1.0.14", features = ["full", "extra-traits"] }
 kernel-lib = { path = "../kernel-lib" }
+common-lib = { path = "../common-lib" }
+
+
+[features]
+extra-traits = []

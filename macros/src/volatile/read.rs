@@ -10,7 +10,7 @@ pub(crate) fn read_volatile(
     };
 
     quote::quote! {
-        pub fn read_volatile(&self) -> #volatile_type{
+        fn read_volatile(&self) -> #volatile_type{
             #r
         }
     }
@@ -18,7 +18,7 @@ pub(crate) fn read_volatile(
 
 pub(crate) fn read_flag_volatile() -> proc_macro2::TokenStream {
     quote::quote! {
-        pub fn read_flag_volatile(&self) -> bool{
+        fn read_flag_volatile(&self) -> bool{
             let lsb  = self.read_volatile() & 0b1;
             return if lsb == 1{
                 true

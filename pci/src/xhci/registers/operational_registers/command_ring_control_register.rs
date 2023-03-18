@@ -1,6 +1,7 @@
 use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 
 pub mod command_abort;
+pub mod command_ring_pointer;
 pub mod command_ring_running;
 pub mod command_stop;
 pub mod ring_cycle_state;
