@@ -13,14 +13,6 @@ pub(crate) fn parse_inner_type(struct_item: ItemStruct) -> Type {
         .clone()
 }
 
-// /// Note: NewTypeパターンの構造体(フィールドが1つの場合)を前提
-// pub(crate) fn convert_to_offset(
-//     volatile_type: proc_macro2::Ident,
-//     offset: Option<proc_macro2::Literal>,
-// ) -> proc_macro2::Literal {
-//     let offset = offset.unwrap_or(Literal::)
-// }
-
 pub(crate) fn parse_volatile_bits_attributes(
     item_struct: ItemStruct,
 ) -> (
