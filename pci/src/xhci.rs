@@ -4,6 +4,7 @@ use kernel_lib::println;
 use crate::error::OperationReason::{FailedAllocate, HostControllerNotHalted, NotReflectedValue};
 use crate::error::{OperationReason, PciError, PciResult};
 use crate::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
+use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegister;
 use crate::xhci::registers::operational_registers::config_register::max_device_slots_enabled::MaxDeviceSlotsEnabled;
 use crate::xhci::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointer;
 use crate::xhci::registers::operational_registers::usb_command_register::host_controller_reset::HostControllerReset;
@@ -18,7 +19,34 @@ pub mod registers;
 ///
 /// 1. xhcのリセット
 /// 2. デバイスコンテキストの設定
-pub fn _init() {}
+pub fn init() -> PciResult {
+    // reset_controller()?;
+    // set_device_context()?;
+    // allocate_device_context_array()?
+    Ok(())
+}
+
+pub fn reset_controller(
+    hch: &HostControllerHalted,
+    hcrst: &HostControllerReset,
+    cnr: &ControllerNotReady,
+) -> PciResult {
+    if !hch.read_flag_volatile() {
+        return Err(PciError::FailedOperateToRegister(HostControllerNotHalted));
+    }
+    println!("start write true -> host controller reset");
+
+    hcrst.reset();
+    println!("write true -> host controller reset");
+
+    cnr.wait_until_ready();
+    println!(
+        "controller is ready! current is = {}",
+        cnr.read_flag_volatile()
+    );
+
+    Ok(())
+}
 
 /// 接続できるデバイス数を取得して、コンフィグレジスタに設定します。
 pub fn set_device_context(
@@ -68,24 +96,40 @@ pub unsafe fn allocate_device_context_array(
     }
 }
 
-pub fn reset_controller(
-    hch: &HostControllerHalted,
-    hcrst: &HostControllerReset,
-    cnr: &ControllerNotReady,
+pub unsafe fn allocate_command_ring(
+    crcr: &CommandRingControlRegister,
+    allocator: &mut impl MemoryAllocatable,
 ) -> PciResult {
-    if !hch.read_flag_volatile() {
-        return Err(PciError::FailedOperateToRegister(HostControllerNotHalted));
+    const TRB_SIZE: usize = 128;
+
+    let alloc_size = TRB_SIZE * 32;
+    let command_ring_addr = allocator
+        .alloc(alloc_size)
+        .ok_or(PciError::FailedOperateToRegister(FailedAllocate))?;
+
+    register_command_ring(crcr, command_ring_addr as u64)
+}
+
+pub fn run(crcr: &CommandRingControlRegister, command_ring_addr: u64) -> PciResult {
+    if crcr.cs.read_flag_volatile() || crcr.ca.read_flag_volatile() {
+        return Err(PciError::FailedOperateToRegister(
+            OperationReason::MustBeCommandRingStopped,
+        ));
     }
-    println!("start write true -> host controller reset");
+    crcr.rcs.write_flag_volatile(true);
+    crcr.command_ring_pointer
+        .set_command_ring_addr(command_ring_addr);
+    Ok(())
+}
 
-    hcrst.reset();
-    println!("write true -> host controller reset");
-
-    cnr.wait_until_ready();
-    println!(
-        "controller is ready! current is = {}",
-        cnr.read_flag_volatile()
-    );
-
+fn register_command_ring(crcr: &CommandRingControlRegister, command_ring_addr: u64) -> PciResult {
+    if crcr.cs.read_flag_volatile() || crcr.ca.read_flag_volatile() {
+        return Err(PciError::FailedOperateToRegister(
+            OperationReason::MustBeCommandRingStopped,
+        ));
+    }
+    crcr.rcs.write_flag_volatile(true);
+    crcr.command_ring_pointer
+        .set_command_ring_addr(command_ring_addr);
     Ok(())
 }

@@ -3,14 +3,11 @@ use syn::token::Comma;
 use syn::{Attribute, ItemStruct, Lit, Meta, MetaList, NestedMeta, Type};
 
 /// Note: NewTypeパターンの構造体(フィールドが1つの場合)を前提
-pub(crate) fn parse_inner_type(struct_item: ItemStruct) -> Type {
-    struct_item
-        .fields
-        .iter()
-        .next()
-        .expect("should be inner field!")
-        .ty
-        .clone()
+pub(crate) fn parse_inner_type(struct_item: ItemStruct) -> (Type, Option<Type>) {
+    let mut iter = struct_item.fields.iter();
+    let first_type = iter.next().expect("should be inner field!").clone().ty;
+    let second = iter.next().map(|f| f.ty.clone());
+    (first_type, second)
 }
 
 pub(crate) fn parse_volatile_bits_attributes(

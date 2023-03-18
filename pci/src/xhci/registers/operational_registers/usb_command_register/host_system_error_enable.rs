@@ -1,12 +1,10 @@
+use core::marker::PhantomData;
+
 use macros::VolatileBits;
 
 use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 
 #[derive(VolatileBits)]
-pub struct HostSystemErrorEnable(usize);
-
-impl HostSystemErrorEnable {
-    pub fn new(offset: OperationalRegistersOffset) -> Self {
-        Self::new_uncheck(offset.offset() + 3)
-    }
-}
+#[offset(3)]
+#[bits(1)]
+pub struct HostSystemErrorEnable(usize, PhantomData<OperationalRegistersOffset>);

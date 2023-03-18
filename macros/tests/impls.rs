@@ -2,6 +2,8 @@
 
 #[cfg(test)]
 mod tests {
+    use std::marker::PhantomData;
+
     use macros::VolatileBits;
 
     #[test]
@@ -32,11 +34,11 @@ mod tests {
     pub fn it_impl_clone() {
         #[derive(VolatileBits)]
         #[volatile_type(u64)]
-        struct VolatileStruct(usize);
+        struct VolatileStruct3(usize, PhantomData<u32>);
 
         let buff = [0xFFu64; 1];
         let addr = buff.as_ptr().addr();
-        let v = VolatileStruct::new_uncheck(addr);
+        let v = VolatileStruct3::new_uncheck(addr);
         assert_eq!(v.clone().read_volatile(), 0xFF);
     }
 }

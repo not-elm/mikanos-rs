@@ -1,5 +1,8 @@
+use core::marker::PhantomData;
+
 use macros::VolatileBits;
 
-#[derive(VolatileBits)]
+use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 
-pub struct ControllerSaveState(usize);
+#[derive(VolatileBits)]
+pub struct ControllerSaveState(usize, PhantomData<OperationalRegistersOffset>);

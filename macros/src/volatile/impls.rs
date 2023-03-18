@@ -1,4 +1,5 @@
 use proc_macro2::Ident;
+use syn::Type;
 
 pub(crate) fn impl_debug(
     struct_name: Ident,
@@ -37,11 +38,19 @@ fn impl_debug_within_bool(struct_name: Ident) -> proc_macro2::TokenStream {
     }
 }
 
-pub(crate) fn impl_clone(struct_name: Ident) -> proc_macro2::TokenStream {
+pub(crate) fn impl_clone(
+    struct_name: Ident,
+    phantom_data: Option<Type>,
+) -> proc_macro2::TokenStream {
+    let new = if let Some(_phantom_data) = phantom_data {
+        quote::quote! {  Self(self.0, PhantomData)}
+    } else {
+        quote::quote! {  Self(self.0)}
+    };
     quote::quote! {
         impl Clone for #struct_name {
             fn clone(&self) -> Self {
-                Self(self.0)
+                #new
             }
         }
     }

@@ -4,7 +4,7 @@ use crate::VolatileAccessible;
 
 pub trait CrcrField<T, VolatileType, Addr>
 where
-    T: VolatileAccessible<VolatileType, Addr>,
+    T: VolatileAccessible<VolatileType, Addr, CommandRingControlRegisterOffset>,
 {
     fn new(offset: CommandRingControlRegisterOffset) -> T;
     fn new_check_flag_false(offset: CommandRingControlRegisterOffset) -> PciResult<T>;
@@ -12,7 +12,7 @@ where
 
 impl<T, VolatileType> CrcrField<T, VolatileType, usize> for T
 where
-    T: VolatileAccessible<VolatileType, usize>,
+    T: VolatileAccessible<VolatileType, usize, CommandRingControlRegisterOffset>,
 {
     fn new(offset: CommandRingControlRegisterOffset) -> T {
         T::new_uncheck(offset.offset())

@@ -14,6 +14,7 @@ pub mod host_system_error_enable;
 pub mod interrupter_enable;
 pub mod light_host_controller_reset;
 pub mod run_stop;
+pub mod usb_command_register_field;
 
 pub struct UsbCommandRegister {
     pub run_stop: RunStop,

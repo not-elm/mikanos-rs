@@ -1,4 +1,8 @@
+use core::marker::PhantomData;
+
 use macros::VolatileBits;
+
+use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
 
 /// CommandRingPointer
 ///
@@ -14,4 +18,10 @@ use macros::VolatileBits;
 #[volatile_type(u64)]
 #[bits(58)]
 #[offset(6)]
-pub struct CommandRingPointer(usize);
+pub struct CommandRingPointer(usize, PhantomData<CommandRingControlRegisterOffset>);
+
+impl CommandRingPointer {
+    pub fn set_command_ring_addr(&self, addr: u64) {
+        self.write_volatile(addr >> 6);
+    }
+}

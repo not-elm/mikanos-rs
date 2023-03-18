@@ -1,3 +1,5 @@
+use core::marker::PhantomData;
+
 use macros::VolatileBits;
 
 use crate::error::{InvalidRegisterReason, PciError, PciResult};
@@ -15,7 +17,7 @@ use crate::xhci::registers::operational_registers::usb_command_register::run_sto
 #[volatile_type(u8)]
 #[bits(1)]
 #[offset(3)]
-pub struct CommandRingRunning(usize);
+pub struct CommandRingRunning(usize, PhantomData<CommandRingControlRegisterOffset>);
 
 impl CommandRingRunning {
     pub fn new_with_check(

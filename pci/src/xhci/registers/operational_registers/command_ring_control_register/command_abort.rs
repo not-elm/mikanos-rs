@@ -1,8 +1,10 @@
+use core::marker::PhantomData;
 use macros::VolatileBits;
 
 use crate::error::{PciError, PciResult};
 use crate::error::OperationReason::MustBeCommandRingStopped;
 use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_running::CommandRingRunning;
+use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
 
 /// CA
 ///
@@ -16,7 +18,7 @@ use crate::xhci::registers::operational_registers::command_ring_control_register
 #[volatile_type(u8)]
 #[bits(1)]
 #[offset(2)]
-pub struct CommandAbort(usize);
+pub struct CommandAbort(usize, PhantomData<CommandRingControlRegisterOffset>);
 
 impl CommandAbort {
     pub fn abort_command(crr: &CommandRingRunning) -> PciResult {

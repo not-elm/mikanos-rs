@@ -1,7 +1,10 @@
+use core::marker::PhantomData;
+
 use macros::VolatileBits;
 
 use crate::error::{OperationReason, PciError, PciResult};
 use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_running::CommandRingRunning;
+use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
 
 /// CS
 ///
@@ -14,7 +17,7 @@ use crate::xhci::registers::operational_registers::command_ring_control_register
 #[volatile_type(u8)]
 #[bits(1)]
 #[offset(1)]
-pub struct CommandStop(usize);
+pub struct CommandStop(usize, PhantomData<CommandRingControlRegisterOffset>);
 
 impl CommandStop {
     pub fn stop_command(crr: &CommandRingRunning) -> PciResult {
