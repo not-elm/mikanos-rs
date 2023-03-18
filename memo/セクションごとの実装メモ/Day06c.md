@@ -12,12 +12,13 @@
 Device Context Base Address Array Pointer Register(DCBAAP)というレジスタにその配列の先頭アドレスをセットする。
 
 デバイスコンテキストはSlotContext1つと、EndPointContext
+1024Byte
 
 ### SlotContext
 
 デバイスコンテキストの中の最初のフィールド
-u32 * 8のサイズ
+32Byteのサイズ
 
 ### EndPointContext
 
-u32 * 8のサイズ
+32Byte * 31のサイズ

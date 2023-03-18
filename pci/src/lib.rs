@@ -1,5 +1,6 @@
 #![no_std]
 #![feature(type_alias_impl_trait)]
+#![feature(strict_provenance)]
 
 pub mod configuration_space;
 pub mod error;

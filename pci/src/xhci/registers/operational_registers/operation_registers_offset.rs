@@ -3,9 +3,9 @@ use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct OperationRegistersOffset(usize);
+pub struct OperationalRegistersOffset(usize);
 
-impl OperationRegistersOffset {
+impl OperationalRegistersOffset {
     pub fn new(mmio_base_addr: MemoryMappedAddr, cap_length: CapabilityLength) -> Self {
         Self(mmio_base_addr.addr() + cap_length.read_volatile() as usize)
     }

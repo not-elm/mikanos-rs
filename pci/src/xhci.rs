@@ -1,4 +1,3 @@
-use core::ptr::read_volatile;
 use kernel_lib::println;
 
 use crate::error::{PciError, PciResult};
@@ -9,6 +8,8 @@ use crate::xhci::registers::operational_registers::usb_command_register::run_sto
 use crate::xhci::registers::operational_registers::usb_status_register::controller_not_ready::ControllerNotReady;
 use crate::xhci::registers::operational_registers::usb_status_register::host_controller_halted::HostControllerHalted;
 
+pub mod memory_allocatable;
+mod mikanos_pci_memory_allocator;
 pub mod registers;
 
 ///

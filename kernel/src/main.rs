@@ -21,7 +21,7 @@ use pci::xhci::registers::capability_registers::capability_length::CapabilityLen
 use pci::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use pci::xhci::registers::capability_registers::structural_parameters1::StructuralParameters1Offset;
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
-use pci::xhci::registers::operational_registers::operation_registers_offset::OperationRegistersOffset;
+use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 
 #[cfg(test)]
@@ -116,17 +116,17 @@ fn hcs1_offset() -> StructuralParameters1Offset {
 }
 
 #[allow(dead_code)]
-fn operation_registers_offset() -> OperationRegistersOffset {
+fn operation_registers_offset() -> OperationalRegistersOffset {
     let mmio_base_addr = mmio_base_addr();
     let cap_length = CapabilityLength::new(mmio_base_addr).unwrap();
-    OperationRegistersOffset::new(mmio_base_addr, cap_length)
+    OperationalRegistersOffset::new(mmio_base_addr, cap_length)
 }
 
 #[allow(dead_code)]
 fn usb_status_register_offset() -> UsbStatusRegisterOffset {
     let mmio_addr = mmio_base_addr();
     let cap_length = CapabilityLength::new(mmio_addr).unwrap();
-    UsbStatusRegisterOffset::new(OperationRegistersOffset::new(mmio_addr, cap_length))
+    UsbStatusRegisterOffset::new(OperationalRegistersOffset::new(mmio_addr, cap_length))
 }
 
 /// この関数はパニック時に呼ばれる

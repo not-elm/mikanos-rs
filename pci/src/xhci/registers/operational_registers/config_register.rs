@@ -1,4 +1,4 @@
-use crate::xhci::registers::operational_registers::operation_registers_offset::OperationRegistersOffset;
+use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 
 pub mod max_device_slots_enabled;
 
@@ -7,7 +7,7 @@ pub mod max_device_slots_enabled;
 pub struct ConfigRegisterOffset(usize);
 
 impl ConfigRegisterOffset {
-    pub fn new(operation_registers_offset: OperationRegistersOffset) -> Self {
+    pub fn new(operation_registers_offset: OperationalRegistersOffset) -> Self {
         Self(operation_registers_offset.offset() + 0x38)
     }
 
