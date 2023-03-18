@@ -1,4 +1,4 @@
-use crate::xhci::memory_allocatable::MemoryAllocatable;
+use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
 
 const MEMORY_SIZE: usize = 4096 * 32;
 static mut MEMORY_POOL: MemoryPool = MemoryPool([0; MEMORY_SIZE]);
@@ -44,8 +44,10 @@ fn add_index_with_align(index: usize, bytes: usize) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::xhci::memory_allocatable::MemoryAllocatable;
-    use crate::xhci::mikanos_pci_memory_allocator::{MikanOSPciMemoryAllocator, MEMORY_POOL};
+    use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
+    use crate::xhci::allocator::mikanos_pci_memory_allocator::{
+        MikanOSPciMemoryAllocator, MEMORY_POOL,
+    };
 
     #[test]
     fn it_align() {

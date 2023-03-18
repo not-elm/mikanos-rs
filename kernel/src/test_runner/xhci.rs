@@ -4,6 +4,7 @@ use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhci::registers::operational_registers::config_register::ConfigRegisterOffset;
+use pci::xhci::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointerOffset;
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 
@@ -41,4 +42,8 @@ pub(crate) fn usb_status_register_offset() -> UsbStatusRegisterOffset {
     let mmio_addr = mmio_base_addr();
     let cap_length = CapabilityLength::new(mmio_addr).unwrap();
     UsbStatusRegisterOffset::new(OperationalRegistersOffset::new(mmio_addr, cap_length))
+}
+
+pub(crate) fn dcbaap_offset() -> DeviceContextBaseAddressArrayPointerOffset {
+    DeviceContextBaseAddressArrayPointerOffset::new(operation_registers_offset())
 }

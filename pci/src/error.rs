@@ -10,6 +10,8 @@ pub enum PciError {
     RuntimeOffsetInvalid(u32),
     XhcStopping,
     XhcRunning,
+    WriteFailedDeviceContextArrayAddrToDCBAAP(u64),
+    FailedAllocate,
     FailedWroteSetMaxSlotsEn(u8),
     HostControllerNotHalted,
     HostControllerResetInvalid,
