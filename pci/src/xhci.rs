@@ -1,7 +1,11 @@
+use core::ptr::read_volatile;
 use kernel_lib::println;
 
 use crate::error::{PciError, PciResult};
+use crate::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
+use crate::xhci::registers::operational_registers::config_register::max_device_slots_enabled::MaxDeviceSlotsEnabled;
 use crate::xhci::registers::operational_registers::usb_command_register::host_controller_reset::HostControllerReset;
+use crate::xhci::registers::operational_registers::usb_command_register::run_stop::RunStop;
 use crate::xhci::registers::operational_registers::usb_status_register::controller_not_ready::ControllerNotReady;
 use crate::xhci::registers::operational_registers::usb_status_register::host_controller_halted::HostControllerHalted;
 
@@ -12,7 +16,24 @@ pub mod registers;
 /// 2. デバイスコンテキストの設定
 pub fn _init() {}
 
-pub fn _set_device_context() {}
+/// 接続できるデバイス数を取得して、コンフィグレジスタに設定します。
+pub fn set_device_context(
+    run_stop: &RunStop,
+    max_slots: &NumberOfDeviceSlots,
+    max_slots_en: &MaxDeviceSlotsEnabled,
+) -> PciResult {
+    if run_stop.read_flag_volatile() {
+        return Err(PciError::XhcRunning);
+    }
+    let enable_slots = max_slots.read_volatile();
+    max_slots_en.write_volatile(enable_slots);
+
+    if max_slots.read_volatile() == enable_slots {
+        Ok(())
+    } else {
+        Err(PciError::FailedWroteSetMaxSlotsEn(enable_slots))
+    }
+}
 
 pub fn reset_controller(
     hch: &HostControllerHalted,

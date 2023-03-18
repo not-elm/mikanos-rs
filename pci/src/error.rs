@@ -9,6 +9,8 @@ pub enum PciError {
     DoorbellOffsetInvalid(u32),
     RuntimeOffsetInvalid(u32),
     XhcStopping,
+    XhcRunning,
+    FailedWroteSetMaxSlotsEn(u8),
     HostControllerNotHalted,
     HostControllerResetInvalid,
     InvalidControllerNotReadyRegister,

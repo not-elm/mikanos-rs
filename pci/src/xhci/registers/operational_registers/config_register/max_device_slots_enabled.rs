@@ -1,3 +1,4 @@
+use crate::xhci::registers::operational_registers::config_register::ConfigRegisterOffset;
 use macros::VolatileBits;
 
 /// MaxSlotsEn
@@ -8,4 +9,11 @@ use macros::VolatileBits;
 ///
 /// Note: UsbCommandRegister/RunStopがTrueの場合、ソフトウエア側の設定は無視される
 #[derive(VolatileBits)]
+#[volatile_type(u8)]
 pub struct MaxDeviceSlotsEnabled(usize);
+
+impl MaxDeviceSlotsEnabled {
+    pub fn new(offset: ConfigRegisterOffset) -> Self {
+        Self::new_uncheck(offset.offset())
+    }
+}
