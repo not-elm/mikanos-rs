@@ -11,9 +11,10 @@ use core::panic::PanicInfo;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 use kernel_lib::error::KernelResult;
-use kernel_lib::gop::console::{draw_cursor, fill_rect_using_global, init_console};
+use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::println;
+use macros::VolatileBits;
 
 #[cfg(test)]
 mod test_runner;
@@ -26,10 +27,10 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
     #[cfg(test)]
     test_main();
 
-    fill_background(PixelColor::new(0x3E, 0x3E, 0x3E), &frame_buffer_config).unwrap();
-    fill_bottom_bar(PixelColor::new(0x00, 0x00, 0xFF), &frame_buffer_config).unwrap();
-
-    draw_cursor().unwrap();
+    // fill_background(PixelColor::new(0x3E, 0x3E, 0x3E), &frame_buffer_config).unwrap();
+    // fill_bottom_bar(PixelColor::new(0x00, 0x00, 0xFF), &frame_buffer_config).unwrap();
+    //
+    // draw_cursor().unwrap();
 
     // let mmio_base_addr = PciDeviceSearcher::new()
     //     .class_code(ClassCode::SerialBus)

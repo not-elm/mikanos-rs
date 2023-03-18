@@ -73,3 +73,21 @@ fn it_write_with_bits_and_offset16() {
     assert_eq!(v.read_volatile(), 0b00);
     assert_eq!(buff[0], 0b1001_0000_1100_0000u16)
 }
+
+#[test_case]
+fn it_write_flag() {
+    #[derive(VolatileBits)]
+    #[bits(3)]
+    #[offset(8)]
+    #[volatile_type(u16)]
+    struct VolatileStruct(usize);
+    let buff = [0b1000_0001_0000_0000u16; 1];
+    let addr = buff.as_ptr().addr();
+    let v = VolatileStruct::new_uncheck(addr);
+
+    assert!(v.read_flag_volatile());
+    v.write_flag_volatile(false);
+
+    assert!(!v.read_flag_volatile());
+    assert_eq!(buff[0], 0b1000_0000_0000_0000u16)
+}
