@@ -2,8 +2,6 @@
 
 #[cfg(test)]
 mod tests {
-    #[allow(unused_imports)]
-    use common_lib::volatile_accessible::VolatileAccessible;
     use macros::VolatileBits;
 
     #[test]

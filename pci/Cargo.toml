@@ -10,4 +10,3 @@ bitfield-struct = "0.3.2"
 enum-try-from = "0.0.1"
 kernel-lib = { path = "../kernel-lib" }
 macros = { path = "../macros", features = ["extra-traits"] }
-common-lib = { path = "../common-lib" }

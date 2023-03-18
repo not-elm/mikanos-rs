@@ -18,6 +18,22 @@ use crate::volatile::read::read_flag_volatile;
 
 mod volatile;
 
+#[cfg(feature = "extra-traits")]
+#[proc_macro]
+pub fn declaration_volatile_accessible(_input: TokenStream) -> TokenStream {
+    let expand = quote::quote! {
+        pub trait VolatileAccessible<ActualValue, Addr> {
+            fn new_uncheck(v: Addr) -> Self;
+            fn read_volatile(&self) -> ActualValue;
+            fn read_flag_volatile(&self) -> bool;
+
+            fn write_flag_volatile(&self, flag: bool);
+            fn write_volatile(&self, value: ActualValue);
+        }
+    };
+    expand.into()
+}
+
 #[proc_macro_derive(VolatileBits, attributes(volatile_type, bits, offset))]
 pub fn volatile_bits(input: TokenStream) -> TokenStream {
     let item_struct = parse_macro_input!(input as ItemStruct);
@@ -75,9 +91,7 @@ fn impl_volatile_accessible(
     write_volatile: proc_macro2::TokenStream,
 ) -> proc_macro2::TokenStream {
     quote::quote! {
-        use common_lib::volatile_accessible::VolatileAccessible;
-
-        impl common_lib::volatile_accessible::VolatileAccessible<#volatile_type, #addr_type> for #struct_name{
+        impl crate::VolatileAccessible<#volatile_type, #addr_type> for #struct_name{
             fn new_uncheck(v: #addr_type) -> Self{
                 Self(v)
             }

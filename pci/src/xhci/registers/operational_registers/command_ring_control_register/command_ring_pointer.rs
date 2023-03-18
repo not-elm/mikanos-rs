@@ -1,8 +1,5 @@
 use macros::VolatileBits;
 
-use crate::error::{InvalidRegisterReason, PciError, PciResult};
-use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
-
 /// CommandRingPointer
 ///
 /// コマンドリングのでキューポインタのアドレスを設定するためのフィールドです。
@@ -18,16 +15,3 @@ use crate::xhci::registers::operational_registers::command_ring_control_register
 #[bits(58)]
 #[offset(6)]
 pub struct CommandRingPointer(usize);
-
-impl CommandRingPointer {
-    pub fn new(offset: CommandRingControlRegisterOffset) -> PciResult<Self> {
-        let s = Self::new_uncheck(offset.offset());
-        if s.read_flag_volatile() {
-            Err(PciError::InvalidRegister(
-                InvalidRegisterReason::IllegalBitFlag { expect: false },
-            ))
-        } else {
-            Ok(s)
-        }
-    }
-}

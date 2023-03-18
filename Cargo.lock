@@ -115,7 +115,6 @@ dependencies = [
 name = "macros"
 version = "0.1.0"
 dependencies = [
- "common-lib",
  "kernel-lib",
  "proc-macro2",
  "quote",
@@ -133,7 +132,6 @@ name = "pci"
 version = "0.1.0"
 dependencies = [
  "bitfield-struct",
- "common-lib",
  "enum-try-from",
  "kernel-lib",
  "macros",

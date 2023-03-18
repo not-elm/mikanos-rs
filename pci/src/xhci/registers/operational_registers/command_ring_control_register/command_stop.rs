@@ -1,8 +1,8 @@
 use macros::VolatileBits;
 
-use crate::error::{InvalidRegisterReason, OperationReason, PciError, PciResult};
-use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_running::CommandRingRunning;
-use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
+use crate::error::{OperationReason, PciError, PciResult};
+use crate::VolatileAccessible;
+use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_running::{CommandRingRunning, VolatileAccessible};
 
 /// CS
 ///
@@ -18,17 +18,6 @@ use crate::xhci::registers::operational_registers::command_ring_control_register
 pub struct CommandStop(usize);
 
 impl CommandStop {
-    pub fn new(offset: CommandRingControlRegisterOffset) -> PciResult<Self> {
-        let s = Self::new_uncheck(offset.offset());
-        if s.read_flag_volatile() {
-            Err(PciError::InvalidRegister(
-                InvalidRegisterReason::IllegalBitFlag { expect: false },
-            ))
-        } else {
-            Ok(s)
-        }
-    }
-
     pub fn stop_command(crr: &CommandRingRunning) -> PciResult {
         if crr.read_flag_volatile() {
             return Err(PciError::FailedOperateToRegister(

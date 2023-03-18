@@ -4,6 +4,7 @@ pub mod command_abort;
 pub mod command_ring_pointer;
 pub mod command_ring_running;
 pub mod command_stop;
+pub mod crcr_field;
 pub mod ring_cycle_state;
 
 #[repr(transparent)]
