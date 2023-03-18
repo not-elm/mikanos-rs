@@ -3,6 +3,7 @@ use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
+use pci::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
 use pci::xhci::registers::operational_registers::config_register::ConfigRegisterOffset;
 use pci::xhci::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointerOffset;
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
@@ -46,4 +47,8 @@ pub(crate) fn usb_status_register_offset() -> UsbStatusRegisterOffset {
 
 pub(crate) fn dcbaap_offset() -> DeviceContextBaseAddressArrayPointerOffset {
     DeviceContextBaseAddressArrayPointerOffset::new(operation_registers_offset())
+}
+
+pub(crate) fn command_ring_control_register_offset() -> CommandRingControlRegisterOffset {
+    CommandRingControlRegisterOffset::new(operation_registers_offset())
 }

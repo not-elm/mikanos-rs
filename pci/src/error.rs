@@ -16,4 +16,5 @@ pub enum PciError {
     HostControllerNotHalted,
     HostControllerResetInvalid,
     InvalidControllerNotReadyRegister,
+    InvalidRingCycleState,
 }
