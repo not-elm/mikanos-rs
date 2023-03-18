@@ -1,6 +1,6 @@
 use macros::VolatileBits;
 
-use crate::error::{PciError, PciResult};
+use crate::error::{InvalidRegisterReason, PciError, PciResult};
 use crate::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 
 #[derive(VolatileBits)]
@@ -13,7 +13,9 @@ impl HostControllerHalted {
         if s.read_flag_volatile() {
             Ok(s)
         } else {
-            Err(PciError::HostControllerNotHalted)
+            Err(PciError::InvalidRegister(
+                InvalidRegisterReason::HostControllerNotHalted,
+            ))
         }
     }
 }

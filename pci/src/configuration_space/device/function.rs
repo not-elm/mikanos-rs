@@ -1,7 +1,7 @@
 use multiple_function_device::MultipleFunctionDevice;
 
 use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
-use crate::error::{PciError, PciResult};
+use crate::error::{FunctionReason, PciError, PciResult};
 
 pub mod multiple_function_device;
 pub mod single_function_device;
@@ -17,7 +17,7 @@ impl Function {
         if let Function::Single(single) = self {
             Ok(single)
         } else {
-            Err(PciError::NotSingleFunction)
+            Err(PciError::InvalidFunction(FunctionReason::NotSingleFunction))
         }
     }
 }

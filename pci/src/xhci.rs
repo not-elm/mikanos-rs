@@ -1,7 +1,8 @@
 use allocator::memory_allocatable::MemoryAllocatable;
 use kernel_lib::println;
 
-use crate::error::{PciError, PciResult};
+use crate::error::OperationReason::{FailedAllocate, HostControllerNotHalted, NotReflectedValue};
+use crate::error::{OperationReason, PciError, PciResult};
 use crate::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use crate::xhci::registers::operational_registers::config_register::max_device_slots_enabled::MaxDeviceSlotsEnabled;
 use crate::xhci::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointer;
@@ -25,7 +26,9 @@ pub fn set_device_context(
     max_slots_en: &MaxDeviceSlotsEnabled,
 ) -> PciResult {
     if run_stop.read_flag_volatile() {
-        return Err(PciError::XhcRunning);
+        return Err(PciError::FailedOperateToRegister(
+            OperationReason::XhcRunning,
+        ));
     }
     let enable_slots = max_slots.read_volatile();
     max_slots_en.write_volatile(enable_slots);
@@ -33,7 +36,11 @@ pub fn set_device_context(
     if max_slots.read_volatile() == enable_slots {
         Ok(())
     } else {
-        Err(PciError::FailedWroteSetMaxSlotsEn(enable_slots))
+        Err(PciError::FailedOperateToRegister(
+            OperationReason::NotReflectedValue {
+                value: enable_slots as usize,
+            },
+        ))
     }
 }
 
@@ -47,14 +54,16 @@ pub unsafe fn allocate_device_context_array(
     let alloc_size = DEVICE_CONTEXT_SIZE * (max_slots_en.read_volatile() + 1) as usize;
     let device_context_array_addr = allocator
         .alloc(alloc_size)
-        .ok_or(PciError::FailedAllocate)?;
+        .ok_or(PciError::FailedOperateToRegister(FailedAllocate))?;
     dcbaap.write_volatile(device_context_array_addr as u64);
 
     let addr = dcbaap.read_volatile();
     if addr == device_context_array_addr as u64 {
         Ok(())
     } else {
-        Err(PciError::WriteFailedDeviceContextArrayAddrToDCBAAP(addr))
+        Err(PciError::FailedOperateToRegister(NotReflectedValue {
+            value: addr as usize,
+        }))
     }
 }
 
@@ -64,7 +73,7 @@ pub fn reset_controller(
     cnr: &ControllerNotReady,
 ) -> PciResult {
     if !hch.read_flag_volatile() {
-        return Err(PciError::HostControllerNotHalted);
+        return Err(PciError::FailedOperateToRegister(HostControllerNotHalted));
     }
     println!("start write true -> host controller reset");
 
