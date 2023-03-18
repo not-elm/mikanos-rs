@@ -1,4 +1,7 @@
-use crate::error::PciResult;
+use crate::error::{OperationReason, PciError, PciResult};
+use crate::error::OperationReason::FailedAllocate;
+use crate::VolatileAccessible;
+use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhci::registers::operational_registers::command_ring_control_register::command_abort::CommandAbort;
 use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_pointer::CommandRingPointer;
 use crate::xhci::registers::operational_registers::command_ring_control_register::command_ring_running::CommandRingRunning;
@@ -33,6 +36,35 @@ impl CommandRingControlRegister {
             command_ring_pointer: CommandRingPointer::new(offset),
         })
     }
+
+    pub fn setup_command_ring(&self, allocator: &mut impl MemoryAllocatable) -> PciResult {
+        unsafe { allocate_command_ring(self, allocator) }
+    }
+}
+unsafe fn allocate_command_ring(
+    crcr: &CommandRingControlRegister,
+    allocator: &mut impl MemoryAllocatable,
+) -> PciResult {
+    const TRB_SIZE: usize = 128;
+
+    let alloc_size = TRB_SIZE * 32;
+    let command_ring_addr = allocator
+        .alloc(alloc_size)
+        .ok_or(PciError::FailedOperateToRegister(FailedAllocate))?;
+
+    register_command_ring(crcr, command_ring_addr as u64)
+}
+
+fn register_command_ring(crcr: &CommandRingControlRegister, command_ring_addr: u64) -> PciResult {
+    if crcr.cs.read_flag_volatile() || crcr.ca.read_flag_volatile() {
+        return Err(PciError::FailedOperateToRegister(
+            OperationReason::MustBeCommandRingStopped,
+        ));
+    }
+    crcr.rcs.write_flag_volatile(true);
+    crcr.command_ring_pointer
+        .set_command_ring_addr(command_ring_addr);
+    Ok(())
 }
 
 #[repr(transparent)]
