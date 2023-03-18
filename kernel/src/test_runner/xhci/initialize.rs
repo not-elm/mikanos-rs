@@ -7,7 +7,7 @@ use crate::hcs1_offset;
 use crate::test_runner::xhci::{config_register_offset, operation_registers_offset};
 
 #[test_case]
-fn set_device_contexts_enabled() {
+fn it_set_device_contexts_enabled() {
     let run_stop = RunStop::new(operation_registers_offset());
     let max_slots = NumberOfDeviceSlots::new(hcs1_offset());
     let max_slots_en = MaxDeviceSlotsEnabled::new(config_register_offset());
