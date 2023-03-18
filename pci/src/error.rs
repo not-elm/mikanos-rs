@@ -1,8 +1,5 @@
-use bitfield_struct::bitfield;
-
 pub type PciResult<T = ()> = Result<T, PciError>;
 
-#[bitfield]
 #[derive(Debug)]
 pub enum PciError {
     NotSingleFunction,
@@ -11,7 +8,7 @@ pub enum PciError {
     CapLengthInvalid(u8),
     DoorbellOffsetInvalid(u32),
     RuntimeOffsetInvalid(u32),
-    XhcStoped,
+    XhcStopping,
     HostControllerNotHalted,
     HostControllerResetInvalid,
 }

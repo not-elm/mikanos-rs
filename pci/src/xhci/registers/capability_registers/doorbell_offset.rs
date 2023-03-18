@@ -1,5 +1,6 @@
-use macros::Volatile;
+use macros::VolatileBits;
 
-#[derive(Debug, Clone, Volatile)]
-#[volatile_type(u32, right_shift = 2)]
+/// FIXME 下位2ビットが予約領域のため、ビットマスクするように修正する必要あり
+#[derive(VolatileBits)]
+#[volatile_type(u32)]
 pub struct DoorbellOffset(usize);

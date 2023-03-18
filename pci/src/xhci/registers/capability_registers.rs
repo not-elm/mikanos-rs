@@ -1,4 +1,4 @@
-use macros::Volatile;
+use macros::VolatileBits;
 
 use crate::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use crate::xhci::registers::capability_registers::capability_parameters1::CapabilityParameters1;
@@ -31,7 +31,7 @@ pub struct CapabilityRegisters {
     pub hcc_params2: CapabilityParameters2,
 }
 
-#[derive(Debug, Clone, Volatile)]
+#[derive(VolatileBits)]
 #[volatile_type(u16)]
 pub struct HciVersion(usize);
 

@@ -1,6 +1,17 @@
 use proc_macro2::Ident;
 
-pub(crate) fn impl_hex_debug(struct_name: Ident) -> proc_macro2::TokenStream {
+pub(crate) fn impl_debug(
+    struct_name: Ident,
+    volatile_type: proc_macro2::Ident,
+) -> proc_macro2::TokenStream {
+    if volatile_type == "bool" {
+        impl_debug_within_bool(struct_name)
+    } else {
+        impl_debug_within_upper_hex(struct_name)
+    }
+}
+
+fn impl_debug_within_upper_hex(struct_name: Ident) -> proc_macro2::TokenStream {
     quote::quote! {
          impl core::fmt::Debug for #struct_name{
                 fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -13,6 +24,16 @@ pub(crate) fn impl_hex_debug(struct_name: Ident) -> proc_macro2::TokenStream {
                 core::fmt::UpperHex::fmt(&self.read_volatile(), f)
             }
         }
+    }
+}
+
+fn impl_debug_within_bool(struct_name: Ident) -> proc_macro2::TokenStream {
+    quote::quote! {
+         impl core::fmt::Debug for #struct_name{
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    f.write_fmt(format_args!("{:?}", self.read_volatile()))
+                }
+         }
     }
 }
 

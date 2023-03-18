@@ -1,41 +1,6 @@
-use quote::ToTokens;
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
 use syn::{Attribute, ItemStruct, Lit, Meta, MetaList, NestedMeta, Type};
-
-pub(crate) fn read_volatile(
-    volatile_type: proc_macro2::TokenStream,
-    bits: Option<proc_macro2::Literal>,
-) -> proc_macro2::TokenStream {
-    let r = if let Some(bits) = bits {
-        read_volatile_with_mask(volatile_type.clone(), bits)
-    } else {
-        read_volatile_no_mask(volatile_type.clone())
-    };
-
-    quote::quote! {
-        pub fn read_volatile(&self) -> #volatile_type{
-            #r
-        }
-    }
-}
-
-pub(crate) fn read_volatile_with_mask(
-    ty: proc_macro2::TokenStream,
-    bits: proc_macro2::Literal,
-) -> proc_macro2::TokenStream {
-    quote::quote! {
-         let mask = !0 >> (#ty::BITS as usize - #bits) ;
-
-         unsafe{core::ptr::read_volatile(self.0 as *const #ty) & mask }
-    }
-}
-
-pub(crate) fn read_volatile_no_mask(ty: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-    quote::quote! {
-        unsafe{core::ptr::read_volatile(self.0 as *const #ty)}
-    }
-}
 
 /// Note: NewTypeパターンの構造体(フィールドが1つの場合)を前提
 pub(crate) fn parse_inner_type(struct_item: ItemStruct) -> Type {
@@ -48,14 +13,24 @@ pub(crate) fn parse_inner_type(struct_item: ItemStruct) -> Type {
         .clone()
 }
 
+// /// Note: NewTypeパターンの構造体(フィールドが1つの場合)を前提
+// pub(crate) fn convert_to_offset(
+//     volatile_type: proc_macro2::Ident,
+//     offset: Option<proc_macro2::Literal>,
+// ) -> proc_macro2::Literal {
+//     let offset = offset.unwrap_or(Literal::)
+// }
+
 pub(crate) fn parse_volatile_bits_attributes(
     item_struct: ItemStruct,
 ) -> (
-    Option<proc_macro2::TokenStream>,
+    Option<proc_macro2::Ident>,
+    Option<proc_macro2::Literal>,
     Option<proc_macro2::Literal>,
 ) {
-    let mut volatile_type: Option<proc_macro2::TokenStream> = None;
+    let mut volatile_type: Option<proc_macro2::Ident> = None;
     let mut bits: Option<proc_macro2::Literal> = None;
+    let mut offset: Option<proc_macro2::Literal> = None;
     item_struct
         .attrs
         .iter()
@@ -68,14 +43,18 @@ pub(crate) fn parse_volatile_bits_attributes(
             InputAttribute::VolatileType(v) => {
                 volatile_type = Some(v);
             }
+            InputAttribute::Offset(v) => {
+                offset = Some(v);
+            }
         });
 
-    (volatile_type, bits)
+    (volatile_type, bits, offset)
 }
 
 enum InputAttribute {
-    VolatileType(proc_macro2::TokenStream),
+    VolatileType(proc_macro2::Ident),
     Bits(proc_macro2::Literal),
+    Offset(proc_macro2::Literal),
 }
 
 fn parse_attribute(attr: Attribute) -> Option<InputAttribute> {
@@ -99,8 +78,8 @@ fn parse_meta_name_value(
     path: &syn::Path,
     nested: &Punctuated<NestedMeta, Comma>,
 ) -> Option<InputAttribute> {
-    let p = path.segments.first()?;
-    let attr_name = p.ident.clone();
+    let path_segment = path.segments.first()?;
+    let attr_name = path_segment.ident.clone();
 
     if attr_name == "bits" {
         if let NestedMeta::Lit(Lit::Int(lit)) = nested.first()? {
@@ -109,10 +88,13 @@ fn parse_meta_name_value(
     } else if attr_name == "volatile_type" {
         if let NestedMeta::Meta(Meta::Path(p)) = nested.first()? {
             return Some(InputAttribute::VolatileType(
-                p.segments.first()?.ident.clone().into_token_stream(),
+                p.segments.first()?.ident.clone(),
             ));
         }
-        return None;
+    } else if attr_name == "offset" {
+        if let NestedMeta::Lit(Lit::Int(lit)) = nested.first()? {
+            return Some(InputAttribute::Offset(lit.token()));
+        }
     }
 
     None

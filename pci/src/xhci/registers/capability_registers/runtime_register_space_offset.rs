@@ -1,5 +1,6 @@
-use macros::Volatile;
+use macros::VolatileBits;
 
-#[derive(Debug, Clone, Volatile)]
-#[volatile_type(u32, right_shift = 5)]
+/// FIXME 下位5ビットが予約領域のため、ビットマスクするように修正する必要あり
+#[derive(VolatileBits)]
+#[volatile_type(u32)]
 pub struct RuntimeRegisterSpaceOffset(usize);

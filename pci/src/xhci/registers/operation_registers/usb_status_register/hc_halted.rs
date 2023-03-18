@@ -1,5 +1,4 @@
 use kernel_lib::println;
-use macros::VolatileFlag;
 
 use crate::error::{PciError, PciResult};
 use crate::xhci::registers::operation_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;

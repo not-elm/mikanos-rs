@@ -1,5 +1,5 @@
-use macros::Volatile;
+use macros::VolatileBits;
 
-#[derive(Debug, Clone, Volatile)]
+#[derive(VolatileBits)]
 #[volatile_type(u32)]
 pub struct StructuralParameters3(usize);
