@@ -11,6 +11,12 @@ pub struct MikanOSPciMemoryAllocator {
     index: usize,
 }
 
+impl MikanOSPciMemoryAllocator {
+    pub fn new() -> Self {
+        Self { index: 0 }
+    }
+}
+
 impl MemoryAllocatable for MikanOSPciMemoryAllocator {
     unsafe fn alloc(&mut self, bytes: usize) -> Option<usize> {
         if MEMORY_POOL.0.len() <= self.index {
@@ -33,5 +39,29 @@ fn add_index_with_align(index: usize, bytes: usize) -> usize {
         index + bytes
     } else {
         index + bytes + (64 - diff)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::xhci::memory_allocatable::MemoryAllocatable;
+    use crate::xhci::mikanos_pci_memory_allocator::{MikanOSPciMemoryAllocator, MEMORY_POOL};
+
+    #[test]
+    fn it_align() {
+        let mut allocator = MikanOSPciMemoryAllocator::new();
+        let base_addr = unsafe { MEMORY_POOL.0.as_ptr().addr() };
+        let addr = unsafe { allocator.alloc(32) };
+        assert!(addr.map(|ptr_addr| ptr_addr == base_addr).is_some());
+        assert_eq!(allocator.index, 64);
+    }
+
+    #[test]
+    fn it_align_more_than_64bytes() {
+        let mut allocator = MikanOSPciMemoryAllocator::new();
+        let base_addr = unsafe { MEMORY_POOL.0.as_ptr().addr() };
+        let addr = unsafe { allocator.alloc(65) };
+        assert!(addr.map(|ptr_addr| ptr_addr == base_addr).is_some());
+        assert_eq!(allocator.index, 128);
     }
 }
