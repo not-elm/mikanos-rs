@@ -1,6 +1,6 @@
 use macros::VolatileBits;
 
-use crate::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
+use crate::xhci::registers::operational_registers::operation_registers_offset::OperationRegistersOffset;
 
 #[derive(VolatileBits)]
 pub struct HostSystemErrorEnable(usize);

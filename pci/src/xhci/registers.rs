@@ -1,7 +1,7 @@
 pub mod capability_registers;
 pub mod doorbell_registers;
 pub mod memory_mapped_addr;
-pub mod operation_registers;
+pub mod operational_registers;
 pub mod runtime_registers;
 
 pub struct Registers {}

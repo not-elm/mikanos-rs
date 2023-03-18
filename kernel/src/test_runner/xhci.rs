@@ -3,8 +3,8 @@ use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
-use pci::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
-use pci::xhci::registers::operation_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
+use pci::xhci::registers::operational_registers::operation_registers_offset::OperationRegistersOffset;
+use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 
 pub mod capability_registers;
 mod usb_command_register;

@@ -7,7 +7,7 @@ use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
 
 mod macros_test;
-// mod xhci;
+mod xhci;
 
 pub trait Testable {
     fn run(&self) -> ();

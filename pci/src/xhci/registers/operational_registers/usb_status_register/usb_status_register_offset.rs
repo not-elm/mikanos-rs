@@ -1,4 +1,4 @@
-use crate::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
+use crate::xhci::registers::operational_registers::operation_registers_offset::OperationRegistersOffset;
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct UsbStatusRegisterOffset(usize);

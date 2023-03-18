@@ -1,10 +1,10 @@
 use crate::error::PciResult;
-use crate::xhci::registers::operation_registers::usb_command_register::controller_save_state::ControllerSaveState;
-use crate::xhci::registers::operation_registers::usb_command_register::host_controller_reset::HostControllerReset;
-use crate::xhci::registers::operation_registers::usb_command_register::host_system_error_enable::HostSystemErrorEnable;
-use crate::xhci::registers::operation_registers::usb_command_register::interrupter_enable::InterrupterEnable;
-use crate::xhci::registers::operation_registers::usb_command_register::light_host_controller_reset::LightHostControllerReset;
-use crate::xhci::registers::operation_registers::usb_command_register::run_stop::RunStop;
+use crate::xhci::registers::operational_registers::usb_command_register::controller_save_state::ControllerSaveState;
+use crate::xhci::registers::operational_registers::usb_command_register::host_controller_reset::HostControllerReset;
+use crate::xhci::registers::operational_registers::usb_command_register::host_system_error_enable::HostSystemErrorEnable;
+use crate::xhci::registers::operational_registers::usb_command_register::interrupter_enable::InterrupterEnable;
+use crate::xhci::registers::operational_registers::usb_command_register::light_host_controller_reset::LightHostControllerReset;
+use crate::xhci::registers::operational_registers::usb_command_register::run_stop::RunStop;
 
 pub mod controller_save_state;
 pub mod host_controller_reset;

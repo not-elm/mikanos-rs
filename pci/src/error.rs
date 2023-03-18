@@ -11,4 +11,5 @@ pub enum PciError {
     XhcStopping,
     HostControllerNotHalted,
     HostControllerResetInvalid,
+    InvalidControllerNotReadyRegister,
 }
