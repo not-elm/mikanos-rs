@@ -2,13 +2,12 @@ use common_lib::vector::Vector2D;
 use kernel_lib::gop::console::fill_rect_using_global;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::println;
-
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
 
 mod macros_test;
-mod xhci;
+// mod xhci;
 
 pub trait Testable {
     fn run(&self) -> ();

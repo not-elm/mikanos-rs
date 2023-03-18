@@ -1,4 +1,4 @@
-use macros::VolatileFlag;
+use macros::VolatileBits;
 
-#[derive(VolatileFlag)]
+#[derive(VolatileBits)]
 pub struct LightHostControllerReset(usize);

@@ -18,7 +18,7 @@ pub(crate) fn parse_volatile_bits_attributes(
 ) -> (
     Option<proc_macro2::Ident>,
     Option<proc_macro2::Literal>,
-    Option<proc_macro2::Literal>,
+    proc_macro2::Literal,
 ) {
     let mut volatile_type: Option<proc_macro2::Ident> = None;
     let mut bits: Option<proc_macro2::Literal> = None;
@@ -40,7 +40,38 @@ pub(crate) fn parse_volatile_bits_attributes(
             }
         });
 
-    (volatile_type, bits, offset)
+    (
+        volatile_type.clone(),
+        bits,
+        offset_suffixed(volatile_type.clone(), offset),
+    )
+}
+
+fn offset_suffixed(
+    volatile_type: Option<proc_macro2::Ident>,
+    offset: Option<proc_macro2::Literal>,
+) -> proc_macro2::Literal {
+    if let Some(offset) = offset {
+        return offset;
+    }
+
+    if let Some(volatile_type) = volatile_type {
+        return if volatile_type == "u8" {
+            proc_macro2::Literal::u8_unsuffixed(0)
+        } else if volatile_type == "u16" {
+            proc_macro2::Literal::u16_unsuffixed(0)
+        } else if volatile_type == "u32" {
+            proc_macro2::Literal::u32_unsuffixed(0)
+        } else if volatile_type == "u64" {
+            proc_macro2::Literal::u64_unsuffixed(0)
+        } else if volatile_type == "u128" {
+            proc_macro2::Literal::u128_unsuffixed(0)
+        } else {
+            proc_macro2::Literal::usize_unsuffixed(0)
+        };
+    }
+
+    proc_macro2::Literal::u32_unsuffixed(0)
 }
 
 enum InputAttribute {

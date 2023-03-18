@@ -1,8 +1,8 @@
-use macros::VolatileFlag;
+use macros::VolatileBits;
 
 use crate::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
 
-#[derive(VolatileFlag)]
+#[derive(VolatileBits)]
 pub struct HostSystemErrorEnable(usize);
 
 impl HostSystemErrorEnable {

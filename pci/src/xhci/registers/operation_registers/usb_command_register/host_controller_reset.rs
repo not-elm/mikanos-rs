@@ -1,16 +1,18 @@
-use crate::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
-use macros::VolatileFlag;
+use macros::VolatileBits;
 
-#[derive(VolatileFlag)]
+use crate::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
+
+#[derive(VolatileBits)]
+#[offset(1)]
 pub struct HostControllerReset(usize);
 
 impl HostControllerReset {
     pub fn new(offset: OperationRegistersOffset) -> Self {
-        Self::new_uncheck(offset.offset() + 1)
+        Self::new_uncheck(offset.offset())
     }
 
-    pub fn reset(&self) {
-        self.write_volatile(true);
-        while !self.read_volatile() {}
-    }
+    // pub fn reset(&self) {
+    //     self.write_volatile(true);
+    //     while !self.read_flag_volatile() {}
+    // }
 }

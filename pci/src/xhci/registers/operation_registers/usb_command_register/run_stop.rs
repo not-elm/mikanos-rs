@@ -1,7 +1,8 @@
-use crate::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
-use macros::VolatileFlag;
+use macros::VolatileBits;
 
-#[derive(VolatileFlag)]
+use crate::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
+
+#[derive(VolatileBits)]
 pub struct RunStop(usize);
 
 impl RunStop {

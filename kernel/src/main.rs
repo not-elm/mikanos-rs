@@ -14,13 +14,6 @@ use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{draw_cursor, fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::println;
-use pci::configuration_space::common_header::class_code::ClassCode;
-use pci::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
-use pci::configuration_space::common_header::sub_class::Subclass;
-use pci::pci_device_searcher::PciDeviceSearcher;
-use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
-use pci::xhci::registers::operation_registers::operation_registers_offset::OperationRegistersOffset;
-use pci::xhci::registers::operation_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 
 #[cfg(test)]
 mod test_runner;
@@ -38,28 +31,28 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
 
     draw_cursor().unwrap();
 
-    let mmio_base_addr = PciDeviceSearcher::new()
-        .class_code(ClassCode::SerialBus)
-        .sub_class(Subclass::Usb)
-        .search()
-        .unwrap()
-        .cast_device()
-        .expect_single()
-        .unwrap()
-        .expect_general()
-        .unwrap()
-        .mmio_base_addr();
-
-    let cap_length = CapabilityLength::new(mmio_base_addr).unwrap();
-
-    let addr =
-        UsbStatusRegisterOffset::new(OperationRegistersOffset::new(mmio_base_addr, cap_length))
-            .offset();
-    println!("operation_registers_addr = {:x}", addr);
-    let data = unsafe { core::ptr::read_volatile((addr as *const u32)) };
-    println!("mmio_base_addr = {:b}", data);
-    let data = unsafe { core::ptr::read_volatile((addr as *const u8)) };
-    println!("mmio_base_addr = {:b}", data);
+    // let mmio_base_addr = PciDeviceSearcher::new()
+    //     .class_code(ClassCode::SerialBus)
+    //     .sub_class(Subclass::Usb)
+    //     .search()
+    //     .unwrap()
+    //     .cast_device()
+    //     .expect_single()
+    //     .unwrap()
+    //     .expect_general()
+    //     .unwrap()
+    //     .mmio_base_addr();
+    //
+    // let cap_length = CapabilityLength::new(mmio_base_addr).unwrap();
+    //
+    // let addr =
+    //     UsbStatusRegisterOffset::new(OperationRegistersOffset::new(mmio_base_addr, cap_length))
+    //         .offset();
+    // println!("operation_registers_addr = {:x}", addr);
+    // let data = unsafe { core::ptr::read_volatile((addr as *const u32)) };
+    // println!("mmio_base_addr = {:b}", data);
+    // let data = unsafe { core::ptr::read_volatile((addr as *const u8)) };
+    // println!("mmio_base_addr = {:b}", data);
 
     common_lib::assembly::hlt_forever();
 }

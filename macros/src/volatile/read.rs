@@ -37,7 +37,7 @@ fn read_volatile_with_mask(
     quote::quote! {
          let mask = !0 >> (#ty::BITS as usize - #bits) ;
 
-         unsafe{(core::ptr::read_volatile(self.0 as *const #ty) >> #offset) & mask }
+         unsafe{(core::ptr::read_volatile(self.0 as *const #ty) >> #offset as #ty) & mask }
     }
 }
 
@@ -46,6 +46,6 @@ pub(crate) fn read_volatile_no_mask(
     offset: proc_macro2::Literal,
 ) -> proc_macro2::TokenStream {
     quote::quote! {
-        unsafe{core::ptr::read_volatile(self.0 as *const #ty) >> #offset}
+        unsafe{core::ptr::read_volatile(self.0 as *const #ty) >> #offset as #ty}
     }
 }

@@ -26,10 +26,14 @@ pub fn volatile_bits(input: TokenStream) -> TokenStream {
 
     let (volatile_type, bits, offset) = parse_volatile_bits_attributes(item_struct.clone());
     let volatile_type = volatile_type.unwrap_or(Ident::new("u32", Span::call_site()));
-    let offset = offset.unwrap_or(Literal::u32_unsuffixed(0));
-    let read_volatile = read_volatile(volatile_type.clone(), bits, offset.clone());
+
+    let read_volatile = read_volatile(volatile_type.clone(), bits.clone(), offset.clone());
     let read_flag_volatile = read_flag_volatile();
-    let write_volatile = write_volatile(volatile_type.clone(), offset.clone());
+    let write_volatile = write_volatile(
+        volatile_type.clone(),
+        bits.unwrap_or(Literal::usize_unsuffixed(1)),
+        offset.clone(),
+    );
 
     let impl_debug = impl_debug(struct_name.clone(), volatile_type.clone());
     let impl_clone = impl_clone(struct_name.clone());

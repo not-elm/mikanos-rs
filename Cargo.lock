@@ -115,6 +115,7 @@ dependencies = [
 name = "macros"
 version = "0.1.0"
 dependencies = [
+ "kernel-lib",
  "proc-macro2",
  "quote",
  "syn",
