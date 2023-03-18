@@ -7,7 +7,7 @@ extern crate alloc;
 use proc_macro::TokenStream;
 
 use proc_macro2::{Ident, Literal, Span};
-use syn::{parse_macro_input, GenericArgument, ItemStruct, PathArguments, Type, TypeParam};
+use syn::{parse_macro_input, GenericArgument, ItemStruct, PathArguments, Type};
 
 use volatile::read::read_volatile;
 use volatile::write::write_volatile;
