@@ -25,8 +25,6 @@ use pci::xhci::registers::operational_registers::operation_registers_offset::Ope
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 use pci::xhci::registers::operational_registers::OperationRegisters;
 
-use crate::qemu::{exit_qemu, QemuExitCode};
-
 mod qemu;
 mod serial;
 #[cfg(test)]
@@ -148,5 +146,5 @@ fn panic(info: &PanicInfo) -> ! {
 fn panic(info: &PanicInfo) -> ! {
     serial_println!("[test failed!]");
     serial_println!("{}", info);
-    exit_qemu(QemuExitCode::Failed);
+    qemu::exit_qemu(qemu::QemuExitCode::Failed);
 }
