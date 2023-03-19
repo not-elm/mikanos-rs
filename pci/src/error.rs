@@ -6,6 +6,7 @@ pub type PciResult<T = ()> = Result<T, PciError>;
 pub enum PciError {
     InvalidHeaderType(HeaderTypeReason),
     InvalidFunction(FunctionReason),
+    FailedAllocate(AllocateReason),
     FailedOperateToRegister(OperationReason),
     InvalidRegister(InvalidRegisterReason),
 }
@@ -18,6 +19,12 @@ pub enum FunctionReason {
 #[derive(Debug)]
 pub enum HeaderTypeReason {
     NotGeneralHeader,
+}
+
+#[derive(Debug)]
+pub enum AllocateReason {
+    NotAlignedAddress { expect_align_size: usize },
+    NotEnoughMemory,
 }
 
 #[derive(Debug)]

@@ -1,3 +1,4 @@
+use crate::xhci::allocator::aligned_address::AlignedAddress;
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
 
 const MEMORY_SIZE: usize = 4096 * 32;
@@ -18,16 +19,16 @@ impl MikanOSPciMemoryAllocator {
 }
 
 impl MemoryAllocatable for MikanOSPciMemoryAllocator {
-    unsafe fn alloc(&mut self, bytes: usize) -> Option<usize> {
+    unsafe fn allocate_with_align_64_bytes(&mut self, bytes: usize) -> Option<AlignedAddress> {
         if MEMORY_POOL.0.len() <= self.index {
             return None;
         }
         let memory_buff = MEMORY_POOL.0;
-        let base = (memory_buff[self.index] as *mut u8).addr();
+        let allocated_memory_base_addr = (memory_buff[self.index] as *mut u8).addr();
 
         self.index += add_index_with_align(self.index, bytes);
 
-        Some(base)
+        Some(AlignedAddress::new_with_check_align_64_bytes(allocated_memory_base_addr).ok()?)
     }
 
     unsafe fn free(&mut self, _base_addr: usize) {}
@@ -53,8 +54,10 @@ mod tests {
     fn it_align() {
         let mut allocator = MikanOSPciMemoryAllocator::new();
         let base_addr = unsafe { MEMORY_POOL.0.as_ptr().addr() };
-        let addr = unsafe { allocator.alloc(32) };
-        assert!(addr.map(|ptr_addr| ptr_addr == base_addr).is_some());
+        let addr = unsafe { allocator.allocate_with_align_64_bytes(32) };
+        assert!(addr
+            .map(|ptr_addr| ptr_addr.address().unwrap() == base_addr)
+            .is_some());
         assert_eq!(allocator.index, 64);
     }
 
@@ -62,8 +65,10 @@ mod tests {
     fn it_align_more_than_64bytes() {
         let mut allocator = MikanOSPciMemoryAllocator::new();
         let base_addr = unsafe { MEMORY_POOL.0.as_ptr().addr() };
-        let addr = unsafe { allocator.alloc(65) };
-        assert!(addr.map(|ptr_addr| ptr_addr == base_addr).is_some());
+        let addr = unsafe { allocator.allocate_with_align_64_bytes(65) };
+        assert!(addr
+            .map(|ptr_addr| ptr_addr.address().unwrap() == base_addr)
+            .is_some());
         assert_eq!(allocator.index, 128);
     }
 }

@@ -77,8 +77,9 @@ unsafe fn allocate_command_ring(
 
     let alloc_size = TRB_SIZE * 32;
     let command_ring_ptr_addr = allocator
-        .alloc(alloc_size)
-        .ok_or(PciError::FailedOperateToRegister(FailedAllocate))?;
+        .allocate_with_align_64_bytes(alloc_size)
+        .ok_or(PciError::FailedOperateToRegister(FailedAllocate))?
+        .address()?;
 
     register_command_ring(crcr, command_ring_ptr_addr as u64)?;
     Ok(command_ring_ptr_addr)

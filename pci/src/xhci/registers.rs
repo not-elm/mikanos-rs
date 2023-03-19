@@ -1,5 +1,5 @@
-use crate::error::OperationReason::{FailedAllocate, NotReflectedValue};
-use crate::error::{OperationReason, PciError, PciResult};
+use crate::error::OperationReason::NotReflectedValue;
+use crate::error::{AllocateReason, OperationReason, PciError, PciResult};
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use crate::xhci::registers::capability_registers::CapabilityRegisters;
@@ -108,8 +108,10 @@ unsafe fn allocate_device_context_array(
 
     let alloc_size = DEVICE_CONTEXT_SIZE * (max_slots_en.read_volatile() + 1) as usize;
     let device_context_array_addr = allocator
-        .alloc(alloc_size)
-        .ok_or(PciError::FailedOperateToRegister(FailedAllocate))?;
+        .allocate_with_align_64_bytes(alloc_size)
+        .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
+        .address()?;
+
     dcbaap.write_volatile(device_context_array_addr as u64);
 
     let addr = dcbaap.read_volatile();
