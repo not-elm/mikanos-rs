@@ -9,5 +9,7 @@ edition = "2021"
 common-lib = { path = "../common-lib" }
 kernel-lib = { path = "../kernel-lib" }
 pci = { path = "../pci" }
-x86_64 = "0.14.10"
+spin = "0.9.4"
 macros = { path = "../macros", features = ["extra-traits"] }
+uart_16550 = "0.2.0"
+lazy_static = { version = "1.4.0", features = ["spin_no_std"] }

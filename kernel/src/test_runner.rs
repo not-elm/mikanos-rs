@@ -1,10 +1,12 @@
 use common_lib::vector::Vector2D;
 use kernel_lib::gop::console::fill_rect_using_global;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::println;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
+
+use crate::qemu::{exit_qemu, QemuExitCode};
+use crate::serial_println;
 
 mod macros_test;
 mod xhci;
@@ -18,10 +20,10 @@ where
     T: Fn(),
 {
     fn run(&self) {
-        println!("test name={}", core::any::type_name::<T>());
+        serial_println!("test name={}", core::any::type_name::<T>());
         self();
-        println!("[ok]");
-        println!();
+        serial_println!("[ok]");
+        serial_println!();
     }
 }
 
@@ -33,12 +35,12 @@ pub fn my_runner(tests: &[&dyn Testable]) {
         PixelColor::new(0x00, 0x00, 0x00),
     )
     .unwrap();
-    println!("start test! num={}", tests.len());
+    serial_println!("start test! num={}", tests.len());
     for t in tests {
         t.run();
     }
-    println!("============= end test! ================");
-    common_lib::assembly::hlt_forever();
+    serial_println!("============= end test! ================");
+    exit_qemu(QemuExitCode::Success);
 }
 
 #[test_case]
@@ -49,19 +51,3 @@ fn it_fetch_mouse_device() {
         .search()
         .is_some());
 }
-
-// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-// #[repr(u32)]
-// pub enum QemuExitCode {
-//     Success = 0x10,
-//     Failed = 0x11,
-// }
-//
-// pub fn exit_qemu(exit_code: QemuExitCode) {
-//     use x86_64::instructions::port::Port;
-//
-//     unsafe {
-//         let mut port = Port::new(0xf4);
-//         port.write(exit_code as u32);
-//     }
-// }

@@ -14,20 +14,24 @@ use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::println;
+use macros::declaration_volatile_accessible;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
-use pci::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use pci::xhci::registers::capability_registers::structural_parameters1::StructuralParameters1Offset;
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 use pci::xhci::registers::operational_registers::OperationRegisters;
-use pci::VolatileAccessible;
 
+use crate::qemu::{exit_qemu, QemuExitCode};
+
+mod qemu;
+mod serial;
 #[cfg(test)]
 mod test_runner;
+declaration_volatile_accessible!();
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
@@ -36,7 +40,7 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
 
     #[cfg(test)]
     test_main();
-
+    serial_println!("hello Serial!");
     // reset_controller(
     //     &HostControllerHalted::new(usb_status_register_offset()).unwrap(),
     //     &HostControllerReset::new(operation_registers_offset()),
@@ -142,7 +146,7 @@ fn panic(info: &PanicInfo) -> ! {
 #[panic_handler]
 #[cfg(test)]
 fn panic(info: &PanicInfo) -> ! {
-    println!("[test failed!]");
-    println!("{}", info);
-    common_lib::assembly::hlt_forever();
+    serial_println!("[test failed!]");
+    serial_println!("{}", info);
+    exit_qemu(QemuExitCode::Failed);
 }

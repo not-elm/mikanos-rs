@@ -46,10 +46,10 @@ pub fn fetch_config_data() -> u32 {
     io_in32(CONFIG_DATA_REGISTER_ADDR)
 }
 
-fn io_out32(addr: u16, data: u32) {
+pub fn io_out32(addr: u16, data: u32) {
     unsafe { asm_io_out32(addr, data) }
 }
 
-fn io_in32(addr: u16) -> u32 {
+pub fn io_in32(addr: u16) -> u32 {
     unsafe { asm_io_in32(addr) }
 }

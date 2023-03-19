@@ -17,7 +17,7 @@ test:
 	make test -C pci
 	make clean
 	make test-build
-	make run KERNEL="test"
+	make run-test KERNEL="test"
 
 .PHONY: test-build $(subdirs)
 test-build: $(subdirs)
@@ -42,6 +42,11 @@ make-img:
 run:
 	make make-img KERNEL=$(KERNEL)
 	sh qemu.sh
+
+.PHONY:run-test
+run-test:
+	make make-img KERNEL=$(KERNEL)
+	sh qemu.sh "test"
 
 run-debug:
 	make make-img KERNEL=$(KERNEL)
