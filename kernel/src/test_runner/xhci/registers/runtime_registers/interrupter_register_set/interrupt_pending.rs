@@ -8,9 +8,9 @@ use crate::test_runner::xhci::registers::runtime_registers::interrupter_register
 fn it_access_correct_interrupt_pending() {
     execute_reset_host_controller();
 
-    let offset = interrupter_register_set_offset();
+    let offset = interrupter_register_set_offset(0);
     let ptr = offset.offset() as *const u8;
     assert_eq!(unsafe { *ptr } & 0b1, 0);
 
-    assert!(InterruptPending::new_check_flag_false(interrupter_register_set_offset()).is_ok())
+    assert!(InterruptPending::new_check_flag_false(interrupter_register_set_offset(0)).is_ok())
 }

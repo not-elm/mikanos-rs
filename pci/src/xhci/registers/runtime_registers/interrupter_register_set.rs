@@ -1,5 +1,6 @@
 use crate::xhci::registers::runtime_registers::RuntimeRegistersOffset;
 
+pub mod event_ring_segment_table_base_address;
 pub mod interrupter_management_register;
 pub mod interrupter_register_set_field;
 
@@ -33,8 +34,8 @@ pub struct InterrupterRegisterSet {}
 pub struct InterrupterRegisterSetOffset(usize);
 
 impl InterrupterRegisterSetOffset {
-    pub fn new(offset: RuntimeRegistersOffset) -> Self {
-        Self(offset.offset() + 0x20)
+    pub fn new(offset: RuntimeRegistersOffset, index: usize) -> Self {
+        Self(offset.offset() + 0x20 + (index) * 32)
     }
 
     pub fn offset(&self) -> usize {

@@ -16,6 +16,6 @@ pub(crate) fn runtime_registers_offset() -> RuntimeRegistersOffset {
     RuntimeRegistersOffset::new(mmio_base_addr(), &rts_off)
 }
 
-pub(crate) fn interrupter_register_set_offset() -> InterrupterRegisterSetOffset {
-    InterrupterRegisterSetOffset::new(runtime_registers_offset())
+pub(crate) fn interrupter_register_set_offset(index: usize) -> InterrupterRegisterSetOffset {
+    InterrupterRegisterSetOffset::new(runtime_registers_offset(), index)
 }
