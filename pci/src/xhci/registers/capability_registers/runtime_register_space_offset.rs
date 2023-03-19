@@ -43,14 +43,14 @@ impl RuntimeRegisterSpaceOffset {
         }
     }
 
-    fn read_rts_offset(&self) -> u32 {
+    pub fn read_rts_offset(&self) -> u32 {
         shift_reserved_bits(self.read_volatile())
     }
 }
 
 fn shift_reserved_bits(bits: u32) -> u32 {
     // 下位5Bitsは予約領域
-    bits >> 5
+    bits & 0xFF_FF_FF_E0
 }
 
 #[cfg(test)]
@@ -60,6 +60,6 @@ mod tests {
     #[test]
     fn it_read_rts_off_bits() {
         let addr = 0b1000_0000_0001_1111;
-        assert_eq!(shift_reserved_bits(addr), 0b100_0000_0000)
+        assert_eq!(shift_reserved_bits(addr), 0b1000_0000_0000_0000)
     }
 }
