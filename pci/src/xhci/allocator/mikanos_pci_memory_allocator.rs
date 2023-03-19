@@ -26,7 +26,7 @@ impl MemoryAllocatable for MikanOSPciMemoryAllocator {
         let memory_buff = MEMORY_POOL.0;
         let allocated_memory_base_addr = (memory_buff[self.index] as *mut u8).addr();
 
-        self.index += add_index_with_align(self.index, bytes);
+        self.index = add_index_with_align(self.index, bytes);
 
         Some(AlignedAddress::new_with_check_align_64_bytes(allocated_memory_base_addr).ok()?)
     }
