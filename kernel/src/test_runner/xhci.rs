@@ -9,10 +9,9 @@ use pci::xhci::registers::operational_registers::device_context_base_address_arr
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 use pci::xhci::registers::operational_registers::OperationalRegisters;
+use pci::xhci::registers::Registers;
 
-pub mod capability_registers;
-mod initialize;
-mod operational_registers;
+mod registers;
 
 pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
     let mouse = PciDeviceSearcher::new()
@@ -28,7 +27,9 @@ pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
 
     mouse.mmio_base_addr()
 }
-
+pub(crate) fn registers() -> Registers {
+    Registers::new(mmio_base_addr()).unwrap()
+}
 pub(crate) fn operational_registers() -> OperationalRegisters {
     OperationalRegisters::new(operation_registers_offset()).unwrap()
 }

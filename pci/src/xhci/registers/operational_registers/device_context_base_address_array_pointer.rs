@@ -13,6 +13,7 @@ mod dcbaap_lo;
 /// 配列の作成と、アドレスとのセットはソフトウェア側が定義する必要があります。
 ///
 /// このレジスタの参照時となるメモリの構造は物理的に連続し、64Byteにアラインされている必要があります。
+#[derive(Debug)]
 pub struct DeviceContextBaseAddressArrayPointer {
     lo: DcbaapLo,
     hi: DcbaapHi,

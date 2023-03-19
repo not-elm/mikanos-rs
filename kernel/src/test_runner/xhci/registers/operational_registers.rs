@@ -1,6 +1,6 @@
 use pci::xhci::registers::operational_registers::OperationalRegisters;
 
-use crate::test_runner::xhci::initialize::execute_reset_host_controller;
+use crate::test_runner::xhci::registers::execute_reset_host_controller;
 use crate::test_runner::xhci::operation_registers_offset;
 
 mod usb_command_register;
