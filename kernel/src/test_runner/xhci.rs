@@ -27,9 +27,11 @@ pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
 
     mouse.mmio_base_addr()
 }
+
 pub(crate) fn registers() -> Registers {
     Registers::new(mmio_base_addr()).unwrap()
 }
+
 pub(crate) fn operational_registers() -> OperationalRegisters {
     OperationalRegisters::new(operation_registers_offset()).unwrap()
 }

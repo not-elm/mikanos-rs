@@ -25,7 +25,7 @@ where
             Ok(s)
         } else {
             Err(PciError::InvalidRegister(
-                InvalidRegisterReason::IllegalBitFlag { expect: false },
+                InvalidRegisterReason::IllegalBitFlag { expect: true },
             ))
         }
     }

@@ -1,3 +1,8 @@
+use crate::xhci::registers::runtime_registers::RuntimeRegistersOffset;
+
+pub mod interrupter_management_register;
+pub mod interrupter_register_set_field;
+
 /// IRO
 ///
 /// # Offset
@@ -19,3 +24,20 @@
 ///
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 pub struct InterrupterRegisterSet {}
+
+/// # Address
+///
+/// RuntimeRegisterOffset + 0x20 Bytes
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub struct InterrupterRegisterSetOffset(usize);
+
+impl InterrupterRegisterSetOffset {
+    pub fn new(offset: RuntimeRegistersOffset) -> Self {
+        Self(offset.offset() + 0x20)
+    }
+
+    pub fn offset(&self) -> usize {
+        self.0
+    }
+}

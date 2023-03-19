@@ -8,6 +8,7 @@ use crate::test_runner::xhci::{
 
 mod capability_registers;
 mod operational_registers;
+mod runtime_registers;
 
 #[test_case]
 fn it_new_all_registers() {
