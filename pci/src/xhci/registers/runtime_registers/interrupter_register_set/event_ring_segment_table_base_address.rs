@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use macros::VolatileBits;
 
-use crate::xhci::bitmask_lower_for;
+use crate::xhci::bit_zero_mask_lower_for;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 
 /// ERSTBA
@@ -32,6 +32,6 @@ pub struct EventRingSegmentTableBaseAddress(usize, PhantomData<InterrupterRegist
 
 impl EventRingSegmentTableBaseAddress {
     pub fn event_ring_segment_table_addr(&self) -> u64 {
-        bitmask_lower_for(6, self.read_volatile() as usize) as u64
+        bit_zero_mask_lower_for(6, self.read_volatile() as usize) as u64
     }
 }

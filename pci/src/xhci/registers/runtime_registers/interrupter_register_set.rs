@@ -1,6 +1,7 @@
 use crate::xhci::registers::runtime_registers::RuntimeRegistersOffset;
 
 pub mod event_ring_segment_table_base_address;
+pub mod event_ring_segment_table_size;
 pub mod interrupter_management_register;
 pub mod interrupter_register_set_field;
 

@@ -34,6 +34,7 @@ pub enum OperationReason {
     FailedAllocate,
     NotReflectedValue { value: usize },
     XhcRunning,
+    ExceedsEventRingSegmentTableMax { max: u32, value: u16 },
 }
 
 #[derive(Debug)]

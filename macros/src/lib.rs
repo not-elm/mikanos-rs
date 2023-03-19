@@ -23,7 +23,7 @@ mod volatile;
 #[proc_macro]
 pub fn declaration_volatile_accessible(_input: TokenStream) -> TokenStream {
     let expand = quote::quote! {
-        pub trait VolatileAccessible<ActualValue, Addr, Offset> {
+        pub trait VolatileAccessible<ActualValue, Addr, Offset>{
             fn new_uncheck(v: Addr) -> Self;
             fn read_volatile(&self) -> ActualValue;
             fn read_flag_volatile(&self) -> bool;
