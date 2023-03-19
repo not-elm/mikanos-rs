@@ -39,12 +39,14 @@ impl Registers {
     }
 
     /// 1. xhcのリセット
-    /// 2. デバイスコンテキストの設定
+    /// 2. 接続できる最大デバイス数を設定
     /// 3. デバイスコンテキストの配列のアドレスをDCBAAPに設定
     /// 4. コマンドリングのアドレスをcommand_ring_pointerに設定
+    /// 5. EventRingの生成
+    /// 6. EventRingをセグメントテーブルに登録
     pub fn init(&self, allocator: &mut impl MemoryAllocatable) -> PciResult {
         self.operational_registers.reset_host_controller();
-        self.set_device_context()?;
+        self.setup_device_context_max_slots()?;
         let _device_context_array_addr = unsafe { self.allocate_device_context_array(allocator)? };
         self.operational_registers
             .crcr()
@@ -52,8 +54,8 @@ impl Registers {
         Ok(())
     }
 
-    pub fn set_device_context(&self) -> PciResult {
-        set_device_context(
+    pub fn setup_device_context_max_slots(&self) -> PciResult {
+        setup_device_context_max_slots(
             self.operational_registers.usb_command().run_stop(),
             self.capability_registers.hcs_params1().max_slots(),
             self.operational_registers.config().max_slots_en(),
@@ -73,7 +75,7 @@ impl Registers {
 }
 
 /// 接続できるデバイス数を取得して、コンフィグレジスタに設定します。
-fn set_device_context(
+fn setup_device_context_max_slots(
     run_stop: &RunStop,
     max_slots: &NumberOfDeviceSlots,
     max_slots_en: &MaxDeviceSlotsEnabled,

@@ -53,7 +53,7 @@ pub(crate) fn execute_reset_host_controller() {
 }
 
 fn execute_set_device_context_max_slot() {
-    registers().set_device_context().unwrap()
+    registers().setup_device_context_max_slots().unwrap()
 }
 
 fn execute_allocate_device_context_array() {

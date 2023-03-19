@@ -33,5 +33,6 @@ pub enum OperationReason {
 pub enum InvalidRegisterReason {
     IllegalBitFlag { expect: bool },
     HostControllerNotHalted,
+    InvalidAddress { specified_address: usize },
     ToSmallCapLength(u8),
 }

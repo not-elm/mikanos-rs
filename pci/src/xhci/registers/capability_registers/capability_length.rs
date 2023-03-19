@@ -3,6 +3,11 @@ use macros::VolatileBits;
 use crate::error::{InvalidRegisterReason, PciError, PciResult};
 use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 
+/// CAP LENGTH
+///
+/// Offset: 0
+///
+/// MemoryMappedAddress+CAP LengthでOperationalRegistersのベースアドレスになります。
 #[derive(VolatileBits)]
 #[volatile_type(u8)]
 pub struct CapabilityLength(usize);

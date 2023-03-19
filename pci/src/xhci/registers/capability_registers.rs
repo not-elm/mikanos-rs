@@ -1,5 +1,6 @@
 use crate::error::PciResult;
 use crate::xhci::registers::capability_registers::capability_length::CapabilityLength;
+use crate::xhci::registers::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
 use crate::xhci::registers::capability_registers::structural_parameters1::{
     StructuralParameters1, StructuralParameters1Offset,
 };
@@ -18,20 +19,26 @@ pub mod structural_parameters3;
 
 /// Address: MemoryMappedAddress
 ///
-/// XhciPdfPageNo: 381
+/// [Xhci Document](https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf)
+/// : 381 Page
 #[derive(Debug)]
 pub struct CapabilityRegisters {
     /// Offset: 0
     cap_length: CapabilityLength,
     /// Offset: 0x04 Byte
     hcs_params1: StructuralParameters1,
+    /// Offset: 0x18 Byte
+    rts_off: RuntimeRegisterSpaceOffset,
 }
 
 impl CapabilityRegisters {
     pub fn new(mmio_addr: MemoryMappedAddr) -> PciResult<Self> {
+        let cap_length = CapabilityLength::new_check_length(mmio_addr)?;
+        let rts_off = RuntimeRegisterSpaceOffset::new_with_check_size(mmio_addr, &cap_length)?;
         Ok(Self {
-            cap_length: CapabilityLength::new_check_length(mmio_addr)?,
+            cap_length,
             hcs_params1: StructuralParameters1::new(StructuralParameters1Offset::new(mmio_addr)),
+            rts_off,
         })
     }
 
@@ -41,5 +48,9 @@ impl CapabilityRegisters {
 
     pub fn hcs_params1(&self) -> &StructuralParameters1 {
         &self.hcs_params1
+    }
+
+    pub fn rts_off(&self) -> &RuntimeRegisterSpaceOffset {
+        &self.rts_off
     }
 }

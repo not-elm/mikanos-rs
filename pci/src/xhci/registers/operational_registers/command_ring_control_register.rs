@@ -20,6 +20,23 @@ pub mod ring_cycle_state;
 /// Address: OperationalRegistersOffset + 0x18
 ///
 /// XhciPdfPageNo: 401
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub struct CommandRingControlRegisterOffset(usize);
+
+impl CommandRingControlRegisterOffset {
+    pub fn new(offset: OperationalRegistersOffset) -> Self {
+        Self(offset.offset() + 0x18)
+    }
+
+    pub fn offset(&self) -> usize {
+        self.0
+    }
+}
+
+/// Address: OperationalRegistersOffset + 0x18
+///
+/// XhciPdfPageNo: 401
 #[derive(Debug)]
 pub struct CommandRingControlRegister {
     /// Offset: 0
@@ -77,21 +94,4 @@ fn register_command_ring(crcr: &CommandRingControlRegister, command_ring_addr: u
     crcr.command_ring_pointer
         .set_command_ring_addr(command_ring_addr);
     Ok(())
-}
-
-/// Address: OperationalRegistersOffset + 0x18
-///
-/// XhciPdfPageNo: 401
-#[repr(transparent)]
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct CommandRingControlRegisterOffset(usize);
-
-impl CommandRingControlRegisterOffset {
-    pub fn new(offset: OperationalRegistersOffset) -> Self {
-        Self(offset.offset() + 0x18)
-    }
-
-    pub fn offset(&self) -> usize {
-        self.0
-    }
 }
