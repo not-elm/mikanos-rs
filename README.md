@@ -1,8 +1,8 @@
 # MikanOS-rs
 
-uchanによって執筆された[ゼロからの OS 自作入門](http://zero.osdev.jp/)の中で製作するMikanOSをRustで挑戦するプロジェクトです。
+uchanさんによって執筆された[ゼロからの OS 自作入門](http://zero.osdev.jp/)の中で製作するMikanOSをRustで挑戦するプロジェクトです。
 
-進捗や、実装時のメモは[Zenn](https://zenn.dev/elm)に挙げています。
+進捗や実装時のメモは[Zenn](https://zenn.dev/elm)に挙げています。
 
 また、たまに[ニコニコ生放送](https://com.nicovideo.jp/community/co5105689)で制作風景を放送しています。
 
