@@ -8,7 +8,7 @@ use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 pub struct CapabilityLength(usize);
 
 impl CapabilityLength {
-    pub fn new(mmio_addr: MemoryMappedAddr) -> PciResult<Self> {
+    pub fn new_check_length(mmio_addr: MemoryMappedAddr) -> PciResult<Self> {
         let cap_length = CapabilityLength::new_uncheck(mmio_addr.addr());
         if cap_length.read_volatile() < 0x20 {
             Err(PciError::InvalidRegister(

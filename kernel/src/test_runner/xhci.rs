@@ -30,8 +30,8 @@ pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
 
 pub(crate) fn operation_registers_offset() -> OperationalRegistersOffset {
     let mmio_base_addr = mmio_base_addr();
-    let cap_length = CapabilityLength::new(mmio_base_addr).unwrap();
-    OperationalRegistersOffset::new(mmio_base_addr, cap_length)
+    let cap_length = CapabilityLength::new_check_length(mmio_base_addr).unwrap();
+    OperationalRegistersOffset::new(mmio_base_addr, &cap_length)
 }
 
 pub(crate) fn config_register_offset() -> ConfigRegisterOffset {
@@ -40,8 +40,8 @@ pub(crate) fn config_register_offset() -> ConfigRegisterOffset {
 
 pub(crate) fn usb_status_register_offset() -> UsbStatusRegisterOffset {
     let mmio_addr = mmio_base_addr();
-    let cap_length = CapabilityLength::new(mmio_addr).unwrap();
-    UsbStatusRegisterOffset::new(OperationalRegistersOffset::new(mmio_addr, cap_length))
+    let cap_length = CapabilityLength::new_check_length(mmio_addr).unwrap();
+    UsbStatusRegisterOffset::new(OperationalRegistersOffset::new(mmio_addr, &cap_length))
 }
 
 pub(crate) fn dcbaap_offset() -> DeviceContextBaseAddressArrayPointerOffset {

@@ -7,7 +7,7 @@ use crate::VolatileAccessible;
 pub struct OperationalRegistersOffset(usize);
 
 impl OperationalRegistersOffset {
-    pub fn new(mmio_base_addr: MemoryMappedAddr, cap_length: CapabilityLength) -> Self {
+    pub fn new(mmio_base_addr: MemoryMappedAddr, cap_length: &CapabilityLength) -> Self {
         Self(mmio_base_addr.addr() + cap_length.read_volatile() as usize)
     }
 

@@ -4,7 +4,6 @@ use kernel_lib::println;
 use crate::error::OperationReason::{FailedAllocate, NotReflectedValue};
 use crate::error::{OperationReason, PciError, PciResult};
 use crate::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
-use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegister;
 use crate::xhci::registers::operational_registers::config_register::max_device_slots_enabled::MaxDeviceSlotsEnabled;
 use crate::xhci::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointer;
 use crate::xhci::registers::operational_registers::usb_command_register::host_controller_reset::HostControllerReset;
@@ -98,4 +97,3 @@ pub unsafe fn allocate_device_context_array(
         }))
     }
 }
-
