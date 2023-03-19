@@ -1,5 +1,11 @@
 # MikanOS-rs
 
+uchanによって執筆された[ゼロからの OS 自作入門](http://zero.osdev.jp/)の中で製作するMikanOSをRustで挑戦するプロジェクトです。
+
+進捗や、実装時のメモは[Zenn](https://zenn.dev/elm)に挙げています。
+
+また、たまに[ニコニコ生放送](https://com.nicovideo.jp/community/co5105689)で制作風景を放送しています。
+
 ## 環境構築
 
 setup.shを実行してください。
@@ -7,26 +13,41 @@ setup.shを実行してください。
 ## ブートローダーの実行方法
 
 makeコマンドでビルドと実行ができます。
+
 ```shell
 make
 ```
 
 make debugでGDBを使用したデバッグ実行ができます。
+
 ```shell
 make debug
 ```
+
 Clionの場合、実行設定でRemoteDebugを追加し、下記項目の通り設定することでデバッグ実行の設定ができます。
+
 - Debugger
-  - GBDのbinaryがあるディレクトリのパス(WSL上で実行する場合、WSL内のGDBを指定する必要があります。)
+    - GBDのbinaryがあるディレクトリのパス(WSL上で実行する場合、WSL内のGDBを指定する必要があります。)
 - Target remote args
-  - tcp::1234
+    - tcp::1234
 - Symbol file
-  - kernel.elfへのパス
+    - kernel.elfへのパス
 
 終了する際はQemuモニタ上で下記コマンドを使用してください。
+
 ```qemu
 qemu> q
 ```
+
+## Test
+
+テストは下記コマンドで実行できます。
+
+```shell
+make test
+```
+
+テストビルドの際はカーネルのターゲットディレクトリをクリーンする必要があるため、少々時間がかかります。
 
 ## Dockerfileについて
 
@@ -81,7 +102,6 @@ GraphicOutputProtocolを使い、ブートローダーからピクセルを描�
 ## Day05e
 
 コンソール制御をする機構の作成をする！
-
 
 ## Day05f
 
