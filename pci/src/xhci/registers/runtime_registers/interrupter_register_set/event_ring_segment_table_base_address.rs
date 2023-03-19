@@ -1,13 +1,15 @@
+use core::marker::PhantomData;
+
+use macros::VolatileBits;
+
 use crate::xhci::bitmask_lower_for;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
-use core::marker::PhantomData;
-use macros::VolatileBits;
 
 /// ERSTBA
 ///
 /// # Offset
 ///
-/// InterrupterRegisterSetOffset + 0x30 Bytes
+/// InterrupterRegisterSetOffset + 0x10 Bytes
 ///
 /// # Size
 ///
@@ -25,7 +27,7 @@ use macros::VolatileBits;
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 #[derive(VolatileBits)]
 #[volatile_type(u64)]
-#[offset(0x30 * 8)]
+#[offset(0x10 * 8)]
 pub struct EventRingSegmentTableBaseAddress(usize, PhantomData<InterrupterRegisterSetOffset>);
 
 impl EventRingSegmentTableBaseAddress {
