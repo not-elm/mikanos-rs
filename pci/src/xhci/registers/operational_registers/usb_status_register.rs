@@ -11,15 +11,24 @@ pub mod usb_status_register_offset;
 
 #[derive(Debug, Clone)]
 pub struct UsbStatusRegister {
-    pub hch: HostControllerHalted,
-    pub cnr: ControllerNotReady,
+    hch: HostControllerHalted,
+    cnr: ControllerNotReady,
 }
 
 impl UsbStatusRegister {
     pub fn new(offset: UsbStatusRegisterOffset) -> PciResult<Self> {
+        // HCHは初期化時にリセットすればいいため、ここで1をチェックする必要はない?
         Ok(Self {
-            hch: HostControllerHalted::new_check_flag_true(offset)?,
+            hch: HostControllerHalted::new(offset),
             cnr: ControllerNotReady::new(offset),
         })
+    }
+
+    pub fn hch(&self) -> &HostControllerHalted {
+        &self.hch
+    }
+
+    pub fn cnr(&self) -> &ControllerNotReady {
+        &self.cnr
     }
 }

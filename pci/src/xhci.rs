@@ -1,15 +1,11 @@
 use allocator::memory_allocatable::MemoryAllocatable;
-use kernel_lib::println;
 
 use crate::error::OperationReason::{FailedAllocate, NotReflectedValue};
 use crate::error::{OperationReason, PciError, PciResult};
 use crate::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use crate::xhci::registers::operational_registers::config_register::max_device_slots_enabled::MaxDeviceSlotsEnabled;
 use crate::xhci::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointer;
-use crate::xhci::registers::operational_registers::usb_command_register::host_controller_reset::HostControllerReset;
 use crate::xhci::registers::operational_registers::usb_command_register::run_stop::RunStop;
-use crate::xhci::registers::operational_registers::usb_status_register::controller_not_ready::ControllerNotReady;
-use crate::xhci::registers::operational_registers::usb_status_register::host_controller_halted::HostControllerHalted;
 use crate::VolatileAccessible;
 
 pub mod allocator;
@@ -23,30 +19,6 @@ pub fn init() -> PciResult {
     // set_device_context()?;
     // allocate_device_context_array()?
     // USBCOMMAND RUN
-    Ok(())
-}
-
-pub fn reset_controller(
-    hch: &HostControllerHalted,
-    run_stop: &RunStop,
-    hcrst: &HostControllerReset,
-    cnr: &ControllerNotReady,
-) -> PciResult {
-    if !hch.read_flag_volatile() {
-        run_stop.write_flag_volatile(false);
-    }
-    hch.until_halted();
-    println!("start write true -> host controller reset");
-
-    hcrst.reset();
-    println!("write true -> host controller reset");
-
-    cnr.wait_until_ready();
-    println!(
-        "controller is ready! current is = {}",
-        cnr.read_flag_volatile()
-    );
-
     Ok(())
 }
 

@@ -23,7 +23,7 @@ use pci::xhci::registers::capability_registers::structural_parameters1::Structur
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
-use pci::xhci::registers::operational_registers::OperationRegisters;
+use pci::xhci::registers::operational_registers::OperationalRegisters;
 
 mod qemu;
 mod serial;
@@ -47,7 +47,7 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
     // .unwrap();
     println!(
         "RESET!! {:?}",
-        OperationRegisters::new(operation_registers_offset()).unwrap()
+        OperationalRegisters::new(operation_registers_offset()).unwrap()
     );
     // fill_background(PixelColor::new(0x3E, 0x3E, 0x3E), &frame_buffer_config).unwrap();
     // fill_bottom_bar(PixelColor::new(0x00, 0x00, 0xFF), &frame_buffer_config).unwrap();

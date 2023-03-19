@@ -1,27 +1,22 @@
 use pci::error::PciResult;
+use pci::xhci::allocate_device_context_array;
 use pci::xhci::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
 use pci::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use pci::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegister;
 use pci::xhci::registers::operational_registers::config_register::max_device_slots_enabled::MaxDeviceSlotsEnabled;
 use pci::xhci::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointer;
-use pci::xhci::registers::operational_registers::usb_command_register::host_controller_reset::HostControllerReset;
 use pci::xhci::registers::operational_registers::usb_command_register::run_stop::RunStop;
 use pci::xhci::registers::operational_registers::usb_command_register::usb_command_register_field::UsbCommandRegisterField;
-use pci::xhci::registers::operational_registers::usb_status_register::controller_not_ready::ControllerNotReady;
-use pci::xhci::registers::operational_registers::usb_status_register::host_controller_halted::HostControllerHalted;
-use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_field::UsbStatusRegisterField;
-use pci::xhci::{allocate_device_context_array, reset_controller};
-use pci::VolatileAccessible;
 
 use crate::hcs1_offset;
 use crate::test_runner::xhci::{
     command_ring_control_register_offset, config_register_offset, dcbaap_offset,
-    operation_registers_offset, usb_status_register_offset,
+    operation_registers_offset, operational_registers,
 };
 
 #[test_case]
 fn it_reset_xhc_host_controller() {
-    execute_reset_host_controller().unwrap();
+    execute_reset_host_controller();
 }
 
 #[test_case]
@@ -31,7 +26,7 @@ fn it_set_device_contexts_enabled() {
 
 #[test_case]
 fn it_allocate_device_context_array_address_and_set_to_dcbaap() {
-    execute_reset_host_controller().unwrap();
+    execute_reset_host_controller();
     set_device_context_max_slot().unwrap();
 
     unsafe {
@@ -44,26 +39,18 @@ fn it_allocate_device_context_array_address_and_set_to_dcbaap() {
     }
 }
 
+pub(crate) fn execute_reset_host_controller() {
+    operational_registers().reset_host_controller();
+}
+
 #[test_case]
 fn it_allocate_command_ring() {
-    execute_reset_host_controller().unwrap();
+    execute_reset_host_controller();
     set_device_context_max_slot().unwrap();
     CommandRingControlRegister::new(command_ring_control_register_offset())
         .unwrap()
         .setup_command_ring(&mut MikanOSPciMemoryAllocator::new())
         .unwrap();
-}
-
-pub(crate) fn execute_reset_host_controller() -> PciResult {
-    reset_controller(
-        &HostControllerHalted::new(usb_status_register_offset()),
-        &RunStop::new(operation_registers_offset()),
-        &HostControllerReset::new(operation_registers_offset()),
-        &ControllerNotReady::new(usb_status_register_offset()),
-    )?;
-
-    RunStop::new(operation_registers_offset()).write_flag_volatile(false);
-    Ok(())
 }
 
 fn set_device_context_max_slot() -> PciResult {

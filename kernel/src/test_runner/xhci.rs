@@ -8,6 +8,7 @@ use pci::xhci::registers::operational_registers::config_register::ConfigRegister
 use pci::xhci::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointerOffset;
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
+use pci::xhci::registers::operational_registers::OperationalRegisters;
 
 pub mod capability_registers;
 mod initialize;
@@ -26,6 +27,10 @@ pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
         .unwrap();
 
     mouse.mmio_base_addr()
+}
+
+pub(crate) fn operational_registers() -> OperationalRegisters {
+    OperationalRegisters::new(operation_registers_offset()).unwrap()
 }
 
 pub(crate) fn operation_registers_offset() -> OperationalRegistersOffset {

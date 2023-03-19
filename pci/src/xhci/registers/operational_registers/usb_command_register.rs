@@ -18,12 +18,12 @@ pub mod usb_command_register_field;
 
 #[derive(Debug, Clone)]
 pub struct UsbCommandRegister {
-    pub run_stop: RunStop,
-    pub hcrst: HostControllerReset,
-    pub inte: InterrupterEnable,
-    pub hsee: HostSystemErrorEnable,
-    pub lhcrst: LightHostControllerReset,
-    pub css: ControllerSaveState,
+    run_stop: RunStop,
+    hcrst: HostControllerReset,
+    inte: InterrupterEnable,
+    hsee: HostSystemErrorEnable,
+    lhcrst: LightHostControllerReset,
+    css: ControllerSaveState,
 }
 
 impl UsbCommandRegister {
@@ -36,5 +36,29 @@ impl UsbCommandRegister {
             lhcrst: LightHostControllerReset::new(operational_offset),
             css: ControllerSaveState::new(operational_offset),
         }
+    }
+
+    pub fn run_stop(&self) -> &RunStop {
+        &self.run_stop
+    }
+
+    pub fn hcrst(&self) -> &HostControllerReset {
+        &self.hcrst
+    }
+
+    pub fn inte(&self) -> &InterrupterEnable {
+        &self.inte
+    }
+
+    pub fn hsee(&self) -> &HostSystemErrorEnable {
+        &self.hsee
+    }
+
+    pub fn lhcrst(&self) -> &LightHostControllerReset {
+        &self.lhcrst
+    }
+
+    pub fn css(&self) -> &ControllerSaveState {
+        &self.css
     }
 }
