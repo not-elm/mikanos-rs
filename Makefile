@@ -15,7 +15,7 @@ test:
 	make test -C macros
 	make test -C kernel-lib
 	make test -C pci
-	make clean
+	rm -r -f target/kernel/
 	make test-build
 	make run-test KERNEL="test"
 

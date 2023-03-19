@@ -145,8 +145,8 @@ fn atr_new_uncheck(
 
 #[allow(dead_code)]
 fn from_phantom(phantom_data: Option<Type>) -> Ident {
-    if let Some(phantome_data) = phantom_data {
-        extract_phantom_type(phantome_data).unwrap()
+    if let Some(phantom_data) = phantom_data {
+        extract_phantom_type(phantom_data).unwrap()
     } else {
         Ident::new("u32", Span::call_site())
     }

@@ -2,6 +2,7 @@ use crate::xhci::registers::capability_registers::capability_length::CapabilityL
 use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 use crate::VolatileAccessible;
 
+/// Address: MemoryMappedAddress + CapLength
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct OperationalRegistersOffset(usize);

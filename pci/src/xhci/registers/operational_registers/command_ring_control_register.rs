@@ -17,12 +17,20 @@ pub mod command_stop;
 pub mod crcr_field;
 pub mod ring_cycle_state;
 
+/// Address: OperationalRegistersOffset + 0x18
+///
+/// XhciPdfPageNo: 401
 #[derive(Debug)]
 pub struct CommandRingControlRegister {
+    /// Offset: 0
     pub rcs: RingCycleState,
+    /// Offset: 1 Bit
     pub cs: CommandStop,
+    /// Offset: 2 Bit
     pub ca: CommandAbort,
+    /// Offset: 3 Bit
     pub crr: CommandRingRunning,
+    /// Offset: 6 Bit
     pub command_ring_pointer: CommandRingPointer,
 }
 
@@ -38,21 +46,25 @@ impl CommandRingControlRegister {
     }
 
     pub fn setup_command_ring(&self, allocator: &mut impl MemoryAllocatable) -> PciResult {
-        unsafe { allocate_command_ring(self, allocator) }
+        let _command_ring_ptr_addr = unsafe { allocate_command_ring(self, allocator) }?;
+        // TODO アドレスからCommandRingにキャスト
+        Ok(())
     }
 }
+
 unsafe fn allocate_command_ring(
     crcr: &CommandRingControlRegister,
     allocator: &mut impl MemoryAllocatable,
-) -> PciResult {
+) -> PciResult<usize> {
     const TRB_SIZE: usize = 128;
 
     let alloc_size = TRB_SIZE * 32;
-    let command_ring_addr = allocator
+    let command_ring_ptr_addr = allocator
         .alloc(alloc_size)
         .ok_or(PciError::FailedOperateToRegister(FailedAllocate))?;
 
-    register_command_ring(crcr, command_ring_addr as u64)
+    register_command_ring(crcr, command_ring_ptr_addr as u64)?;
+    Ok(command_ring_ptr_addr)
 }
 
 fn register_command_ring(crcr: &CommandRingControlRegister, command_ring_addr: u64) -> PciResult {
@@ -67,6 +79,9 @@ fn register_command_ring(crcr: &CommandRingControlRegister, command_ring_addr: u
     Ok(())
 }
 
+/// Address: OperationalRegistersOffset + 0x18
+///
+/// XhciPdfPageNo: 401
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct CommandRingControlRegisterOffset(usize);

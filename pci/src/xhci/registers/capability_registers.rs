@@ -16,9 +16,14 @@ pub mod structural_parameters1;
 pub mod structural_parameters2;
 pub mod structural_parameters3;
 
+/// Address: MemoryMappedAddress
+///
+/// XhciPdfPageNo: 381
 #[derive(Debug)]
 pub struct CapabilityRegisters {
+    /// Offset: 0
     cap_length: CapabilityLength,
+    /// Offset: 0x04 Byte
     hcs_params1: StructuralParameters1,
 }
 

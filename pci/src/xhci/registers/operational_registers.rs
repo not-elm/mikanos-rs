@@ -1,5 +1,6 @@
 use crate::error::PciResult;
 use crate::VolatileAccessible;
+use crate::xhci::registers::operational_registers::command_ring_control_register::{CommandRingControlRegister, CommandRingControlRegisterOffset};
 use crate::xhci::registers::operational_registers::config_register::{ConfigRegister, ConfigRegisterOffset};
 use crate::xhci::registers::operational_registers::device_context_base_address_array_pointer::{DeviceContextBaseAddressArrayPointer, DeviceContextBaseAddressArrayPointerOffset};
 use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
@@ -18,11 +19,20 @@ pub mod operation_registers_offset;
 pub mod usb_command_register;
 pub mod usb_status_register;
 
+/// Address: MemoryMappedAddress + CapLength
+///
+/// XhciPdfPageNo: 391
 #[derive(Debug)]
 pub struct OperationalRegisters {
+    /// Offset: 0x00
     usb_command: UsbCommandRegister,
+    /// Offset: 0x04 Byte
     usb_sts: UsbStatusRegister,
+    /// Offset: 0x18 Byte
+    crcr: CommandRingControlRegister,
+    /// Offset: 0x30 Byte
     dcbaap: DeviceContextBaseAddressArrayPointer,
+    /// Offset: 0x38 Byte
     config: ConfigRegister,
 }
 
@@ -31,6 +41,7 @@ impl OperationalRegisters {
         Ok(Self {
             usb_command: UsbCommandRegister::new(offset),
             usb_sts: UsbStatusRegister::new(UsbStatusRegisterOffset::new(offset))?,
+            crcr: CommandRingControlRegister::new(CommandRingControlRegisterOffset::new(offset))?,
             dcbaap: DeviceContextBaseAddressArrayPointer::new(
                 DeviceContextBaseAddressArrayPointerOffset::new(offset),
             ),
@@ -55,6 +66,9 @@ impl OperationalRegisters {
 
     pub fn usb_sts(&self) -> &UsbStatusRegister {
         &self.usb_sts
+    }
+    pub fn crcr(&self) -> &CommandRingControlRegister {
+        &self.crcr
     }
     pub fn dcbaap(&self) -> &DeviceContextBaseAddressArrayPointer {
         &self.dcbaap

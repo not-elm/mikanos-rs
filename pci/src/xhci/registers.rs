@@ -19,7 +19,9 @@ pub mod runtime_registers;
 
 #[derive(Debug)]
 pub struct Registers {
+    /// Offset: 0
     pub capability_registers: CapabilityRegisters,
+    /// Offset: CapLength Byte
     pub operational_registers: OperationalRegisters,
 }
 
@@ -36,16 +38,17 @@ impl Registers {
         })
     }
 
-    ///
     /// 1. xhcのリセット
     /// 2. デバイスコンテキストの設定
-    pub fn init(&self) -> PciResult {
-        // reset_controller()?;
-        // set_device_context()?;
-        // allocate_device_context_array()?
-        // USBCOMMAND RUN
+    /// 3. デバイスコンテキストの配列のアドレスをDCBAAPに設定
+    /// 4. コマンドリングのアドレスをcommand_ring_pointerに設定
+    pub fn init(&self, allocator: &mut impl MemoryAllocatable) -> PciResult {
         self.operational_registers.reset_host_controller();
         self.set_device_context()?;
+        let _device_context_array_addr = unsafe { self.allocate_device_context_array(allocator)? };
+        self.operational_registers
+            .crcr()
+            .setup_command_ring(allocator)?;
         Ok(())
     }
 
@@ -60,7 +63,7 @@ impl Registers {
     pub unsafe fn allocate_device_context_array(
         &self,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult {
+    ) -> PciResult<usize> {
         allocate_device_context_array(
             self.operational_registers.dcbaap(),
             self.operational_registers.config().max_slots_en(),
@@ -98,7 +101,7 @@ unsafe fn allocate_device_context_array(
     dcbaap: &DeviceContextBaseAddressArrayPointer,
     max_slots_en: &MaxDeviceSlotsEnabled,
     allocator: &mut impl MemoryAllocatable,
-) -> PciResult {
+) -> PciResult<usize> {
     const DEVICE_CONTEXT_SIZE: usize = 1024;
 
     let alloc_size = DEVICE_CONTEXT_SIZE * (max_slots_en.read_volatile() + 1) as usize;
@@ -109,7 +112,7 @@ unsafe fn allocate_device_context_array(
 
     let addr = dcbaap.read_volatile();
     if addr == device_context_array_addr as u64 {
-        Ok(())
+        Ok(device_context_array_addr)
     } else {
         Err(PciError::FailedOperateToRegister(NotReflectedValue {
             value: addr as usize,

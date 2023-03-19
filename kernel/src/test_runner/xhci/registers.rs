@@ -41,6 +41,13 @@ fn it_allocate_command_ring() {
         .unwrap();
 }
 
+#[test_case]
+fn it_xhci_host_controller_initialize() {
+    registers()
+        .init(&mut MikanOSPciMemoryAllocator::new())
+        .unwrap();
+}
+
 pub(crate) fn execute_reset_host_controller() {
     operational_registers().reset_host_controller();
 }
