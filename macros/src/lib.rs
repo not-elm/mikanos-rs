@@ -6,7 +6,7 @@ extern crate alloc;
 
 use proc_macro::TokenStream;
 
-use proc_macro2::{Ident, Literal, Span};
+use proc_macro2::{Ident, Span};
 use syn::{parse_macro_input, GenericArgument, ItemStruct, PathArguments, Type};
 
 use volatile::read::read_volatile;
@@ -35,24 +35,29 @@ pub fn declaration_volatile_accessible(_input: TokenStream) -> TokenStream {
     expand.into()
 }
 
-#[proc_macro_derive(VolatileBits, attributes(volatile_type, bits, offset_bit))]
+#[proc_macro_derive(
+    VolatileBits,
+    attributes(volatile_type, bits, offset_bit, add_addr_bytes)
+)]
 pub fn volatile_bits(input: TokenStream) -> TokenStream {
     let struct_ast = parse_macro_input!(input as ItemStruct);
     let struct_name = struct_ast.clone().ident;
     let (addr_type, phantom_type) = parse_inner_type(struct_ast.clone());
 
-    let (volatile_type, bits, offset) = parse_volatile_bits_attributes(struct_ast.clone());
+    let (volatile_type, bits, offset, add_addr_bytes) =
+        parse_volatile_bits_attributes(struct_ast.clone());
     let volatile_type = volatile_type.unwrap_or(Ident::new("u32", Span::call_site()));
 
     let read_volatile = read_volatile(volatile_type.clone(), bits.clone(), offset.clone());
     let read_flag_volatile = read_flag_volatile();
     let write_volatile = write_volatile(
         volatile_type.clone(),
-        bits.unwrap_or(Literal::usize_unsuffixed(1)),
+        bits.unwrap_or(proc_macro2::Literal::usize_unsuffixed(1)),
         offset.clone(),
     );
 
-    let new_uncheck = atr_new_uncheck(addr_type.clone(), phantom_type.clone()).unwrap();
+    let new_uncheck =
+        atr_new_uncheck(addr_type.clone(), add_addr_bytes, phantom_type.clone()).unwrap();
 
     let impl_debug = impl_debug(struct_name.clone(), volatile_type.clone());
     let impl_clone = impl_clone(struct_name.clone(), phantom_type.clone());
@@ -129,12 +134,13 @@ fn impl_volatile_without_trait(
 
 fn atr_new_uncheck(
     addr_type: Type,
+    add_addr_bytes: proc_macro2::Literal,
     phantom_type: Option<Type>,
 ) -> Result<proc_macro2::TokenStream, ()> {
     let new = if let Some(_phantom_data) = phantom_type {
-        quote::quote! { Self(v, PhantomData)}
+        quote::quote! { Self(v + #add_addr_bytes *  core::mem::size_of::<u8>(), PhantomData)}
     } else {
-        quote::quote! { Self(v)}
+        quote::quote! { Self(v + #add_addr_bytes *  core::mem::size_of::<u8>() )}
     };
     Ok(quote::quote! {
          fn new_uncheck(v: #addr_type) -> Self{

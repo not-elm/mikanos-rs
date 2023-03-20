@@ -41,7 +41,7 @@ use crate::xhci::registers::runtime_registers::interrupter_register_set::Interru
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 #[derive(VolatileBits)]
 #[volatile_type(u32)]
-#[offset_bit(64)]
+#[add_addr_bytes(8)]
 pub struct EventRingSegmentTableSize(usize, PhantomData<InterrupterRegisterSetOffset>);
 
 impl EventRingSegmentTableSize {

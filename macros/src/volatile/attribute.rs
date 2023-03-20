@@ -16,10 +16,12 @@ pub(crate) fn parse_volatile_bits_attributes(
     Option<proc_macro2::Ident>,
     Option<proc_macro2::Literal>,
     proc_macro2::Literal,
+    proc_macro2::Literal,
 ) {
     let mut volatile_type: Option<proc_macro2::Ident> = None;
     let mut bits: Option<proc_macro2::Literal> = None;
     let mut offset: Option<proc_macro2::Literal> = None;
+    let mut addr_addr_bytes: Option<proc_macro2::Literal> = None;
     item_struct
         .attrs
         .iter()
@@ -35,12 +37,16 @@ pub(crate) fn parse_volatile_bits_attributes(
             InputAttribute::Offset(v) => {
                 offset = Some(v);
             }
+            InputAttribute::AddAddrBytes(v) => {
+                addr_addr_bytes = Some(v);
+            }
         });
 
     (
         volatile_type.clone(),
         bits,
         offset_suffixed(volatile_type.clone(), offset),
+        offset_suffixed(volatile_type.clone(), addr_addr_bytes),
     )
 }
 
@@ -75,6 +81,7 @@ enum InputAttribute {
     VolatileType(proc_macro2::Ident),
     Bits(proc_macro2::Literal),
     Offset(proc_macro2::Literal),
+    AddAddrBytes(proc_macro2::Literal),
 }
 
 fn parse_attribute(attr: Attribute) -> Option<InputAttribute> {
@@ -114,6 +121,10 @@ fn parse_meta_name_value(
     } else if attr_name == "offset_bit" {
         if let NestedMeta::Lit(Lit::Int(lit)) = nested.first()? {
             return Some(InputAttribute::Offset(lit.token()));
+        }
+    } else if attr_name == "add_addr_bytes" {
+        if let NestedMeta::Lit(Lit::Int(lit)) = nested.first()? {
+            return Some(InputAttribute::AddAddrBytes(lit.token()));
         }
     }
 
