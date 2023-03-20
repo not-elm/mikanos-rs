@@ -2,6 +2,8 @@ use core::marker::PhantomData;
 
 use macros::VolatileBits;
 
+use crate::error::PciResult;
+use crate::wait_update_64bits_register_for;
 use crate::xhci::bit_zero_mask_lower_for;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 
@@ -35,7 +37,9 @@ impl EventRingSegmentTableBaseAddress {
         bit_zero_mask_lower_for(6, self.read_volatile() as usize) as u64
     }
 
-    pub fn update_event_ring_segment_table_addr(&self, addr: usize) {
-        self.write_volatile(bit_zero_mask_lower_for(6, addr) as u64);
+    pub fn update_event_ring_segment_table_addr(&self, addr: usize) -> PciResult {
+        let write_addr = bit_zero_mask_lower_for(6, addr) as u64;
+        self.write_volatile(write_addr);
+        wait_update_64bits_register_for(10, write_addr, self)
     }
 }
