@@ -18,12 +18,17 @@ use macros::declaration_volatile_accessible;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
+use pci::xhci::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
 use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
+use pci::xhci::registers::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
 use pci::xhci::registers::capability_registers::structural_parameters1::StructuralParameters1Offset;
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
-use pci::xhci::registers::operational_registers::OperationalRegisters;
+use pci::xhci::registers::runtime_registers::interrupter_register_set::{
+    InterrupterRegisterSet, InterrupterRegisterSetOffset,
+};
+use pci::xhci::registers::runtime_registers::RuntimeRegistersOffset;
 
 mod qemu;
 mod serial;
@@ -47,7 +52,9 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
     // .unwrap();
     println!(
         "RESET!! {:?}",
-        OperationalRegisters::new(operation_registers_offset()).unwrap()
+        InterrupterRegisterSet::new(interrupter_register_set_offset(0))
+            .setup_event_ring(&mut MikanOSPciMemoryAllocator::new())
+            .unwrap()
     );
     // fill_background(PixelColor::new(0x3E, 0x3E, 0x3E), &frame_buffer_config).unwrap();
     // fill_bottom_bar(PixelColor::new(0x00, 0x00, 0xFF), &frame_buffer_config).unwrap();
@@ -112,6 +119,20 @@ pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
         .unwrap();
 
     mouse.mmio_base_addr()
+}
+
+fn runtime_registers_offset() -> RuntimeRegistersOffset {
+    let rts_off = RuntimeRegisterSpaceOffset::new_with_check_size(
+        mmio_base_addr(),
+        &CapabilityLength::new_check_length(mmio_base_addr()).unwrap(),
+    )
+    .unwrap();
+
+    RuntimeRegistersOffset::new(mmio_base_addr(), &rts_off)
+}
+
+fn interrupter_register_set_offset(index: usize) -> InterrupterRegisterSetOffset {
+    InterrupterRegisterSetOffset::new(runtime_registers_offset(), index)
 }
 
 #[allow(dead_code)]

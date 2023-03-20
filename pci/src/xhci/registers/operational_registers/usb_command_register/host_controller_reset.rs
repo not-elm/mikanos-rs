@@ -3,7 +3,7 @@ use core::marker::PhantomData;
 use macros::VolatileBits;
 
 #[derive(VolatileBits)]
-#[offset(1)]
+#[offset_bit(1)]
 #[bits(1)]
 pub struct HostControllerReset(usize, PhantomData<OperationalRegistersOffset>);
 

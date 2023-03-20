@@ -17,7 +17,7 @@ use crate::xhci::registers::operational_registers::command_ring_control_register
 #[derive(VolatileBits)]
 #[volatile_type(u8)]
 #[bits(1)]
-#[offset(2)]
+#[offset_bit(2)]
 pub struct CommandAbort(usize, PhantomData<CommandRingControlRegisterOffset>);
 
 impl CommandAbort {

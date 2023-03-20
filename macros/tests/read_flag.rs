@@ -29,7 +29,7 @@ mod tests {
     #[test]
     pub fn it_read_true_with_offset0() {
         #[derive(VolatileBits)]
-        #[offset(0)]
+        #[offset_bit(0)]
         struct VolatileStruct(usize);
 
         let buff = [0b0000_0001u32; 1];
@@ -41,7 +41,7 @@ mod tests {
     #[test]
     pub fn it_read_true_with_offset7() {
         #[derive(VolatileBits)]
-        #[offset(7)]
+        #[offset_bit(7)]
         struct VolatileStruct(usize);
 
         let buff = [0b1000_0000u32; 1];
@@ -66,7 +66,7 @@ mod tests {
     pub fn it_read_true_with_volatile_type_and_offset() {
         #[derive(VolatileBits)]
         #[volatile_type(u8)]
-        #[offset(7)]
+        #[offset_bit(7)]
         struct VolatileStruct(usize);
 
         let buff = [0b1000_0000u32; 1];

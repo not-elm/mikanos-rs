@@ -17,7 +17,7 @@ use crate::xhci::registers::operational_registers::command_ring_control_register
 #[derive(VolatileBits)]
 #[volatile_type(u64)]
 #[bits(58)]
-#[offset(6)]
+#[offset_bit(6)]
 pub struct CommandRingPointer(usize, PhantomData<CommandRingControlRegisterOffset>);
 
 impl CommandRingPointer {

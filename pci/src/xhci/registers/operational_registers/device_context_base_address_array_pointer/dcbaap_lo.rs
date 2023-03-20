@@ -12,7 +12,7 @@ use crate::xhci::registers::operational_registers::device_context_base_address_a
 #[derive(VolatileBits)]
 #[volatile_type(u32)]
 #[bits(27)]
-#[offset(6)]
+#[offset_bit(6)]
 pub struct DcbaapLo(usize);
 
 impl DcbaapLo {

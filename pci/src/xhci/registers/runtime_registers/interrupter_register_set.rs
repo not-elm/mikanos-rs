@@ -1,3 +1,11 @@
+use core::fmt::Debug;
+
+use crate::error::{AllocateReason, OperationReason, PciError, PciResult};
+use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhci::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_base_address::EventRingSegmentTableBaseAddress;
+use crate::xhci::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_size::EventRingSegmentTableSize;
+use crate::xhci::registers::runtime_registers::interrupter_register_set::interrupter_management_register::InterrupterManagementRegister;
+use crate::xhci::registers::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
 use crate::xhci::registers::runtime_registers::RuntimeRegistersOffset;
 
 pub mod event_ring_segment_table_base_address;
@@ -25,7 +33,56 @@ pub mod interrupter_register_set_field;
 /// [Xhci Document] : 424 Page
 ///
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-pub struct InterrupterRegisterSet {}
+pub struct InterrupterRegisterSet {
+    /// Offset: 0
+    iman: InterrupterManagementRegister,
+    /// Offset: 0x08 Bytes
+    erstsz: EventRingSegmentTableSize,
+    /// Offset: 0x10 Bytes
+    erstba: EventRingSegmentTableBaseAddress,
+}
+
+impl InterrupterRegisterSet {
+    pub fn new(offset: InterrupterRegisterSetOffset) -> Self {
+        Self {
+            iman: InterrupterManagementRegister::new(offset),
+            erstsz: EventRingSegmentTableSize::new(offset),
+            erstba: EventRingSegmentTableBaseAddress::new(offset),
+        }
+    }
+
+    pub fn iman(&self) -> &InterrupterManagementRegister {
+        &self.iman
+    }
+
+    pub fn erstsz(&self) -> &EventRingSegmentTableSize {
+        &self.erstsz
+    }
+
+    pub fn erstba(&self) -> &EventRingSegmentTableBaseAddress {
+        &self.erstba
+    }
+
+    pub fn setup_event_ring(&self, allocator: &mut impl MemoryAllocatable) -> PciResult {
+        let address = unsafe {
+            allocator
+                .allocate_with_align_64_bytes(4 * 4)
+                .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
+                .address()?
+        };
+
+        self.erstsz.update_event_ring_segment_table_size(1)?;
+        todo!();
+        self.erstba.update_event_ring_segment_table_addr(address);
+        if self.erstba.event_ring_segment_table_addr() != 0 {
+            Ok(())
+        } else {
+            Err(PciError::FailedOperateToRegister(
+                OperationReason::NotReflectedValue { value: 1 },
+            ))
+        }
+    }
+}
 
 /// # Address
 ///

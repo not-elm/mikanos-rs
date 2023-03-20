@@ -111,7 +111,7 @@ fn parse_meta_name_value(
                 p.segments.first()?.ident.clone(),
             ));
         }
-    } else if attr_name == "offset" {
+    } else if attr_name == "offset_bit" {
         if let NestedMeta::Lit(Lit::Int(lit)) = nested.first()? {
             return Some(InputAttribute::Offset(lit.token()));
         }

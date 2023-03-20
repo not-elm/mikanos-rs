@@ -26,7 +26,7 @@ use crate::xhci::registers::operational_registers::operation_registers_offset::O
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 #[derive(VolatileBits)]
 #[volatile_type(u32)]
-#[offset(0x18 * 8)]
+#[offset_bit(0x18 * 8)]
 pub struct RuntimeRegisterSpaceOffset(usize, PhantomData<MemoryMappedAddr>);
 
 impl RuntimeRegisterSpaceOffset {

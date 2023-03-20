@@ -11,7 +11,7 @@ use crate::xhci::registers::operational_registers::usb_status_register::usb_stat
 /// RunStopが1の間、0になります。
 #[derive(VolatileBits)]
 #[bits(1)]
-#[offset(11)]
+#[offset_bit(11)]
 #[volatile_type(u32)]
 pub struct ControllerNotReady(usize, PhantomData<UsbStatusRegisterOffset>);
 

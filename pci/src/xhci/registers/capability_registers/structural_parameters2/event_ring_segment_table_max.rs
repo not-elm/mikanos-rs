@@ -33,7 +33,7 @@ use crate::xhci::registers::capability_registers::structural_parameters2::Struct
 #[derive(VolatileBits)]
 #[volatile_type(u32)]
 #[bits(4)]
-#[offset(4)]
+#[offset_bit(4)]
 pub struct EventRingSegmentTableMax(usize, PhantomData<StructuralParameters2Offset>);
 
 impl EventRingSegmentTableMax {

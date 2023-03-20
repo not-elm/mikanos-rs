@@ -30,5 +30,5 @@ use crate::xhci::registers::runtime_registers::interrupter_register_set::Interru
 #[derive(VolatileBits)]
 #[volatile_type(u32)]
 #[bits(1)]
-#[offset(1)]
+#[offset_bit(1)]
 pub struct InterruptEnable(usize, PhantomData<InterrupterRegisterSetOffset>);

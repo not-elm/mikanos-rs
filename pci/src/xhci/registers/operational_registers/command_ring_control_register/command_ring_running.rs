@@ -16,7 +16,7 @@ use crate::xhci::registers::operational_registers::usb_command_register::run_sto
 #[derive(VolatileBits)]
 #[volatile_type(u8)]
 #[bits(1)]
-#[offset(3)]
+#[offset_bit(3)]
 pub struct CommandRingRunning(usize, PhantomData<CommandRingControlRegisterOffset>);
 
 impl CommandRingRunning {

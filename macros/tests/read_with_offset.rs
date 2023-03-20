@@ -7,7 +7,7 @@ mod tests {
     #[test]
     pub fn it_read_with_3bits() {
         #[derive(VolatileBits)]
-        #[offset(2)]
+        #[offset_bit(2)]
         #[volatile_type(u8)]
         struct VolatileStruct(usize);
 

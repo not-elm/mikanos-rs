@@ -35,7 +35,7 @@ pub fn declaration_volatile_accessible(_input: TokenStream) -> TokenStream {
     expand.into()
 }
 
-#[proc_macro_derive(VolatileBits, attributes(volatile_type, bits, offset))]
+#[proc_macro_derive(VolatileBits, attributes(volatile_type, bits, offset_bit))]
 pub fn volatile_bits(input: TokenStream) -> TokenStream {
     let struct_ast = parse_macro_input!(input as ItemStruct);
     let struct_name = struct_ast.clone().ident;

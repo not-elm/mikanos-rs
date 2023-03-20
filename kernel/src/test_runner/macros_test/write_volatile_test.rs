@@ -31,7 +31,7 @@ fn it_write_with_bits() {
 #[test_case]
 fn it_write_with_offset() {
     #[derive(VolatileBits)]
-    #[offset(1)]
+    #[offset_bit(1)]
     #[volatile_type(u64)]
     struct VolatileStruct(usize);
 
@@ -46,7 +46,7 @@ fn it_write_with_offset() {
 fn it_write_with_bits_and_offset() {
     #[derive(VolatileBits)]
     #[bits(2)]
-    #[offset(1)]
+    #[offset_bit(1)]
     #[volatile_type(u8)]
     struct VolatileStruct(usize);
     let buff = [0b1000u8; 1];
@@ -62,7 +62,7 @@ fn it_write_with_bits_and_offset() {
 fn it_write_with_bits_and_offset16() {
     #[derive(VolatileBits)]
     #[bits(4)]
-    #[offset(8)]
+    #[offset_bit(8)]
     #[volatile_type(u16)]
     struct VolatileStruct(usize);
     let buff = [0b1001_0101_1100_0000u16; 1];
@@ -78,7 +78,7 @@ fn it_write_with_bits_and_offset16() {
 fn it_write_flag() {
     #[derive(VolatileBits)]
     #[bits(3)]
-    #[offset(8)]
+    #[offset_bit(8)]
     #[volatile_type(u16)]
     struct VolatileStruct(usize);
     let buff = [0b1000_0001_0000_0000u16; 1];
