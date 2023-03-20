@@ -86,7 +86,7 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
 
     common_lib::assembly::hlt_forever();
 }
-
+#[allow(dead_code)]
 fn fill_background(color: PixelColor, config: &FrameBufferConfig) -> KernelResult {
     fill_rect_using_global(
         Vector2D::new(0, 0),
@@ -95,6 +95,7 @@ fn fill_background(color: PixelColor, config: &FrameBufferConfig) -> KernelResul
     )
 }
 
+#[allow(dead_code)]
 fn fill_bottom_bar(color: PixelColor, config: &FrameBufferConfig) -> KernelResult {
     let v = config.vertical_resolution;
     let h = config.horizontal_resolution;
@@ -106,7 +107,8 @@ fn fill_bottom_bar(color: PixelColor, config: &FrameBufferConfig) -> KernelResul
     )
 }
 
-pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
+#[allow(dead_code)]
+fn mmio_base_addr() -> MemoryMappedAddr {
     let mouse = PciDeviceSearcher::new()
         .class_code(ClassCode::SerialBus)
         .sub_class(Subclass::Usb)
