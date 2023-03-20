@@ -46,7 +46,7 @@ mod tests {
     #[test]
     pub fn it_when_volatile_32bits_read_from_added_2_address() {
         #[derive(VolatileBits)]
-        #[add_addr_bytes(2)]
+        #[add_addr_bytes(0x02)]
         #[volatile_type(u32)]
         struct VolatileStruct(usize);
 

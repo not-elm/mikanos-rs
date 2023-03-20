@@ -2,8 +2,9 @@ use core::marker::PhantomData;
 
 use macros::VolatileBits;
 
-use crate::error::PciResult;
+use crate::error::{OperationReason, PciError, PciResult};
 use crate::wait_update_32bits_register_for;
+use crate::xhci::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 
 /// ERSTS
@@ -49,17 +50,20 @@ impl EventRingSegmentTableSize {
         mask_16_bits(self.read_volatile())
     }
 
-    pub fn update_event_ring_segment_table_size(&self, set_size: u16) -> PciResult {
-        // // TODO テーブルの要素数を設定する
-        // let max = erst_max.max_entries();
-        // if max < set_size as u32 {
-        //     return Err(PciError::FailedOperateToRegister(
-        //         OperationReason::ExceedsEventRingSegmentTableMax {
-        //             max,
-        //             value: set_size,
-        //         },
-        //     ));
-        // }
+    pub fn update_event_ring_segment_table_size(
+        &self,
+        erst_max: &EventRingSegmentTableMax,
+        set_size: u16,
+    ) -> PciResult {
+        let max = erst_max.max_entries();
+        if max < set_size as u32 {
+            return Err(PciError::FailedOperateToRegister(
+                OperationReason::ExceedsEventRingSegmentTableMax {
+                    max,
+                    value: set_size,
+                },
+            ));
+        }
 
         self.write_volatile((set_size & 0xFF_FF) as u32);
 

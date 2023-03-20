@@ -71,7 +71,7 @@ impl InterrupterRegisterSet {
                 .address()?
         };
 
-        self.erstsz.update_event_ring_segment_table_size(1)?;
+        // self.erstsz.update_event_ring_segment_table_size(self.,1)?;
         todo!();
         self.erstba.update_event_ring_segment_table_addr(address);
         if self.erstba.event_ring_segment_table_addr() != 0 {
