@@ -62,7 +62,7 @@ impl MemoryAllocatable for MikanOSPciMemoryAllocator {
 }
 
 unsafe fn step_next_bound_if_over(ptr: *const u8, bytes: usize, bound: usize) -> *const u8 {
-    if bound <= 0 {
+    if bound == 0 {
         return ptr;
     }
 

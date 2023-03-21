@@ -6,7 +6,7 @@ pub trait UsbCommandRegisterField<T, VolatileType, Addr>
 where
     T: VolatileAccessible<VolatileType, Addr, OperationalRegistersOffset>,
 {
-    fn new(offset: OperationalRegistersOffset) -> T;
+    fn new(offset: OperationalRegistersOffset) -> Self;
     fn new_check_flag_false(offset: OperationalRegistersOffset) -> PciResult<T>;
 }
 

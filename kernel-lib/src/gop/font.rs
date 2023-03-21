@@ -20,8 +20,8 @@ pub fn convert_to_ascii(mut c: char) -> Option<char> {
 
 pub fn get_font_from(c: char) -> Option<*mut u8> {
     let char_ptr = unsafe { get_font(convert_to_ascii(c)? as c_char) };
-    if char_ptr == core::ptr::null_mut() {
-        return None;
+    if char_ptr.is_null() {
+        None
     } else {
         Some(char_ptr)
     }

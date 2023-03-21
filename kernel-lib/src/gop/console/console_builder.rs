@@ -23,3 +23,9 @@ impl ConsoleBuilder {
         )
     }
 }
+
+impl Default for ConsoleBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}

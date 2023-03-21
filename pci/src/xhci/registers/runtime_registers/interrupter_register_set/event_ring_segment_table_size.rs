@@ -65,7 +65,7 @@ impl EventRingSegmentTableSize {
             ));
         }
 
-        self.write_volatile((segments_count & 0xFF_FF) as u32);
+        self.write_volatile(segments_count as u32);
 
         wait_update_32bits_register_for(10, segments_count as u32, self)
     }

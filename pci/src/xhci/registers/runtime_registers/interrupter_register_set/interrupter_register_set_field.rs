@@ -6,7 +6,7 @@ pub trait InterrupterRegisterSetField<T, VolatileType, Addr>
 where
     T: VolatileAccessible<VolatileType, Addr, InterrupterRegisterSetOffset>,
 {
-    fn new(offset: InterrupterRegisterSetOffset) -> T;
+    fn new(offset: InterrupterRegisterSetOffset) -> Self;
     fn new_check_flag_true(offset: InterrupterRegisterSetOffset) -> PciResult<T>;
     fn new_check_flag_false(offset: InterrupterRegisterSetOffset) -> PciResult<T>;
 }

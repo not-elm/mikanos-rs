@@ -35,7 +35,7 @@ mod test_runner;
 declaration_volatile_accessible!();
 
 #[no_mangle]
-pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
+pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) {
     init_console(frame_buffer_config);
     println!("hello!");
     use pci::xhci::allocator::memory_allocatable::MemoryAllocatable;
@@ -129,6 +129,7 @@ fn mmio_base_addr() -> MemoryMappedAddr {
     mouse.mmio_base_addr()
 }
 
+#[allow(dead_code)]
 fn runtime_registers_offset() -> RuntimeRegistersOffset {
     let rts_off = RuntimeRegisterSpaceOffset::new_with_check_size(
         mmio_base_addr(),
@@ -139,6 +140,7 @@ fn runtime_registers_offset() -> RuntimeRegistersOffset {
     RuntimeRegistersOffset::new(mmio_base_addr(), &rts_off)
 }
 
+#[allow(dead_code)]
 fn interrupter_register_set_offset(index: usize) -> InterrupterRegisterSetOffset {
     InterrupterRegisterSetOffset::new(runtime_registers_offset(), index)
 }

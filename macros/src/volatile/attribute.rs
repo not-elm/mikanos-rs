@@ -26,7 +26,7 @@ pub(crate) fn parse_volatile_bits_attributes(
         .attrs
         .iter()
         .map(|attr| parse_attribute(attr.clone()))
-        .filter_map(|v| v)
+        .flatten()
         .for_each(|input_attribute| match input_attribute {
             InputAttribute::Bits(input_bits) => {
                 bits = Some(input_bits);
@@ -46,7 +46,7 @@ pub(crate) fn parse_volatile_bits_attributes(
         volatile_type.clone(),
         bits,
         offset_suffixed(volatile_type.clone(), offset),
-        offset_suffixed(volatile_type.clone(), addr_addr_bytes),
+        offset_suffixed(volatile_type, addr_addr_bytes),
     )
 }
 

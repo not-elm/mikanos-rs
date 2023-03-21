@@ -12,7 +12,6 @@ use crate::xhci::registers::operational_registers::usb_status_register::usb_stat
 #[derive(VolatileBits)]
 #[bits(1)]
 #[offset_bit(11)]
-#[volatile_type(u32)]
 pub struct ControllerNotReady(usize, PhantomData<UsbStatusRegisterOffset>);
 
 impl ControllerNotReady {

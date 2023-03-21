@@ -31,7 +31,7 @@ impl CharWritable for AscIICharWriter {
                 if is_need_write_bit {
                     unsafe {
                         pixel_writer
-                            .write(pos.x() as usize + dx, pos.y() as usize + dy, color)
+                            .write(pos.x() + dx, pos.y() + dy, color)
                             .unwrap()
                     };
                 }

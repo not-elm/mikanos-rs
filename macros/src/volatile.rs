@@ -33,8 +33,7 @@ pub(crate) fn ast_volatile_bits(input: TokenStream) -> TokenStream {
     let struct_name = ast_struct.clone().ident;
     let (addr_type, phantom_type) = parse_inner_type(ast_struct.clone());
 
-    let (volatile_type, bits, offset, add_addr_bytes) =
-        parse_volatile_bits_attributes(ast_struct.clone());
+    let (volatile_type, bits, offset, add_addr_bytes) = parse_volatile_bits_attributes(ast_struct);
     let volatile_type = volatile_type.unwrap_or(Ident::new("u32", Span::call_site()));
 
     let read_volatile = read_volatile(volatile_type.clone(), bits.clone(), offset.clone());
@@ -42,7 +41,7 @@ pub(crate) fn ast_volatile_bits(input: TokenStream) -> TokenStream {
     let write_volatile = write_volatile(
         volatile_type.clone(),
         bits.unwrap_or(proc_macro2::Literal::usize_unsuffixed(1)),
-        offset.clone(),
+        offset,
     );
 
     let new_uncheck =

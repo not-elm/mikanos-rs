@@ -1,4 +1,5 @@
 use alloc::vec::Vec;
+use core::cmp::Ordering;
 
 use crate::elf::phdr::program_header::PType;
 use crate::elf::phdr::program_header::ProgramHeader;
@@ -41,19 +42,21 @@ impl Iterator for ProgramHeaderTable {
     type Item = ProgramHeader;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current_num < self.e_phnum {
-            let current = self.dref();
-            unsafe {
-                self.phdr_ptr = self.phdr_ptr.add(1);
-                self.current_num += 1;
+        match self.current_num.cmp(&self.e_phnum) {
+            Ordering::Less => {
+                let current = self.dref();
+                unsafe {
+                    self.phdr_ptr = self.phdr_ptr.add(1);
+                    self.current_num += 1;
+                }
+                Some(current)
             }
-            Some(current)
-        } else if self.current_num == self.e_phnum {
-            self.current_num += 1;
-            let current = self.dref();
-            Some(current)
-        } else {
-            None
+            Ordering::Equal => {
+                self.current_num += 1;
+                let current = self.dref();
+                Some(current)
+            }
+            _ => None,
         }
     }
 }

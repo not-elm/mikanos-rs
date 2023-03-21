@@ -62,15 +62,17 @@ impl Registers {
         )
     }
 
-    pub unsafe fn allocate_device_context_array(
+    pub fn allocate_device_context_array(
         &self,
         allocator: &mut impl MemoryAllocatable,
     ) -> PciResult<usize> {
-        allocate_device_context_array(
-            self.operational_registers.dcbaap(),
-            self.operational_registers.config().max_slots_en(),
-            allocator,
-        )
+        unsafe {
+            allocate_device_context_array(
+                self.operational_registers.dcbaap(),
+                self.operational_registers.config().max_slots_en(),
+                allocator,
+            )
+        }
     }
 }
 
