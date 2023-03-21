@@ -108,7 +108,7 @@ unsafe fn allocate_device_context_array(
 
     let alloc_size = DEVICE_CONTEXT_SIZE * (max_slots_en.read_volatile() + 1) as usize;
     let device_context_array_addr = allocator
-        .allocate_with_align_64_bytes(alloc_size)
+        .allocate_with_align(alloc_size, 64, 64 * 1024)
         .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
         .address()?;
 

@@ -53,21 +53,21 @@ impl EventRingSegmentTableSize {
     pub fn update_event_ring_segment_table_size(
         &self,
         erst_max: &EventRingSegmentTableMax,
-        set_size: u16,
+        segment_table_entry_count: u16,
     ) -> PciResult {
         let max = erst_max.max_entries();
-        if max < set_size as u32 {
+        if max < segment_table_entry_count as u32 {
             return Err(PciError::FailedOperateToRegister(
                 OperationReason::ExceedsEventRingSegmentTableMax {
                     max,
-                    value: set_size,
+                    value: segment_table_entry_count,
                 },
             ));
         }
 
-        self.write_volatile((set_size & 0xFF_FF) as u32);
+        self.write_volatile((segment_table_entry_count & 0xFF_FF) as u32);
 
-        wait_update_32bits_register_for(10, set_size as u32, self)
+        wait_update_32bits_register_for(10, segment_table_entry_count as u32, self)
     }
 }
 

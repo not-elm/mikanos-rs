@@ -5,7 +5,12 @@ pub trait MemoryAllocatable {
     /// 指定されたバイト数のメモリを確保し、確保先の先頭アドレスを返します。
     ///
     /// Note: このメソッドの戻り値となるアドレスは64Bytesにアラインされている必要があります。
-    unsafe fn allocate_with_align_64_bytes(&mut self, bytes: usize) -> Option<AlignedAddress>;
+    unsafe fn allocate_with_align(
+        &mut self,
+        bytes: usize,
+        align: usize,
+        page_bounds: usize,
+    ) -> Option<AlignedAddress>;
 
     unsafe fn free(&mut self, base_addr: usize);
 }

@@ -1,7 +1,8 @@
 use core::fmt::Debug;
 
-use crate::error::{AllocateReason, OperationReason, PciError, PciResult};
+use crate::error::{AllocateReason, PciError, PciResult};
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhci::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_base_address::EventRingSegmentTableBaseAddress;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_size::EventRingSegmentTableSize;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::interrupter_management_register::InterrupterManagementRegister;
@@ -63,24 +64,36 @@ impl InterrupterRegisterSet {
         &self.erstba
     }
 
-    pub fn setup_event_ring(&self, allocator: &mut impl MemoryAllocatable) -> PciResult {
-        let address = unsafe {
-            allocator
-                .allocate_with_align_64_bytes(4 * 4)
-                .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
-                .address()?
-        };
+    pub fn setup_event_ring(
+        &self,
+        segment_table_entry_count: u16,
+        erst_max: &EventRingSegmentTableMax,
+        allocator: &mut impl MemoryAllocatable,
+    ) -> PciResult {
+        self.erstsz
+            .update_event_ring_segment_table_size(erst_max, segment_table_entry_count)?;
 
-        // self.erstsz.update_event_ring_segment_table_size(self.,1)?;
-        todo!();
-        self.erstba.update_event_ring_segment_table_addr(address);
-        if self.erstba.event_ring_segment_table_addr() != 0 {
-            Ok(())
-        } else {
-            Err(PciError::FailedOperateToRegister(
-                OperationReason::NotReflectedValue { value: 1 },
-            ))
-        }
+        let event_ring_segment_table_addr =
+            allocate_event_ring_segment_table(segment_table_entry_count, allocator)?;
+
+        self.erstba
+            .update_event_ring_segment_table_addr(event_ring_segment_table_addr)
+    }
+}
+
+fn allocate_event_ring_segment_table(
+    segment_table_entry_count: u16,
+    allocator: &mut impl MemoryAllocatable,
+) -> PciResult<usize> {
+    unsafe {
+        allocator
+            .allocate_with_align(
+                core::mem::size_of::<u32>() * 4 * segment_table_entry_count as usize,
+                64,
+                64 * 1024,
+            )
+            .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
+            .address()
     }
 }
 

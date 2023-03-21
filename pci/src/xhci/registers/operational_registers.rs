@@ -19,9 +19,14 @@ pub mod operation_registers_offset;
 pub mod usb_command_register;
 pub mod usb_status_register;
 
-/// Address: MemoryMappedAddress + CapLength
+/// # Address
 ///
-/// XhciPdfPageNo: 391
+/// MemoryMappedAddress + CapLength
+///
+///
+/// [Xhci Document] : 391 Page
+///
+/// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 #[derive(Debug)]
 pub struct OperationalRegisters {
     /// Offset: 0x00

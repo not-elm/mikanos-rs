@@ -4,7 +4,7 @@ use macros::VolatileBits;
 
 use crate::error::PciResult;
 use crate::wait_update_64bits_register_for;
-use crate::xhci::bit_zero_mask_lower_for;
+use crate::xhci::bit_mask_zeros_lower_for;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 
 /// ERSTBA
@@ -34,11 +34,11 @@ pub struct EventRingSegmentTableBaseAddress(usize, PhantomData<InterrupterRegist
 
 impl EventRingSegmentTableBaseAddress {
     pub fn event_ring_segment_table_addr(&self) -> u64 {
-        bit_zero_mask_lower_for(6, self.read_volatile() as usize) as u64
+        bit_mask_zeros_lower_for(6, self.read_volatile() as usize) as u64
     }
 
     pub fn update_event_ring_segment_table_addr(&self, addr: usize) -> PciResult {
-        let write_addr = bit_zero_mask_lower_for(6, addr) as u64;
+        let write_addr = bit_mask_zeros_lower_for(6, addr) as u64;
         self.write_volatile(write_addr);
         wait_update_64bits_register_for(10, write_addr, self)
     }

@@ -3,7 +3,7 @@ use core::marker::PhantomData;
 use macros::VolatileBits;
 
 use crate::error::{InvalidRegisterReason, PciError, PciResult};
-use crate::xhci::bit_zero_mask_lower_for;
+use crate::xhci::bit_mask_zeros_lower_for;
 use crate::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use crate::xhci::registers::capability_registers::capability_registers_field::CapabilityRegistersField;
 use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
@@ -51,6 +51,6 @@ impl RuntimeRegisterSpaceOffset {
     }
 
     pub fn read_rts_offset(&self) -> u32 {
-        bit_zero_mask_lower_for(5, self.read_volatile() as usize) as u32
+        bit_mask_zeros_lower_for(5, self.read_volatile() as usize) as u32
     }
 }
