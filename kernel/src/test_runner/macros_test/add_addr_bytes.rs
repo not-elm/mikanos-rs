@@ -1,7 +1,5 @@
 use macros::VolatileBits;
 
-use crate::VolatileAccessible;
-
 #[test_case]
 fn it_add_1_byte() {
     #[derive(VolatileBits)]

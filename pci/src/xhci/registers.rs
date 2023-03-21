@@ -9,6 +9,8 @@ use crate::xhci::registers::operational_registers::device_context_base_address_a
 use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use crate::xhci::registers::operational_registers::usb_command_register::run_stop::RunStop;
 use crate::xhci::registers::operational_registers::OperationalRegisters;
+use crate::xhci::registers::runtime_registers::{RuntimeRegisters, RuntimeRegistersOffset};
+use crate::xhci::transfer::event::event_ring::EventRing;
 use crate::VolatileAccessible;
 
 pub mod capability_registers;
@@ -20,9 +22,11 @@ pub mod runtime_registers;
 #[derive(Debug)]
 pub struct Registers {
     /// Offset: 0
-    pub capability_registers: CapabilityRegisters,
+    capability_registers: CapabilityRegisters,
     /// Offset: CapLength Byte
-    pub operational_registers: OperationalRegisters,
+    operational_registers: OperationalRegisters,
+    /// Offset: RuntimeRegistersSpaceOffset
+    runtime_registers: RuntimeRegisters,
 }
 
 impl Registers {
@@ -32,9 +36,14 @@ impl Registers {
             mmio_addr,
             capability_registers.cap_length(),
         ))?;
+        let runtime_registers = RuntimeRegisters::new(RuntimeRegistersOffset::new(
+            mmio_addr,
+            capability_registers.rts_off(),
+        ));
         Ok(Self {
             capability_registers,
             operational_registers,
+            runtime_registers,
         })
     }
 
@@ -44,14 +53,21 @@ impl Registers {
     /// 4. コマンドリングのアドレスをcommand_ring_pointerに設定
     /// 5. EventRingの生成
     /// 6. EventRingをセグメントテーブルに登録
-    pub fn init(&self, allocator: &mut impl MemoryAllocatable) -> PciResult {
+    pub fn init(&self, allocator: &mut impl MemoryAllocatable) -> PciResult<EventRing> {
         self.operational_registers.reset_host_controller();
         self.setup_device_context_max_slots()?;
-        let _device_context_array_addr = unsafe { self.allocate_device_context_array(allocator)? };
+        let _device_context_array_addr = self.allocate_device_context_array(allocator)?;
         self.operational_registers
             .crcr()
             .setup_command_ring(allocator)?;
-        Ok(())
+
+        self.runtime_registers
+            .interrupter_register_set()
+            .setup_event_ring(
+                1,
+                self.capability_registers.hcs_params2().erst_max(),
+                allocator,
+            )
     }
 
     pub fn setup_device_context_max_slots(&self) -> PciResult {

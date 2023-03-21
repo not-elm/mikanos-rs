@@ -24,6 +24,7 @@ pub mod interrupt_pending;
 /// [Xhci Document] : 425 Page
 ///
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+#[derive(Debug)]
 pub struct InterrupterManagementRegister {
     /// Offset: 0
     ip: InterruptPending,

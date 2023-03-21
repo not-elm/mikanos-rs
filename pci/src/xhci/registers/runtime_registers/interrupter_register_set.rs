@@ -1,14 +1,18 @@
 use core::fmt::Debug;
 
 use crate::error::{AllocateReason, PciError, PciResult};
+use crate::VolatileAccessible;
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhci::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
+use crate::xhci::registers::runtime_registers::interrupter_register_set::event_ring_deque_pointer::EventRingDequeuePointer;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_base_address::EventRingSegmentTableBaseAddress;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_size::EventRingSegmentTableSize;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::interrupter_management_register::InterrupterManagementRegister;
 use crate::xhci::registers::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
 use crate::xhci::registers::runtime_registers::RuntimeRegistersOffset;
+use crate::xhci::transfer::event::event_ring::EventRing;
 
+mod event_ring_deque_pointer;
 pub mod event_ring_segment_table_base_address;
 pub mod event_ring_segment_table_size;
 pub mod interrupter_management_register;
@@ -34,6 +38,7 @@ pub mod interrupter_register_set_field;
 /// [Xhci Document] : 424 Page
 ///
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+#[derive(Debug)]
 pub struct InterrupterRegisterSet {
     /// Offset: 0
     iman: InterrupterManagementRegister,
@@ -41,6 +46,7 @@ pub struct InterrupterRegisterSet {
     erstsz: EventRingSegmentTableSize,
     /// Offset: 0x10 Bytes
     erstba: EventRingSegmentTableBaseAddress,
+    erdp: EventRingDequeuePointer,
 }
 
 impl InterrupterRegisterSet {
@@ -49,19 +55,8 @@ impl InterrupterRegisterSet {
             iman: InterrupterManagementRegister::new(offset),
             erstsz: EventRingSegmentTableSize::new(offset),
             erstba: EventRingSegmentTableBaseAddress::new(offset),
+            erdp: EventRingDequeuePointer::new(offset),
         }
-    }
-
-    pub fn iman(&self) -> &InterrupterManagementRegister {
-        &self.iman
-    }
-
-    pub fn erstsz(&self) -> &EventRingSegmentTableSize {
-        &self.erstsz
-    }
-
-    pub fn erstba(&self) -> &EventRingSegmentTableBaseAddress {
-        &self.erstba
     }
 
     pub fn setup_event_ring(
@@ -69,15 +64,22 @@ impl InterrupterRegisterSet {
         segment_table_entry_count: u16,
         erst_max: &EventRingSegmentTableMax,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult {
+    ) -> PciResult<EventRing> {
         self.erstsz
             .update_event_ring_segment_table_size(erst_max, segment_table_entry_count)?;
 
-        let event_ring_segment_table_addr =
-            allocate_event_ring_segment_table(segment_table_entry_count, allocator)?;
+        let event_ring = EventRing::new(32, allocator)?;
 
-        self.erstba
-            .update_event_ring_segment_table_addr(event_ring_segment_table_addr)
+        self.erstba.update_event_ring_segment_table_addr(
+            event_ring.segment_table().segment_table_addr().addr(),
+        )?;
+        self.erdp.update_deque_pointer(
+            event_ring
+                .segment_table()
+                .segments_base_addr()
+                .read_volatile(),
+        )?;
+        Ok(event_ring)
     }
 }
 

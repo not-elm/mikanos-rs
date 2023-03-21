@@ -21,16 +21,22 @@ impl MikanOSPciMemoryAllocator {
 
     unsafe fn align_ptr(&self, align: usize) -> *const u8 {
         let ptr = self.address as *const u8;
-        return if align > 0 && !ptr.is_aligned_to(align) {
+        if align > 0 && !ptr.is_aligned_to(align) {
             ptr.add(ptr.align_offset(align))
         } else {
             ptr
-        };
+        }
     }
     fn end_addr(&self) -> usize {
         let buff = unsafe { MEMORY_POOL.0 };
         let ptr = buff.as_ptr();
         unsafe { ptr.add(buff.len() - 1).addr() + core::mem::size_of::<u8>() }
+    }
+}
+
+impl Default for MikanOSPciMemoryAllocator {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

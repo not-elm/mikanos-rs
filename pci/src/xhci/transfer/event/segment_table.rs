@@ -2,7 +2,7 @@ use macros::Address;
 
 use crate::error::{AllocateReason, PciError, PciResult};
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhci::transfer::event::segment::Segment;
+use crate::xhci::transfer::event::segment::{RingSegmentsBaseAddr, Segment};
 use crate::xhci::transfer::event::segment_table::ring_segment_addr_entry::RingSegmentsBaseAddrEntry;
 use crate::xhci::transfer::event::segment_table::ring_segment_table_field::RingSegmentTableField;
 
@@ -32,6 +32,14 @@ impl SegmentTable {
             ring_segments_base_addr_entry,
             ring_segment,
         })
+    }
+
+    pub fn segment_table_addr(&self) -> SegmentTableAddr {
+        self.segment_table_addr
+    }
+
+    pub fn segments_base_addr(&self) -> &RingSegmentsBaseAddrEntry {
+        &self.ring_segments_base_addr_entry
     }
 }
 

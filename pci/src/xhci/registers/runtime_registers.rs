@@ -1,5 +1,8 @@
 use crate::xhci::registers::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
 use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
+use crate::xhci::registers::runtime_registers::interrupter_register_set::{
+    InterrupterRegisterSet, InterrupterRegisterSetOffset,
+};
 
 pub mod interrupter_register_set;
 
@@ -20,7 +23,24 @@ pub mod interrupter_register_set;
 /// [Xhci Document] : 422 Page
 ///
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-pub struct RuntimeRegisters {}
+#[derive(Debug)]
+pub struct RuntimeRegisters {
+    interrupter_register_set: InterrupterRegisterSet,
+}
+
+impl RuntimeRegisters {
+    pub fn new(offset: RuntimeRegistersOffset) -> Self {
+        Self {
+            interrupter_register_set: InterrupterRegisterSet::new(
+                InterrupterRegisterSetOffset::new(offset, 0),
+            ),
+        }
+    }
+
+    pub fn interrupter_register_set(&self) -> &InterrupterRegisterSet {
+        &self.interrupter_register_set
+    }
+}
 
 /// # Address
 ///

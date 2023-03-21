@@ -1,6 +1,5 @@
 use pci::xhci::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
 use pci::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegister;
-use pci::xhci::registers::operational_registers::usb_command_register::usb_command_register_field::UsbCommandRegisterField;
 
 use crate::test_runner::xhci::{
     command_ring_control_register_offset, operational_registers, registers,
