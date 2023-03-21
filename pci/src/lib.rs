@@ -1,6 +1,8 @@
 #![no_std]
 #![feature(type_alias_impl_trait)]
 #![feature(strict_provenance)]
+#![feature(pointer_is_aligned)]
+#![feature(pointer_byte_offsets)]
 
 use macros::declaration_volatile_accessible;
 
@@ -27,7 +29,8 @@ pub(crate) fn wait_update_32bits_register_for<Addr, Offset>(
 
     Err(PciError::FailedOperateToRegister(
         OperationReason::NotReflectedValue {
-            value: expect_value as usize,
+            value: volatile.read_volatile() as usize,
+            expect: expect_value as usize,
         },
     ))
 }
@@ -45,7 +48,8 @@ pub(crate) fn wait_update_64bits_register_for<Addr, Offset>(
 
     Err(PciError::FailedOperateToRegister(
         OperationReason::NotReflectedValue {
-            value: expect_value as usize,
+            expect: expect_value as usize,
+            value: volatile.read_volatile() as usize,
         },
     ))
 }

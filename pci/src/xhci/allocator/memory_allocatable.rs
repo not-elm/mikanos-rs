@@ -9,7 +9,7 @@ pub trait MemoryAllocatable {
         &mut self,
         bytes: usize,
         align: usize,
-        page_bounds: usize,
+        bounds: usize,
     ) -> Option<AlignedAddress>;
 
     unsafe fn free(&mut self, base_addr: usize);

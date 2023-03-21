@@ -13,6 +13,7 @@ if [ "$QEMU_STATE" = "debug" ]
     -serial stdio \
     -s \
     -S \
+    -m 256M \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
 
 elif [ "$QEMU_STATE" = "test" ]; then
@@ -24,6 +25,7 @@ elif [ "$QEMU_STATE" = "test" ]; then
     -device usb-mouse \
     -serial stdio \
     -display none \
+    -m 256M \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
 
 else
@@ -34,6 +36,7 @@ else
     -device nec-usb-xhci,id=xhci \
     -device usb-mouse \
     -serial stdio \
+    -m 256M \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
 fi
 

@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use macros::VolatileBits;
 
-use crate::error::PciResult;
+use crate::error::{OperationReason, PciError, PciResult};
 use crate::wait_update_64bits_register_for;
 use crate::xhci::bit_mask_zeros_lower_for;
 use crate::xhci::transfer::event::segment::RingSegmentsBaseAddr;
@@ -22,9 +22,13 @@ use crate::xhci::transfer::event::segment_table::SegmentTableAddr;
 pub struct RingSegmentsBaseAddrEntry(usize, PhantomData<SegmentTableAddr>);
 
 impl RingSegmentsBaseAddrEntry {
-    pub fn update_ring_segment_addr(&self, ring_segment_addr: RingSegmentsBaseAddr) -> PciResult {
+    pub fn update_ring_segment_addr(&self, ring_segment_addr: &RingSegmentsBaseAddr) -> PciResult {
         let addr = bit_mask_zeros_lower_for(6, ring_segment_addr.addr()) as u64;
         self.write_volatile(addr);
         wait_update_64bits_register_for(10, addr, self)
+    }
+
+    fn read_base_addr(&self) -> u64 {
+        bit_mask_zeros_lower_for(6, self.read_volatile() as usize) as u64
     }
 }

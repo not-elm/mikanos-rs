@@ -32,7 +32,7 @@ pub enum OperationReason {
     MustBeCommandRingStopped,
     HostControllerNotHalted,
     FailedAllocate,
-    NotReflectedValue { value: usize },
+    NotReflectedValue { expect: usize, value: usize },
     XhcRunning,
     ExceedsEventRingSegmentTableMax { max: u32, value: u16 },
 }

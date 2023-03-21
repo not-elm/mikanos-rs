@@ -2,6 +2,7 @@ use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
+use pci::xhci::registers::capability_registers::structural_parameters2::StructuralParameters2Offset;
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
 use pci::xhci::registers::operational_registers::config_register::ConfigRegisterOffset;
@@ -34,6 +35,11 @@ pub(crate) fn registers() -> Registers {
 
 pub(crate) fn operational_registers() -> OperationalRegisters {
     OperationalRegisters::new(operation_registers_offset()).unwrap()
+}
+
+#[allow(dead_code)]
+pub(crate) fn hcs_params2_offset() -> StructuralParameters2Offset {
+    StructuralParameters2Offset::new(crate::mmio_base_addr())
 }
 
 pub(crate) fn operation_registers_offset() -> OperationalRegistersOffset {

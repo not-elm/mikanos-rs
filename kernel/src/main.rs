@@ -25,9 +25,7 @@ use pci::xhci::registers::capability_registers::structural_parameters1::Structur
 use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
-use pci::xhci::registers::runtime_registers::interrupter_register_set::{
-    InterrupterRegisterSet, InterrupterRegisterSetOffset,
-};
+use pci::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 use pci::xhci::registers::runtime_registers::RuntimeRegistersOffset;
 
 mod qemu;
@@ -40,22 +38,29 @@ declaration_volatile_accessible!();
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> () {
     init_console(frame_buffer_config);
     println!("hello!");
+    use pci::xhci::allocator::memory_allocatable::MemoryAllocatable;
 
     #[cfg(test)]
     test_main();
     serial_println!("hello Serial!");
+
+    unsafe {
+        let mut a = MikanOSPciMemoryAllocator::new();
+        serial_println!(
+            "{}",
+            a.allocate_with_align(64, 64, 64 * 1024)
+                .unwrap()
+                .address()
+                .unwrap()
+        );
+    }
     // reset_controller(
     //     &HostControllerHalted::new(usb_status_register_offset()).unwrap(),
     //     &HostControllerReset::new(operation_registers_offset()),
     //     &ControllerNotReady::new(usb_status_register_offset()).unwrap(),
     // )
     // .unwrap();
-    println!(
-        "RESET!! {:?}",
-        InterrupterRegisterSet::new(interrupter_register_set_offset(0))
-            .setup_event_ring(&mut MikanOSPciMemoryAllocator::new())
-            .unwrap()
-    );
+
     // fill_background(PixelColor::new(0x3E, 0x3E, 0x3E), &frame_buffer_config).unwrap();
     // fill_bottom_bar(PixelColor::new(0x00, 0x00, 0xFF), &frame_buffer_config).unwrap();
     //
@@ -86,6 +91,7 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) -> ()
 
     common_lib::assembly::hlt_forever();
 }
+
 #[allow(dead_code)]
 fn fill_background(color: PixelColor, config: &FrameBufferConfig) -> KernelResult {
     fill_rect_using_global(
