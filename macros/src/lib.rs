@@ -6,8 +6,6 @@ extern crate alloc;
 
 use proc_macro::TokenStream;
 
-use crate::volatile::{ast_declaration_volatile_accessible, ast_volatile_bits};
-
 mod address;
 mod generics;
 mod volatile;
@@ -15,7 +13,7 @@ mod volatile;
 #[cfg(feature = "extra-traits")]
 #[proc_macro]
 pub fn declaration_volatile_accessible(_input: TokenStream) -> TokenStream {
-    ast_declaration_volatile_accessible(_input)
+    volatile::ast_declaration_volatile_accessible(_input)
 }
 
 #[proc_macro_derive(
@@ -23,5 +21,10 @@ pub fn declaration_volatile_accessible(_input: TokenStream) -> TokenStream {
     attributes(volatile_type, bits, offset_bit, add_addr_bytes)
 )]
 pub fn volatile_bits(input: TokenStream) -> TokenStream {
-    ast_volatile_bits(input)
+    volatile::ast_volatile_bits(input)
+}
+
+#[proc_macro_derive(Address)]
+pub fn address(input: TokenStream) -> TokenStream {
+    address::ast_impl_new_address(input)
 }

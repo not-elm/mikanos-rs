@@ -13,6 +13,7 @@ pub mod impls;
 pub mod read;
 pub mod write;
 
+#[allow(dead_code)]
 pub(crate) fn ast_declaration_volatile_accessible(_input: TokenStream) -> TokenStream {
     let expand = quote::quote! {
         pub trait VolatileAccessible<ActualValue, Addr, Offset>{
