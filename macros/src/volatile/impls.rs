@@ -1,7 +1,7 @@
 use proc_macro2::Ident;
 use syn::Type;
 
-pub(crate) fn impl_debug(
+pub(crate) fn ast_impl_debug(
     struct_name: Ident,
     volatile_type: proc_macro2::Ident,
 ) -> proc_macro2::TokenStream {
@@ -38,7 +38,7 @@ fn impl_debug_within_bool(struct_name: Ident) -> proc_macro2::TokenStream {
     }
 }
 
-pub(crate) fn impl_clone(
+pub(crate) fn ast_impl_clone(
     struct_name: Ident,
     phantom_data: Option<Type>,
 ) -> proc_macro2::TokenStream {
