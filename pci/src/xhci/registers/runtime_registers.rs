@@ -40,6 +40,10 @@ impl RuntimeRegisters {
     pub fn interrupter_register_set(&self) -> &InterrupterRegisterSet {
         &self.interrupter_register_set
     }
+
+    pub fn a(&self) {
+        self.interrupter_register_set.dp();
+    }
 }
 
 /// # Address

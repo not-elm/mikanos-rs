@@ -1,3 +1,5 @@
+use kernel_lib::println;
+
 use crate::error::OperationReason::NotReflectedValue;
 use crate::error::{AllocateReason, OperationReason, PciError, PciResult};
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
@@ -9,6 +11,7 @@ use crate::xhci::registers::operational_registers::device_context_base_address_a
 use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 use crate::xhci::registers::operational_registers::usb_command_register::run_stop::RunStop;
 use crate::xhci::registers::operational_registers::OperationalRegisters;
+use crate::xhci::registers::port_registers::PortRegisters;
 use crate::xhci::registers::runtime_registers::{RuntimeRegisters, RuntimeRegistersOffset};
 use crate::xhci::transfer::event::event_ring::EventRing;
 use crate::VolatileAccessible;
@@ -17,10 +20,12 @@ pub mod capability_registers;
 pub mod doorbell_registers;
 pub mod memory_mapped_addr;
 pub mod operational_registers;
+mod port_registers;
 pub mod runtime_registers;
 
 #[derive(Debug)]
 pub struct Registers {
+    mmio_addr: MemoryMappedAddr,
     /// Offset: 0
     capability_registers: CapabilityRegisters,
     /// Offset: CapLength Byte
@@ -41,6 +46,7 @@ impl Registers {
             capability_registers.rts_off(),
         ));
         Ok(Self {
+            mmio_addr,
             capability_registers,
             operational_registers,
             runtime_registers,
@@ -70,15 +76,18 @@ impl Registers {
                 allocator,
             )?;
 
-        self.operational_registers
-            .usb_command()
-            .inte()
-            .write_flag_volatile(true);
+        // self.operational_registers
+        //     .usb_command()
+        //     .inte()
+        //     .write_flag_volatile(true);
         Ok(event_ring)
     }
 
     pub fn run(&self) {
         self.operational_registers.run_host_controller();
+    }
+    pub fn a(&self) {
+        self.runtime_registers.a()
     }
 
     pub fn setup_device_context_max_slots(&self) -> PciResult {
@@ -86,6 +95,12 @@ impl Registers {
             self.operational_registers.usb_command().run_stop(),
             self.capability_registers.hcs_params1().max_slots(),
             self.operational_registers.config().max_slots_en(),
+        )
+    }
+    pub fn port_registers(&self) -> PortRegisters {
+        PortRegisters::new(
+            OperationalRegistersOffset::new(self.mmio_addr, self.capability_registers.cap_length()),
+            self.capability_registers.hcs_params1().max_ports(),
         )
     }
 

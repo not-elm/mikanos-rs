@@ -28,7 +28,7 @@ impl RingSegmentsBaseAddrEntry {
         wait_update_64bits_register_for(10, addr, self)
     }
 
-    fn read_base_addr(&self) -> u64 {
+    pub fn read_base_addr(&self) -> u64 {
         bit_mask_zeros_lower_for(6, self.read_volatile() as usize) as u64
     }
 }

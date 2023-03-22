@@ -1,5 +1,7 @@
 use core::fmt::Debug;
 
+use kernel_lib::println;
+
 use crate::error::{AllocateReason, PciError, PciResult};
 use crate::VolatileAccessible;
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
@@ -79,10 +81,15 @@ impl InterrupterRegisterSet {
                 .segments_base_addr()
                 .read_volatile(),
         )?;
-
-        self.iman.ie().write_flag_volatile(true);
-        self.iman.ip().write_flag_volatile(true);
+        //
+        // self.iman.ie().write_flag_volatile(true);
+        // self.iman.ip().write_flag_volatile(true);
         Ok(event_ring)
+    }
+
+    pub fn dp(&self) {
+        let tb = ((self.erdp.read_volatile() << 4) as *mut u16);
+        println!("{:x}", unsafe { *tb });
     }
 }
 

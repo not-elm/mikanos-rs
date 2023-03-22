@@ -1,5 +1,7 @@
 use core::marker::PhantomData;
 
+use crate::error::PciResult;
+use crate::wait_update_64bits_register_for;
 use macros::VolatileBits;
 
 use crate::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
@@ -16,12 +18,12 @@ use crate::xhci::registers::operational_registers::command_ring_control_register
 /// リングポインタの下位6ビットは常に0にする必要があります。
 #[derive(VolatileBits)]
 #[volatile_type(u64)]
-#[bits(58)]
 #[offset_bit(6)]
 pub struct CommandRingPointer(usize, PhantomData<CommandRingControlRegisterOffset>);
 
 impl CommandRingPointer {
-    pub fn set_command_ring_addr(&self, addr: u64) {
+    pub fn update_command_ring_addr(&self, addr: u64) -> PciResult {
         self.write_volatile(addr >> 6);
+        wait_update_64bits_register_for(10, addr >> 6, self)
     }
 }

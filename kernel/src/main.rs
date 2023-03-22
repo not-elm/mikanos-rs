@@ -46,17 +46,20 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) {
     serial_println!("hello Serial!");
 
     let registers = Registers::new(mmio_base_addr()).unwrap();
+
+    let ps = registers.port_registers();
+
     let mut event_ring = registers
         .init(&mut MikanOSPciMemoryAllocator::new())
         .unwrap();
     registers.run();
 
+    for p in ps {
+        p.reset();
+        println!("port = {:?}", p);
+    }
     loop {
-        let trb = unsafe { *event_ring.trb() };
-
-        if trb != 0 {
-            println!("{:b}", trb);
-        }
+        registers.a();
     }
     // reset_controller(
     //     &HostControllerHalted::new(usb_status_register_offset()).unwrap(),
