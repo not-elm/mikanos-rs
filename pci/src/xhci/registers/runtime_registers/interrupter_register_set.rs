@@ -79,6 +79,9 @@ impl InterrupterRegisterSet {
                 .segments_base_addr()
                 .read_volatile(),
         )?;
+
+        self.iman.ie().write_flag_volatile(true);
+        self.iman.ip().write_flag_volatile(true);
         Ok(event_ring)
     }
 }

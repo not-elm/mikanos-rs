@@ -33,7 +33,9 @@ impl SegmentTable {
             ring_segment,
         })
     }
-
+    pub fn trb(&mut self) -> *const u16 {
+        self.ring_segment.trb()
+    }
     pub fn segment_table_addr(&self) -> SegmentTableAddr {
         self.segment_table_addr
     }

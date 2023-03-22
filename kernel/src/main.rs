@@ -27,6 +27,7 @@ use pci::xhci::registers::operational_registers::operation_registers_offset::Ope
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 use pci::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 use pci::xhci::registers::runtime_registers::RuntimeRegistersOffset;
+use pci::xhci::registers::Registers;
 
 mod qemu;
 mod serial;
@@ -44,15 +45,18 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) {
     test_main();
     serial_println!("hello Serial!");
 
-    unsafe {
-        let mut a = MikanOSPciMemoryAllocator::new();
-        serial_println!(
-            "{}",
-            a.allocate_with_align(64, 64, 64 * 1024)
-                .unwrap()
-                .address()
-                .unwrap()
-        );
+    let registers = Registers::new(mmio_base_addr()).unwrap();
+    let mut event_ring = registers
+        .init(&mut MikanOSPciMemoryAllocator::new())
+        .unwrap();
+    registers.run();
+
+    loop {
+        let trb = unsafe { *event_ring.trb() };
+        println!("{}", registers)
+        if trb != 0 {
+            println!("{:b}", trb);
+        }
     }
     // reset_controller(
     //     &HostControllerHalted::new(usb_status_register_offset()).unwrap(),

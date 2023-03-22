@@ -61,13 +61,24 @@ impl Registers {
             .crcr()
             .setup_command_ring(allocator)?;
 
-        self.runtime_registers
+        let event_ring = self
+            .runtime_registers
             .interrupter_register_set()
             .setup_event_ring(
                 1,
                 self.capability_registers.hcs_params2().erst_max(),
                 allocator,
-            )
+            )?;
+
+        self.operational_registers
+            .usb_command()
+            .inte()
+            .write_flag_volatile(true);
+        Ok(event_ring)
+    }
+
+    pub fn run(&self) {
+        self.operational_registers.run_host_controller();
     }
 
     pub fn setup_device_context_max_slots(&self) -> PciResult {

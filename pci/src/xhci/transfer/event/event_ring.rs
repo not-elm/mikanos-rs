@@ -19,6 +19,8 @@ impl EventRing {
     pub fn segment_table(&self) -> &SegmentTable {
         &self.segment_table
     }
-    
-    
+
+    pub fn trb(&mut self) -> *const u16 {
+        self.segment_table.trb()
+    }
 }
