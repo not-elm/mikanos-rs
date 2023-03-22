@@ -1,22 +1,32 @@
+use crate::VolatileAccessible;
 use crate::xhci::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
+use crate::xhci::registers::capability_registers::structural_parameters1::number_of_ports::NumberOfPorts;
+use crate::xhci::registers::capability_registers::structural_parameters1::structural_parameters1_field::StructuralParameters1Field;
 use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
 
 pub mod number_of_device_slots;
+mod number_of_ports;
+mod structural_parameters1_field;
 
 #[derive(Debug)]
 pub struct StructuralParameters1 {
     max_slots: NumberOfDeviceSlots,
+    max_ports: NumberOfPorts,
 }
 
 impl StructuralParameters1 {
     pub fn new(offset: StructuralParameters1Offset) -> Self {
         Self {
             max_slots: NumberOfDeviceSlots::new(offset),
+            max_ports: NumberOfPorts::new(offset),
         }
     }
 
     pub fn max_slots(&self) -> &NumberOfDeviceSlots {
         &self.max_slots
+    }
+    pub fn max_ports(&self) -> u32 {
+        self.max_ports.read_volatile()
     }
 }
 

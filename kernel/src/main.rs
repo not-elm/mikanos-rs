@@ -53,7 +53,7 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) {
 
     loop {
         let trb = unsafe { *event_ring.trb() };
-        println!("{}", registers)
+
         if trb != 0 {
             println!("{:b}", trb);
         }
