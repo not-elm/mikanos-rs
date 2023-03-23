@@ -1,7 +1,7 @@
 use crate::error::PciResult;
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhci::transfer::event::segment::Segment;
-use crate::xhci::transfer::event::segment_table::{SegmentTable, SegmentTableAddr};
+use crate::xhci::transfer::event::segment_table::SegmentTable;
 
 #[derive(Debug)]
 pub struct EventRing {
@@ -18,9 +18,5 @@ impl EventRing {
 
     pub fn segment_table(&self) -> &SegmentTable {
         &self.segment_table
-    }
-
-    pub fn trb(&mut self) -> *const u16 {
-        self.segment_table.trb()
     }
 }

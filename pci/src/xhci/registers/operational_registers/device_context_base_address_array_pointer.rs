@@ -1,9 +1,6 @@
-use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
-
 use macros::VolatileBits;
 
-mod dcbaap_hi;
-mod dcbaap_lo;
+use crate::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
 
 ///DCBAAP
 ///

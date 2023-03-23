@@ -18,7 +18,6 @@ use macros::declaration_volatile_accessible;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
-use pci::xhci::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
 use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
 use pci::xhci::registers::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
 use pci::xhci::registers::capability_registers::structural_parameters1::StructuralParameters1Offset;
@@ -27,7 +26,6 @@ use pci::xhci::registers::operational_registers::operation_registers_offset::Ope
 use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 use pci::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 use pci::xhci::registers::runtime_registers::RuntimeRegistersOffset;
-use pci::xhci::registers::Registers;
 
 mod qemu;
 mod serial;
@@ -39,59 +37,16 @@ declaration_volatile_accessible!();
 pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) {
     init_console(frame_buffer_config);
     println!("hello!");
-    use pci::xhci::allocator::memory_allocatable::MemoryAllocatable;
 
     #[cfg(test)]
     test_main();
     serial_println!("hello Serial!");
 
-    let registers = Registers::new(mmio_base_addr()).unwrap();
-    let mut event_ring = registers
-        .init(&mut MikanOSPciMemoryAllocator::new())
-        .unwrap();
-    registers.run();
-
-    loop {
-        let trb = unsafe { *event_ring.trb() };
-        println!("{}", registers)
-        if trb != 0 {
-            println!("{:b}", trb);
-        }
-    }
-    // reset_controller(
-    //     &HostControllerHalted::new(usb_status_register_offset()).unwrap(),
-    //     &HostControllerReset::new(operation_registers_offset()),
-    //     &ControllerNotReady::new(usb_status_register_offset()).unwrap(),
-    // )
-    // .unwrap();
-
-    // fill_background(PixelColor::new(0x3E, 0x3E, 0x3E), &frame_buffer_config).unwrap();
-    // fill_bottom_bar(PixelColor::new(0x00, 0x00, 0xFF), &frame_buffer_config).unwrap();
-    //
-    // draw_cursor().unwrap();
-
-    // let mmio_base_addr = PciDeviceSearcher::new()
-    //     .class_code(ClassCode::SerialBus)
-    //     .sub_class(Subclass::Usb)
-    //     .search()
-    //     .unwrap()
-    //     .cast_device()
-    //     .expect_single()
-    //     .unwrap()
-    //     .expect_general()
-    //     .unwrap()
-    //     .mmio_base_addr();
-    //
-    // let cap_length = CapabilityLength::new(mmio_base_addr).unwrap();
-    //
-    // let addr =
-    //     UsbStatusRegisterOffset::new(OperationRegistersOffset::new(mmio_base_addr, cap_length))
-    //         .offset();
-    // println!("operation_registers_addr = {:x}", addr);
-    // let data = unsafe { core::ptr::read_volatile((addr as *const u32)) };
-    // println!("mmio_base_addr = {:b}", data);
-    // let data = unsafe { core::ptr::read_volatile((addr as *const u8)) };
-    // println!("mmio_base_addr = {:b}", data);
+    // let registers = Registers::new(mmio_base_addr()).unwrap();
+    // let mut event_ring = registers
+    //     .init(&mut MikanOSPciMemoryAllocator::new())
+    //     .unwrap();
+    // registers.run();
 
     common_lib::assembly::hlt_forever();
 }

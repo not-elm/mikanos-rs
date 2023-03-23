@@ -1,6 +1,6 @@
 use core::fmt::Debug;
 
-use crate::error::{AllocateReason, PciError, PciResult};
+use crate::error::PciResult;
 use crate::VolatileAccessible;
 use crate::xhci::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhci::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
@@ -83,22 +83,6 @@ impl InterrupterRegisterSet {
         self.iman.ie().write_flag_volatile(true);
         self.iman.ip().write_flag_volatile(true);
         Ok(event_ring)
-    }
-}
-
-fn allocate_event_ring_segment_table(
-    segment_table_entry_count: u16,
-    allocator: &mut impl MemoryAllocatable,
-) -> PciResult<usize> {
-    unsafe {
-        allocator
-            .allocate_with_align(
-                core::mem::size_of::<u32>() * 4 * segment_table_entry_count as usize,
-                64,
-                64 * 1024,
-            )
-            .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
-            .address()
     }
 }
 

@@ -42,22 +42,26 @@ pub(crate) fn hcs_params2_offset() -> StructuralParameters2Offset {
     StructuralParameters2Offset::new(crate::mmio_base_addr())
 }
 
+#[allow(dead_code)]
 pub(crate) fn operation_registers_offset() -> OperationalRegistersOffset {
     let mmio_base_addr = mmio_base_addr();
     let cap_length = CapabilityLength::new_check_length(mmio_base_addr).unwrap();
     OperationalRegistersOffset::new(mmio_base_addr, &cap_length)
 }
 
+#[allow(dead_code)]
 pub(crate) fn config_register_offset() -> ConfigRegisterOffset {
     ConfigRegisterOffset::new(operation_registers_offset())
 }
 
+#[allow(dead_code)]
 pub(crate) fn usb_status_register_offset() -> UsbStatusRegisterOffset {
     let mmio_addr = mmio_base_addr();
     let cap_length = CapabilityLength::new_check_length(mmio_addr).unwrap();
     UsbStatusRegisterOffset::new(OperationalRegistersOffset::new(mmio_addr, &cap_length))
 }
 
+#[allow(dead_code)]
 pub(crate) fn dcbaap_offset() -> DeviceContextBaseAddressArrayPointerOffset {
     DeviceContextBaseAddressArrayPointerOffset::new(operation_registers_offset())
 }

@@ -30,6 +30,7 @@ pub enum TrbType {
 }
 
 impl TrbType {
+    #[allow(dead_code)]
     pub fn new(trb_addr: TrbAddr) -> PciResult<TrbType> {
         let trb_type = TrbTypeBit::new_uncheck(trb_addr.addr()).read_volatile();
         match trb_type {

@@ -7,21 +7,15 @@ use crate::xhci::transfer::request_block::TRB_SIZE;
 #[derive(Debug)]
 pub struct Segment {
     segment_base_addr: RingSegmentsBaseAddr,
-    index: usize,
-    trb_buffer_len: usize,
 }
 
 impl Segment {
     pub fn new(trb_buffer_len: usize, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
         Ok(Self {
             segment_base_addr: allocate_segment(trb_buffer_len, allocator)?,
-            index: 0,
-            trb_buffer_len,
         })
     }
-    pub fn trb(&mut self) -> *const u16 {
-        (self.segment_base_addr.addr() as *const u16)
-    }
+
     pub fn base_addr(&self) -> &RingSegmentsBaseAddr {
         &self.segment_base_addr
     }

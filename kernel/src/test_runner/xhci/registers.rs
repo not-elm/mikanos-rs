@@ -58,9 +58,7 @@ fn execute_set_device_context_max_slot() {
 }
 
 fn execute_allocate_device_context_array() {
-    unsafe {
-        registers()
-            .allocate_device_context_array(&mut MikanOSPciMemoryAllocator::new())
-            .unwrap()
-    };
+    registers()
+        .allocate_device_context_array(&mut MikanOSPciMemoryAllocator::new())
+        .unwrap();
 }
