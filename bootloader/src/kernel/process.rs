@@ -46,7 +46,7 @@ pub fn execute_kernel(
     if let Ok((_, memory_map)) =
         system_table.exit_boot_services(handle, memory_map_vec.as_mut_slice())
     {
-        entry_point.execute(frame_buffer_config, &memory_map);
+        entry_point.execute(&frame_buffer_config, &memory_map);
         core::mem::forget(memory_map_vec);
         Ok(())
     } else {

@@ -12,7 +12,7 @@
   "pre-link-args": {
     "ld": [
       "--entry",
-      "kernel_main",
+      "kernel_entry_point",
       "--image-base=0x100000",
       "--static",
       "-z",

@@ -65,9 +65,6 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "common-lib"
 version = "0.1.0"
-dependencies = [
- "uefi",
-]
 
 [[package]]
 name = "enum-try-from"
@@ -79,6 +76,7 @@ checksum = "2834b37e663ed8feababf536696a8495fff40a398ba68cafc94dc0a47bd737c3"
 name = "kernel"
 version = "0.1.0"
 dependencies = [
+ "cc",
  "common-lib",
  "kernel-lib",
  "lazy_static",

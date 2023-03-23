@@ -6,10 +6,12 @@
 #![test_runner(test_runner::my_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+use core::arch::asm;
 use core::panic::PanicInfo;
 
-use uefi::table::boot::MemoryMapIter;
+use uefi::table::boot::{MemoryMapIter, MemoryType};
 
+use crate::entry_point::KERNEL_MAIN_STACK;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 use kernel_lib::error::KernelResult;
@@ -29,6 +31,7 @@ use pci::xhci::registers::operational_registers::usb_status_register::usb_status
 use pci::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 use pci::xhci::registers::runtime_registers::RuntimeRegistersOffset;
 
+mod entry_point;
 mod qemu;
 mod serial;
 #[cfg(test)]
@@ -36,11 +39,30 @@ mod test_runner;
 declaration_volatile_accessible!();
 
 #[no_mangle]
-pub extern "sysv64" fn kernel_main(
-    frame_buffer_config: FrameBufferConfig,
+pub extern "sysv64" fn kernel_entry_point(
+    frame_buffer_config: &FrameBufferConfig,
     memory_map: &MemoryMapIter,
 ) {
-    init_console(frame_buffer_config);
+    let address = KERNEL_MAIN_STACK.end_addr() - 1024;
+    serial_println!("address={:x}", address);
+    unsafe {
+        asm!(
+            "mov rsp, {0}",
+            "call kernel_main",
+            in(reg) address,
+            in("rdi") frame_buffer_config,
+            in("esi") memory_map,
+            clobber_abi("sysv64")
+        )
+    }
+}
+
+#[no_mangle]
+pub extern "sysv64" fn kernel_main(
+    frame_buffer_config: &FrameBufferConfig,
+    memory_map: &MemoryMapIter,
+) {
+    init_console(frame_buffer_config.clone());
     println!("hello!");
 
     #[cfg(test)]
@@ -59,6 +81,15 @@ pub extern "sysv64" fn kernel_main(
     // registers.run();
 
     common_lib::assembly::hlt_forever();
+}
+
+fn is_available(memory_type: MemoryType) -> bool {
+    match memory_type {
+        MemoryType::BOOT_SERVICES_CODE
+        | MemoryType::BOOT_SERVICES_DATA
+        | MemoryType::CONVENTIONAL => true,
+        _ => false,
+    }
 }
 
 #[allow(dead_code)]
