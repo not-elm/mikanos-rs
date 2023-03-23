@@ -30,13 +30,18 @@ Device Context Base Address Array Pointer Register(DCBAAP)というレジスタ�
 
 32Byte * 31のサイズ
 
-## Command Ring Control Register(CRCR)
+## イベントリングが反応しない不具合
 
-Command Ring Control Register (CRCR)
-Address: Operational Base + (18h)
-Default Value: 0000 0000 0000 0000h
-Attribute: RW
-Size: 64 bits
-The Command Ring Control Register provides Command Ring control and status
-capabilities, and identifies the address and Cycle bit state of the Command Ring
-Dequeue Pointer.
+イベントリングにイベントコマンドが渡された場合、デキューポインタの参照先に値がセットされます。
+
+いろいろ調べた結果、XHC起動からイベントの受信だけなら以下の手順だけでできることが判明しました。
+1. xHC Reset
+2. Event Ring 登録
+3. xHc Run
+
+しかし、自分のコード上で動かしても全く受信されず...またいろいろ調べた結果
+EventRingDequeuePointerに渡すアドレスは物理アドレスの必要がありますが、現状仮想アドレスになっていることが原因？
+
+UEIF上のBootServiceが動いている間は恒等マップになっているようですが、Exit Boot Serviceで終了させた後はそのマッピングも破棄される？
+
+取り合えずMikanOSのDay08の恒等マップの設定まで行ってみることにします。
