@@ -43,9 +43,11 @@ pub fn execute_kernel(
 
     let frame_buffer_config = obtain_frame_buffer_config(&mut open_gop(&system_table).unwrap());
 
-    if let Ok(_) = system_table.exit_boot_services(handle, memory_map_vec.as_mut_slice()) {
+    if let Ok((_, memory_map)) =
+        system_table.exit_boot_services(handle, memory_map_vec.as_mut_slice())
+    {
+        entry_point.execute(frame_buffer_config, &memory_map);
         core::mem::forget(memory_map_vec);
-        entry_point.execute(frame_buffer_config);
         Ok(())
     } else {
         Err(())

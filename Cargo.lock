@@ -46,6 +46,7 @@ name = "bootloader-lib"
 version = "0.1.0"
 dependencies = [
  "common-lib",
+ "uefi",
  "uefi-services",
 ]
 
@@ -64,6 +65,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "common-lib"
 version = "0.1.0"
+dependencies = [
+ "uefi",
+]
 
 [[package]]
 name = "enum-try-from"
@@ -82,6 +86,7 @@ dependencies = [
  "pci",
  "spin 0.9.5",
  "uart_16550",
+ "uefi",
 ]
 
 [[package]]

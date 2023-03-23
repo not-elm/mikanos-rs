@@ -8,6 +8,8 @@
 
 use core::panic::PanicInfo;
 
+use uefi::table::boot::MemoryMapIter;
+
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 use kernel_lib::error::KernelResult;
@@ -34,7 +36,10 @@ mod test_runner;
 declaration_volatile_accessible!();
 
 #[no_mangle]
-pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) {
+pub extern "sysv64" fn kernel_main(
+    frame_buffer_config: FrameBufferConfig,
+    memory_map: &MemoryMapIter,
+) {
     init_console(frame_buffer_config);
     println!("hello!");
 
@@ -42,6 +47,11 @@ pub extern "sysv64" fn kernel_main(frame_buffer_config: FrameBufferConfig) {
     test_main();
     serial_println!("hello Serial!");
 
+    fill_background(PixelColor::new(0, 0, 0x22), &frame_buffer_config).unwrap();
+    fill_bottom_bar(PixelColor::new(0, 0, 0xFF), &frame_buffer_config).unwrap();
+    for m in memory_map.clone() {
+        println!("{:?}", m);
+    }
     // let registers = Registers::new(mmio_base_addr()).unwrap();
     // let mut event_ring = registers
     //     .init(&mut MikanOSPciMemoryAllocator::new())

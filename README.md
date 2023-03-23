@@ -107,3 +107,6 @@ GraphicOutputProtocolを使い、ブートローダーからピクセルを描�
 
 println!マクロの実装をする！
 
+## Day08a
+
+メモリーマップをカーネルに渡す！
