@@ -8,6 +8,7 @@ edition = "2021"
 common-lib = { path = "../common-lib" }
 once = "0.3.4"
 spin = "0.9.5"
+uefi = { version = "0.19.0" }
 
 
 [build-dependencies]

@@ -11,13 +11,13 @@ use core::panic::PanicInfo;
 
 use uefi::table::boot::{MemoryMapIter, MemoryType};
 
-use crate::entry_point::KERNEL_MAIN_STACK;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::println;
+use kernel_lib::stack::KERNEL_STACK;
 use macros::declaration_volatile_accessible;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
@@ -31,7 +31,6 @@ use pci::xhci::registers::operational_registers::usb_status_register::usb_status
 use pci::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 use pci::xhci::registers::runtime_registers::RuntimeRegistersOffset;
 
-mod entry_point;
 mod qemu;
 mod serial;
 #[cfg(test)]
@@ -43,7 +42,7 @@ pub extern "sysv64" fn kernel_entry_point(
     frame_buffer_config: &FrameBufferConfig,
     memory_map: &MemoryMapIter,
 ) {
-    let address = KERNEL_MAIN_STACK.end_addr() - 1024;
+    let address = KERNEL_STACK.end_addr() - 1024;
     serial_println!("address={:x}", address);
     unsafe {
         asm!(

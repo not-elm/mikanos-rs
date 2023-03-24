@@ -95,6 +95,7 @@ dependencies = [
  "common-lib",
  "once",
  "spin 0.9.5",
+ "uefi",
 ]
 
 [[package]]
