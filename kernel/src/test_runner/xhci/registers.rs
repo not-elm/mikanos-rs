@@ -7,6 +7,7 @@ use crate::test_runner::xhci::{
 
 mod capability_registers;
 mod operational_registers;
+mod port_register;
 mod runtime_registers;
 mod transfer;
 

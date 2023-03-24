@@ -93,6 +93,6 @@ fn register_command_ring(crcr: &CommandRingControlRegister, command_ring_addr: u
     }
     crcr.rcs.write_flag_volatile(true);
     crcr.command_ring_pointer
-        .set_command_ring_addr(command_ring_addr);
+        .update_command_ring_addr(command_ring_addr)?;
     Ok(())
 }

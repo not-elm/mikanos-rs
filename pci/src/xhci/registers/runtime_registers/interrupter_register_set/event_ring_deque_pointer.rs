@@ -34,7 +34,7 @@ pub struct EventRingDequeuePointer(usize, PhantomData<InterrupterRegisterSetOffs
 
 impl EventRingDequeuePointer {
     pub(crate) fn update_deque_pointer(&self, deque_ptr_addr: u64) -> PciResult {
-        self.write_volatile(deque_ptr_addr);
-        wait_update_64bits_register_for(10, deque_ptr_addr, self)
+        self.write_volatile(deque_ptr_addr >> 4);
+        wait_update_64bits_register_for(10, deque_ptr_addr >> 4, self)
     }
 }
