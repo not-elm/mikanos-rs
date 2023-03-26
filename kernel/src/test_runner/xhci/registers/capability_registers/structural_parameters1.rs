@@ -1,4 +1,4 @@
-use pci::xhci::registers::capability_registers::structural_parameters1::StructuralParameters1;
+use pci::xhc::registers::capability_registers::structural_parameters1::StructuralParameters1;
 
 use crate::{hcs1_offset, serial_println};
 

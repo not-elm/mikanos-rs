@@ -1,8 +1,8 @@
-use pci::xhci::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
-use pci::xhci::registers::capability_registers::structural_parameters2::structural_parameters2_field::StructuralParameters2Field;
-use pci::xhci::registers::capability_registers::structural_parameters2::StructuralParameters2Offset;
-use pci::xhci::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_size::EventRingSegmentTableSize;
-use pci::xhci::registers::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
+use pci::xhc::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
+use pci::xhc::registers::capability_registers::structural_parameters2::structural_parameters2_field::StructuralParameters2Field;
+use pci::xhc::registers::capability_registers::structural_parameters2::StructuralParameters2Offset;
+use pci::xhc::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_size::EventRingSegmentTableSize;
+use pci::xhc::registers::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
 
 use crate::test_runner::xhci::mmio_base_addr;
 use crate::test_runner::xhci::registers::execute_reset_host_controller;

@@ -3,6 +3,12 @@
 version = 3
 
 [[package]]
+name = "accessor"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd8b2abd55bf1f9cffbf00fd594566c51a9d31402553284920c1309ca8351086"
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -83,19 +89,24 @@ dependencies = [
  "macros",
  "pci",
  "spin 0.9.5",
- "uart_16550",
  "uefi",
+ "x86_64",
+ "xhci",
 ]
 
 [[package]]
 name = "kernel-lib"
 version = "0.1.0"
 dependencies = [
+ "bitfield-struct",
  "cc",
  "common-lib",
+ "lazy_static",
  "once",
  "spin 0.9.5",
+ "uart_16550",
  "uefi",
+ "x86_64",
 ]
 
 [[package]]
@@ -137,10 +148,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-derive"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "876a53fff98e03a936a674b29568b0e605f06b29372c2489ff4de23f1949743d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "once"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60bfe75a40f755f162b794140436c57845cb106fd1467598631c76c6fff08e28"
+
+[[package]]
+name = "paste"
+version = "1.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
 
 [[package]]
 name = "pci"
@@ -150,6 +187,7 @@ dependencies = [
  "enum-try-from",
  "kernel-lib",
  "macros",
+ "xhci",
 ]
 
 [[package]]
@@ -305,4 +343,17 @@ dependencies = [
  "bitflags",
  "rustversion",
  "volatile",
+]
+
+[[package]]
+name = "xhci"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aad8d87662cea0d5272e94c582376124ba9ce42c97c3022e251736f215dd9863"
+dependencies = [
+ "accessor",
+ "bit_field",
+ "num-derive",
+ "num-traits",
+ "paste",
 ]

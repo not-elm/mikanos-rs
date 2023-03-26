@@ -6,63 +6,67 @@
 #![test_runner(test_runner::my_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-use core::arch::asm;
+use core::num::NonZeroUsize;
+use core::ops::{Add, DerefMut};
 use core::panic::PanicInfo;
 
 use uefi::table::boot::{MemoryMapIter, MemoryType};
+use x86_64::structures::paging::mapper::CleanUp;
+use x86_64::structures::paging::{FrameAllocator, Mapper, PageSize, Translate};
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::println;
-use kernel_lib::stack::KERNEL_STACK;
-use macros::declaration_volatile_accessible;
+use kernel_lib::segment::setup_segments;
+use kernel_lib::{println, serial_println};
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
-use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
-use pci::xhci::registers::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
-use pci::xhci::registers::capability_registers::structural_parameters1::StructuralParameters1Offset;
-use pci::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
-use pci::xhci::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
-use pci::xhci::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
-use pci::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
-use pci::xhci::registers::runtime_registers::RuntimeRegistersOffset;
+use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
+use pci::xhc::registers::capability_registers::capability_length::CapabilityLength;
+use pci::xhc::registers::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
+use pci::xhc::registers::capability_registers::structural_parameters1::StructuralParameters1Offset;
+use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
+use pci::xhc::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
+use pci::xhc::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
+use pci::xhc::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
+use pci::xhc::registers::runtime_registers::RuntimeRegistersOffset;
+use pci::xhc::xhci_library_registers::XhciLibraryRegisters;
+use pci::xhc::XhcController;
 
 mod qemu;
-mod serial;
 #[cfg(test)]
 mod test_runner;
-declaration_volatile_accessible!();
 
-#[no_mangle]
-pub extern "sysv64" fn kernel_entry_point(
-    frame_buffer_config: &FrameBufferConfig,
-    memory_map: &MemoryMapIter,
-) {
-    let address = KERNEL_STACK.end_addr() - 1024;
-    serial_println!("address={:x}", address);
-    unsafe {
-        asm!(
-            "mov rsp, {0}",
-            "call kernel_main",
-            in(reg) address,
-            in("rdi") frame_buffer_config,
-            in("esi") memory_map,
-            clobber_abi("sysv64")
-        )
-    }
-}
+// #[no_mangle]
+// pub extern "sysv64" fn kernel_entry_point(
+//     frame_buffer_config: &FrameBufferConfig,
+//     memory_map: &MemoryMapIter,
+// ) {
+//     let address = KERNEL_STACK.end_addr();
+//     serial_println!("address={:x}", address);
+//     unsafe {
+//         asm!(
+//             "mov rsp, {0}",
+//             "call kernel_main",
+//
+//             in(reg) address,
+//             in("rdi") frame_buffer_config,
+//             in("esi") memory_map,
+//             clobber_abi("sysv64")
+//         )
+//     }
+// }
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
-    memory_map: &MemoryMapIter,
+    _memory_map: &MemoryMapIter,
 ) {
     init_console(frame_buffer_config.clone());
-    println!("hello!");
+    unsafe { setup_segments() };
 
     #[cfg(test)]
     test_main();
@@ -70,22 +74,43 @@ pub extern "sysv64" fn kernel_main(
 
     fill_background(PixelColor::new(0, 0, 0x22), &frame_buffer_config).unwrap();
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), &frame_buffer_config).unwrap();
-    for m in memory_map.clone() {
-        println!("{:?}", m);
+    serial_println!("MMIO ADDRESS = {:x}", mmio_base_addr().addr());
+    let mut registers = pci::xhc::registers::Registers::new(mmio_base_addr()).unwrap();
+    let mut allocator = MikanOSPciMemoryAllocator::new();
+
+    registers.init(&mut allocator).unwrap();
+    let mut xhc_controller = XhcController::new(
+        XhciLibraryRegisters::new(mmio_base_addr(), IdentityMapper()),
+        &mut MikanOSPciMemoryAllocator::new(),
+    )
+    .unwrap();
+
+    loop {
+        registers.trb();
     }
-    // let registers = Registers::new(mmio_base_addr()).unwrap();
-    // let mut event_ring = registers
-    //     .init(&mut MikanOSPciMemoryAllocator::new())
-    //     .unwrap();
-    // registers.run();
+    xhc_controller.start_event_pooling();
 
     common_lib::assembly::hlt_forever();
 }
 
+#[derive(Clone)]
+struct IdentityMapper();
+
+impl xhci::accessor::Mapper for IdentityMapper {
+    unsafe fn map(&mut self, phys_start: usize, _bytes: usize) -> NonZeroUsize {
+        return NonZeroUsize::new_unchecked(phys_start);
+    }
+
+    fn unmap(&mut self, _virt_start: usize, _bytes: usize) {}
+}
+
+#[allow(dead_code)]
 fn is_available(memory_type: MemoryType) -> bool {
     match memory_type {
         MemoryType::BOOT_SERVICES_CODE
         | MemoryType::BOOT_SERVICES_DATA
+        | MemoryType::MMIO
+        | MemoryType::MMIO_PORT_SPACE
         | MemoryType::CONVENTIONAL => true,
         _ => false,
     }

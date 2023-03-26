@@ -1,5 +1,5 @@
 use crate::{operation_registers_offset, serial_println};
-use pci::xhci::registers::port_registers::port::{Port, PortRegisterAddr};
+use pci::xhc::registers::port_registers::port::{Port, PortRegisterAddr};
 
 #[test_case]
 fn it_current_connect() {

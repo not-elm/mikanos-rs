@@ -1,6 +1,6 @@
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::ConfigurationSpace;
-use crate::xhci::registers::memory_mapped_addr::MemoryMappedAddr;
+use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 
 /// Header Type 0x0のデバイスを表します。
 #[derive(Debug, Clone)]

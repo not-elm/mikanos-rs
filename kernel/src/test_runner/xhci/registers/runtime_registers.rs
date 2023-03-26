@@ -1,8 +1,8 @@
 use crate::test_runner::xhci::mmio_base_addr;
-use pci::xhci::registers::capability_registers::capability_length::CapabilityLength;
-use pci::xhci::registers::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
-use pci::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
-use pci::xhci::registers::runtime_registers::RuntimeRegistersOffset;
+use pci::xhc::registers::capability_registers::capability_length::CapabilityLength;
+use pci::xhc::registers::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
+use pci::xhc::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
+use pci::xhc::registers::runtime_registers::RuntimeRegistersOffset;
 
 mod interrupter_register_set;
 

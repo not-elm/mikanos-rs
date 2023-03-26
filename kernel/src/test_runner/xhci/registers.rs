@@ -1,5 +1,5 @@
-use pci::xhci::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
-use pci::xhci::registers::operational_registers::command_ring_control_register::CommandRingControlRegister;
+use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
+use pci::xhc::registers::operational_registers::command_ring_control_register::CommandRingControlRegister;
 
 use crate::test_runner::xhci::{
     command_ring_control_register_offset, operational_registers, registers,

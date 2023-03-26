@@ -1,5 +1,5 @@
-use pci::xhci::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
-use pci::xhci::transfer::event::segment::Segment;
+use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
+use pci::xhc::transfer::event::segment::Segment;
 
 use crate::test_runner::xhci::registers::execute_reset_host_controller;
 

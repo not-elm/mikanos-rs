@@ -1,5 +1,5 @@
-use pci::xhci::registers::operational_registers::command_ring_control_register::command_stop::CommandStop;
-use pci::xhci::registers::operational_registers::command_ring_control_register::crcr_field::CrcrField;
+use pci::xhc::registers::operational_registers::command_ring_control_register::command_stop::CommandStop;
+use pci::xhc::registers::operational_registers::command_ring_control_register::crcr_field::CrcrField;
 
 use crate::test_runner::xhci::command_ring_control_register_offset;
 

@@ -1,7 +1,7 @@
-use pci::xhci::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
-use pci::xhci::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
-use pci::xhci::registers::capability_registers::structural_parameters2::structural_parameters2_field::StructuralParameters2Field;
-use pci::xhci::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSet;
+use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
+use pci::xhc::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
+use pci::xhc::registers::capability_registers::structural_parameters2::structural_parameters2_field::StructuralParameters2Field;
+use pci::xhc::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSet;
 
 use crate::test_runner::xhci::hcs_params2_offset;
 use crate::test_runner::xhci::registers::execute_reset_host_controller;
