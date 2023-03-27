@@ -1,4 +1,4 @@
-use pci::xhc::registers::operational_registers::OperationalRegisters;
+use pci::xhc::registers::internal::operational_registers::OperationalRegisters;
 
 use crate::test_runner::xhci::operation_registers_offset;
 use crate::test_runner::xhci::registers::execute_reset_host_controller;

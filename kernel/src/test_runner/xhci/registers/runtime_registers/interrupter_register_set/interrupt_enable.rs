@@ -1,5 +1,5 @@
-use pci::xhc::registers::runtime_registers::interrupter_register_set::interrupter_management_register::interrupt_enable::InterruptEnable;
-use pci::xhc::registers::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
+use pci::xhc::registers::internal::runtime_registers::interrupter_register_set::interrupter_management_register::interrupt_enable::InterruptEnable;
+use pci::xhc::registers::internal::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
 
 use crate::test_runner::xhci::registers::execute_reset_host_controller;
 use crate::test_runner::xhci::registers::runtime_registers::interrupter_register_set_offset;

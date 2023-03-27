@@ -1,6 +1,5 @@
-use pci::xhc::registers::operational_registers::command_ring_control_register::command_abort::CommandAbort;
-use pci::xhc::registers::operational_registers::command_ring_control_register::crcr_field::CrcrField;
-
+use pci::xhc::registers::internal::operational_registers::command_ring_control_register::command_abort::CommandAbort;
+use pci::xhc::registers::internal::operational_registers::command_ring_control_register::crcr_field::CommandRingControlRegisterField;
 use crate::test_runner::xhci::command_ring_control_register_offset;
 
 #[test_case]

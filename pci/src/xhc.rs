@@ -1,54 +1,48 @@
 use core::marker::PhantomData;
 
-use kernel_lib::{println, serial_println};
+use kernel_lib::serial_println;
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::registers::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
+use crate::xhc::registers::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
+use crate::xhc::registers::registers_operation::RegistersOperation;
+use crate::xhc::registers::usb_command_register_accessible::UsbCommandRegisterAccessible;
 use crate::xhc::transfer::command_ring::CommandRing;
-use crate::xhc::transfer::event_ring::EventRing;
+use transfer::event::event_ring_segment::EventRingSegment;
 
 pub mod allocator;
 pub mod registers;
 pub mod transfer;
-pub mod xhci_library_registers;
-
-pub trait XhcRegistersHoldable {
-    fn reset(&mut self) -> PciResult;
-    fn run(&mut self) -> PciResult;
-    fn setup_event_ring(&mut self, allocator: &mut impl MemoryAllocatable)
-        -> PciResult<(u64, u64)>;
-    fn setup_command_ring(
-        &mut self,
-        ring_size: usize,
-        allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<u64>;
-
-    fn setup_device_context_array(&mut self, allocator: &mut impl MemoryAllocatable) -> PciResult;
-}
 
 pub struct XhcController<T>
 where
-    T: XhcRegistersHoldable,
+    T: RegistersOperation,
 {
     _p: PhantomData<T>,
-    event_ring: EventRing,
+    event_ring: EventRingSegment,
     _command_ring: CommandRing,
 }
 
 impl<T> XhcController<T>
 where
-    T: XhcRegistersHoldable,
+    T: RegistersOperation
+        + InterrupterSetRegisterAccessible
+        + UsbCommandRegisterAccessible
+        + DeviceContextBaseAddressArrayPointerAccessible,
 {
     pub fn new(registers: &mut T, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
         registers.reset()?;
 
-        registers.setup_device_context_array(allocator)?;
-        let (event_ring_table_addr, event_ring_addr) = registers.setup_event_ring(allocator)?;
-        // let _event_ring_table = EventRingTable::new(event_ring_table_addr, event_ring_addr)?;
-        let event_ring = EventRing::new(event_ring_addr, 32);
-        println!("event ring address = {:x}", event_ring_addr);
+        let device_context_array_addr = allocator.try_allocate_trb_ring(1024)?;
+        registers.write_device_context_array_addr(device_context_array_addr)?;
 
-        let command_ring = CommandRing::new(registers.setup_command_ring(32, allocator)?, 32);
+        let (_, event_ring) = registers.setup_event_ring(1, 32, allocator)?;
+
+        let command_ring_addr = allocator.try_allocate_trb_ring(32)?;
+        let command_ring = CommandRing::new(command_ring_addr, 32);
+        registers.write_command_ring_addr(command_ring_addr)?;
+
         registers.run()?;
 
         Ok(Self {

@@ -1,16 +1,17 @@
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
-use pci::xhc::registers::capability_registers::capability_length::CapabilityLength;
-use pci::xhc::registers::capability_registers::structural_parameters2::StructuralParameters2Offset;
-use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
-use pci::xhc::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
-use pci::xhc::registers::operational_registers::config_register::ConfigRegisterOffset;
-use pci::xhc::registers::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointerOffset;
-use pci::xhc::registers::operational_registers::operation_registers_offset::OperationalRegistersOffset;
-use pci::xhc::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
-use pci::xhc::registers::operational_registers::OperationalRegisters;
-use pci::xhc::registers::Registers;
+use pci::xhc::registers::internal::capability_registers::capability_length::CapabilityLength;
+use pci::xhc::registers::internal::capability_registers::structural_parameters1::StructuralParameters1Offset;
+use pci::xhc::registers::internal::capability_registers::structural_parameters2::StructuralParameters2Offset;
+use pci::xhc::registers::internal::Internal;
+use pci::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
+use pci::xhc::registers::internal::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
+use pci::xhc::registers::internal::operational_registers::config_register::ConfigRegisterOffset;
+use pci::xhc::registers::internal::operational_registers::device_context_base_address_array_pointer::DeviceContextBaseAddressArrayPointerOffset;
+use pci::xhc::registers::internal::operational_registers::operation_registers_offset::OperationalRegistersOffset;
+use pci::xhc::registers::internal::operational_registers::OperationalRegisters;
+use pci::xhc::registers::internal::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 
 mod registers;
 
@@ -29,12 +30,17 @@ pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
     mouse.mmio_base_addr()
 }
 
-pub(crate) fn registers() -> Registers {
-    Registers::new(mmio_base_addr()).unwrap()
+pub(crate) fn registers() -> Internal {
+    Internal::new(mmio_base_addr()).unwrap()
 }
 
 pub(crate) fn operational_registers() -> OperationalRegisters {
     OperationalRegisters::new(operation_registers_offset()).unwrap()
+}
+
+#[allow(dead_code)]
+pub(crate) fn hcs_params1_offset() -> StructuralParameters1Offset {
+    StructuralParameters1Offset::new(crate::mmio_base_addr())
 }
 
 #[allow(dead_code)]

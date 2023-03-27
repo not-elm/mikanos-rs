@@ -1,17 +1,8 @@
-use core::ptr::read;
-
-use kernel_lib::println;
-
 use crate::xhc::allocator::aligned_address::AlignedAddress;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 
 const MEMORY_SIZE: usize = 4096 * 32;
 static mut MEMORY_POOL: MemoryPool = MemoryPool([0u8; MEMORY_SIZE]);
-
-extern "C" {
-    static mut mmio_memory: [u8; MEMORY_SIZE];
-    fn read_mmio_memory() -> u64;
-}
 
 #[repr(C, align(64))]
 #[derive(Debug)]
@@ -25,11 +16,8 @@ pub struct MikanOSPciMemoryAllocator {
 
 impl MikanOSPciMemoryAllocator {
     pub fn new() -> Self {
-        let address = unsafe { mmio_memory.as_ptr() as u64 };
-        println!("memory from soft = {:x}", address);
-        unsafe {
-            println!("memory from asm = {:x}", read_mmio_memory());
-        }
+        let address = unsafe { MEMORY_POOL.0.as_ptr() as u64 };
+
         Self {
             address,
             end_address: address + MEMORY_SIZE as u64,

@@ -1,6 +1,6 @@
 use pci::VolatileAccessible;
-use pci::xhc::registers::runtime_registers::interrupter_register_set::event_ring_segment_table_base_address::EventRingSegmentTableBaseAddress;
-use pci::xhc::registers::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
+use pci::xhc::registers::internal::runtime_registers::interrupter_register_set::event_ring_segment_table_base_address::EventRingSegmentTableBaseAddress;
+use pci::xhc::registers::internal::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
 
 use crate::test_runner::xhci::registers::execute_reset_host_controller;
 use crate::test_runner::xhci::registers::runtime_registers::interrupter_register_set_offset;
@@ -25,6 +25,6 @@ fn it_update_correct_event_ring_segment_table_base_address() {
     let dummy_event_ring_segment_base_address = [0u32; 4].as_ptr().addr();
 
     EventRingSegmentTableBaseAddress::new(offset)
-        .update_event_ring_segment_table_addr(dummy_event_ring_segment_base_address)
+        .update_event_ring_segment_table_addr(dummy_event_ring_segment_base_address as u64)
         .unwrap();
 }
