@@ -1,4 +1,5 @@
 use core::marker::PhantomData;
+
 use macros::VolatileBits;
 
 use crate::error::{PciError, PciResult};
@@ -15,7 +16,6 @@ use crate::xhc::registers::operational_registers::command_ring_control_register:
 ///
 /// Note: CommandRingRunning(CRR)が1の場合、書き込みは無視されます。
 #[derive(VolatileBits)]
-#[volatile_type(u8)]
 #[bits(1)]
 #[offset_bit(2)]
 pub struct CommandAbort(usize, PhantomData<CommandRingControlRegisterOffset>);

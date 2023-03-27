@@ -1,4 +1,5 @@
 use core::fmt::Debug;
+use core::ops::Add;
 
 use kernel_lib::serial_println;
 
@@ -12,7 +13,7 @@ use crate::xhc::registers::runtime_registers::interrupter_register_set::event_ri
 use crate::xhc::registers::runtime_registers::interrupter_register_set::interrupter_management_register::InterrupterManagementRegister;
 use crate::xhc::registers::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
 use crate::xhc::registers::runtime_registers::RuntimeRegistersOffset;
-use crate::xhc::transfer::event::event_ring::EventRing;
+use crate::xhc::transfer::event::event_ring::EventRingA;
 
 mod event_ring_deque_pointer;
 pub mod event_ring_segment_table_base_address;
@@ -78,11 +79,11 @@ impl InterrupterRegisterSet {
         segment_table_entry_count: u16,
         erst_max: &EventRingSegmentTableMax,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<EventRing> {
+    ) -> PciResult<EventRingA> {
         self.erstsz
             .update_event_ring_segment_table_size(erst_max, segment_table_entry_count)?;
 
-        let event_ring = EventRing::new(32, allocator)?;
+        let event_ring = EventRingA::new(32, allocator)?;
 
         self.erstba.update_event_ring_segment_table_addr(
             event_ring.segment_table().segment_table_addr().addr() as u64,
@@ -101,16 +102,17 @@ impl InterrupterRegisterSet {
     }
 
     pub fn debug_trb(&self) {
-        serial_println!("{:?}", unsafe {
-            *(self.erdp.read_deque_pointer() as *mut u128)
-        });
+        let ptr = self.erdp.read_deque_pointer();
+        loop {
+            serial_println!("{:x}", unsafe { *((ptr) as *mut u128) });
+        }
     }
 }
 
 fn allocate_event_ring_segment_table(
     segment_table_entry_count: u16,
     allocator: &mut impl MemoryAllocatable,
-) -> PciResult<usize> {
+) -> PciResult<u64> {
     unsafe {
         allocator
             .allocate_with_align(

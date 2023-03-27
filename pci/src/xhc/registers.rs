@@ -1,7 +1,8 @@
+use kernel_lib::println;
+
 use crate::error::OperationReason::NotReflectedValue;
 use crate::error::{AllocateReason, OperationReason, PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
 use crate::xhc::registers::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use crate::xhc::registers::capability_registers::CapabilityRegisters;
 use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
@@ -11,9 +12,10 @@ use crate::xhc::registers::operational_registers::operation_registers_offset::Op
 use crate::xhc::registers::operational_registers::usb_command_register::run_stop::RunStop;
 use crate::xhc::registers::operational_registers::OperationalRegisters;
 use crate::xhc::registers::port_registers::PortRegisters;
+use crate::xhc::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSet;
 use crate::xhc::registers::runtime_registers::{RuntimeRegisters, RuntimeRegistersOffset};
 use crate::xhc::transfer::command_ring::CommandRing;
-use crate::xhc::transfer::event::event_ring::EventRing;
+use crate::xhc::transfer::event_ring::EventRing;
 use crate::xhc::transfer::event_ring_table::EventRingTable;
 use crate::xhc::transfer::ring::RingBase;
 use crate::xhc::XhcRegistersHoldable;
@@ -44,35 +46,44 @@ impl XhcRegistersHoldable for Registers {
     }
 
     fn run(&mut self) -> PciResult {
+        println!(
+            "Host Controller Error = {}",
+            self.operational_registers
+                .usb_sts()
+                .host_controller_error()
+                .read_flag_volatile()
+        );
+
         self.operational_registers.run_host_controller();
         self.port_registers()
-            .filter(|port| port.is_enabled_port())
+            .filter(|port| port.is_connect())
             .for_each(|port| {
                 port.reset();
+                println!("Port = {:?}", port);
             });
 
         Ok(())
     }
 
-    fn setup_event_ring(&mut self, event_ring_table: &EventRingTable) -> PciResult {
-        let primary_interrupter = self.runtime_registers.interrupter_register_set();
+    fn setup_event_ring(
+        &mut self,
+        allocator: &mut impl MemoryAllocatable,
+    ) -> PciResult<(EventRingTable, EventRing)> {
+        let event_ring_table_addr = allocate_event_ring_table(
+            self.runtime_registers.interrupter_register_set(),
+            allocator,
+        )?;
+        let command_ring_addr = allocate_event_ring(
+            self.runtime_registers.interrupter_register_set(),
+            32,
+            allocator,
+        )?;
+        println!("Command ring address = {:x}", command_ring_addr);
 
-        primary_interrupter
-            .event_ring_dequeue_pointer()
-            .update_deque_pointer(event_ring_table.event_ring_address())?;
+        let event_ring_table = EventRingTable::new(event_ring_table_addr, command_ring_addr)?;
+        let event_ring = EventRing::new(command_ring_addr, 32);
 
-        primary_interrupter
-            .event_ring_table_max_size()
-            .update_event_ring_segment_table_size(
-                self.capability_registers.hcs_params2().erst_max(),
-                1,
-            )?;
-
-        primary_interrupter
-            .event_ring_table_base_array_address()
-            .update_event_ring_segment_table_addr(event_ring_table.table_address())?;
-
-        Ok(())
+        Ok((event_ring_table, event_ring))
     }
 
     fn setup_command_ring(&mut self, command_ring: &CommandRing) -> PciResult {
@@ -81,15 +92,51 @@ impl XhcRegistersHoldable for Registers {
             .register_command_ring(command_ring.ring_base_addr())
     }
 
-    fn dequeu(&self) -> u128 {
-        let ptr = self
-            .runtime_registers
-            .interrupter_register_set()
-            .event_ring_dequeue_pointer()
-            .read_deque_pointer();
+    fn setup_device_context_array(&mut self, allocator: &mut impl MemoryAllocatable) -> PciResult {
+        self.setup_device_context_max_slots()?;
+        let _device_context_array_addr = self.allocate_device_context_array(allocator)?;
 
-        unsafe { *(ptr as *const u128) }
+        Ok(())
     }
+}
+
+fn allocate_event_ring_table(
+    interrupter_set: &InterrupterRegisterSet,
+    allocator: &mut impl MemoryAllocatable,
+) -> PciResult<u64> {
+    let table_ptr_address = unsafe {
+        allocator
+            .try_allocate_with_align(core::mem::size_of::<u128>(), 64, 64 * 1024)?
+            .address()?
+    };
+
+    interrupter_set
+        .event_ring_table_base_array_address()
+        .update_event_ring_segment_table_addr(table_ptr_address)?;
+
+    Ok(interrupter_set
+        .event_ring_table_base_array_address()
+        .read_volatile())
+}
+
+fn allocate_event_ring(
+    interrupter_set: &InterrupterRegisterSet,
+    ring_size: usize,
+    allocator: &mut impl MemoryAllocatable,
+) -> PciResult<u64> {
+    let event_ring_addr = unsafe {
+        allocator
+            .try_allocate_with_align(core::mem::size_of::<u128>() * ring_size, 64, 64 * 1024)?
+            .address()?
+    };
+
+    interrupter_set
+        .event_ring_dequeue_pointer()
+        .update_deque_pointer(event_ring_addr)?;
+
+    Ok(interrupter_set
+        .event_ring_dequeue_pointer()
+        .read_deque_pointer())
 }
 
 impl Registers {
@@ -118,33 +165,35 @@ impl Registers {
     /// 4. コマンドリングのアドレスをcommand_ring_pointerに設定
     /// 5. EventRingの生成
     // /// 6. EventRingをセグメントテーブルに登録
-    pub fn init(&self, allocator: &mut impl MemoryAllocatable) -> PciResult<EventRing> {
+    pub fn init(&mut self, allocator: &mut impl MemoryAllocatable) -> PciResult {
         self.operational_registers.reset_host_controller();
-        self.setup_device_context_max_slots()?;
-        let _device_context_array_addr = self.allocate_device_context_array(allocator)?;
-        self.operational_registers
-            .crcr()
-            .setup_command_ring(allocator)?;
+        // self.setup_device_context_max_slots()?;
+        // let _device_context_array_addr = self.allocate_device_context_array(allocator)?;
+        // self.operational_registers
+        //     .crcr()
+        //     .setup_command_ring(allocator)?;
+        // let cr = CommandRing::new_with_alloc(64, allocator)?;
+        // self.setup_command_ring(&cr)?;
+        //
+        // let event = EventRingTable::new(allocator)?;
+        // self.setup_event_ring(&event)?;
 
-        let event_ring = self
-            .runtime_registers
-            .interrupter_register_set()
-            .setup_event_ring(
-                1,
-                self.capability_registers.hcs_params2().erst_max(),
-                allocator,
-            )?;
+        // let event_ring = self
+        //     .runtime_registers
+        //     .interrupter_register_set()
+        //     .setup_event_ring(
+        //         1,
+        //         self.capability_registers.hcs_params2().erst_max(),
+        //         allocator,
+        //     )?;
 
-        self.operational_registers
-            .usb_command()
-            .inte()
-            .write_flag_volatile(true);
-        Ok(event_ring)
+        // self.operational_registers
+        //     .usb_command()
+        //     .inte()
+        //     .write_flag_volatile(true);
+        Ok(())
     }
 
-    pub fn run(&self) {
-        self.operational_registers.run_host_controller();
-    }
     pub fn trb(&self) {
         self.runtime_registers
             .interrupter_register_set()
@@ -217,14 +266,14 @@ unsafe fn allocate_device_context_array(
         .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
         .address()?;
 
-    dcbaap.write_volatile(device_context_array_addr as u64);
+    dcbaap.update_device_context_array_addr(device_context_array_addr as u64);
 
-    let addr = dcbaap.read_volatile();
+    let addr = dcbaap.read_device_context_array_addr();
     if addr == device_context_array_addr as u64 {
-        Ok(device_context_array_addr)
+        Ok(device_context_array_addr as usize)
     } else {
         Err(PciError::FailedOperateToRegister(NotReflectedValue {
-            expect: device_context_array_addr,
+            expect: device_context_array_addr as usize,
             value: addr as usize,
         }))
     }

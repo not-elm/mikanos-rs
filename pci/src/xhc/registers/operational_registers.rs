@@ -60,12 +60,17 @@ impl OperationalRegisters {
         })
     }
     pub fn reset_host_controller(&self) {
+        self.usb_command.inte().write_flag_volatile(false);
+        self.usb_command.hsee().write_flag_volatile(false);
+        self.usb_command
+            .enable_wrap_event()
+            .write_flag_volatile(false);
         reset_controller(
             self.usb_sts().hch(),
             self.usb_command().run_stop(),
             self.usb_command().hcrst(),
             self.usb_sts().cnr(),
-        )
+        );
     }
     pub fn run_host_controller(&self) {
         self.usb_command().run_stop().write_flag_volatile(true);
@@ -95,7 +100,7 @@ fn reset_controller(
     hcrst: &HostControllerReset,
     cnr: &ControllerNotReady,
 ) {
-    if !hch.read_flag_volatile() {
+    if !hch.read_flag_volatile() || run_stop.read_flag_volatile() {
         run_stop.write_flag_volatile(false);
     }
     hch.until_halted();

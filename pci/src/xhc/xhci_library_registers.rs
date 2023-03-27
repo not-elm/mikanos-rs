@@ -1,4 +1,5 @@
 use crate::error::PciResult;
+use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use crate::xhc::transfer::command_ring::CommandRing;
 use crate::xhc::transfer::event_ring_table::EventRingTable;
@@ -107,7 +108,7 @@ where
         Ok(())
     }
 
-    fn dequeu(&self) -> u128 {
+    fn setup_device_context_array(&mut self, a: &mut impl MemoryAllocatable) -> PciResult {
         todo!()
     }
 }

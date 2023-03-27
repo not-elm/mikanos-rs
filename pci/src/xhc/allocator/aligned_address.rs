@@ -19,9 +19,9 @@ impl AlignedAddress {
         }
     }
 
-    pub fn address(&self) -> PciResult<usize> {
+    pub fn address(&self) -> PciResult<u64> {
         if is_align_64_bytes(self.0) {
-            Ok(self.0)
+            Ok(self.0 as u64)
         } else {
             Err(PciError::FailedAllocate(
                 AllocateReason::NotAlignedAddress {

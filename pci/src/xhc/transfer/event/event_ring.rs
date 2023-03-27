@@ -4,11 +4,11 @@ use crate::xhc::transfer::event::segment::Segment;
 use crate::xhc::transfer::event::segment_table::SegmentTable;
 
 #[derive(Debug)]
-pub struct EventRing {
+pub struct EventRingA {
     segment_table: SegmentTable,
 }
 
-impl EventRing {
+impl EventRingA {
     pub fn new(trb_buffer_len: usize, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
         let ring_segment = Segment::new(trb_buffer_len, allocator)?;
         Ok(Self {

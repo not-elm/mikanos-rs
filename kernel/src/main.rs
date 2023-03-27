@@ -33,8 +33,7 @@ use pci::xhc::registers::operational_registers::operation_registers_offset::Oper
 use pci::xhc::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 use pci::xhc::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 use pci::xhc::registers::runtime_registers::RuntimeRegistersOffset;
-use pci::xhc::xhci_library_registers::XhciLibraryRegisters;
-use pci::xhc::XhcController;
+use pci::xhc::{XhcController, XhcRegistersHoldable};
 
 mod qemu;
 #[cfg(test)]
@@ -76,19 +75,16 @@ pub extern "sysv64" fn kernel_main(
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), &frame_buffer_config).unwrap();
     serial_println!("MMIO ADDRESS = {:x}", mmio_base_addr().addr());
     let mut registers = pci::xhc::registers::Registers::new(mmio_base_addr()).unwrap();
-    let mut allocator = MikanOSPciMemoryAllocator::new();
+    // registers
+    //     .init(&mut MikanOSPciMemoryAllocator::new())
+    //     .unwrap();
+    //
+    let mut xhc_controller =
+        XhcController::new(&mut registers, &mut MikanOSPciMemoryAllocator::new()).unwrap();
 
-    registers.init(&mut allocator).unwrap();
-    let mut xhc_controller = XhcController::new(
-        XhciLibraryRegisters::new(mmio_base_addr(), IdentityMapper()),
-        &mut MikanOSPciMemoryAllocator::new(),
-    )
-    .unwrap();
-
-    loop {
-        registers.trb();
-    }
-    xhc_controller.start_event_pooling();
+    registers.trb();
+    // xhc_controller.start_event_pooling();
+    // xhc_controller.start_event_pooling();
 
     common_lib::assembly::hlt_forever();
 }

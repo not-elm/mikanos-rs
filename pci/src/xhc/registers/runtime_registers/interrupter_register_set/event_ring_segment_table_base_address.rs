@@ -34,7 +34,12 @@ pub struct EventRingSegmentTableBaseAddress(usize, PhantomData<InterrupterRegist
 
 impl EventRingSegmentTableBaseAddress {
     pub fn update_event_ring_segment_table_addr(&self, comannd_ring_table_addr: u64) -> PciResult {
-        self.write_volatile(comannd_ring_table_addr);
-        wait_update_64bits_register_for(10, comannd_ring_table_addr, self)
+        let addr = comannd_ring_table_addr >> 6;
+        self.write_volatile(addr);
+        wait_update_64bits_register_for(10, addr, self)
+    }
+
+    pub fn read_event_ring_segment_table_addr(&self) -> u64 {
+        self.read_volatile() << 6
     }
 }

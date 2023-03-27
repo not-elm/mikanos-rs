@@ -29,7 +29,7 @@ fn allocate_segment(
         unsafe { allocator.allocate_with_align(TRB_SIZE * segment_size, 64, 64 * 1024) }
             .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
             .address()?;
-    Ok(RingSegmentsBaseAddr::new(segment_base_addr))
+    Ok(RingSegmentsBaseAddr::new(segment_base_addr as usize))
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Address)]

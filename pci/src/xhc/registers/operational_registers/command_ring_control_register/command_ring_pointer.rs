@@ -23,6 +23,7 @@ pub struct CommandRingPointer(usize, PhantomData<CommandRingControlRegisterOffse
 
 impl CommandRingPointer {
     pub fn update_command_ring_addr(&self, addr: u64) -> PciResult {
+        let addr = addr >> 6;
         self.write_volatile(addr);
         wait_update_64bits_register_for(10, addr, self)
     }

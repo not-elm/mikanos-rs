@@ -14,7 +14,6 @@ use crate::xhc::registers::operational_registers::usb_command_register::run_stop
 /// RunStopが0にクリアされるか、CommandStopかCommandAbortに1が書き込まれた後にコマンドリングが停止した場合、
 /// 0にクリアされます。
 #[derive(VolatileBits)]
-#[volatile_type(u8)]
 #[bits(1)]
 #[offset_bit(3)]
 pub struct CommandRingRunning(usize, PhantomData<CommandRingControlRegisterOffset>);

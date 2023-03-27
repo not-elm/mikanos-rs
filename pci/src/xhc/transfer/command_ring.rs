@@ -17,6 +17,12 @@ impl CommandRing {
         })
     }
 
+    pub fn new(ring_ptr_addr: u64, ring_size: usize) -> Self {
+        Self {
+            ring: Ring::new(ring_ptr_addr, ring_size),
+        }
+    }
+
     pub fn enable_slot(&mut self) {
         self.ring.push(xhci::ring::trb::command::EnableSlot::new());
     }

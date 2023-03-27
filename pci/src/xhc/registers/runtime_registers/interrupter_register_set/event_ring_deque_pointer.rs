@@ -1,9 +1,9 @@
 use core::marker::PhantomData;
 
-use crate::error::PciResult;
-use crate::wait_update_64bits_register_for;
 use macros::VolatileBits;
 
+use crate::error::PciResult;
+use crate::wait_update_64bits_register_for;
 use crate::xhc::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 
 /// ERSTBA
@@ -34,11 +34,12 @@ pub struct EventRingDequeuePointer(usize, PhantomData<InterrupterRegisterSetOffs
 
 impl EventRingDequeuePointer {
     pub(crate) fn update_deque_pointer(&self, deque_ptr_addr: u64) -> PciResult {
-        self.write_volatile(deque_ptr_addr);
-        wait_update_64bits_register_for(10, deque_ptr_addr, self)
+        let addr = deque_ptr_addr >> 4;
+        self.write_volatile(addr);
+        wait_update_64bits_register_for(10, addr, self)
     }
 
     pub fn read_deque_pointer(&self) -> u64 {
-        self.read_volatile() << 4
+        (self.read_volatile() << 4)
     }
 }

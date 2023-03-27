@@ -1,4 +1,6 @@
-use kernel_lib::println;
+use core::ops::Add;
+
+use kernel_lib::{println, serial_println};
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
@@ -37,7 +39,7 @@ impl Ring {
 
         let ring_ptr_addr =
             unsafe { allocator.try_allocate_with_align(bytes, 64, 64 * 1024) }?.address()?;
-        println!("Ring pointer address = {:x}", ring_ptr_addr);
+
         Ok(Self::new(ring_ptr_addr as u64, ring_size))
     }
     pub fn pop(&mut self) -> [u32; 4] {
@@ -49,6 +51,7 @@ impl Ring {
             self.cycle_bit = !self.cycle_bit;
         }
         let data = self.ring_data_at(current_index);
+
         [data[0], data[1], data[2], data[3]]
     }
     pub fn push(&mut self, trb: impl Into<[u32; 4]>) {
@@ -73,6 +76,9 @@ impl Ring {
     }
 
     fn ring_data_at(&mut self, index: usize) -> &mut [u32] {
+        serial_println!("TRB raw data = {:x}", unsafe {
+            *self.ring_ptr().add(index)
+        });
         unsafe { core::slice::from_raw_parts_mut(self.ring_ptr().add(index).cast::<u32>(), 4) }
     }
 

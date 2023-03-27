@@ -20,9 +20,9 @@ use crate::xhc::transfer::event::segment_table::SegmentTableAddr;
 #[derive(VolatileBits)]
 #[volatile_type(u64)]
 #[offset_bit(6)]
-pub struct RingSegmentsBaseAddrEntry(usize, PhantomData<SegmentTableAddr>);
+pub struct EventRingAddressEntry(usize, PhantomData<SegmentTableAddr>);
 
-impl RingSegmentsBaseAddrEntry {
+impl EventRingAddressEntry {
     pub fn update_ring_segment_addr(&self, ring_segment_addr: &RingSegmentsBaseAddr) -> PciResult {
         let addr = (ring_segment_addr.addr()) as u64;
         self.write_volatile(addr);

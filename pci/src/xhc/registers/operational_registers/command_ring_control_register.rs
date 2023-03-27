@@ -53,9 +53,9 @@ pub struct CommandRingControlRegister {
 impl CommandRingControlRegister {
     pub fn new(offset: CommandRingControlRegisterOffset) -> PciResult<Self> {
         Ok(Self {
-            rcs: RingCycleState::new_check_flag_false(offset)?,
-            cs: CommandStop::new_check_flag_false(offset)?,
-            ca: CommandAbort::new_check_flag_false(offset)?,
+            rcs: RingCycleState::new(offset),
+            cs: CommandStop::new(offset),
+            ca: CommandAbort::new(offset),
             crr: CommandRingRunning::new(offset),
             command_ring_pointer: CommandRingPointer::new(offset),
         })
@@ -93,7 +93,7 @@ impl CommandRingControlRegister {
 unsafe fn allocate_command_ring(
     crcr: &CommandRingControlRegister,
     allocator: &mut impl MemoryAllocatable,
-) -> PciResult<usize> {
+) -> PciResult<u64> {
     const TRB_SIZE: usize = 128;
 
     let alloc_size = TRB_SIZE * 32;
@@ -111,10 +111,13 @@ fn register_command_ring(crcr: &CommandRingControlRegister, command_ring_addr: u
             OperationReason::MustBeCommandRingStopped,
         ));
     }
-    crcr.rcs.write_flag_volatile(true);
+
     crcr.cs.write_flag_volatile(false);
     crcr.ca.write_flag_volatile(false);
+
     crcr.command_ring_pointer
         .update_command_ring_addr(command_ring_addr)?;
+    crcr.rcs.write_flag_volatile(true);
+
     Ok(())
 }

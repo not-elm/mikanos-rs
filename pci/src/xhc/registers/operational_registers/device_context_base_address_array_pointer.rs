@@ -18,6 +18,13 @@ impl DeviceContextBaseAddressArrayPointer {
     pub fn new(offset: DeviceContextBaseAddressArrayPointerOffset) -> Self {
         Self(offset.offset())
     }
+    pub fn update_device_context_array_addr(&self, addr: u64) {
+        self.write_volatile(addr >> 6);
+    }
+
+    pub fn read_device_context_array_addr(&self) -> u64 {
+        self.read_volatile() << 6
+    }
 }
 
 #[repr(transparent)]
