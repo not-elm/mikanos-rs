@@ -1,10 +1,8 @@
 use core::fmt::Debug;
-use core::ops::Add;
 
 use kernel_lib::serial_println;
 
-use crate::error::{AllocateReason, PciError, PciResult};
-use crate::VolatileAccessible;
+use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::registers::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
 use crate::xhc::registers::runtime_registers::interrupter_register_set::event_ring_deque_pointer::EventRingDequeuePointer;
@@ -15,7 +13,7 @@ use crate::xhc::registers::runtime_registers::interrupter_register_set::interrup
 use crate::xhc::registers::runtime_registers::RuntimeRegistersOffset;
 use crate::xhc::transfer::event::event_ring::EventRingA;
 
-mod event_ring_deque_pointer;
+pub mod event_ring_deque_pointer;
 pub mod event_ring_segment_table_base_address;
 pub mod event_ring_segment_table_size;
 pub mod interrupter_management_register;
@@ -46,27 +44,35 @@ pub struct InterrupterRegisterSet {
     /// Offset: 0
     iman: InterrupterManagementRegister,
     /// Offset: 0x08 Bytes
-    erstsz: EventRingSegmentTableSize,
+    event_ring_segment_table_size: EventRingSegmentTableSize,
     /// Offset: 0x10 Bytes
     erstba: EventRingSegmentTableBaseAddress,
-    erdp: EventRingDequeuePointer,
+    event_ring_dequeue_pointer: EventRingDequeuePointer,
 }
 
 impl InterrupterRegisterSet {
     pub fn new(offset: InterrupterRegisterSetOffset) -> Self {
         Self {
             iman: InterrupterManagementRegister::new(offset),
-            erstsz: EventRingSegmentTableSize::new(offset),
+            event_ring_segment_table_size: EventRingSegmentTableSize::new(offset),
             erstba: EventRingSegmentTableBaseAddress::new(offset),
-            erdp: EventRingDequeuePointer::new(offset),
+            event_ring_dequeue_pointer: EventRingDequeuePointer::new(offset),
         }
     }
+    pub fn interrupter_management(&self) -> &InterrupterManagementRegister {
+        &self.iman
+    }
+
+    pub fn event_ring_segment_table_size(&self) -> &EventRingSegmentTableSize {
+        &self.event_ring_segment_table_size
+    }
+
     pub fn event_ring_dequeue_pointer(&self) -> &EventRingDequeuePointer {
-        &self.erdp
+        &self.event_ring_dequeue_pointer
     }
 
     pub fn event_ring_table_max_size(&self) -> &EventRingSegmentTableSize {
-        &self.erstsz
+        &self.event_ring_segment_table_size
     }
 
     pub fn event_ring_table_base_array_address(&self) -> &EventRingSegmentTableBaseAddress {
@@ -80,7 +86,7 @@ impl InterrupterRegisterSet {
         erst_max: &EventRingSegmentTableMax,
         allocator: &mut impl MemoryAllocatable,
     ) -> PciResult<EventRingA> {
-        self.erstsz
+        self.event_ring_segment_table_size
             .update_event_ring_segment_table_size(erst_max, segment_table_entry_count)?;
 
         let event_ring = EventRingA::new(32, allocator)?;
@@ -88,9 +94,12 @@ impl InterrupterRegisterSet {
         self.erstba.update_event_ring_segment_table_addr(
             event_ring.segment_table().segment_table_addr().addr() as u64,
         )?;
-        self.erdp
+        self.event_ring_dequeue_pointer
             .update_deque_pointer(event_ring.segment_table().segments_base_addr().addr() as u64)?;
-        serial_println!("erdp {:x}", self.erdp.read_deque_pointer());
+        serial_println!(
+            "erdp {:x}",
+            self.event_ring_dequeue_pointer.read_deque_pointer()
+        );
 
         // self.iman.ie().write_flag_volatile(true);
         // self.iman.ip().write_flag_volatile(true);
@@ -98,30 +107,14 @@ impl InterrupterRegisterSet {
     }
 
     pub fn deque_ptr(&self) -> u64 {
-        self.erdp.read_deque_pointer()
+        self.event_ring_dequeue_pointer.read_deque_pointer()
     }
 
     pub fn debug_trb(&self) {
-        let ptr = self.erdp.read_deque_pointer();
+        let ptr = self.event_ring_dequeue_pointer.read_deque_pointer();
         loop {
             serial_println!("{:x}", unsafe { *((ptr) as *mut u128) });
         }
-    }
-}
-
-fn allocate_event_ring_segment_table(
-    segment_table_entry_count: u16,
-    allocator: &mut impl MemoryAllocatable,
-) -> PciResult<u64> {
-    unsafe {
-        allocator
-            .allocate_with_align(
-                core::mem::size_of::<u32>() * 4 * segment_table_entry_count as usize,
-                64,
-                64 * 1024,
-            )
-            .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))?
-            .address()
     }
 }
 

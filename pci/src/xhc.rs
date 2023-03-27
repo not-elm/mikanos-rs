@@ -30,7 +30,7 @@ where
 {
     _p: PhantomData<T>,
     event_ring: EventRing,
-    command_ring: CommandRing,
+    _command_ring: CommandRing,
 }
 
 impl<T> XhcController<T>
@@ -49,7 +49,7 @@ where
         Ok(Self {
             _p: PhantomData,
             event_ring,
-            command_ring,
+            _command_ring: command_ring,
         })
     }
 

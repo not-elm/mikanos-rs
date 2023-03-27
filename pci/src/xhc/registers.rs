@@ -25,7 +25,7 @@ pub mod capability_registers;
 pub mod doorbell_registers;
 pub mod memory_mapped_addr;
 pub mod operational_registers;
-mod port_registers;
+pub mod port_registers;
 pub mod runtime_registers;
 
 #[derive(Debug)]
@@ -157,41 +157,6 @@ impl Registers {
             operational_registers,
             runtime_registers,
         })
-    }
-
-    /// 1. xhcのリセット
-    /// 2. 接続できる最大デバイス数を設定
-    /// 3. デバイスコンテキストの配列のアドレスをDCBAAPに設定
-    /// 4. コマンドリングのアドレスをcommand_ring_pointerに設定
-    /// 5. EventRingの生成
-    // /// 6. EventRingをセグメントテーブルに登録
-    pub fn init(&mut self, allocator: &mut impl MemoryAllocatable) -> PciResult {
-        self.operational_registers.reset_host_controller();
-        // self.setup_device_context_max_slots()?;
-        // let _device_context_array_addr = self.allocate_device_context_array(allocator)?;
-        // self.operational_registers
-        //     .crcr()
-        //     .setup_command_ring(allocator)?;
-        // let cr = CommandRing::new_with_alloc(64, allocator)?;
-        // self.setup_command_ring(&cr)?;
-        //
-        // let event = EventRingTable::new(allocator)?;
-        // self.setup_event_ring(&event)?;
-
-        // let event_ring = self
-        //     .runtime_registers
-        //     .interrupter_register_set()
-        //     .setup_event_ring(
-        //         1,
-        //         self.capability_registers.hcs_params2().erst_max(),
-        //         allocator,
-        //     )?;
-
-        // self.operational_registers
-        //     .usb_command()
-        //     .inte()
-        //     .write_flag_volatile(true);
-        Ok(())
     }
 
     pub fn trb(&self) {

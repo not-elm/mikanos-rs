@@ -3,9 +3,8 @@
 /// RSPレジスタがこのスタック領域を使用するために、カーネルのエントリーポイントで
 /// この領域の終了アドレスをRSPに書き込んでいます。
 pub const KERNEL_STACK: KernelStack = KernelStack::new();
-#[repr(C, align(16))]
 
-struct Stack(u8);
+#[repr(C, align(16))]
 #[repr(C, align(16))]
 pub struct KernelStack([u8; 1024 * 1024]);
 

@@ -1,14 +1,10 @@
 use core::mem::size_of;
 
-use x86_64::registers::segmentation::Segment;
-
 use crate::paging::setup_identity_page_table;
 use crate::segment::descriptor::DescriptorA;
-use crate::serial_println;
 
 pub const DOUBLE_FAULT_IST_INDEX: u16 = 0;
 
-mod asm;
 mod descriptor;
 
 static mut GDT: [u64; 8] = [0; 8];
@@ -63,24 +59,10 @@ pub unsafe fn setup_segments() {
         GDT.as_ptr() as u64,
     );
 
-    // load_tss(GDTA.1.tss_selector);
-    const kernel_cs: u16 = 1 << 3;
-    const kernel_ss: u16 = 2 << 3;
+    const KERNEL_CS: u16 = 1 << 3;
+    const KERNEL_SS: u16 = 2 << 3;
     SetDSAll(0);
 
-    SetCSSS(kernel_cs, kernel_ss);
+    SetCSSS(KERNEL_CS, KERNEL_SS);
     setup_identity_page_table();
-
-    // println!("{:?}", GPT[0]);
-    // set_code_segment(&mut GPT[1], 10, 0, 0, 0xF_FF_FF);
-    // set_data_segment(&mut GPT[2], 2, 0, 0, 0xF_FF_FF);
-    // println!("{:?}", GPT[1]);
-    // println!("{:?}", GPT[2]);
-    //
-    // load_gdt((GPT.len() - 1) as u16, GPT.as_ptr().addr() as u64);
-    // const kernel_cs: u16 = 1 << 3;
-    // const kernel_ss: u16 = 2 << 3;
-    // set_ds_all(0);
-    //
-    // set_csss(kernel_cs, kernel_ss);
 }

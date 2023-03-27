@@ -9,6 +9,7 @@ sudo apt-get install -y curl  \
     util-linux \
     dosfstools \
     gdb \
+    nasm \
     ovmf
 
 

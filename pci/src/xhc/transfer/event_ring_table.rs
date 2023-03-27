@@ -1,8 +1,6 @@
 use crate::error::PciResult;
-use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::event::segment::RingSegmentsBaseAddr;
 use crate::xhc::transfer::event::segment_table::ring_segment_addr_entry::EventRingAddressEntry;
-use crate::xhc::transfer::ring::RingBase;
 use crate::VolatileAccessible;
 
 #[derive(Debug)]

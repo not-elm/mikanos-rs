@@ -1,5 +1,4 @@
 pub mod command_ring;
-pub(crate) mod device_context_array;
 pub mod event;
 pub mod event_ring;
 pub mod event_ring_table;

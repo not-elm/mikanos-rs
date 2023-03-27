@@ -1,7 +1,6 @@
 use crate::error::{InvalidRegisterReason, PciError, PciResult};
 use crate::xhc::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 use crate::VolatileAccessible;
-use kernel_lib::println;
 
 pub trait InterrupterRegisterSetField<T, VolatileType, Addr>
 where

@@ -40,6 +40,6 @@ impl EventRingDequeuePointer {
     }
 
     pub fn read_deque_pointer(&self) -> u64 {
-        (self.read_volatile() << 4)
+        self.read_volatile() << 4
     }
 }

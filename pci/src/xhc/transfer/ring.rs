@@ -1,6 +1,4 @@
-use core::ops::Add;
-
-use kernel_lib::{println, serial_println};
+use kernel_lib::serial_println;
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;

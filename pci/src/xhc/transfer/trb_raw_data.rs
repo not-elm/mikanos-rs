@@ -42,7 +42,7 @@ impl TryFrom<[u32; 4]> for TrbRawData {
     type Error = ();
 
     fn try_from(value: [u32; 4]) -> Result<Self, Self::Error> {
-        TrbRawData::new(into_u128(value)).map_err(|e| ())
+        TrbRawData::new(into_u128(value)).map_err(|_| ())
     }
 }
 
