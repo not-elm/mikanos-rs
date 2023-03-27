@@ -13,6 +13,13 @@ pub trait MemoryAllocatable {
         bounds: usize,
     ) -> Option<AlignedAddress>;
 
+    fn try_allocate_trb_ring(&mut self, ring_size: usize) -> PciResult<u64> {
+        unsafe {
+            self.try_allocate_with_align(core::mem::size_of::<u128>() * ring_size, 64, 64 * 1024)?
+                .address()
+        }
+    }
+
     unsafe fn try_allocate_with_align(
         &mut self,
         bytes: usize,

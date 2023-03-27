@@ -34,7 +34,7 @@ else
     -drive if=pflash,format=raw,readonly,file=OVMF_CODE.fd \
     -drive if=pflash,format=raw,file=OVMF_VARS.fd \
     -drive if=ide,index=0,media=disk,format=raw,file='disk.img' \
-    -device nec-usb-xhci,id=xhci \
+    -device qemu-xhci,id=xhci \
     -device usb-mouse \
     -serial stdio
 fi

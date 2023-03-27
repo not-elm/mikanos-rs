@@ -1,9 +1,9 @@
 use core::marker::PhantomData;
 
-use crate::error::PciResult;
-use crate::wait_update_64bits_register_for;
 use macros::VolatileBits;
 
+use crate::error::PciResult;
+use crate::wait_update_64bits_register_for;
 use crate::xhc::registers::operational_registers::command_ring_control_register::CommandRingControlRegisterOffset;
 
 /// CommandRingPointer
@@ -26,5 +26,9 @@ impl CommandRingPointer {
         let addr = addr >> 6;
         self.write_volatile(addr);
         wait_update_64bits_register_for(10, addr, self)
+    }
+
+    pub fn read_command_ring_addr(&self) -> u64 {
+        self.read_volatile() << 6
     }
 }

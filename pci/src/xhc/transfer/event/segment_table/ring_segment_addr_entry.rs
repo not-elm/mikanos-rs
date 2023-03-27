@@ -19,7 +19,6 @@ use crate::xhc::transfer::event::segment_table::SegmentTableAddr;
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 #[derive(VolatileBits)]
 #[volatile_type(u64)]
-#[offset_bit(6)]
 pub struct EventRingAddressEntry(usize, PhantomData<SegmentTableAddr>);
 
 impl EventRingAddressEntry {

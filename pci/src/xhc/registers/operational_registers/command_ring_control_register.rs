@@ -39,15 +39,15 @@ impl CommandRingControlRegisterOffset {
 #[derive(Debug)]
 pub struct CommandRingControlRegister {
     /// Offset: 0
-    pub rcs: RingCycleState,
+    rcs: RingCycleState,
     /// Offset: 1 Bit
-    pub cs: CommandStop,
+    cs: CommandStop,
     /// Offset: 2 Bit
-    pub ca: CommandAbort,
+    ca: CommandAbort,
     /// Offset: 3 Bit
-    pub crr: CommandRingRunning,
+    crr: CommandRingRunning,
     /// Offset: 6 Bit
-    pub command_ring_pointer: CommandRingPointer,
+    command_ring_pointer: CommandRingPointer,
 }
 
 impl CommandRingControlRegister {

@@ -18,9 +18,9 @@ impl CommandRing {
     }
 
     pub fn new(ring_ptr_addr: u64, ring_size: usize) -> Self {
-        Self {
-            ring: Ring::new(ring_ptr_addr, ring_size),
-        }
+        let mut ring = Ring::new(ring_ptr_addr, ring_size);
+
+        Self { ring }
     }
 
     pub fn enable_slot(&mut self) {

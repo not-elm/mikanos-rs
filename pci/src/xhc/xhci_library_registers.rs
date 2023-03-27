@@ -1,9 +1,9 @@
+use kernel_lib::println;
+
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
-use crate::xhc::transfer::command_ring::CommandRing;
 use crate::xhc::transfer::event_ring_table::EventRingTable;
-use crate::xhc::transfer::ring::RingBase;
 use crate::xhc::XhcRegistersHoldable;
 
 pub struct XhciLibraryRegisters<M>(xhci::registers::Registers<M>)
@@ -36,10 +36,13 @@ where
         let registers = self.registers_mut();
         registers.operational.usbcmd.update_volatile(|usb_cmd| {
             usb_cmd.clear_run_stop();
-            usb_cmd.set_host_controller_reset();
         });
 
         while !registers.operational.usbsts.read_volatile().hc_halted() {}
+        registers.operational.usbcmd.update_volatile(|usb_cmd| {
+            usb_cmd.set_host_controller_reset();
+            usb_cmd.set_light_host_controller_reset();
+        });
         while registers
             .operational
             .usbsts
@@ -78,37 +81,70 @@ where
             .portsc
             .port_reset()
         {}
-
+        println!(
+            "USB STATUS = {:?}",
+            self.registers_mut()
+                .interrupter_register_set
+                .interrupter(0)
+                .iman
+                .read_volatile()
+        );
         Ok(())
     }
 
-    fn setup_event_ring(&mut self, event_ring_table: &EventRingTable) -> PciResult {
+    fn setup_event_ring(
+        &mut self,
+        allocator: &mut impl MemoryAllocatable,
+    ) -> PciResult<(u64, u64)> {
         let registers = self.registers_mut();
         let mut primary_interrupter = registers.interrupter_register_set.interrupter_mut(0);
+        let event_ring_table_addr = allocator.try_allocate_trb_ring(1)?;
+        let event_ring_addr = allocator.try_allocate_trb_ring(32)?;
 
+        primary_interrupter.iman.update_volatile(|iman| {
+            iman.clear_interrupt_enable();
+            iman.clear_interrupt_pending();
+        });
         primary_interrupter.erstba.update_volatile(|erstba| {
-            erstba.set(event_ring_table.table_address());
+            erstba.set(event_ring_table_addr);
+        });
+        primary_interrupter.erstsz.update_volatile(|e| e.set(1));
+
+        primary_interrupter
+            .erdp
+            .update_volatile(|erdp| erdp.set_event_ring_dequeue_pointer(event_ring_addr));
+        primary_interrupter.iman.update_volatile(|iman| {
+            iman.set_0_interrupt_pending();
+            iman.set_interrupt_enable();
+        });
+        registers.operational.usbcmd.update_volatile(|sts| {
+            sts.set_interrupter_enable();
         });
 
-        primary_interrupter.erdp.update_volatile(|erdp| {
-            let address = event_ring_table.event_ring_address();
-
-            erdp.set_event_ring_dequeue_pointer(address)
-        });
-
-        Ok(())
+        Ok((
+            event_ring_table_addr,
+            primary_interrupter
+                .erdp
+                .read_volatile()
+                .event_ring_dequeue_pointer(),
+        ))
     }
 
-    fn setup_command_ring(&mut self, command_ring: &CommandRing) -> PciResult {
+    fn setup_command_ring(
+        &mut self,
+        ring_size: usize,
+        allocator: &mut impl MemoryAllocatable,
+    ) -> PciResult<u64> {
         let registers = self.registers_mut();
+        let command_ring_addr = allocator.try_allocate_trb_ring(ring_size)?;
         registers.operational.crcr.update_volatile(|crcr| {
             crcr.set_ring_cycle_state();
-            crcr.set_command_ring_pointer(command_ring.ring_base_addr());
+            crcr.set_command_ring_pointer(command_ring_addr);
         });
-        Ok(())
+        Ok(command_ring_addr & !0b111111)
     }
 
     fn setup_device_context_array(&mut self, a: &mut impl MemoryAllocatable) -> PciResult {
-        todo!()
+        Ok(())
     }
 }

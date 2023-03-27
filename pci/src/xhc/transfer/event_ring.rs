@@ -20,9 +20,9 @@ impl EventRing {
         })
     }
     pub fn new(event_ring_addr: u64, ring_size: usize) -> Self {
-        Self {
-            ring: Ring::new(event_ring_addr, ring_size),
-        }
+        let mut ring = Ring::new(event_ring_addr, ring_size);
+
+        Self { ring }
     }
     pub fn pop_event_trb(&mut self) -> Option<EventTrb> {
         let trb_buff = self.ring.pop();

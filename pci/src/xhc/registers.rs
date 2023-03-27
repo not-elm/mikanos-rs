@@ -68,28 +68,31 @@ impl XhcRegistersHoldable for Registers {
     fn setup_event_ring(
         &mut self,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<(EventRingTable, EventRing)> {
+    ) -> PciResult<(u64, u64)> {
         let event_ring_table_addr = allocate_event_ring_table(
             self.runtime_registers.interrupter_register_set(),
             allocator,
         )?;
-        let command_ring_addr = allocate_event_ring(
+        let event_ring_addr = allocate_event_ring(
             self.runtime_registers.interrupter_register_set(),
             32,
             allocator,
         )?;
-        println!("Command ring address = {:x}", command_ring_addr);
 
-        let event_ring_table = EventRingTable::new(event_ring_table_addr, command_ring_addr)?;
-        let event_ring = EventRing::new(command_ring_addr, 32);
-
-        Ok((event_ring_table, event_ring))
+        Ok((event_ring_table_addr, event_ring_addr & !0b111_111))
     }
 
-    fn setup_command_ring(&mut self, command_ring: &CommandRing) -> PciResult {
+    fn setup_command_ring(
+        &mut self,
+        ring_size: usize,
+        allocator: &mut impl MemoryAllocatable,
+    ) -> PciResult<u64> {
+        let command_ring_addr = allocator.try_allocate_trb_ring(ring_size)?;
         self.operational_registers
             .crcr()
-            .register_command_ring(command_ring.ring_base_addr())
+            .register_command_ring(command_ring_addr)?;
+
+        Ok(command_ring_addr & !0b111111)
     }
 
     fn setup_device_context_array(&mut self, allocator: &mut impl MemoryAllocatable) -> PciResult {
@@ -124,11 +127,7 @@ fn allocate_event_ring(
     ring_size: usize,
     allocator: &mut impl MemoryAllocatable,
 ) -> PciResult<u64> {
-    let event_ring_addr = unsafe {
-        allocator
-            .try_allocate_with_align(core::mem::size_of::<u128>() * ring_size, 64, 64 * 1024)?
-            .address()?
-    };
+    let event_ring_addr = allocator.try_allocate_trb_ring(ring_size)?;
 
     interrupter_set
         .event_ring_dequeue_pointer()
@@ -234,7 +233,7 @@ unsafe fn allocate_device_context_array(
     dcbaap.update_device_context_array_addr(device_context_array_addr as u64);
 
     let addr = dcbaap.read_device_context_array_addr();
-    if addr == device_context_array_addr as u64 {
+    if addr == device_context_array_addr {
         Ok(device_context_array_addr as usize)
     } else {
         Err(PciError::FailedOperateToRegister(NotReflectedValue {

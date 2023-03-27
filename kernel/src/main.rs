@@ -33,6 +33,7 @@ use pci::xhc::registers::operational_registers::operation_registers_offset::Oper
 use pci::xhc::registers::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 use pci::xhc::registers::runtime_registers::interrupter_register_set::InterrupterRegisterSetOffset;
 use pci::xhc::registers::runtime_registers::RuntimeRegistersOffset;
+use pci::xhc::xhci_library_registers::XhciLibraryRegisters;
 use pci::xhc::{XhcController, XhcRegistersHoldable};
 
 mod qemu;
@@ -64,26 +65,28 @@ pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
     _memory_map: &MemoryMapIter,
 ) {
-    init_console(frame_buffer_config.clone());
+    init_console(*frame_buffer_config);
     unsafe { setup_segments() };
 
     #[cfg(test)]
     test_main();
     serial_println!("hello Serial!");
 
-    fill_background(PixelColor::new(0, 0, 0x22), &frame_buffer_config).unwrap();
-    fill_bottom_bar(PixelColor::new(0, 0, 0xFF), &frame_buffer_config).unwrap();
+    fill_background(PixelColor::new(0, 0, 0x22), frame_buffer_config).unwrap();
+    fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
     serial_println!("MMIO ADDRESS = {:x}", mmio_base_addr().addr());
-    let mut registers = pci::xhc::registers::Registers::new(mmio_base_addr()).unwrap();
+    // let mut registers = pci::xhc::registers::Registers::new(mmio_base_addr()).unwrap();
     // registers
     //     .init(&mut MikanOSPciMemoryAllocator::new())
     //     .unwrap();
     //
-    let mut xhc_controller =
-        XhcController::new(&mut registers, &mut MikanOSPciMemoryAllocator::new()).unwrap();
 
-    registers.trb();
-    // xhc_controller.start_event_pooling();
+    // let rs = unsafe{xhci::registers::Registers::new(mmio_base_addr().addr(), IdentityMapper())};
+    let mut rs = XhciLibraryRegisters::new(mmio_base_addr(), IdentityMapper());
+    let mut xhc_controller =
+        XhcController::new(&mut rs, &mut MikanOSPciMemoryAllocator::new()).unwrap();
+
+    xhc_controller.start_event_pooling();
     // xhc_controller.start_event_pooling();
 
     common_lib::assembly::hlt_forever();

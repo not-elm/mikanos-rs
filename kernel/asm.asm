@@ -10,8 +10,15 @@ section .bss align=16
 kernel_main_stack:
   resb 1024 * 1024
 
+global mmio_memory
+mmio_memory:
+  resb 4096 * 32
 
 section .text
+global read_mmio_memory  ; void IoOut32(uint16_t addr, uint32_t data);
+read_mmio_memory:
+    mov eax, mmio_memory    ; dx = addr
+    o64 ret
 
 global IoOut32  ; void IoOut32(uint16_t addr, uint32_t data);
 IoOut32:

@@ -1,4 +1,5 @@
 use core::marker::PhantomData;
+
 use kernel_lib::serial_println;
 
 use crate::error::PciResult;
@@ -10,16 +11,18 @@ use crate::xhc::transfer::event_ring_table::EventRingTable;
 pub mod allocator;
 pub mod registers;
 pub mod transfer;
-// mod xhci_library_registers;
+pub mod xhci_library_registers;
 
 pub trait XhcRegistersHoldable {
     fn reset(&mut self) -> PciResult;
     fn run(&mut self) -> PciResult;
-    fn setup_event_ring(
+    fn setup_event_ring(&mut self, allocator: &mut impl MemoryAllocatable)
+        -> PciResult<(u64, u64)>;
+    fn setup_command_ring(
         &mut self,
+        ring_size: usize,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<(EventRingTable, EventRing)>;
-    fn setup_command_ring(&mut self, command_ring: &CommandRing) -> PciResult;
+    ) -> PciResult<u64>;
 
     fn setup_device_context_array(&mut self, allocator: &mut impl MemoryAllocatable) -> PciResult;
 }
@@ -39,11 +42,13 @@ where
 {
     pub fn new(registers: &mut T, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
         registers.reset()?;
-        let command_ring = CommandRing::new_with_alloc(64, allocator)?;
 
         registers.setup_device_context_array(allocator)?;
-        let (_, event_ring) = registers.setup_event_ring(allocator)?;
-        registers.setup_command_ring(&command_ring)?;
+        let (event_ring_table_addr, event_ring_addr) = registers.setup_event_ring(allocator)?;
+        let _event_ring_table = EventRingTable::new(event_ring_table_addr, event_ring_addr)?;
+        let event_ring = EventRing::new(event_ring_addr, 32);
+
+        let command_ring = CommandRing::new(registers.setup_command_ring(32, allocator)?, 32);
         registers.run()?;
 
         Ok(Self {
