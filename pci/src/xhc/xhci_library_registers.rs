@@ -1,4 +1,4 @@
-use kernel_lib::println;
+use kernel_lib::{println, serial_println};
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
@@ -34,9 +34,20 @@ where
 {
     fn reset(&mut self) -> PciResult {
         let registers = self.registers_mut();
-        registers.operational.usbcmd.update_volatile(|usb_cmd| {
-            usb_cmd.clear_run_stop();
-        });
+
+        serial_println!(
+            "{:x}",
+            registers
+                .interrupter_register_set
+                .interrupter_mut(0)
+                .erdp
+                .read_volatile()
+                .event_ring_dequeue_pointer()
+        );
+
+        // registers.operational.usbcmd.update_volatile(|usb_cmd| {
+        //     usb_cmd.clear_run_stop();
+        // });
 
         while !registers.operational.usbsts.read_volatile().hc_halted() {}
         registers.operational.usbcmd.update_volatile(|usb_cmd| {
@@ -105,14 +116,19 @@ where
             iman.clear_interrupt_enable();
             iman.clear_interrupt_pending();
         });
-        primary_interrupter.erstba.update_volatile(|erstba| {
-            erstba.set(event_ring_table_addr);
-        });
+
+        let _event_ring_table = EventRingTable::new(event_ring_table_addr, event_ring_addr)?;
+
         primary_interrupter.erstsz.update_volatile(|e| e.set(1));
 
         primary_interrupter
             .erdp
             .update_volatile(|erdp| erdp.set_event_ring_dequeue_pointer(event_ring_addr));
+
+        primary_interrupter.erstba.update_volatile(|erstba| {
+            erstba.set(event_ring_table_addr);
+        });
+
         primary_interrupter.iman.update_volatile(|iman| {
             iman.set_0_interrupt_pending();
             iman.set_interrupt_enable();
@@ -122,7 +138,7 @@ where
         });
 
         Ok((
-            event_ring_table_addr,
+            primary_interrupter.erstba.read_volatile().get(),
             primary_interrupter
                 .erdp
                 .read_volatile()
@@ -145,6 +161,20 @@ where
     }
 
     fn setup_device_context_array(&mut self, a: &mut impl MemoryAllocatable) -> PciResult {
+        let registers = self.registers_mut();
+        let max_slots = registers
+            .capability
+            .hcsparams1
+            .read_volatile()
+            .number_of_device_slots();
+        println!("Event Ring Max Segment Size = {}", max_slots);
+
+        let d = a.try_allocate_trb_ring(1024)?;
+
+        registers
+            .operational
+            .dcbaap
+            .update_volatile(|device_context| device_context.set(d));
         Ok(())
     }
 }

@@ -4,6 +4,8 @@ use kernel_lib::{println, serial_println};
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::transfer::event::trb::EventTrb;
+use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 pub trait RingBase {
     fn ring(&self) -> &Ring;
@@ -78,7 +80,7 @@ impl Ring {
         let cycle_bit = self.cycle_bit_as_u32();
         let current_data = self.ring_data_at(index);
         let write_data = trb.into();
-        println!("TRB = {:?}", write_data);
+
         current_data[0] = write_data[0];
         current_data[1] = write_data[1];
         current_data[2] = write_data[2];
@@ -86,8 +88,9 @@ impl Ring {
     }
 
     fn ring_data_at(&mut self, index: usize) -> &mut [u32] {
-        serial_println!("TRB raw data = {:x}", unsafe {
-            *self.ring_ptr().add(index)
+        serial_println!("{:?}", unsafe {
+            let raw = TrbRawData::new(*(self.ring_ptr().add(index))).unwrap();
+            EventTrb::new(raw)
         });
         unsafe { core::slice::from_raw_parts_mut(self.ring_ptr().add(index).cast::<u32>(), 4) }
     }

@@ -12,6 +12,8 @@ use crate::xhc::registers::runtime_registers::interrupter_register_set::interrup
 use crate::xhc::registers::runtime_registers::interrupter_register_set::interrupter_register_set_field::InterrupterRegisterSetField;
 use crate::xhc::registers::runtime_registers::RuntimeRegistersOffset;
 use crate::xhc::transfer::event::event_ring::EventRingA;
+use crate::xhc::transfer::event::trb::EventTrb;
+use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 pub mod event_ring_deque_pointer;
 pub mod event_ring_segment_table_base_address;
@@ -114,6 +116,11 @@ impl InterrupterRegisterSet {
         let ptr = self.event_ring_dequeue_pointer.read_deque_pointer();
         loop {
             serial_println!("{:x}", unsafe { *((ptr) as *mut u128) });
+            serial_println!("{:?}", unsafe {
+                let a = core::slice::from_raw_parts_mut(((ptr) as *mut u32), 4);
+                let raw = TrbRawData::new(*((ptr) as *mut u128)).unwrap();
+                EventTrb::new(raw)
+            });
         }
     }
 }
