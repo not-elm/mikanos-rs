@@ -1,6 +1,6 @@
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::transfer::event::event_ring_segment::EventRingSegment;
+use crate::xhc::transfer::event::event_ring::EventRing;
 use crate::xhc::transfer::event::event_ring_segment_table::EventRingSegmentTable;
 
 pub trait InterrupterSetRegisterAccessible {
@@ -26,7 +26,7 @@ pub trait InterrupterSetRegisterAccessible {
         event_ring_segment_table_size: u16,
         event_ring_segment_size: usize,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<(EventRingSegmentTable, EventRingSegment)> {
+    ) -> PciResult<(EventRingSegmentTable, EventRing)> {
         let event_ring_segment_table_addr =
             allocator.try_allocate_trb_ring(event_ring_segment_table_size as usize)?;
         let event_ring_segment_addr = allocator.try_allocate_trb_ring(event_ring_segment_size)?;
@@ -39,7 +39,9 @@ pub trait InterrupterSetRegisterAccessible {
         )?;
 
         self.write_event_ring_segment_table_pointer(0, event_ring_segment_table_addr)?;
-        let event_ring = EventRingSegment::new(event_ring_segment_addr, 32);
+        self.write_interrupter_pending(0, true)?;
+        self.write_interrupter_enable(0, true)?;
+        let event_ring = EventRing::new(event_ring_segment_addr, 32);
         Ok((event_ring_table, event_ring))
     }
 }

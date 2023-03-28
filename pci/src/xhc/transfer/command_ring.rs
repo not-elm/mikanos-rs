@@ -1,39 +1,32 @@
 use crate::error::PciResult;
-use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::transfer::ring::{Ring, RingBase};
+use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::transfer::ring::Ring;
+use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]
 pub struct CommandRing {
-    ring: Ring,
+    transfer_ring: Ring,
 }
 
 impl CommandRing {
-    pub fn new_with_alloc(
-        ring_size: usize,
-        allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<Self> {
-        Ok(Self {
-            ring: Ring::new_with_alloc(ring_size, allocator)?,
-        })
-    }
-
     pub fn new(ring_ptr_addr: u64, ring_size: usize) -> Self {
-        let ring = Ring::new(ring_ptr_addr, ring_size);
-
-        Self { ring }
+        Self {
+            transfer_ring: Ring::new(ring_ptr_addr, ring_size, true),
+        }
     }
-
-    pub fn enable_slot(&mut self) {
-        self.ring.push(xhci::ring::trb::command::EnableSlot::new());
+    pub fn push_no_op(&mut self, doorbell: &mut impl DoorbellRegistersAccessible) -> PciResult {
+        self.transfer_ring.push(TrbRawData::from(
+            xhci::ring::trb::command::Noop::new().into_raw(),
+        ))?;
+        doorbell.notify_at(0, 0, 0)
     }
-}
-
-impl RingBase for CommandRing {
-    fn ring(&self) -> &Ring {
-        &self.ring
-    }
-
-    fn ring_mut(&mut self) -> &mut Ring {
-        &mut self.ring
+    pub fn push_enable_slot(
+        &mut self,
+        doorbell: &mut impl DoorbellRegistersAccessible,
+    ) -> PciResult {
+        self.transfer_ring.push(TrbRawData::from(
+            xhci::ring::trb::command::EnableSlot::new().into_raw(),
+        ))?;
+        doorbell.notify_at(0, 0, 0)
     }
 }

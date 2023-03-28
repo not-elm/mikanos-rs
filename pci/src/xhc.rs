@@ -1,15 +1,18 @@
-use core::marker::PhantomData;
+use xhci::ring::trb::event::PortStatusChange;
 
-use kernel_lib::serial_println;
+use kernel_lib::{println, serial_println};
+use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
+use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
+use registers::traits::registers_operation::RegistersOperation;
+use registers::traits::usb_command_register_accessible::UsbCommandRegisterAccessible;
+use transfer::event::event_ring::EventRing;
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::registers::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
-use crate::xhc::registers::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
-use crate::xhc::registers::registers_operation::RegistersOperation;
-use crate::xhc::registers::usb_command_register_accessible::UsbCommandRegisterAccessible;
+use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
 use crate::xhc::transfer::command_ring::CommandRing;
-use transfer::event::event_ring_segment::EventRingSegment;
+use crate::xhc::transfer::event::event_trb::EventTrb;
 
 pub mod allocator;
 pub mod registers;
@@ -17,11 +20,14 @@ pub mod transfer;
 
 pub struct XhcController<T>
 where
-    T: RegistersOperation + InterrupterSetRegisterAccessible,
+    T: RegistersOperation
+        + InterrupterSetRegisterAccessible
+        + PortRegistersAccessible
+        + DoorbellRegistersAccessible,
 {
     registers: T,
-    event_ring: EventRingSegment,
-    _command_ring: CommandRing,
+    event_ring: EventRing,
+    command_ring: CommandRing,
 }
 
 impl<T> XhcController<T>
@@ -29,26 +35,26 @@ where
     T: RegistersOperation
         + InterrupterSetRegisterAccessible
         + UsbCommandRegisterAccessible
+        + DoorbellRegistersAccessible
+        + PortRegistersAccessible
         + DeviceContextBaseAddressArrayPointerAccessible,
 {
     pub fn new(mut registers: T, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
         registers.reset()?;
 
-        let device_context_array_addr = allocator.try_allocate_trb_ring(1024)?;
+        let device_context_array_addr = allocator.try_allocate_device_context_array(8)?;
         registers.write_device_context_array_addr(device_context_array_addr)?;
 
-        let (_, event_ring) = registers.setup_event_ring(1, 32, allocator)?;
+        let command_ring = registers.setup_command_ring(32, allocator)?;
 
-        let command_ring_addr = allocator.try_allocate_trb_ring(32)?;
-        let command_ring = CommandRing::new(command_ring_addr, 32);
-        registers.write_command_ring_addr(command_ring_addr)?;
+        let (_, event_ring) = registers.setup_event_ring(1, 32, allocator)?;
 
         registers.run()?;
 
         Ok(Self {
             registers,
             event_ring,
-            _command_ring: command_ring,
+            command_ring,
         })
     }
 
@@ -63,11 +69,34 @@ where
             .event_ring
             .read_event_trb(self.registers.read_event_ring_addr(0))
         {
-            serial_println!("{:?}", event_trb);
-            self.event_ring.next_dequeue_pointer(&mut self.registers)?;
+            self.on_event(event_trb)?;
         }
 
         Ok(())
+    }
+
+    fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
+        match event_trb {
+            EventTrb::CommandCompletionEvent(completion) => {
+                println!("COMMAND! {:?}", completion);
+                Ok(())
+            }
+            EventTrb::PortStatusChangeEvent(port_status) => self.enable_slot(port_status),
+            EventTrb::NotSupport { .. } => Ok(()),
+        }
+    }
+
+    fn enable_slot(&mut self, port_status: PortStatusChange) -> PciResult {
+        println!(
+            "Receive Port Status Change = {:?} {:x}",
+            port_status,
+            self.registers.read_event_ring_addr(0)
+        );
+        let port_id = port_status.port_id();
+        self.registers.clear_port_reset_change_at(port_id - 1)?;
+        self.command_ring.push_enable_slot(&mut self.registers)?;
+        self.event_ring.next_dequeue_pointer(&mut self.registers)
+        // self.command_ring.push_no_op(&mut self.registers)
     }
 }
 

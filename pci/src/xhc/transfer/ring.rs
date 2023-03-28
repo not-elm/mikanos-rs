@@ -1,98 +1,88 @@
-use xhci::ring::trb::Link;
-
-use kernel_lib::serial_println;
-
-use crate::error::PciResult;
-use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::transfer::event::trb::EventTrb;
+use crate::error::{PciError, PciResult};
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
-
-pub trait RingBase {
-    fn ring(&self) -> &Ring;
-    fn ring_mut(&mut self) -> &mut Ring;
-    fn ring_base_addr(&self) -> u64 {
-        self.ring().ring_ptr_addr
-    }
-}
+use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
 
 #[derive(Debug)]
 pub struct Ring {
-    ring_ptr_addr: u64,
-    index: usize,
-    ring_size: usize,
+    ring_ptr_base_address: u64,
+    ring_ptr_address: u64,
+    ring_end_address: u64,
     cycle_bit: bool,
 }
 
 impl Ring {
-    pub fn new(ring_ptr_addr: u64, ring_size: usize) -> Self {
+    pub fn new(ring_ptr_base_address: u64, ring_size: usize, cycle_bit: bool) -> Self {
         Self {
-            ring_ptr_addr,
-            index: 0,
-            ring_size,
-            cycle_bit: false,
+            ring_ptr_base_address,
+            ring_ptr_address: ring_ptr_base_address,
+            ring_end_address: ring_ptr_base_address + trb_byte_size() * (ring_size - 1) as u64,
+            cycle_bit,
         }
     }
 
-    pub fn new_with_alloc(
-        ring_size: usize,
-        allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<Self> {
-        let bytes = core::mem::size_of::<u128>() * ring_size;
+    pub fn push(&mut self, trb: TrbRawData) -> PciResult {
+        self.write(trb)?;
 
-        let ring_ptr_addr =
-            unsafe { allocator.try_allocate_with_align(bytes, 64, 64 * 1024) }?.address()?;
-
-        Ok(Self::new(ring_ptr_addr as u64, ring_size))
-    }
-    pub fn pop(&mut self) -> [u32; 4] {
-        let current_index = self.index;
-        // if self.index < self.ring_size {
-        //     self.index += 1;
-        // } else {
-        //     self.index = 0;
-        //     self.cycle_bit = !self.cycle_bit;
-        // }
-        let data = self.ring_data_at(current_index);
-
-        [data[0], data[1], data[2], data[3]]
-    }
-    pub fn push(&mut self, trb: impl Into<[u32; 4]>) {
-        self.write_data(self.index, trb);
-        self.index += 1;
-        if self.index == self.ring_size - 1 {
-            let mut link_trb = xhci::ring::trb::Link::new();
-            link_trb.set_cycle_bit();
-            self.write_data(self.index, link_trb);
-            self.index = 0;
-            self.cycle_bit = !self.cycle_bit;
+        self.ring_ptr_address += trb_byte_size();
+        if self.is_end_address(self.ring_ptr_address) {
+            self.rollback()?;
         }
+        Ok(())
     }
-    pub fn append_link_trb(&mut self) {
-        let mut link_trb = Link::new();
-        link_trb.set_cycle_bit();
-        link_trb.set_toggle_cycle();
-        link_trb.set_ring_segment_pointer(self.ring_ptr_addr);
-
-        self.write_data(self.ring_size - 1, link_trb);
+    pub fn read(&self) -> Option<TrbRawData> {
+        self.read_transfer_request_block(self.ring_ptr_address)
+    }
+    pub fn next(&mut self) {
+        self.ring_ptr_address += trb_byte_size();
+    }
+    pub fn read_transfer_request_block(&self, trb_addr: u64) -> Option<TrbRawData> {
+        let ptr = trb_addr as *const u128;
+        if ptr.is_null() {
+            return None;
+        }
+        TrbRawData::new(unsafe { *(ptr) }).ok()
+    }
+    pub fn base_address(&self) -> u64 {
+        self.ring_ptr_base_address
+    }
+    pub fn toggle_cycle_bit(&mut self) {
+        self.cycle_bit = !self.cycle_bit;
     }
 
-    fn write_data(&mut self, index: usize, trb: impl Into<[u32; 4]>) {
-        let cycle_bit = self.cycle_bit_as_u32();
-        let current_data = self.ring_data_at(index);
-        let write_data = trb.into();
-
-        current_data[0] = write_data[0];
-        current_data[1] = write_data[1];
-        current_data[2] = write_data[2];
-        current_data[3] = 0x1802;
+    pub fn current_ptr_address(&self) -> u64 {
+        self.ring_ptr_address
     }
 
-    fn ring_data_at(&mut self, index: usize) -> &mut [u32] {
-        serial_println!("{:?}", unsafe {
-            let raw = TrbRawData::new(*(self.ring_ptr().add(index))).unwrap();
-            EventTrb::new(raw, false)
-        });
-        unsafe { core::slice::from_raw_parts_mut(self.ring_ptr().add(index).cast::<u32>(), 4) }
+    pub fn is_end_address(&self, address: u64) -> bool {
+        self.ring_end_address <= address
+    }
+    pub fn cycle_bit(&self) -> bool {
+        self.cycle_bit
+    }
+    fn rollback(&mut self) -> PciResult {
+        let mut link = xhci::ring::trb::Link::new();
+        link.set_toggle_cycle();
+
+        self.write(TrbRawData::from(link.into_raw()))?;
+
+        self.ring_ptr_address = self.ring_ptr_base_address;
+        self.toggle_cycle_bit();
+        Ok(())
+    }
+    fn write(&mut self, trb: TrbRawData) -> PciResult {
+        let dest_deref = unsafe {
+            (self.ring_ptr_address as *mut u128)
+                .as_mut()
+                .ok_or(PciError::FailedOperateTransferRing)
+        }?;
+        let dest_buff = trb_buffer_from_address(dest_deref);
+        let src_buff: [u32; 4] = trb.into();
+        dest_buff[0] = src_buff[0];
+        dest_buff[1] = src_buff[1];
+        dest_buff[2] = src_buff[2];
+        dest_buff[3] = (src_buff[3] & !0b1u32) | self.cycle_bit_as_u32();
+
+        Ok(())
     }
 
     fn cycle_bit_as_u32(&self) -> u32 {
@@ -102,8 +92,58 @@ impl Ring {
             0
         }
     }
+}
 
-    fn ring_ptr(&self) -> *mut u128 {
-        self.ring_ptr_addr as *mut u128
+#[cfg(test)]
+mod tests {
+    use crate::xhc::transfer::ring::Ring;
+    use crate::xhc::transfer::trb_byte_size;
+    use crate::xhc::transfer::trb_raw_data::TrbRawData;
+
+    #[test]
+    fn it_push_trb() {
+        let buff = [0u128; 32];
+        let mut ring = Ring::new(buff.as_ptr() as u64, 32, true);
+        let enable_slot_trb =
+            TrbRawData::try_from(xhci::ring::trb::command::EnableSlot::new().into_raw()).unwrap();
+        let is_ok = ring.push(enable_slot_trb).is_ok();
+
+        assert!(is_ok);
+        let enable_slot_buff: [u32; 4] = enable_slot_trb.into();
+        let buff = buff.as_ptr().cast::<u32>();
+        unsafe {
+            assert_eq!(buff.read_volatile(), enable_slot_buff[0]);
+            assert_eq!(buff.add(1).read_volatile(), enable_slot_buff[1]);
+            assert_eq!(buff.add(2).read_volatile(), enable_slot_buff[2]);
+            assert_eq!(buff.add(3).read_volatile(), 1);
+            assert_eq!(
+                ring.ring_ptr_address,
+                ring.ring_ptr_base_address + trb_byte_size()
+            )
+        }
+    }
+
+    #[test]
+    #[cfg(target_endian = "little")]
+    fn it_push_link_trb_and_rollback() {
+        let buff = [0u128; 2];
+        let mut ring = Ring::new(buff.as_ptr() as u64, 2, true);
+        let enable_slot_trb =
+            TrbRawData::try_from(xhci::ring::trb::command::EnableSlot::new().into_raw()).unwrap();
+
+        assert!(ring.push(enable_slot_trb).is_ok());
+
+        let mut link = xhci::ring::trb::Link::new();
+        link.set_toggle_cycle();
+        let link_buff = link.into_raw();
+        unsafe {
+            let buff = buff.as_ptr().add(1).cast::<u32>();
+            assert_eq!(buff.read_volatile(), link_buff[3]);
+            assert_eq!(buff.add(1).read_volatile(), link_buff[2]);
+            assert_eq!(buff.add(2).read_volatile(), link_buff[1]);
+            assert_eq!(buff.add(3).read_volatile(), 1);
+            assert_eq!(ring.ring_ptr_address, ring.ring_ptr_base_address);
+            assert!(!ring.cycle_bit);
+        }
     }
 }

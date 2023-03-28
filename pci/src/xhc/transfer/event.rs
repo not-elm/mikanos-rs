@@ -1,3 +1,3 @@
-pub mod event_ring_segment;
+pub mod event_ring;
 pub mod event_ring_segment_table;
-pub mod trb;
+pub mod event_trb;

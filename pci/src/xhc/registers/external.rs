@@ -1,12 +1,14 @@
 use kernel_lib::println;
 
 use crate::error::{OperationReason, PciError, PciResult};
-use crate::xhc::registers::config_register_accessible::ConfigRegisterAccessible;
-use crate::xhc::registers::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
-use crate::xhc::registers::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
-use crate::xhc::registers::registers_operation::RegistersOperation;
-use crate::xhc::registers::usb_command_register_accessible::UsbCommandRegisterAccessible;
+use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
+use crate::xhc::registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
+use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
+use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
+use crate::xhc::registers::traits::registers_operation::RegistersOperation;
+use crate::xhc::registers::traits::usb_command_register_accessible::UsbCommandRegisterAccessible;
 
 pub struct External<M>(xhci::registers::Registers<M>)
 where
@@ -36,6 +38,11 @@ where
 {
     fn reset(&mut self) -> PciResult {
         let registers = self.registers_mut();
+        registers.operational.usbcmd.update_volatile(|usb_cmd| {
+            usb_cmd.clear_interrupter_enable();
+            usb_cmd.clear_host_system_error_enable();
+            usb_cmd.clear_enable_wrap_event();
+        });
 
         while !registers.operational.usbsts.read_volatile().hc_halted() {}
         registers.operational.usbcmd.update_volatile(|usb_cmd| {
@@ -53,6 +60,9 @@ where
     }
 
     fn run(&mut self) -> PciResult {
+        self.0.operational.usbcmd.update_volatile(|c| {
+            c.set_interrupter_enable();
+        });
         self.0.operational.usbcmd.update_volatile(|u| {
             u.set_run_stop();
         });
@@ -80,15 +90,20 @@ where
             .portsc
             .port_reset()
         {}
-        println!(
-            "USB STATUS = {:?}",
-            self.registers_mut()
-                .interrupter_register_set
-                .interrupter(0)
-                .iman
-                .read_volatile()
-        );
         Ok(())
+        // if self
+        //     .0
+        //     .operational
+        //     .crcr
+        //     .read_volatile()
+        //     .command_ring_running()
+        // {
+        //     Ok(())
+        // } else {
+        //     Err(PciError::FailedOperateToRegister(
+        //         OperationReason::MustBeCommandRingStopped,
+        //     ))
+        // }
     }
 }
 
@@ -231,6 +246,58 @@ where
             .interrupter_mut(index)
             .erstsz
             .update_volatile(|e| e.set(size));
+
+        Ok(())
+    }
+}
+
+impl<M> DoorbellRegistersAccessible for External<M>
+where
+    M: xhci::accessor::Mapper + Clone,
+{
+    fn notify_at(&mut self, index: usize, target: u8, stream_id: u16) -> PciResult {
+        self.registers_mut()
+            .doorbell
+            .update_volatile_at(index, |doorbell| {
+                doorbell.set_doorbell_target(target);
+                doorbell.set_doorbell_stream_id(stream_id);
+            });
+
+        Ok(())
+    }
+}
+impl<M> PortRegistersAccessible for External<M>
+where
+    M: xhci::accessor::Mapper + Clone,
+{
+    fn reset_port_at(&mut self, port_id: u8) -> PciResult {
+        self.registers_mut()
+            .port_register_set
+            .update_volatile_at(port_id as usize, |port| {
+                port.portsc.set_port_reset();
+                port.portsc.set_wake_on_connect_enable();
+            });
+        while self
+            .0
+            .port_register_set
+            .read_volatile_at(port_id as usize)
+            .portsc
+            .port_reset()
+        {}
+        Ok(())
+    }
+
+    fn clear_port_reset_change_at(&mut self, port_id: u8) -> PciResult {
+        self.registers_mut()
+            .port_register_set
+            .update_volatile_at(port_id as usize, |port| {
+                println!(
+                    "PORT ID = {} port is connect {}",
+                    port_id,
+                    port.portsc.current_connect_status()
+                );
+                port.portsc.clear_port_reset_change();
+            });
 
         Ok(())
     }

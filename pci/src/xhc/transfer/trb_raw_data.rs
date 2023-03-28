@@ -1,6 +1,9 @@
 use core::fmt::{Debug, Formatter};
 
+use kernel_lib::{println, serial_println};
+
 use crate::error::{PciError, PciResult};
+use crate::xhc::transfer::trb_buffer_from_address;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 #[repr(transparent)]
@@ -12,13 +15,16 @@ impl TrbRawData {
     }
     pub fn new(trb_raw_data: u128) -> PciResult<Self> {
         let last_offset = into_u32_array(trb_raw_data);
+        println!("Receive  TRB = {:?}", last_offset);
         if last_offset[0] == 0 {
             Err(PciError::InvalidTrb(trb_raw_data))
         } else {
             Ok(Self(trb_raw_data))
         }
     }
-
+    pub fn buffer_mut(&mut self) -> &mut [u32] {
+        trb_buffer_from_address(&mut self.0)
+    }
     pub fn raw(&self) -> u128 {
         self.0
     }
@@ -38,11 +44,9 @@ impl Into<[u32; 4]> for TrbRawData {
     }
 }
 
-impl TryFrom<[u32; 4]> for TrbRawData {
-    type Error = ();
-
-    fn try_from(value: [u32; 4]) -> Result<Self, Self::Error> {
-        TrbRawData::new(into_u128(value)).map_err(|_| ())
+impl From<[u32; 4]> for TrbRawData {
+    fn from(value: [u32; 4]) -> Self {
+        TrbRawData::new_unchecked(into_u128(value))
     }
 }
 
@@ -84,5 +88,24 @@ mod tests {
             .for_each(|(data, trb_data)| {
                 assert_eq!(*data, *trb_data);
             });
+    }
+
+    #[test]
+    fn it_success_into_port_status_change_event_array() {
+        let trb = TrbRawData::new_unchecked(0x8801010000000000000005000000u128);
+        let trb_buff: [u32; 4] = trb.into();
+        assert!(xhci::ring::trb::event::PortStatusChange::try_from(trb_buff).is_ok())
+    }
+
+    #[test]
+    fn it_success_buffer_mut_port_status_change_event_array() {
+        let mut trb = TrbRawData::new_unchecked(0x8801010000000000000005000000u128);
+        let trb_buff: [u32; 4] = trb.into();
+        let trb_buff_mut = trb.buffer_mut();
+        let is_equal = trb_buff
+            .iter()
+            .zip(trb_buff_mut.iter())
+            .all(|(x, y)| x == y);
+        assert!(is_equal);
     }
 }

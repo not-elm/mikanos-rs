@@ -1,8 +1,11 @@
+use kernel_lib::serial_println;
+
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]
 pub enum EventTrb {
     PortStatusChangeEvent(xhci::ring::trb::event::PortStatusChange),
+    CommandCompletionEvent(xhci::ring::trb::event::CommandCompletion),
     NotSupport { trb_type: u128 },
 }
 
@@ -11,8 +14,12 @@ impl EventTrb {
         if read_cycle_bit(trb.raw()) != cycle_bit {
             return None;
         }
+
         let raw_data_buff: [u32; 4] = trb.into();
         let event_trb = match read_trb_type(trb.raw()) {
+            33 => EventTrb::CommandCompletionEvent(
+                xhci::ring::trb::event::CommandCompletion::try_from(raw_data_buff).ok()?,
+            ),
             34 => EventTrb::PortStatusChangeEvent(
                 xhci::ring::trb::event::PortStatusChange::try_from(raw_data_buff).ok()?,
             ),
@@ -24,13 +31,10 @@ impl EventTrb {
         Some(event_trb)
     }
 }
+
 fn read_cycle_bit(trb: u128) -> bool {
     let cycle_bit = (trb >> 96) & 0b1;
-    if cycle_bit == 1 {
-        true
-    } else {
-        false
-    }
+    cycle_bit == 1
 }
 
 fn read_trb_type(trb: u128) -> u128 {
@@ -39,7 +43,7 @@ fn read_trb_type(trb: u128) -> u128 {
 
 #[cfg(test)]
 mod tests {
-    use crate::xhc::transfer::event::trb::read_trb_type;
+    use crate::xhc::transfer::event::event_trb::read_trb_type;
 
     #[test]
     fn it_trb_type_is_port_status_change() {

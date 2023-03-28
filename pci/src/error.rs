@@ -5,6 +5,7 @@ pub type PciResult<T = ()> = Result<T, PciError>;
 #[derive(Debug)]
 pub enum PciError {
     InvalidTrb(u128),
+    FailedOperateTransferRing,
     NullPointer,
     InvalidHeaderType(HeaderTypeReason),
     InvalidFunction(FunctionReason),
