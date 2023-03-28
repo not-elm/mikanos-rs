@@ -90,7 +90,7 @@ impl Ring {
     fn ring_data_at(&mut self, index: usize) -> &mut [u32] {
         serial_println!("{:?}", unsafe {
             let raw = TrbRawData::new(*(self.ring_ptr().add(index))).unwrap();
-            EventTrb::new(raw)
+            EventTrb::new(raw, false)
         });
         unsafe { core::slice::from_raw_parts_mut(self.ring_ptr().add(index).cast::<u32>(), 4) }
     }

@@ -68,9 +68,9 @@ pub extern "sysv64" fn kernel_main(
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
     serial_println!("MMIO ADDRESS = {:x}", mmio_base_addr().addr());
 
-    let mut external = External::new(mmio_base_addr(), IdentityMapper());
+    let external = External::new(mmio_base_addr(), IdentityMapper());
     let mut xhc_controller =
-        XhcController::new(&mut external, &mut MikanOSPciMemoryAllocator::new()).unwrap();
+        XhcController::new(external, &mut MikanOSPciMemoryAllocator::new()).unwrap();
 
     xhc_controller.start_event_pooling();
 

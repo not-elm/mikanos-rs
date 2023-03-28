@@ -17,9 +17,9 @@ pub mod transfer;
 
 pub struct XhcController<T>
 where
-    T: RegistersOperation,
+    T: RegistersOperation + InterrupterSetRegisterAccessible,
 {
-    _p: PhantomData<T>,
+    registers: T,
     event_ring: EventRingSegment,
     _command_ring: CommandRing,
 }
@@ -31,7 +31,7 @@ where
         + UsbCommandRegisterAccessible
         + DeviceContextBaseAddressArrayPointerAccessible,
 {
-    pub fn new(registers: &mut T, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
+    pub fn new(mut registers: T, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
         registers.reset()?;
 
         let device_context_array_addr = allocator.try_allocate_trb_ring(1024)?;
@@ -46,22 +46,28 @@ where
         registers.run()?;
 
         Ok(Self {
-            _p: PhantomData,
+            registers,
             event_ring,
             _command_ring: command_ring,
         })
     }
 
-    pub fn start_event_pooling(&mut self) {
+    pub fn start_event_pooling(&mut self) -> PciResult {
         loop {
-            self.on_event();
+            self.check_event()?;
         }
     }
 
-    pub fn on_event(&mut self) {
-        if let Some(event_trb) = self.event_ring.pop_event_trb() {
+    pub fn check_event(&mut self) -> PciResult {
+        if let Some(event_trb) = self
+            .event_ring
+            .read_event_trb(self.registers.read_event_ring_addr(0))
+        {
             serial_println!("{:?}", event_trb);
+            self.event_ring.next_dequeue_pointer(&mut self.registers)?;
         }
+
+        Ok(())
     }
 }
 

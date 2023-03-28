@@ -7,7 +7,10 @@ pub enum EventTrb {
 }
 
 impl EventTrb {
-    pub unsafe fn new(trb: TrbRawData) -> Option<Self> {
+    pub unsafe fn new(trb: TrbRawData, cycle_bit: bool) -> Option<Self> {
+        if read_cycle_bit(trb.raw()) != cycle_bit {
+            return None;
+        }
         let raw_data_buff: [u32; 4] = trb.into();
         let event_trb = match read_trb_type(trb.raw()) {
             34 => EventTrb::PortStatusChangeEvent(
@@ -19,6 +22,14 @@ impl EventTrb {
         };
 
         Some(event_trb)
+    }
+}
+fn read_cycle_bit(trb: u128) -> bool {
+    let cycle_bit = (trb >> 96) & 0b1;
+    if cycle_bit == 1 {
+        true
+    } else {
+        false
     }
 }
 
