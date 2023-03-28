@@ -17,7 +17,6 @@ use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::{println, serial_println};
-use macros::declaration_volatile_accessible;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
@@ -30,7 +29,7 @@ mod qemu;
 #[cfg(test)]
 mod test_runner;
 #[cfg(test)]
-declaration_volatile_accessible!();
+macros::declaration_volatile_accessible!();
 // #[no_mangle]
 // pub extern "sysv64" fn kernel_entry_point(
 //     frame_buffer_config: &FrameBufferConfig,
@@ -72,7 +71,7 @@ pub extern "sysv64" fn kernel_main(
     let mut xhc_controller =
         XhcController::new(external, &mut MikanOSPciMemoryAllocator::new()).unwrap();
 
-    xhc_controller.start_event_pooling();
+    xhc_controller.start_event_pooling().unwrap();
 
     common_lib::assembly::hlt_forever();
 }
