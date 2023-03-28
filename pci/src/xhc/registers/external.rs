@@ -1,7 +1,8 @@
 use kernel_lib::println;
 
-use crate::error::{OperationReason, PciError, PciResult};
+use crate::error::PciResult;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
+use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
 use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
 use crate::xhc::registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
@@ -47,7 +48,6 @@ where
         while !registers.operational.usbsts.read_volatile().hc_halted() {}
         registers.operational.usbcmd.update_volatile(|usb_cmd| {
             usb_cmd.set_host_controller_reset();
-            usb_cmd.set_light_host_controller_reset();
         });
         while registers
             .operational
@@ -91,19 +91,27 @@ where
             .port_reset()
         {}
         Ok(())
-        // if self
-        //     .0
-        //     .operational
-        //     .crcr
-        //     .read_volatile()
-        //     .command_ring_running()
-        // {
-        //     Ok(())
-        // } else {
-        //     Err(PciError::FailedOperateToRegister(
-        //         OperationReason::MustBeCommandRingStopped,
-        //     ))
-        // }
+    }
+}
+
+impl<M> CapabilityRegistersAccessible for External<M>
+where
+    M: xhci::accessor::Mapper + Clone,
+{
+    fn read_max_scratchpad_buffers_len(&self) -> usize {
+        println!(
+            "len= {}",
+            self.0
+                .capability
+                .hcsparams2
+                .read_volatile()
+                .max_scratchpad_buffers()
+        );
+        self.0
+            .capability
+            .hcsparams2
+            .read_volatile()
+            .max_scratchpad_buffers() as usize
     }
 }
 
@@ -118,14 +126,15 @@ where
             .hcsparams1
             .read_volatile()
             .number_of_device_slots();
-        if device_slots < max_device_slots {
-            return Err(PciError::FailedOperateToRegister(
-                OperationReason::OverMaxDeviceSlots {
-                    max: max_device_slots,
-                    specify: device_slots,
-                },
-            ));
-        }
+        println!("number of device slots {}", max_device_slots);
+        // if device_slots < max_device_slots {
+        //     return Err(PciError::FailedOperateToRegister(
+        //         OperationReason::OverMaxDeviceSlots {
+        //             max: max_device_slots,
+        //             specify: device_slots,
+        //         },
+        //     ));
+        // }
         self.registers_mut()
             .operational
             .config
@@ -146,6 +155,7 @@ where
 
         registers.operational.crcr.update_volatile(|crcr| {
             crcr.set_ring_cycle_state();
+
             crcr.set_command_ring_pointer(command_ring_addr);
         });
 
@@ -266,6 +276,7 @@ where
         Ok(())
     }
 }
+
 impl<M> PortRegistersAccessible for External<M>
 where
     M: xhci::accessor::Mapper + Clone,

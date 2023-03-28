@@ -1,6 +1,6 @@
 use xhci::ring::trb::event::PortStatusChange;
 
-use kernel_lib::{println, serial_println};
+use kernel_lib::println;
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use registers::traits::registers_operation::RegistersOperation;
@@ -9,9 +9,12 @@ use transfer::event::event_ring::EventRing;
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
+use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
 use crate::xhc::transfer::command_ring::CommandRing;
+use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
 use crate::xhc::transfer::event::event_trb::EventTrb;
 
 pub mod allocator;
@@ -28,22 +31,29 @@ where
     registers: T,
     event_ring: EventRing,
     command_ring: CommandRing,
+    _device_context_array: DeviceContextArrayPtr,
 }
 
 impl<T> XhcController<T>
 where
     T: RegistersOperation
+        + CapabilityRegistersAccessible
         + InterrupterSetRegisterAccessible
         + UsbCommandRegisterAccessible
         + DoorbellRegistersAccessible
         + PortRegistersAccessible
+        + ConfigRegisterAccessible
         + DeviceContextBaseAddressArrayPointerAccessible,
 {
     pub fn new(mut registers: T, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
         registers.reset()?;
 
-        let device_context_array_addr = allocator.try_allocate_device_context_array(8)?;
-        registers.write_device_context_array_addr(device_context_array_addr)?;
+        registers.write_max_device_slots_enabled(8)?;
+        let device_context_array = registers.setup_device_context_array(
+            8,
+            registers.read_max_scratchpad_buffers_len(),
+            allocator,
+        )?;
 
         let command_ring = registers.setup_command_ring(32, allocator)?;
 
@@ -55,6 +65,7 @@ where
             registers,
             event_ring,
             command_ring,
+            _device_context_array: device_context_array,
         })
     }
 

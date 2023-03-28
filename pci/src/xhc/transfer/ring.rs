@@ -77,10 +77,11 @@ impl Ring {
         }?;
         let dest_buff = trb_buffer_from_address(dest_deref);
         let src_buff: [u32; 4] = trb.into();
-        dest_buff[0] = src_buff[0];
-        dest_buff[1] = src_buff[1];
-        dest_buff[2] = src_buff[2];
-        dest_buff[3] = (src_buff[3] & !0b1u32) | self.cycle_bit_as_u32();
+
+        dest_buff[0] = src_buff[3];
+        dest_buff[1] = src_buff[2];
+        dest_buff[2] = src_buff[1];
+        dest_buff[3] = (src_buff[0] & !0b1) | self.cycle_bit_as_u32();
 
         Ok(())
     }
@@ -105,17 +106,18 @@ mod tests {
         let buff = [0u128; 32];
         let mut ring = Ring::new(buff.as_ptr() as u64, 32, true);
         let enable_slot_trb =
-            TrbRawData::try_from(xhci::ring::trb::command::EnableSlot::new().into_raw()).unwrap();
+            TrbRawData::from(xhci::ring::trb::command::EnableSlot::new().into_raw());
         let is_ok = ring.push(enable_slot_trb).is_ok();
 
         assert!(is_ok);
         let enable_slot_buff: [u32; 4] = enable_slot_trb.into();
         let buff = buff.as_ptr().cast::<u32>();
         unsafe {
-            assert_eq!(buff.read_volatile(), enable_slot_buff[0]);
-            assert_eq!(buff.add(1).read_volatile(), enable_slot_buff[1]);
-            assert_eq!(buff.add(2).read_volatile(), enable_slot_buff[2]);
-            assert_eq!(buff.add(3).read_volatile(), 1);
+            let buff = core::slice::from_raw_parts(buff, 4);
+            assert_eq!(buff[0], enable_slot_buff[3]);
+            assert_eq!(buff[1], enable_slot_buff[2]);
+            assert_eq!(buff[2], enable_slot_buff[1]);
+            assert_eq!(buff[3], enable_slot_buff[0] | 1);
             assert_eq!(
                 ring.ring_ptr_address,
                 ring.ring_ptr_base_address + trb_byte_size()
@@ -138,10 +140,10 @@ mod tests {
         let link_buff = link.into_raw();
         unsafe {
             let buff = buff.as_ptr().add(1).cast::<u32>();
-            assert_eq!(buff.read_volatile(), link_buff[3]);
-            assert_eq!(buff.add(1).read_volatile(), link_buff[2]);
-            assert_eq!(buff.add(2).read_volatile(), link_buff[1]);
-            assert_eq!(buff.add(3).read_volatile(), 1);
+            assert_eq!(buff.read_volatile(), link_buff[0]);
+            assert_eq!(buff.add(1).read_volatile(), link_buff[1]);
+            assert_eq!(buff.add(2).read_volatile(), link_buff[2]);
+            assert_eq!(buff.add(3).read_volatile(), link_buff[3] | 1);
             assert_eq!(ring.ring_ptr_address, ring.ring_ptr_base_address);
             assert!(!ring.cycle_bit);
         }

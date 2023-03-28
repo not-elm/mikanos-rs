@@ -1,7 +1,5 @@
 use core::fmt::{Debug, Formatter};
 
-use kernel_lib::{println, serial_println};
-
 use crate::error::{PciError, PciResult};
 use crate::xhc::transfer::trb_buffer_from_address;
 
@@ -15,12 +13,15 @@ impl TrbRawData {
     }
     pub fn new(trb_raw_data: u128) -> PciResult<Self> {
         let last_offset = into_u32_array(trb_raw_data);
-        println!("Receive  TRB = {:?}", last_offset);
+
         if last_offset[0] == 0 {
             Err(PciError::InvalidTrb(trb_raw_data))
         } else {
             Ok(Self(trb_raw_data))
         }
+    }
+    pub fn into_u32_array(self) -> [u32; 4] {
+        self.into()
     }
     pub fn buffer_mut(&mut self) -> &mut [u32] {
         trb_buffer_from_address(&mut self.0)
@@ -57,11 +58,11 @@ fn into_u128(raw_data: [u32; 4]) -> u128 {
 }
 
 fn into_u32_array(raw_data: u128) -> [u32; 4] {
-    let raw_data = (&raw_data as *const u128).cast::<u32>();
     unsafe {
-        let get = |index: usize| raw_data.add(index).read_volatile();
+        let raw_data = *(&raw_data as *const u128);
+        let mask = |shift: u128| ((raw_data >> (32 * shift)) & 0xFFFF_FFFF) as u32;
 
-        [get(0), get(1), get(2), get(3)]
+        return [mask(0), mask(1), mask(2), mask(3)];
     }
 }
 
@@ -71,13 +72,13 @@ mod tests {
 
     #[test]
     fn it_success_create_trb() {
-        let raw_data = 0xFF_00_00_FFu128;
+        let raw_data = 0xFFFFFFFF_00000000_00000000_FFFFFFFFu128;
         assert!(TrbRawData::new(raw_data).is_ok());
     }
 
     #[test]
     fn it_success_into_u32_array() {
-        let trb = TrbRawData::new_unchecked(0x3333_1111_0000_FFFFu128);
+        let trb = TrbRawData::new_unchecked(0xFFFFFFFF_00000000_00000000_00000000u128);
         let raw_data = (&trb.raw() as *const u128).cast::<u32>();
         let data_buff: [u32; 4] = trb.into();
         let expect_buff = unsafe { core::slice::from_raw_parts(raw_data, 4) };

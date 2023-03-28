@@ -1,4 +1,4 @@
-use kernel_lib::serial_println;
+use kernel_lib::println;
 
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
@@ -11,6 +11,12 @@ pub enum EventTrb {
 
 impl EventTrb {
     pub unsafe fn new(trb: TrbRawData, cycle_bit: bool) -> Option<Self> {
+        println!(
+            "TRB Cycle Bit = {} Type={} Raw = {:?}",
+            read_cycle_bit(trb.raw()),
+            read_trb_type(trb.raw()),
+            trb
+        );
         if read_cycle_bit(trb.raw()) != cycle_bit {
             return None;
         }
@@ -38,7 +44,7 @@ fn read_cycle_bit(trb: u128) -> bool {
 }
 
 fn read_trb_type(trb: u128) -> u128 {
-    trb >> 106
+    (trb >> 106) & 0b111_111
 }
 
 #[cfg(test)]

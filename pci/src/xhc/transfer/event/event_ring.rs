@@ -1,4 +1,4 @@
-use crate::error::{PciError, PciResult};
+use crate::error::PciResult;
 use crate::xhc::registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use crate::xhc::transfer::event::event_trb::EventTrb;
 use crate::xhc::transfer::ring::Ring;

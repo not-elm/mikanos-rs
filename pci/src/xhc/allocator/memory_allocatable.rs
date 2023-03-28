@@ -19,10 +19,14 @@ pub trait MemoryAllocatable {
                 .address()
         }
     }
-    fn try_allocate_device_context_array(&mut self, max_slots: usize) -> PciResult<u64> {
+    fn try_allocate_device_context_array(&mut self, max_slots: u8) -> PciResult<u64> {
         unsafe {
-            self.try_allocate_with_align(core::mem::size_of::<[u32; 32]>() * max_slots, 64, 4096)?
-                .address()
+            self.try_allocate_with_align(
+                core::mem::size_of::<u64>() * max_slots as usize,
+                64,
+                4096,
+            )?
+            .address()
         }
     }
     fn try_allocate_device_context(&mut self) -> PciResult<u64> {

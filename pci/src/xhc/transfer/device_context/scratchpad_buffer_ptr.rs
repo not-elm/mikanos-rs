@@ -2,9 +2,9 @@ use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 
 #[repr(transparent)]
-pub struct ScratchpadBuffer(u64);
+pub struct ScratchpadBufferPtr(u64);
 
-impl ScratchpadBuffer {
+impl ScratchpadBufferPtr {
     pub fn new_with_allocate(
         address: u64,
         allocator: &mut impl MemoryAllocatable,

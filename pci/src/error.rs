@@ -33,6 +33,7 @@ pub enum AllocateReason {
 #[derive(Debug)]
 pub enum OperationReason {
     MustBeCommandRingStopped,
+    CommandRingNotRunning,
     OverMaxDeviceSlots { max: u8, specify: u8 },
     HostControllerNotHalted,
     FailedAllocate,

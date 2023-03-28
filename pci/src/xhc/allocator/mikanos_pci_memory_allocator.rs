@@ -80,7 +80,10 @@ unsafe fn step_next_bound_if_over(ptr: *mut u8, bytes: usize, bound: usize) -> *
         return ptr;
     }
 
-    let diff = bound % ptr.addr();
+    let diff = ptr.addr() % bound;
+    if diff == 0 {
+        return ptr;
+    }
     let next_bound = bound - diff;
     if next_bound < bytes {
         ptr.byte_add(next_bound)
