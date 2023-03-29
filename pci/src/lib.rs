@@ -3,6 +3,8 @@
 #![feature(strict_provenance)]
 #![feature(pointer_is_aligned)]
 #![feature(pointer_byte_offsets)]
+#![feature(maybe_uninit_slice)]
+#![feature(ptr_as_uninit)]
 
 use macros::declaration_volatile_accessible;
 

@@ -7,6 +7,7 @@ pub enum PciError {
     InvalidTrb(u128),
     FailedOperateTransferRing,
     NullPointer,
+    FailedOperateDeviceContext(DeviceContextReason),
     InvalidHeaderType(HeaderTypeReason),
     InvalidFunction(FunctionReason),
     FailedAllocate(AllocateReason),
@@ -28,6 +29,14 @@ pub enum HeaderTypeReason {
 pub enum AllocateReason {
     NotAlignedAddress { expect_align_size: usize },
     NotEnoughMemory,
+}
+
+#[derive(Debug)]
+pub enum DeviceContextReason {
+    ExceedMasSlots {
+        max_slots: u8,
+        specified_slot_id: u8,
+    },
 }
 
 #[derive(Debug)]

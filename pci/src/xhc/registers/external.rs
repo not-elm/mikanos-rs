@@ -126,15 +126,6 @@ where
             .hcsparams1
             .read_volatile()
             .number_of_device_slots();
-        println!("number of device slots {}", max_device_slots);
-        // if device_slots < max_device_slots {
-        //     return Err(PciError::FailedOperateToRegister(
-        //         OperationReason::OverMaxDeviceSlots {
-        //             max: max_device_slots,
-        //             specify: device_slots,
-        //         },
-        //     ));
-        // }
         self.registers_mut()
             .operational
             .config
@@ -284,32 +275,40 @@ where
     fn reset_port_at(&mut self, port_id: u8) -> PciResult {
         self.registers_mut()
             .port_register_set
-            .update_volatile_at(port_id as usize, |port| {
+            .update_volatile_at(port_index(port_id), |port| {
                 port.portsc.set_port_reset();
                 port.portsc.set_wake_on_connect_enable();
             });
         while self
             .0
             .port_register_set
-            .read_volatile_at(port_id as usize)
+            .read_volatile_at(port_index(port_id))
             .portsc
             .port_reset()
         {}
         Ok(())
     }
 
+    fn read_port_speed_at(&self, port_id: u8) -> PciResult<u8> {
+        Ok(self
+            .0
+            .port_register_set
+            .read_volatile_at(port_index(port_id))
+            .portsc
+            .port_speed())
+    }
+
     fn clear_port_reset_change_at(&mut self, port_id: u8) -> PciResult {
         self.registers_mut()
             .port_register_set
-            .update_volatile_at(port_id as usize, |port| {
-                println!(
-                    "PORT ID = {} port is connect {}",
-                    port_id,
-                    port.portsc.current_connect_status()
-                );
+            .update_volatile_at(port_index(port_id), |port| {
                 port.portsc.clear_port_reset_change();
             });
 
         Ok(())
     }
+}
+
+fn port_index(port_id: u8) -> usize {
+    (port_id - 1) as usize
 }

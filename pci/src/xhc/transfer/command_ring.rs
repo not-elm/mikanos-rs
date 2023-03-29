@@ -20,6 +20,21 @@ impl CommandRing {
         ))?;
         doorbell.notify_at(0, 0, 0)
     }
+    pub fn push_address_command(
+        &mut self,
+        input_context_addr: u64,
+        slot_id: u8,
+        doorbell: &mut impl DoorbellRegistersAccessible,
+    ) -> PciResult {
+        let mut address_command = xhci::ring::trb::command::AddressDevice::new();
+        address_command.set_input_context_pointer(input_context_addr);
+        address_command.set_slot_id(slot_id);
+
+        self.transfer_ring
+            .push(TrbRawData::from(address_command.into_raw()))?;
+        doorbell.notify_at(0, 0, 0)
+    }
+
     pub fn push_enable_slot(
         &mut self,
         doorbell: &mut impl DoorbellRegistersAccessible,

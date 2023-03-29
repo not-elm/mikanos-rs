@@ -18,6 +18,7 @@ use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
 use crate::xhc::transfer::event::event_trb::EventTrb;
 
 pub mod allocator;
+pub mod device_manager;
 pub mod registers;
 pub mod transfer;
 
@@ -104,7 +105,7 @@ where
             self.registers.read_event_ring_addr(0)
         );
         let port_id = port_status.port_id();
-        self.registers.clear_port_reset_change_at(port_id - 1)?;
+        self.registers.clear_port_reset_change_at(port_id)?;
         self.command_ring.push_enable_slot(&mut self.registers)?;
         self.event_ring.next_dequeue_pointer(&mut self.registers)
         // self.command_ring.push_no_op(&mut self.registers)
