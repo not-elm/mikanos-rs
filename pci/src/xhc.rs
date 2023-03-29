@@ -1,3 +1,4 @@
+use core::any::Any;
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange};
 
 use kernel_lib::println;
@@ -18,6 +19,7 @@ use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegist
 use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
 use crate::xhc::transfer::command_ring::CommandRing;
 use crate::xhc::transfer::event::event_trb::EventTrb;
+use crate::xhc::transfer::read_trb_type;
 
 pub mod allocator;
 pub mod device_manager;
@@ -96,11 +98,25 @@ where
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
         match event_trb {
-            EventTrb::CommandCompletionEvent(completion) => self.address_device(completion),
-            EventTrb::PortStatusChangeEvent(port_status) => self.enable_slot(port_status),
-            EventTrb::NotSupport { .. } => Ok(()),
+            EventTrb::CommandCompletionEvent(completion) => {
+                self.process_completion_event(completion)?
+            }
+            EventTrb::PortStatusChangeEvent(port_status) => self.enable_slot(port_status)?,
+            EventTrb::NotSupport { .. } => {}
+        };
+
+        self.event_ring.next_dequeue_pointer(&mut self.registers)
+    }
+
+    fn process_completion_event(&mut self, completion: CommandCompletion) -> PciResult {
+        let trb = unsafe { *(completion.command_trb_pointer() as *const u128) };
+        println!("{}", read_trb_type(trb));
+        match read_trb_type(trb) {
+            9 => self.address_device(completion), // Enable Slot TRB
+            _ => Ok(()),
         }
     }
+
     fn address_device(&mut self, completion: CommandCompletion) -> PciResult {
         let input_context_addr = self.device_manager.address_device(
             completion.slot_id(),
@@ -113,6 +129,7 @@ where
             &mut self.registers,
         )
     }
+
     fn enable_slot(&mut self, port_status: PortStatusChange) -> PciResult {
         println!(
             "Receive Port Status Change = {:?} {:x}",
@@ -124,7 +141,7 @@ where
         self.registers.clear_port_reset_change_at(port_id)?;
         self.command_ring.push_enable_slot(&mut self.registers)?;
         self.device_manager.set_addressing_port_id(port_id);
-        self.event_ring.next_dequeue_pointer(&mut self.registers)
+        Ok(())
     }
 }
 

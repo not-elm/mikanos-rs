@@ -13,3 +13,6 @@ pub(crate) fn trb_buffer_from_address(trb_pointer: &mut u128) -> &mut [u32] {
     let raw_data = ptr.cast::<u32>();
     unsafe { core::slice::from_raw_parts_mut(raw_data, 4) }
 }
+pub(crate) fn read_trb_type(trb: u128) -> u128 {
+    (trb >> 106) & 0b111_111
+}
