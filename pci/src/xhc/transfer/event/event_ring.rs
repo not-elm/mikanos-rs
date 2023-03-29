@@ -1,19 +1,19 @@
 use crate::error::PciResult;
 use crate::xhc::registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use crate::xhc::transfer::event::event_trb::EventTrb;
-use crate::xhc::transfer::ring::Ring;
+use crate::xhc::transfer::transfer_ring::TransferRing;
 use crate::xhc::transfer::trb_byte_size;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]
 pub struct EventRing {
-    transfer_ring: Ring,
+    transfer_ring: TransferRing,
 }
 
 impl EventRing {
     pub fn new(segment_base_addr: u64, ring_size: usize) -> Self {
         Self {
-            transfer_ring: Ring::new(segment_base_addr, ring_size, true),
+            transfer_ring: TransferRing::new(segment_base_addr, ring_size, true),
         }
     }
 

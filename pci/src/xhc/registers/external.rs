@@ -120,12 +120,6 @@ where
     M: xhci::accessor::Mapper + Clone,
 {
     fn write_max_device_slots_enabled(&mut self, device_slots: u8) -> PciResult {
-        let registers = self.registers_mut();
-        let max_device_slots = registers
-            .capability
-            .hcsparams1
-            .read_volatile()
-            .number_of_device_slots();
         self.registers_mut()
             .operational
             .config

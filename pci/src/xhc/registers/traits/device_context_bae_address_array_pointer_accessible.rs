@@ -1,10 +1,26 @@
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::device_collectable::single_device_collector::SingleDeviceCollector;
+use crate::xhc::device_manager::DeviceManager;
 use crate::xhc::transfer::device_context::scratchpad_buffers_array_ptr::ScratchpadBuffersArrayPtr;
 use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
 
 pub trait DeviceContextBaseAddressArrayPointerAccessible {
     fn write_device_context_array_addr(&mut self, device_context_addr: u64) -> PciResult;
+
+    fn setup_device_manager(
+        &mut self,
+        device_slots: u8,
+        scratchpad_buffers_len: usize,
+        allocator: &mut impl MemoryAllocatable,
+    ) -> PciResult<DeviceManager<SingleDeviceCollector>> {
+        let device_context_array =
+            self.setup_device_context_array(device_slots, scratchpad_buffers_len, allocator)?;
+        Ok(DeviceManager::new(
+            SingleDeviceCollector::new(device_slots),
+            device_context_array,
+        ))
+    }
 
     fn setup_device_context_array(
         &mut self,

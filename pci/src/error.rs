@@ -33,6 +33,7 @@ pub enum AllocateReason {
 
 #[derive(Debug)]
 pub enum DeviceContextReason {
+    NotExistsAddressingPort,
     ExceedMasSlots {
         max_slots: u8,
         specified_slot_id: u8,

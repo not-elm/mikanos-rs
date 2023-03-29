@@ -1,7 +1,7 @@
 pub mod command_ring;
 pub mod device_context;
 pub mod event;
-pub mod ring;
+pub mod transfer_ring;
 pub(crate) mod trb_raw_data;
 
 pub(crate) fn trb_byte_size() -> u64 {

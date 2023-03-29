@@ -1,17 +1,17 @@
 use crate::error::PciResult;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
-use crate::xhc::transfer::ring::Ring;
+use crate::xhc::transfer::transfer_ring::TransferRing;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]
 pub struct CommandRing {
-    transfer_ring: Ring,
+    transfer_ring: TransferRing,
 }
 
 impl CommandRing {
     pub fn new(ring_ptr_addr: u64, ring_size: usize) -> Self {
         Self {
-            transfer_ring: Ring::new(ring_ptr_addr, ring_size, true),
+            transfer_ring: TransferRing::new(ring_ptr_addr, ring_size, true),
         }
     }
     pub fn push_no_op(&mut self, doorbell: &mut impl DoorbellRegistersAccessible) -> PciResult {

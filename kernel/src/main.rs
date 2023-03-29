@@ -69,7 +69,7 @@ pub extern "sysv64" fn kernel_main(
 
     let external = External::new(mmio_base_addr(), IdentityMapper());
     let mut xhc_controller =
-        XhcController::new(external, &mut MikanOSPciMemoryAllocator::new()).unwrap();
+        XhcController::new(external, MikanOSPciMemoryAllocator::new()).unwrap();
 
     xhc_controller.start_event_pooling().unwrap();
 

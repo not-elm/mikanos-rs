@@ -3,14 +3,14 @@ use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
 
 #[derive(Debug)]
-pub struct Ring {
+pub struct TransferRing {
     ring_ptr_base_address: u64,
     ring_ptr_address: u64,
     ring_end_address: u64,
     cycle_bit: bool,
 }
 
-impl Ring {
+impl TransferRing {
     pub fn new(ring_ptr_base_address: u64, ring_size: usize, cycle_bit: bool) -> Self {
         Self {
             ring_ptr_base_address,
@@ -97,14 +97,14 @@ impl Ring {
 
 #[cfg(test)]
 mod tests {
-    use crate::xhc::transfer::ring::Ring;
+    use crate::xhc::transfer::transfer_ring::TransferRing;
     use crate::xhc::transfer::trb_byte_size;
     use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
     #[test]
     fn it_push_trb() {
         let buff = [0u128; 32];
-        let mut ring = Ring::new(buff.as_ptr() as u64, 32, true);
+        let mut ring = TransferRing::new(buff.as_ptr() as u64, 32, true);
         let enable_slot_trb =
             TrbRawData::from(xhci::ring::trb::command::EnableSlot::new().into_raw());
         let is_ok = ring.push(enable_slot_trb).is_ok();
@@ -129,7 +129,7 @@ mod tests {
     #[cfg(target_endian = "little")]
     fn it_push_link_trb_and_rollback() {
         let buff = [0u128; 2];
-        let mut ring = Ring::new(buff.as_ptr() as u64, 2, true);
+        let mut ring = TransferRing::new(buff.as_ptr() as u64, 2, true);
         let enable_slot_trb =
             TrbRawData::try_from(xhci::ring::trb::command::EnableSlot::new().into_raw()).unwrap();
 

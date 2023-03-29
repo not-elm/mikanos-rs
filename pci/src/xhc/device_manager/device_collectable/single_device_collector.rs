@@ -1,4 +1,5 @@
 use crate::error::{DeviceContextReason, PciError, PciResult};
+use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::Device;
 use crate::xhc::device_manager::device_collectable::DeviceCollectable;
 
@@ -43,11 +44,17 @@ impl DeviceCollectable for SingleDeviceCollector {
         })
     }
 
-    fn new_set_at(&mut self, port_id: u8, port_speed: u8, slot_id: u8) -> PciResult {
+    fn new_set_at(
+        &mut self,
+        port_id: u8,
+        port_speed: u8,
+        slot_id: u8,
+        allocator: &mut impl MemoryAllocatable,
+    ) -> PciResult {
         self.check_specify_slot_id(slot_id)?;
-        self.device = Some(Device::new_with_init_slot_context(
-            port_id, port_speed, slot_id,
-        ));
+        self.device = Some(Device::new_with_init_default_control_pipe(
+            port_id, port_speed, slot_id, allocator,
+        )?);
 
         Ok(())
     }
@@ -55,26 +62,33 @@ impl DeviceCollectable for SingleDeviceCollector {
 
 #[cfg(test)]
 mod tests {
+    use crate::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
     use crate::xhc::device_manager::device_collectable::single_device_collector::SingleDeviceCollector;
     use crate::xhc::device_manager::device_collectable::DeviceCollectable;
 
     #[test]
     fn it_set_device_into_slot_id0() {
         let mut ptr = SingleDeviceCollector::new(1);
-        assert!(ptr.new_set_at(0, 0, 0).is_ok());
+        assert!(ptr
+            .new_set_at(0, 0, 0, &mut MikanOSPciMemoryAllocator::new())
+            .is_ok());
     }
 
     #[test]
     fn it_get_device_from_slot_id0() {
         let mut ptr = SingleDeviceCollector::new(1);
-        assert!(ptr.new_set_at(0, 0, 0).is_ok());
+        assert!(ptr
+            .new_set_at(0, 0, 0, &mut MikanOSPciMemoryAllocator::new())
+            .is_ok());
         assert_eq!(0, ptr.mut_at(0).unwrap().slot_id());
     }
 
     #[test]
     fn it_set_device_into_slot_id20_and_100() {
         let mut ptr = SingleDeviceCollector::new(101);
-        assert!(ptr.new_set_at(0, 0, 100).is_ok());
+        assert!(ptr
+            .new_set_at(0, 0, 100, &mut MikanOSPciMemoryAllocator::new())
+            .is_ok());
 
         assert_eq!(100, ptr.mut_at(100).unwrap().slot_id());
     }
@@ -82,13 +96,17 @@ mod tests {
     #[test]
     fn it_failed_set_device_when_over_slots() {
         let mut ptr = SingleDeviceCollector::new(1);
-        assert!(ptr.new_set_at(0, 0, 1).is_err());
+        assert!(ptr
+            .new_set_at(0, 0, 1, &mut MikanOSPciMemoryAllocator::new())
+            .is_err());
     }
 
     #[test]
     fn it_failed_get_device_when_over_slots() {
         let mut ptr = SingleDeviceCollector::new(1);
-        assert!(ptr.new_set_at(0, 0, 0).is_ok());
+        assert!(ptr
+            .new_set_at(0, 0, 0, &mut MikanOSPciMemoryAllocator::new())
+            .is_ok());
         assert!(ptr.mut_at(1).is_none());
     }
 
@@ -96,6 +114,6 @@ mod tests {
     fn it_failed_when_get_uninit() {
         let mut ptr = SingleDeviceCollector::new(1);
 
-        assert!(ptr.mut_at(0).is_none());
+        assert!(ptr.mut_at(0).is_none(),);
     }
 }
