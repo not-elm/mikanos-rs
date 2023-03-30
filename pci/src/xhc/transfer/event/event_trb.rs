@@ -12,16 +12,15 @@ pub enum EventTrb {
 
 impl EventTrb {
     pub unsafe fn new(trb: TrbRawData, cycle_bit: bool) -> Option<Self> {
+        if read_cycle_bit(trb.raw()) != cycle_bit {
+            return None;
+        }
         serial_println!(
             "TRB Cycle Bit = {} Type={} Raw = {:?}",
             read_cycle_bit(trb.raw()),
             read_trb_type(trb.raw()),
             trb
         );
-        if read_cycle_bit(trb.raw()) != cycle_bit {
-            return None;
-        }
-
         let raw_data_buff: [u32; 4] = trb.into();
         let event_trb = match read_trb_type(trb.raw()) {
             33 => EventTrb::CommandCompletionEvent(

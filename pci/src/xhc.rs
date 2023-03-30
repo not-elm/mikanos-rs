@@ -1,4 +1,5 @@
 use core::any::Any;
+
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange};
 
 use kernel_lib::println;
@@ -97,6 +98,7 @@ where
     }
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
+        println!("{:?}", event_trb);
         match event_trb {
             EventTrb::CommandCompletionEvent(completion) => {
                 self.process_completion_event(completion)?
@@ -110,9 +112,10 @@ where
 
     fn process_completion_event(&mut self, completion: CommandCompletion) -> PciResult {
         let trb = unsafe { *(completion.command_trb_pointer() as *const u128) };
-        println!("{}", read_trb_type(trb));
+        println!("Completion Type = {}", read_trb_type(trb));
         match read_trb_type(trb) {
             9 => self.address_device(completion), // Enable Slot TRB
+            11 => Ok(()),
             _ => Ok(()),
         }
     }
@@ -131,11 +134,6 @@ where
     }
 
     fn enable_slot(&mut self, port_status: PortStatusChange) -> PciResult {
-        println!(
-            "Receive Port Status Change = {:?} {:x}",
-            port_status,
-            self.registers.read_event_ring_addr(0)
-        );
         let port_id = port_status.port_id();
 
         self.registers.clear_port_reset_change_at(port_id)?;

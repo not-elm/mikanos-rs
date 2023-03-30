@@ -2,7 +2,7 @@ pub mod scratchpad_buffer_ptr;
 pub mod scratchpad_buffers_array_ptr;
 
 #[repr(transparent)]
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct DeviceContextArrayPtr(u64);
 
 impl DeviceContextArrayPtr {
@@ -14,7 +14,7 @@ impl DeviceContextArrayPtr {
         unsafe {
             let ptr = (self.0 as *mut u64).add(index);
 
-            *ptr = device_context_addr;
+            ptr.write(device_context_addr);
         }
     }
 }

@@ -1,4 +1,5 @@
-use kernel_lib::println;
+use core::fmt::Debug;
+use kernel_lib::{println, serial_println};
 
 use crate::error::PciResult;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
@@ -11,7 +12,10 @@ use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAcces
 use crate::xhc::registers::traits::registers_operation::RegistersOperation;
 use crate::xhc::registers::traits::usb_command_register_accessible::UsbCommandRegisterAccessible;
 
-pub struct External<M>(xhci::registers::Registers<M>)
+pub struct External<M>(
+    xhci::registers::Registers<M>,
+    xhci::extended_capabilities::List<M>,
+)
 where
     M: xhci::accessor::Mapper + Clone;
 
@@ -20,7 +24,16 @@ where
     M: xhci::accessor::Mapper + Clone,
 {
     pub fn new(mmio_addr: MemoryMappedAddr, mapper: M) -> Self {
-        Self(unsafe { xhci::Registers::new(mmio_addr.addr(), mapper) })
+        let registers = unsafe { xhci::Registers::new(mmio_addr.addr(), mapper.clone()) };
+        let e = unsafe {
+            xhci::extended_capabilities::List::new(
+                mmio_addr.addr(),
+                registers.capability.hccparams1.read_volatile(),
+                mapper.clone(),
+            )
+            .unwrap()
+        };
+        Self(registers, e)
     }
 }
 
@@ -35,7 +48,7 @@ where
 
 impl<M> RegistersOperation for External<M>
 where
-    M: xhci::accessor::Mapper + Clone,
+    M: xhci::accessor::Mapper + Clone + Debug,
 {
     fn reset(&mut self) -> PciResult {
         let registers = self.registers_mut();
@@ -60,6 +73,9 @@ where
     }
 
     fn run(&mut self) -> PciResult {
+        self.1.into_iter().for_each(|a| {
+            serial_println!("{:?}", a.unwrap());
+        });
         self.0.operational.usbcmd.update_volatile(|c| {
             c.set_interrupter_enable();
         });

@@ -76,7 +76,7 @@ pub extern "sysv64" fn kernel_main(
     common_lib::assembly::hlt_forever();
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct IdentityMapper();
 
 impl xhci::accessor::Mapper for IdentityMapper {
