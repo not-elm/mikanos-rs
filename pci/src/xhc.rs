@@ -1,8 +1,6 @@
-use core::any::Any;
-
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange};
 
-use kernel_lib::println;
+use kernel_lib::serial_println;
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use registers::traits::registers_operation::RegistersOperation;
@@ -98,7 +96,9 @@ where
     }
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
-        println!("{:?}", event_trb);
+        serial_println!();
+        serial_println!("{:?}", event_trb);
+
         match event_trb {
             EventTrb::CommandCompletionEvent(completion) => {
                 self.process_completion_event(completion)?
@@ -112,14 +112,17 @@ where
 
     fn process_completion_event(&mut self, completion: CommandCompletion) -> PciResult {
         let trb = unsafe { *(completion.command_trb_pointer() as *const u128) };
-        println!("Completion Type = {}", read_trb_type(trb));
+        serial_println!("Completion Type = {}", read_trb_type(trb));
+
         match read_trb_type(trb) {
             9 => self.address_device(completion), // Enable Slot TRB
-            11 => Ok(()),
+            11 => self.init_device(completion),
             _ => Ok(()),
         }
     }
-
+    fn init_device(&mut self, _completion: CommandCompletion) -> PciResult {
+        Ok(())
+    }
     fn address_device(&mut self, completion: CommandCompletion) -> PciResult {
         let input_context_addr = self.device_manager.address_device(
             completion.slot_id(),

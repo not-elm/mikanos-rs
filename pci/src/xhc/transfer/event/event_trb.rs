@@ -46,7 +46,6 @@ fn read_cycle_bit(trb: u128) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::xhc::transfer::event::event_trb::read_trb_type;
-    use crate::xhc::transfer::read_trb_type;
 
     #[test]
     fn it_trb_type_is_port_status_change() {

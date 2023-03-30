@@ -29,10 +29,20 @@ pub trait MemoryAllocatable {
             .address()
         }
     }
+    fn try_allocate_input_context(&mut self) -> PciResult<u64> {
+        unsafe {
+            self.try_allocate_with_align(core::mem::size_of::<xhci::context::Input32Byte>(), 64, 0)?
+                .address()
+        }
+    }
     fn try_allocate_device_context(&mut self) -> PciResult<u64> {
         unsafe {
-            self.try_allocate_with_align(core::mem::size_of::<u8>() * 4096, 4096, 4096)?
-                .address()
+            self.try_allocate_with_align(
+                core::mem::size_of::<xhci::context::Device32Byte>(),
+                64,
+                0,
+            )?
+            .address()
         }
     }
     fn try_allocate_max_scratchpad_buffers(&mut self, len: usize) -> PciResult<u64> {

@@ -39,8 +39,8 @@ pub trait InterrupterSetRegisterAccessible {
         )?;
 
         self.write_event_ring_segment_table_pointer(0, event_ring_segment_table_addr)?;
-        self.write_interrupter_pending(0, true)?;
-        self.write_interrupter_enable(0, true)?;
+        // self.write_interrupter_pending(0, true)?;
+        // self.write_interrupter_enable(0, true)?;
         let event_ring = EventRing::new(event_ring_segment_addr, 32);
         Ok((event_ring_table, event_ring))
     }

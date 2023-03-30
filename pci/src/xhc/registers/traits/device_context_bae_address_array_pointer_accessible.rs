@@ -29,7 +29,7 @@ pub trait DeviceContextBaseAddressArrayPointerAccessible {
         allocator: &mut impl MemoryAllocatable,
     ) -> PciResult<DeviceContextArrayPtr> {
         let device_context_array_addr =
-            allocator.try_allocate_device_context_array(device_slots)?;
+            allocator.try_allocate_device_context_array(device_slots + 1)?;
         let mut device_context_array = DeviceContextArrayPtr::new(device_context_array_addr);
 
         if 0 < scratchpad_buffers_len {

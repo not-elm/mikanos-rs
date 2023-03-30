@@ -1,7 +1,6 @@
 use crate::error::{PciError, PciResult};
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
-use kernel_lib::println;
 
 #[derive(Debug)]
 pub struct TransferRing {
@@ -21,7 +20,7 @@ impl TransferRing {
         }
     }
 
-    pub fn push(&mut self, trb: TrbRawData) -> PciResult {
+    pub fn push(&mut self, trb: [u32; 4]) -> PciResult {
         self.write(trb)?;
 
         self.ring_ptr_address += trb_byte_size();
@@ -64,25 +63,24 @@ impl TransferRing {
         let mut link = xhci::ring::trb::Link::new();
         link.set_toggle_cycle();
 
-        self.write(TrbRawData::from(link.into_raw()))?;
+        self.write(link.into_raw())?;
 
         self.ring_ptr_address = self.ring_ptr_base_address;
         self.toggle_cycle_bit();
         Ok(())
     }
-    fn write(&mut self, trb: TrbRawData) -> PciResult {
+    fn write(&mut self, src_buff: [u32; 4]) -> PciResult {
         let dest_deref = unsafe {
             (self.ring_ptr_address as *mut u128)
                 .as_mut()
                 .ok_or(PciError::FailedOperateTransferRing)
         }?;
         let dest_buff = trb_buffer_from_address(dest_deref);
-        let src_buff: [u32; 4] = trb.into();
 
-        dest_buff[0] = src_buff[3];
-        dest_buff[1] = src_buff[2];
-        dest_buff[2] = src_buff[1];
-        dest_buff[3] = (src_buff[0] & !0b1) | self.cycle_bit_as_u32();
+        dest_buff[0] = src_buff[0];
+        dest_buff[1] = src_buff[1];
+        dest_buff[2] = src_buff[2];
+        dest_buff[3] = (src_buff[3] & !0b1) | self.cycle_bit_as_u32();
 
         Ok(())
     }

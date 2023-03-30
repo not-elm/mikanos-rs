@@ -1,5 +1,6 @@
 use core::fmt::Debug;
-use kernel_lib::{println, serial_println};
+
+use kernel_lib::serial_println;
 
 use crate::error::PciResult;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
@@ -76,9 +77,7 @@ where
         self.1.into_iter().for_each(|a| {
             serial_println!("{:?}", a.unwrap());
         });
-        self.0.operational.usbcmd.update_volatile(|c| {
-            c.set_interrupter_enable();
-        });
+
         self.0.operational.usbcmd.update_volatile(|u| {
             u.set_run_stop();
         });
@@ -106,6 +105,7 @@ where
             .portsc
             .port_reset()
         {}
+
         Ok(())
     }
 }
@@ -115,14 +115,6 @@ where
     M: xhci::accessor::Mapper + Clone,
 {
     fn read_max_scratchpad_buffers_len(&self) -> usize {
-        println!(
-            "len= {}",
-            self.0
-                .capability
-                .hcsparams2
-                .read_volatile()
-                .max_scratchpad_buffers()
-        );
         self.0
             .capability
             .hcsparams2
@@ -308,7 +300,22 @@ where
             .port_speed())
     }
 
+    fn read_port_reset_change_status(&self, port_id: u8) -> PciResult<bool> {
+        Ok(self
+            .0
+            .port_register_set
+            .read_volatile_at(port_index(port_id))
+            .portsc
+            .port_reset_change())
+    }
+
     fn clear_port_reset_change_at(&mut self, port_id: u8) -> PciResult {
+        self.0
+            .port_register_set
+            .update_volatile_at(port_index(port_id), |p| {
+                serial_println!("{:?}", p);
+                serial_println!();
+            });
         self.registers_mut()
             .port_register_set
             .update_volatile_at(port_index(port_id), |port| {

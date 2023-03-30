@@ -1,7 +1,6 @@
 use crate::error::PciResult;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
-use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]
 pub struct CommandRing {
@@ -15,9 +14,8 @@ impl CommandRing {
         }
     }
     pub fn push_no_op(&mut self, doorbell: &mut impl DoorbellRegistersAccessible) -> PciResult {
-        self.transfer_ring.push(TrbRawData::from(
-            xhci::ring::trb::command::Noop::new().into_raw(),
-        ))?;
+        self.transfer_ring
+            .push(xhci::ring::trb::command::Noop::new().into_raw())?;
         doorbell.notify_at(0, 0, 0)
     }
     pub fn push_address_command(
@@ -30,8 +28,7 @@ impl CommandRing {
         address_command.set_input_context_pointer(input_context_addr);
         address_command.set_slot_id(slot_id);
 
-        self.transfer_ring
-            .push(TrbRawData::from(address_command.into_raw()))?;
+        self.transfer_ring.push(address_command.into_raw())?;
         doorbell.notify_at(0, 0, 0)
     }
 
@@ -39,9 +36,8 @@ impl CommandRing {
         &mut self,
         doorbell: &mut impl DoorbellRegistersAccessible,
     ) -> PciResult {
-        self.transfer_ring.push(TrbRawData::from(
-            xhci::ring::trb::command::EnableSlot::new().into_raw(),
-        ))?;
+        self.transfer_ring
+            .push(xhci::ring::trb::command::EnableSlot::new().into_raw())?;
         doorbell.notify_at(0, 0, 0)
     }
 }
