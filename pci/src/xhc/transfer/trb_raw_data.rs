@@ -11,15 +11,7 @@ impl TrbRawData {
     pub fn new_unchecked(trb_raw_data: u128) -> Self {
         Self(trb_raw_data)
     }
-    pub fn new(trb_raw_data: u128) -> PciResult<Self> {
-        let last_offset = into_u32_array(trb_raw_data);
 
-        if last_offset[0] == 0 {
-            Err(PciError::InvalidTrb(trb_raw_data))
-        } else {
-            Ok(Self(trb_raw_data))
-        }
-    }
     pub fn into_u32_array(self) -> [u32; 4] {
         self.into()
     }

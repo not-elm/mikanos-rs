@@ -1,4 +1,5 @@
-use xhci::ring::trb::event::{CommandCompletion, PortStatusChange};
+use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
+use xhci::ring::trb::transfer::StatusStage;
 
 use kernel_lib::serial_println;
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
@@ -17,7 +18,7 @@ use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAcc
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
 use crate::xhc::transfer::command_ring::CommandRing;
-use crate::xhc::transfer::event::event_trb::EventTrb;
+use crate::xhc::transfer::event::event_trb::{EventTrb, TargetEvent};
 use crate::xhc::transfer::read_trb_type;
 
 pub mod allocator;
@@ -100,6 +101,10 @@ where
         serial_println!("{:?}", event_trb);
 
         match event_trb {
+            EventTrb::TransferEvent {
+                transfer_event,
+                target_event,
+            } => self.on_transfer_event(transfer_event.slot_id(), target_event)?,
             EventTrb::CommandCompletionEvent(completion) => {
                 self.process_completion_event(completion)?
             }
@@ -110,18 +115,30 @@ where
         self.event_ring.next_dequeue_pointer(&mut self.registers)
     }
 
+    fn on_transfer_event(&mut self, slot_id: u8, target_event: TargetEvent) -> PciResult {
+        match target_event {
+            TargetEvent::StatusStage(status_stage) => {
+                self.device_manager.initialize_at(slot_id, status_stage)?;
+                self.registers.notify_at(slot_id as usize, 1, 0)
+            }
+        }
+    }
+
     fn process_completion_event(&mut self, completion: CommandCompletion) -> PciResult {
         let trb = unsafe { *(completion.command_trb_pointer() as *const u128) };
         serial_println!("Completion Type = {}", read_trb_type(trb));
 
         match read_trb_type(trb) {
-            9 => self.address_device(completion), // Enable Slot TRB
-            11 => self.init_device(completion),
+            9 => self.address_device(completion), // Enable Slot
+            11 => self.init_device(completion),   // Address Device
             _ => Ok(()),
         }
     }
-    fn init_device(&mut self, _completion: CommandCompletion) -> PciResult {
-        Ok(())
+    fn init_device(&mut self, completion: CommandCompletion) -> PciResult {
+        self.device_manager
+            .start_initialize_at(completion.slot_id())?;
+        self.registers
+            .notify_at(completion.slot_id() as usize, 1, 0)
     }
     fn address_device(&mut self, completion: CommandCompletion) -> PciResult {
         let input_context_addr = self.device_manager.address_device(

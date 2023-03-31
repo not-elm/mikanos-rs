@@ -1,9 +1,12 @@
+use bitfield_struct::bitfield;
 use xhci::context::{Device32Byte, EndpointType, Input32Byte, InputHandler};
+use xhci::ring::trb::transfer::{SetupStage, StatusStage, TransferType};
 
 use kernel_lib::println;
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::initialize_phase::InitializePhase;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
 #[repr(C, align(64))]
@@ -11,9 +14,18 @@ use crate::xhc::transfer::transfer_ring::TransferRing;
 pub struct Device {
     input_context: InputContext,
     slot_id: u8,
-
     device_context: DeviceContext,
     transfer_ring: TransferRing,
+    phase: InitializePhase,
+}
+
+#[bitfield(u8)]
+pub struct RequestType {
+    #[bits(5)]
+    pub recipient: u8,
+    #[bits(2)]
+    pub ty: u8,
+    pub direction: bool,
 }
 
 #[repr(C, align(64))]
@@ -41,6 +53,28 @@ impl Device {
 
         Ok(me)
     }
+    pub fn setup(&mut self, status_stage: StatusStage) -> PciResult {
+        self.phase = InitializePhase::Phase2;
+        let mut status = xhci::ring::trb::transfer::StatusStage::new();
+        status.set_direction();
+        status.set_interrupt_on_completion();
+
+        // Config
+        self.transfer_ring
+            .push(make_setup_stage(2, 0, 0).into_raw())?;
+        self.transfer_ring.push(status.into_raw())
+    }
+
+    pub fn control_in_setup_data(&mut self) -> PciResult {
+        self.phase = InitializePhase::Phase1;
+        let mut status = xhci::ring::trb::transfer::StatusStage::new();
+        status.set_direction();
+        status.set_interrupt_on_completion();
+
+        self.transfer_ring
+            .push(make_setup_stage(1, 0, 0).into_raw())?;
+        self.transfer_ring.push(status.into_raw())
+    }
 
     fn init_slot_context(&mut self, root_port_hub_id: u8, port_speed: u8) {
         let slot = self.input_context.0.device_mut().slot_mut();
@@ -65,7 +99,7 @@ impl Device {
         default_control_pipe.set_interval(0);
         default_control_pipe.set_max_primary_streams(0);
         default_control_pipe.set_mult(0);
-        default_control_pipe.set_error_count(0);
+        default_control_pipe.set_error_count(3);
     }
     fn new(slot_id: u8, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
         let transfer_ring_addr = allocator.try_allocate_trb_ring(32)?;
@@ -76,6 +110,7 @@ impl Device {
             input_context: InputContext(Input32Byte::default()),
             device_context: DeviceContext(Device32Byte::default()),
             transfer_ring,
+            phase: InitializePhase::NotPrepared,
         })
     }
     pub fn device_context_addr(&self) -> u64 {
@@ -97,6 +132,18 @@ impl Device {
             .control_mut()
             .set_add_context_flag(device_context_index);
     }
+}
+
+fn make_setup_stage(descriptor_type: u16, descriptor_index: u16, length: u16) -> SetupStage {
+    // // Standard
+    let mut setup = xhci::ring::trb::transfer::SetupStage::new();
+    setup.set_request_type(RequestType::new().with_direction(true).into());
+    setup.set_request(6);
+    setup.set_value(descriptor_type << 8 | descriptor_index);
+    setup.set_index(0);
+    setup.set_length(length);
+    setup.set_transfer_type(TransferType::No);
+    setup
 }
 
 fn max_packet_size(port_speed: u8) -> u16 {

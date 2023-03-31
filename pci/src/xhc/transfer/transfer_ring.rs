@@ -7,6 +7,7 @@ pub struct TransferRing {
     ring_ptr_base_address: u64,
     ring_ptr_address: u64,
     ring_end_address: u64,
+    ring_size: usize,
     cycle_bit: bool,
 }
 
@@ -16,6 +17,7 @@ impl TransferRing {
             ring_ptr_base_address,
             ring_ptr_address: ring_ptr_base_address,
             ring_end_address: ring_ptr_base_address + trb_byte_size() * (ring_size - 1) as u64,
+            ring_size,
             cycle_bit,
         }
     }
@@ -32,6 +34,10 @@ impl TransferRing {
     pub fn read(&self) -> Option<TrbRawData> {
         self.read_transfer_request_block(self.ring_ptr_address)
     }
+
+    pub fn ring_size(&self) -> usize {
+        self.ring_size
+    }
     pub fn next(&mut self) {
         self.ring_ptr_address += trb_byte_size();
     }
@@ -40,7 +46,7 @@ impl TransferRing {
         if ptr.is_null() {
             return None;
         }
-        TrbRawData::new(unsafe { *(ptr) }).ok()
+        Some(TrbRawData::new_unchecked(unsafe { *(ptr) }))
     }
     pub fn base_address(&self) -> u64 {
         self.ring_ptr_base_address
