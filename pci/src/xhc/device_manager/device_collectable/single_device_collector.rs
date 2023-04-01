@@ -2,21 +2,23 @@ use crate::error::{DeviceContextReason, PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::Device;
 use crate::xhc::device_manager::device_collectable::DeviceCollectable;
+use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use alloc::rc::Rc;
+use core::cell::RefCell;
 
 #[derive(Debug)]
-pub struct SingleDeviceCollector {
+pub struct SingleDeviceCollector<T>
+where
+    T: DoorbellRegistersAccessible,
+{
     device_slots: u8,
-    device: Option<Device>,
+    device: Option<Device<T>>,
 }
 
-impl SingleDeviceCollector {
-    pub fn new(device_slots: u8) -> Self {
-        Self {
-            device_slots,
-            device: None,
-        }
-    }
-
+impl<T> SingleDeviceCollector<T>
+where
+    T: DoorbellRegistersAccessible,
+{
     fn check_specify_slot_id(&self, slot_id: u8) -> PciResult {
         if self.device_slots - 1 < slot_id {
             Err(PciError::FailedOperateDeviceContext(
@@ -31,8 +33,17 @@ impl SingleDeviceCollector {
     }
 }
 
-impl DeviceCollectable for SingleDeviceCollector {
-    fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device> {
+impl<T> DeviceCollectable<T> for SingleDeviceCollector<T>
+where
+    T: DoorbellRegistersAccessible,
+{
+    fn new(device_slots: u8) -> Self {
+        Self {
+            device_slots,
+            device: None,
+        }
+    }
+    fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device<T>> {
         self.check_specify_slot_id(slot_id).ok()?;
 
         self.device.as_mut().and_then(|device| {
@@ -49,11 +60,12 @@ impl DeviceCollectable for SingleDeviceCollector {
         port_id: u8,
         port_speed: u8,
         slot_id: u8,
+        doorbell: &Rc<RefCell<T>>,
         allocator: &mut impl MemoryAllocatable,
     ) -> PciResult {
         self.check_specify_slot_id(slot_id)?;
         self.device = Some(Device::new_with_init_default_control_pipe(
-            port_id, port_speed, slot_id, allocator,
+            port_id, port_speed, slot_id, doorbell, allocator,
         )?);
 
         Ok(())

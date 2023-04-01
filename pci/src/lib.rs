@@ -6,6 +6,8 @@
 #![feature(maybe_uninit_slice)]
 #![feature(ptr_as_uninit)]
 
+extern crate alloc;
+
 use macros::declaration_volatile_accessible;
 
 use crate::error::{OperationReason, PciError, PciResult};
@@ -16,7 +18,13 @@ pub mod pci_device_searcher;
 pub mod xhc;
 
 declaration_volatile_accessible!();
-
+pub(crate) fn flag_to_num(flag: bool) -> usize {
+    if flag {
+        1
+    } else {
+        0
+    }
+}
 pub(crate) fn wait_update_32bits_register_for<Addr, Offset>(
     wait_limit_count: usize,
     expect_value: u32,

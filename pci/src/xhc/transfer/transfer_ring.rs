@@ -2,7 +2,7 @@ use crate::error::{PciError, PciResult};
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct TransferRing {
     ring_ptr_base_address: u64,
     ring_ptr_address: u64,

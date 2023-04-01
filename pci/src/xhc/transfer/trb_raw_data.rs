@@ -1,8 +1,26 @@
 use core::fmt::{Debug, Formatter};
 
-use crate::error::{PciError, PciResult};
+use bitfield_struct::bitfield;
+
 use crate::xhc::transfer::trb_buffer_from_address;
 
+#[bitfield(u128)]
+pub struct TrbTemplate {
+    pub parameter: u64,
+    pub status: u32,
+    pub cycle_bit: bool,
+    pub evaluate_next_trb: bool,
+    _reserve1: u8,
+
+    #[bits(6)]
+    pub trb_type: u8,
+    pub control: u16,
+}
+impl TrbTemplate {
+    pub fn from_addr(addr: u64) -> Self {
+        unsafe { *(addr as *const Self) }
+    }
+}
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct TrbRawData(u128);
@@ -11,7 +29,13 @@ impl TrbRawData {
     pub fn new_unchecked(trb_raw_data: u128) -> Self {
         Self(trb_raw_data)
     }
-
+    pub fn template(&self) -> TrbTemplate {
+        unsafe { *((&self.0) as *const u128).cast::<TrbTemplate>() }
+    }
+    pub fn from_addr(addr: u64) -> Self {
+        let trb_raw_data = unsafe { *(addr as *const u128) };
+        Self::new_unchecked(trb_raw_data)
+    }
     pub fn into_u32_array(self) -> [u32; 4] {
         self.into()
     }

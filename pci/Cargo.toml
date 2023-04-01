@@ -11,3 +11,4 @@ enum-try-from = "0.0.1"
 kernel-lib = { path = "../kernel-lib" }
 macros = { path = "../macros", features = ["extra-traits"] }
 xhci = { workspace = true }
+modular-bitfield = { workspace = true }

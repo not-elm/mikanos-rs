@@ -5,7 +5,10 @@
 #![feature(strict_provenance)]
 #![test_runner(test_runner::my_runner)]
 #![reexport_test_harness_main = "test_main"]
+#![feature(alloc_error_handler)]
+extern crate alloc;
 
+use core::alloc::Layout;
 use core::num::NonZeroUsize;
 use core::panic::PanicInfo;
 
@@ -150,4 +153,10 @@ fn panic(info: &PanicInfo) -> ! {
     serial_println!("[test failed!]");
     serial_println!("{}", info);
     qemu::exit_qemu(qemu::QemuExitCode::Failed);
+}
+
+#[alloc_error_handler]
+fn on_oom(layout: Layout) -> ! {
+    println!("Failed Heap Allocate! {:?}", layout);
+    common_lib::assembly::hlt_forever();
 }

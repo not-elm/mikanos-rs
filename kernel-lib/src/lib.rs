@@ -11,3 +11,4 @@ pub mod paging;
 pub mod segment;
 pub mod serial;
 pub mod stack;
+pub mod allocate;

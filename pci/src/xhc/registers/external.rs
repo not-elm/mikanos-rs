@@ -1,7 +1,5 @@
 use core::fmt::Debug;
 
-use kernel_lib::serial_println;
-
 use crate::error::PciResult;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
@@ -74,10 +72,6 @@ where
     }
 
     fn run(&mut self) -> PciResult {
-        self.1.into_iter().for_each(|a| {
-            serial_println!("{:?}", a.unwrap());
-        });
-
         self.0.operational.usbcmd.update_volatile(|u| {
             u.set_run_stop();
         });
@@ -310,12 +304,6 @@ where
     }
 
     fn clear_port_reset_change_at(&mut self, port_id: u8) -> PciResult {
-        self.0
-            .port_register_set
-            .update_volatile_at(port_index(port_id), |p| {
-                serial_println!("{:?}", p);
-                serial_println!();
-            });
         self.registers_mut()
             .port_register_set
             .update_volatile_at(port_index(port_id), |port| {

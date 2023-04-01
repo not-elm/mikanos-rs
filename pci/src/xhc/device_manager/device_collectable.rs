@@ -1,12 +1,19 @@
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::Device;
+use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use alloc::rc::Rc;
+use core::cell::RefCell;
 
 pub mod single_device_collector;
 
-pub trait DeviceCollectable {
+pub trait DeviceCollectable<T>
+where
+    T: DoorbellRegistersAccessible,
+{
+    fn new(slot_id: u8) -> Self;
     /// 指定したスロットのIDをもつデバイスを取得します。
-    fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device>;
+    fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device<T>>;
 
     /// 指定したスロットIDのデバイスを作成します。
     fn new_set_at(
@@ -14,6 +21,7 @@ pub trait DeviceCollectable {
         parent_hub_slot_id: u8,
         port_speed: u8,
         slot_id: u8,
+        doorbell: &Rc<RefCell<T>>,
         allocator: &mut impl MemoryAllocatable,
     ) -> PciResult;
 }
