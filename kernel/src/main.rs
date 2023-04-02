@@ -16,9 +16,11 @@ use uefi::table::boot::{MemoryMapIter, MemoryType};
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
+use kernel_lib::allocate::init_alloc;
 use kernel_lib::error::KernelResult;
-use kernel_lib::gop::console::{fill_rect_using_global, init_console};
+use kernel_lib::gop::console::{draw_cursor, fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
+use kernel_lib::segment::setup_segments;
 use kernel_lib::{println, serial_println};
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
@@ -58,8 +60,9 @@ pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
     _memory_map: &MemoryMapIter,
 ) {
+    unsafe { setup_segments() };
+    init_alloc();
     init_console(*frame_buffer_config);
-    // unsafe { setup_segments() };
 
     #[cfg(test)]
     test_main();
@@ -68,8 +71,8 @@ pub extern "sysv64" fn kernel_main(
 
     fill_background(PixelColor::new(0, 0, 0x22), frame_buffer_config).unwrap();
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
-    serial_println!("MMIO ADDRESS = {:x}", mmio_base_addr().addr());
 
+    draw_cursor(Vector2D::new(200, 100), PixelColor::new(0xFF, 0xFF, 0xFF)).unwrap();
     let external = External::new(mmio_base_addr(), IdentityMapper());
     let mut xhc_controller =
         XhcController::new(external, MikanOSPciMemoryAllocator::new()).unwrap();

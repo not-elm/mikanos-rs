@@ -18,12 +18,18 @@ impl BumpPointerAlloc {
         }
     }
 }
+
+impl BumpPointerAlloc {
+    pub fn init(&mut self, head: usize, end: usize) {
+        *self.head.get_mut() = head;
+        self.end = end;
+    }
+}
 unsafe impl Sync for BumpPointerAlloc {}
 
 unsafe impl GlobalAlloc for BumpPointerAlloc {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let head = self.head.get();
-
         let align = layout.align();
         let res = *head % align;
         let start = if res == 0 { *head } else { *head + align - res };

@@ -73,6 +73,9 @@ where
 
     fn run(&mut self) -> PciResult {
         self.0.operational.usbcmd.update_volatile(|u| {
+            u.set_interrupter_enable();
+        });
+        self.0.operational.usbcmd.update_volatile(|u| {
             u.set_run_stop();
         });
 

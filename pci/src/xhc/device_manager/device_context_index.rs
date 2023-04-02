@@ -1,6 +1,6 @@
 use crate::flag_to_num;
 use crate::xhc::device_manager::endpoint_id::EndpointId;
-
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct DeviceContextIndex(usize);
 
 impl DeviceContextIndex {

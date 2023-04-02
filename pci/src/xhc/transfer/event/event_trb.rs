@@ -1,6 +1,8 @@
 use xhci::ring::trb::event::TransferEvent;
 use xhci::ring::trb::transfer::{DataStage, Normal, StatusStage};
 
+use kernel_lib::serial_println;
+
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]
@@ -43,12 +45,13 @@ impl TargetEvent {
 
 impl EventTrb {
     pub unsafe fn new(trb: TrbRawData, cycle_bit: bool) -> Option<Self> {
+        let raw_data_buff: [u32; 4] = trb.into();
+
         if read_cycle_bit(trb.raw()) != cycle_bit {
             return None;
         }
 
-        let raw_data_buff: [u32; 4] = trb.into();
-
+        // serial_println!("{:?}", raw_data_buff);
         let event_trb = match trb.template().trb_type() {
             32 => EventTrb::TransferEvent {
                 transfer_event: TransferEvent::try_from(raw_data_buff).ok()?,

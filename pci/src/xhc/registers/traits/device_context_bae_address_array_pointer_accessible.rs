@@ -34,26 +34,19 @@ pub trait DeviceContextBaseAddressArrayPointerAccessible {
     }
 }
 
-pub(crate) fn setup_device_manager<T, U>(
-    registers: &mut Rc<RefCell<U>>,
+pub(crate) fn setup_device_manager<T>(
+    registers: &mut impl DeviceContextBaseAddressArrayPointerAccessible,
     device_slots: u8,
     scratchpad_buffers_len: usize,
     allocator: &mut impl MemoryAllocatable,
-) -> PciResult<DeviceManager<T, U>>
+) -> PciResult<DeviceManager<T>>
 where
-    T: DeviceCollectable<U>,
-    U: PortRegistersAccessible
-        + DeviceContextBaseAddressArrayPointerAccessible
-        + DoorbellRegistersAccessible,
+    T: DeviceCollectable,
 {
-    let device_context_array = registers.borrow_mut().setup_device_context_array(
-        device_slots,
-        scratchpad_buffers_len,
-        allocator,
-    )?;
+    let device_context_array =
+        registers.setup_device_context_array(device_slots, scratchpad_buffers_len, allocator)?;
     Ok(DeviceManager::new(
         T::new(device_slots),
         device_context_array,
-        registers,
     ))
 }

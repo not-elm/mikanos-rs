@@ -1,6 +1,5 @@
 use core::mem::size_of;
 use core::ops::Add;
-use kernel_lib::serial_println;
 
 use crate::xhc::device_manager::descriptor::descriptor::UsbDescriptor;
 use crate::xhc::device_manager::descriptor::endpoint_descriptor::{
@@ -29,7 +28,9 @@ pub struct ConfigurationDescriptors {
     index: usize,
     len: usize,
 }
+
 pub(crate) const CONFIGURATION_DESCRIPTOR_TYPE: u8 = 2;
+
 impl ConfigurationDescriptors {
     pub fn new(descriptor_ptr: *mut u8, len: usize) -> Self {
         Self {
@@ -51,13 +52,14 @@ impl Iterator for ConfigurationDescriptors {
         let ptr = unsafe { self.descriptor_ptr.add(self.index) };
         let (descriptor_size, descriptor) = unsafe { convert_to_descriptor(ptr) };
         self.index += descriptor_size;
+
         Some(descriptor)
     }
 }
 
 unsafe fn convert_to_descriptor(ptr: *mut u8) -> (usize, UsbDescriptor) {
     let descriptor_type = *ptr.add(1);
-    serial_println!("TYPE = {}", descriptor_type);
+
     fn convert<T>(ptr: *mut u8) -> (usize, T) {
         (size_of::<T>(), unsafe { (ptr as *const T).read_volatile() })
     }
@@ -73,6 +75,7 @@ unsafe fn convert_to_descriptor(ptr: *mut u8) -> (usize, UsbDescriptor) {
         }
         ENDPOINT_DESCRIPTOR_TYPE => {
             let (size, descriptor) = convert::<EndpointDescriptor>(ptr);
+
             (size, UsbDescriptor::Endpoint(descriptor))
         }
         HID_DESCRIPTOR_TYPE => {

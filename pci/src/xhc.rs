@@ -1,10 +1,8 @@
-use alloc::rc::Rc;
-use core::cell::RefCell;
 use core::fmt::Debug;
 
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
-use kernel_lib::serial_println;
+use kernel_lib::println;
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use registers::traits::registers_operation::RegistersOperation;
@@ -13,8 +11,10 @@ use transfer::event::event_ring::EventRing;
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::device::buff;
 use crate::xhc::device_manager::device_collectable::single_device_collector::SingleDeviceCollector;
 use crate::xhc::device_manager::device_collectable::DeviceCollectable;
+use crate::xhc::device_manager::endpoint_id::EndpointId;
 use crate::xhc::device_manager::DeviceManager;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
 use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
@@ -38,17 +38,17 @@ where
         + InterrupterSetRegisterAccessible
         + PortRegistersAccessible
         + DoorbellRegistersAccessible,
-    U: DeviceCollectable<T>,
+    U: DeviceCollectable,
     I: MemoryAllocatable,
 {
-    registers: Rc<RefCell<T>>,
-    event_ring: EventRing<T>,
-    command_ring: CommandRing<T>,
-    device_manager: DeviceManager<U, T>,
+    registers: T,
+    event_ring: EventRing,
+    command_ring: CommandRing,
+    device_manager: DeviceManager<U>,
     allocator: I,
 }
 
-impl<T, I> XhcController<T, SingleDeviceCollector<T>, I>
+impl<T, I> XhcController<T, SingleDeviceCollector, I>
 where
     T: RegistersOperation
         + CapabilityRegistersAccessible
@@ -58,23 +58,23 @@ where
         + PortRegistersAccessible
         + ConfigRegisterAccessible
         + DeviceContextBaseAddressArrayPointerAccessible,
-
     I: MemoryAllocatable,
 {
     pub fn new(mut registers: T, mut allocator: I) -> PciResult<Self> {
-        let mut registers = Rc::new(RefCell::new(registers));
-        registers.borrow_mut().reset()?;
+        registers.reset()?;
 
-        registers.borrow_mut().write_max_device_slots_enabled(8)?;
-        let scratchpad_buffers_len = registers.borrow().read_max_scratchpad_buffers_len();
+        registers.write_max_device_slots_enabled(8)?;
+        let scratchpad_buffers_len = registers.read_max_scratchpad_buffers_len();
         let device_manager =
             setup_device_manager(&mut registers, 8, scratchpad_buffers_len, &mut allocator)?;
 
         let command_ring = setup_command_ring(&mut registers, 32, &mut allocator)?;
 
-        let (_, event_ring) = setup_event_ring(&registers, 1, 32, &mut allocator)?;
+        let (_, event_ring) = setup_event_ring(&mut registers, 1, 32, &mut allocator)?;
+        registers.write_interrupter_enable(0, true)?;
+        registers.write_interrupter_pending(0, true)?;
 
-        registers.borrow_mut().run()?;
+        registers.run()?;
 
         Ok(Self {
             registers,
@@ -92,7 +92,7 @@ where
     }
 
     pub fn check_event(&mut self) -> PciResult {
-        if let Some(event_trb) = self.event_ring.read_event_trb() {
+        if let Some(event_trb) = self.event_ring.read_event_trb(&self.registers) {
             self.on_event(event_trb)?;
         }
 
@@ -100,8 +100,6 @@ where
     }
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
-        serial_println!("{:?}", event_trb);
-
         match event_trb {
             EventTrb::TransferEvent {
                 transfer_event,
@@ -113,8 +111,8 @@ where
             EventTrb::PortStatusChangeEvent(port_status) => self.enable_slot(port_status)?,
             EventTrb::NotSupport { .. } => {}
         };
-        serial_println!();
-        self.event_ring.next_dequeue_pointer()
+
+        self.event_ring.next_dequeue_pointer(&mut self.registers)
     }
 
     fn on_transfer_event(
@@ -122,9 +120,20 @@ where
         transfer_event: TransferEvent,
         target_event: TargetEvent,
     ) -> PciResult {
-        let is_init = self
-            .device_manager
-            .initialize_phase_at(transfer_event.slot_id(), transfer_event)?;
+        if let TargetEvent::Normal(normal) = target_event {
+            let b = buff();
+            println!("{} {} {}", b[0], b[1], b[2]);
+            self.device_manager
+                .device_slot_at(transfer_event.slot_id())
+                .unwrap()
+                .interrupter_in(EndpointId::from_addr(3), &mut self.registers)?;
+            return Ok(());
+        }
+        let is_init = self.device_manager.initialize_phase_at(
+            transfer_event.slot_id(),
+            transfer_event,
+            &mut self.registers,
+        )?;
 
         if is_init {
             self.command_ring.push_configure_endpoint(
@@ -133,6 +142,7 @@ where
                     .unwrap()
                     .input_context_addr(),
                 transfer_event.slot_id(),
+                &mut self.registers,
             )?;
         }
         Ok(())
@@ -145,30 +155,35 @@ where
         {
             9 => self.address_device(completion), // Enable Slot
             11 => self.init_device(completion),   // Address Device
-            12 => Ok(()),
+            12 => self
+                .device_manager
+                .configure_endpoint(completion.slot_id(), &mut self.registers),
             _ => Ok(()),
         }
     }
     fn init_device(&mut self, completion: CommandCompletion) -> PciResult {
         self.device_manager
-            .start_initialize_at(completion.slot_id())?;
+            .start_initialize_at(completion.slot_id(), &mut self.registers)?;
 
         Ok(())
     }
     fn address_device(&mut self, completion: CommandCompletion) -> PciResult {
-        let input_context_addr = self
-            .device_manager
-            .address_device(completion.slot_id(), &mut self.allocator)?;
-        self.command_ring
-            .push_address_command(input_context_addr, completion.slot_id())
+        let input_context_addr = self.device_manager.address_device(
+            completion.slot_id(),
+            &mut self.allocator,
+            &mut self.registers,
+        )?;
+        self.command_ring.push_address_command(
+            input_context_addr,
+            completion.slot_id(),
+            &mut self.registers,
+        )
     }
 
     fn enable_slot(&mut self, port_status: PortStatusChange) -> PciResult {
         let port_id = port_status.port_id();
-        self.registers
-            .borrow_mut()
-            .clear_port_reset_change_at(port_id)?;
-        self.command_ring.push_enable_slot()?;
+        self.registers.clear_port_reset_change_at(port_id)?;
+        self.command_ring.push_enable_slot(&mut self.registers)?;
         self.device_manager.set_addressing_port_id(port_id);
         Ok(())
     }

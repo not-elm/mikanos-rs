@@ -64,18 +64,17 @@ pub fn init_console(frame_buffer_config: FrameBufferConfig) {
     unsafe { CONSOLE.init(frame_buffer_config) };
 }
 
-pub fn draw_cursor() -> KernelResult {
+pub fn draw_cursor(pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
     for dy in 0..CURSOR_HEIGHT {
         for dx in 0..CURSOR_WIDTH {
             let c = char::from(CURSOR_SHAPE[dy][dx]);
             if c == '@' {
-                get_mut_console()
-                    .write_pixel(Vector2D::new(200 + dx, 100 + dy), PixelColor::new(0, 0, 0))?;
-            } else if c == '.' {
                 get_mut_console().write_pixel(
-                    Vector2D::new(200 + dx, 100 + dy),
-                    PixelColor::new(0xFF, 0xFF, 0xFF),
+                    Vector2D::new(pos.x() + dx, pos.y() + dy),
+                    PixelColor::new(0, 0, 0),
                 )?;
+            } else if c == '.' {
+                get_mut_console().write_pixel(Vector2D::new(pos.x() + dx, pos.y() + dy), color)?;
             }
         }
     }

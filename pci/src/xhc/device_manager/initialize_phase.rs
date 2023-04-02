@@ -6,4 +6,5 @@ pub enum InitializePhase {
     Phase2,
     Phase3,
     Completed,
+    Finish,
 }

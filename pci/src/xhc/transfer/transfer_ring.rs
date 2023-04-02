@@ -1,6 +1,7 @@
 use crate::error::{PciError, PciResult};
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
+use kernel_lib::serial_println;
 
 #[derive(Debug, Copy, Clone)]
 pub struct TransferRing {
@@ -16,7 +17,7 @@ impl TransferRing {
         Self {
             ring_ptr_base_address,
             ring_ptr_address: ring_ptr_base_address,
-            ring_end_address: ring_ptr_base_address + trb_byte_size() * (ring_size - 1) as u64,
+            ring_end_address: ring_ptr_base_address + trb_byte_size() * (ring_size) as u64,
             ring_size,
             cycle_bit,
         }
@@ -38,8 +39,13 @@ impl TransferRing {
     pub fn ring_size(&self) -> usize {
         self.ring_size
     }
-    pub fn next(&mut self) {
+    pub fn next(&mut self) -> PciResult {
         self.ring_ptr_address += trb_byte_size();
+        if self.is_end_address(self.ring_ptr_address) {
+            self.rollback()?;
+        }
+
+        Ok(())
     }
     pub fn read_transfer_request_block(&self, trb_addr: u64) -> Option<TrbRawData> {
         let ptr = trb_addr as *const u128;

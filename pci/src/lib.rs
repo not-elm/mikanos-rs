@@ -5,6 +5,7 @@
 #![feature(pointer_byte_offsets)]
 #![feature(maybe_uninit_slice)]
 #![feature(ptr_as_uninit)]
+#![feature(is_some_and)]
 
 extern crate alloc;
 
