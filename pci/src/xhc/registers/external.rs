@@ -75,6 +75,13 @@ where
         self.0.operational.usbcmd.update_volatile(|u| {
             u.set_interrupter_enable();
         });
+        self.0
+            .interrupter_register_set
+            .interrupter_mut(0)
+            .imod
+            .update_volatile(|moderation| {
+                moderation.set_interrupt_moderation_interval(4000);
+            });
         self.0.operational.usbcmd.update_volatile(|u| {
             u.set_run_stop();
         });

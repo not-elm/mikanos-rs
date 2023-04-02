@@ -215,6 +215,7 @@ name = "pci"
 version = "0.1.0"
 dependencies = [
  "bitfield-struct",
+ "common-lib",
  "enum-try-from",
  "kernel-lib",
  "macros",

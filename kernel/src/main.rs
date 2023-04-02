@@ -18,7 +18,7 @@ use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 use kernel_lib::allocate::init_alloc;
 use kernel_lib::error::KernelResult;
-use kernel_lib::gop::console::{draw_cursor, fill_rect_using_global, init_console};
+use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::segment::setup_segments;
 use kernel_lib::{println, serial_println};
@@ -72,7 +72,6 @@ pub extern "sysv64" fn kernel_main(
     fill_background(PixelColor::new(0, 0, 0x22), frame_buffer_config).unwrap();
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
 
-    draw_cursor(Vector2D::new(200, 100), PixelColor::new(0xFF, 0xFF, 0xFF)).unwrap();
     let external = External::new(mmio_base_addr(), IdentityMapper());
     let mut xhc_controller =
         XhcController::new(external, MikanOSPciMemoryAllocator::new()).unwrap();

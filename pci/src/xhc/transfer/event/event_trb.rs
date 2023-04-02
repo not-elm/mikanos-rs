@@ -51,7 +51,6 @@ impl EventTrb {
             return None;
         }
 
-        // serial_println!("{:?}", raw_data_buff);
         let event_trb = match trb.template().trb_type() {
             32 => EventTrb::TransferEvent {
                 transfer_event: TransferEvent::try_from(raw_data_buff).ok()?,

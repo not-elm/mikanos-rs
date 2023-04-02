@@ -12,6 +12,7 @@ use xhci::ring::trb::transfer::{DataStage, SetupStage, StatusStage, TransferType
 use kernel_lib::println;
 
 use crate::error::{PciError, PciResult};
+use crate::usb::mouse::MouseDriver;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::descriptor::configuration_descriptor::{
     ConfigurationDescriptor, ConfigurationDescriptors,
@@ -48,7 +49,7 @@ pub struct Device {
     hid_buff: [u8; 1024],
     endpoint_configs: Vec<EndpointConfig>,
     setup_stage: Option<SetupStage>,
-
+    mouse: MouseDriver,
     interface_num: u16,
     ring2: TransferRing,
 }
@@ -60,30 +61,6 @@ pub struct RequestType {
     #[bits(2)]
     pub ty: u8,
     pub direction: bool,
-}
-
-#[bitfield(u128)]
-struct NormalTRB {
-    pub data_buffer_pointer: u64,
-    #[bits(17)]
-    pub trb_transfer_length: u32,
-    #[bits(5)]
-    pub td_size: u8,
-    #[bits(10)]
-    pub interrupter_target: u16,
-    pub cycle_bit: bool,
-    pub evaluate_next_trb: bool,
-    pub interrupt_on_short_packet: bool,
-    pub no_snoop: bool,
-    pub chain_bit: bool,
-    pub interrupt_on_completion: bool,
-    pub immediate_data: bool,
-    #[bits(2)]
-    pub _reserve: u8,
-    pub block_event_interrupt: bool,
-    #[bits(6)]
-    pub trb_type: u8,
-    _reserve_2: u16,
 }
 
 #[repr(C, align(64))]
@@ -216,9 +193,10 @@ impl Device {
         ep_id: EndpointId,
         doorbell: &mut impl DoorbellRegistersAccessible,
     ) -> PciResult {
+        self.mouse.on_data_received()?;
         self.phase = InitializePhase::Finish;
         let mut normal = xhci::ring::trb::transfer::Normal::new();
-        normal.set_data_buffer_pointer(unsafe { M.0.as_ptr() as u64 });
+        normal.set_data_buffer_pointer(self.mouse.data_buff_addr());
 
         normal.set_interrupt_on_short_packet();
         normal.set_trb_transfer_length(3);
@@ -459,7 +437,7 @@ impl Device {
             endpoint_configs: Vec::new(),
             setup_stage: None,
             hid_buff: [0; 1024],
-
+            mouse: MouseDriver::new(),
             interface_num: 0,
             ring2: Self::allocate_transfer_ring(allocator)?,
         })

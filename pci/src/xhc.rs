@@ -2,7 +2,6 @@ use core::fmt::Debug;
 
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
-use kernel_lib::println;
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use registers::traits::registers_operation::RegistersOperation;
@@ -11,7 +10,6 @@ use transfer::event::event_ring::EventRing;
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::device::buff;
 use crate::xhc::device_manager::device_collectable::single_device_collector::SingleDeviceCollector;
 use crate::xhc::device_manager::device_collectable::DeviceCollectable;
 use crate::xhc::device_manager::endpoint_id::EndpointId;
@@ -121,8 +119,6 @@ where
         target_event: TargetEvent,
     ) -> PciResult {
         if let TargetEvent::Normal(normal) = target_event {
-            let b = buff();
-            println!("{} {} {}", b[0], b[1], b[2]);
             self.device_manager
                 .device_slot_at(transfer_event.slot_id())
                 .unwrap()
