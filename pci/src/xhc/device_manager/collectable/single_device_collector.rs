@@ -1,6 +1,6 @@
 use crate::error::{DeviceContextReason, PciError, PciResult};
 use crate::xhc::device_manager::collectable::DeviceCollectable;
-use crate::xhc::device_manager::device::Device;
+use crate::xhc::device_manager::device_slot::Device;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 
 pub struct SingleDeviceCollector<T>

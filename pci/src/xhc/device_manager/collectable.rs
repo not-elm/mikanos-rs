@@ -1,6 +1,6 @@
 use crate::error::{DeviceReason, PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::device::Device;
+use crate::xhc::device_manager::device_slot::Device;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use alloc::rc::Rc;
 use core::cell::RefCell;

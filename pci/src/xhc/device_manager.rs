@@ -6,14 +6,15 @@ use xhci::ring::trb::event::TransferEvent;
 use crate::error::{DeviceContextReason, DeviceReason, PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::DeviceCollectable;
-use crate::xhc::device_manager::device::Device;
+use crate::xhc::device_manager::device_slot::Device;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
 use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
 
 pub mod collectable;
-pub mod device;
+pub mod device_slot;
 
+pub mod control_pipe;
 pub mod descriptor;
 pub(crate) mod device_context_index;
 mod endpoint_config;
@@ -85,13 +86,7 @@ where
         device.start_initialize()
     }
     pub fn initialize_phase_at(&mut self, slot_id: u8, trb: TransferEvent) -> PciResult<bool> {
-        let device = self
-            .devices
-            .mut_at(slot_id)
-            .ok_or(PciError::FailedOperateDeviceContext(
-                DeviceContextReason::NotExistsAddressingPort,
-            ))?;
-
+        let device = self.device_mut_at(slot_id)?;
         device.on_transfer_event_received(trb)?;
         Ok(device.is_init())
     }

@@ -16,6 +16,7 @@ use kernel_lib::println;
 use crate::class_driver::mouse::Mouse;
 use crate::error::{PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::control_pipe::ControlPipe;
 use crate::xhc::device_manager::descriptor::configuration_descriptor::{
     ConfigurationDescriptor, ConfigurationDescriptors,
 };
@@ -29,6 +30,8 @@ use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegist
 use crate::xhc::transfer::event::event_trb::TargetEvent;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
+pub mod phase0;
+
 const DATA_BUFF: usize = 256;
 
 #[repr(C, align(64))]
@@ -39,7 +42,7 @@ where
     input_context: InputContext,
     slot_id: u8,
     device_context: DeviceContext,
-    transfer_ring: TransferRing,
+    default_control_pipe: ControlPipe<T>,
     phase: InitializePhase,
     data_buff: [u8; DATA_BUFF],
     hid_buff: [u8; 1024],
@@ -264,27 +267,10 @@ where
             );
         }
     }
-    fn get_descriptor(
-        &mut self,
-        ep_id: EndpointId,
-        desc_type: u16,
-        desc_index: u16,
-        buff: *mut u8,
-        len: u16,
-    ) -> PciResult {
-        let mut setup_data = SetupStage::new();
-        setup_data.set_request_type(RequestType::new().with_direction(true).into());
-        setup_data.set_request(6);
-        setup_data.set_value(desc_type << 8 | desc_index);
-        setup_data.set_index(0);
-        setup_data.set_length(len);
-
-        self.control_in(ep_id, setup_data, buff, len)
-    }
 
     fn set_configuration(&mut self, ep_id: EndpointId, config_value: u16) -> PciResult {
         let mut setup_data = SetupStage::new();
-        // setup_data.set_request_type(RequestType::new().into());
+
         const CONFIGURATION: u8 = 9;
         setup_data.set_request(CONFIGURATION);
         setup_data.set_value(config_value);
@@ -293,67 +279,7 @@ where
 
         self.control_out(ep_id, setup_data, null_mut(), 0)
     }
-    fn control_in(
-        &mut self,
-        ep_id: EndpointId,
-        setup_data: SetupStage,
-        buff: *mut u8,
-        len: u16,
-    ) -> PciResult {
-        let mut status = StatusStage::new();
 
-        if !buff.is_null() {
-            let setup = make_setup_stage(setup_data, TransferType::In);
-            self.transfer_ring.push(setup.clone().into_raw())?;
-
-            let mut data_stage = make_data_stage(buff as u64, len as u32, true);
-            data_stage.set_interrupt_on_completion();
-            self.transfer_ring.push(data_stage.into_raw())?;
-
-            self.transfer_ring.push(status.into_raw())?;
-            self.setup_stage = Some(setup);
-        } else {
-            let setup_stage = make_setup_stage(setup_data, TransferType::No);
-            self.transfer_ring.push(setup_stage.clone().into_raw())?;
-
-            status.set_direction();
-            status.set_interrupt_on_completion();
-            self.transfer_ring.push(status.into_raw())?;
-            self.setup_stage = Some(setup_stage);
-        }
-        self.notify(DeviceContextIndex::from_endpoint_id(ep_id))
-    }
-    fn control_out(
-        &mut self,
-        ep_id: EndpointId,
-        setup_data: SetupStage,
-        buff: *mut u8,
-        len: u16,
-    ) -> PciResult {
-        let mut status = StatusStage::new();
-        status.set_direction();
-
-        if !buff.is_null() {
-            let setup = make_setup_stage(setup_data, TransferType::Out);
-            self.transfer_ring.push(setup.into_raw())?;
-
-            let mut data_stage = make_data_stage(buff as u64, len as u32, false);
-            data_stage.set_interrupt_on_completion();
-            self.transfer_ring.push(data_stage.into_raw())?;
-
-            self.transfer_ring.push(status.into_raw())?;
-            self.setup_stage = Some(setup);
-        } else {
-            let setup_stage = make_setup_stage(setup_data, TransferType::No);
-            self.transfer_ring.push(setup_stage.into_raw())?;
-
-            status.set_interrupt_on_completion();
-            self.transfer_ring.push(status.into_raw())?;
-            self.setup_stage = Some(setup_stage);
-        }
-
-        self.notify(DeviceContextIndex::from_endpoint_id(ep_id))
-    }
     fn init_slot_context(&mut self, root_port_hub_id: u8, port_speed: u8) {
         let slot = self.input_context.0.device_mut().slot_mut();
         slot.set_root_hub_port_number(root_port_hub_id);
@@ -372,7 +298,7 @@ where
         default_control_pipe.set_endpoint_type(EndpointType::Control);
         default_control_pipe.set_max_packet_size(max_packet_size(port_speed));
         default_control_pipe.set_max_burst_size(0);
-        default_control_pipe.set_tr_dequeue_pointer(self.transfer_ring.base_address());
+        default_control_pipe.set_tr_dequeue_pointer(self.default_control_pipe.);
         default_control_pipe.set_dequeue_cycle_state();
         default_control_pipe.set_interval(0);
         default_control_pipe.set_max_primary_streams(0);
@@ -388,7 +314,12 @@ where
             slot_id,
             input_context: InputContext(Input32Byte::default()),
             device_context: DeviceContext(Device32Byte::default()),
-            transfer_ring: Self::allocate_transfer_ring(allocator)?,
+            default_control_pipe: ControlPipe::new(
+                slot_id,
+                DeviceContextIndex::default(),
+                doorbell,
+                allocator,
+            )?,
             doorbell: Rc::clone(doorbell),
             phase: InitializePhase::NotPrepared,
             data_buff: [0; DATA_BUFF],

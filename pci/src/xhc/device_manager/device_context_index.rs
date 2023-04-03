@@ -3,6 +3,11 @@ use crate::xhc::device_manager::endpoint_id::EndpointId;
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct DeviceContextIndex(usize);
 
+impl Default for DeviceContextIndex {
+    fn default() -> Self {
+        Self(1)
+    }
+}
 impl DeviceContextIndex {
     pub fn from_endpoint_id(endpoint_id: EndpointId) -> Self {
         Self(endpoint_id.value())

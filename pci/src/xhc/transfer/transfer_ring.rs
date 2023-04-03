@@ -1,4 +1,5 @@
 use crate::error::{PciError, PciResult};
+use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
 
@@ -21,7 +22,14 @@ impl TransferRing {
             cycle_bit,
         }
     }
-
+    pub fn new_with_alloc(
+        ring_size: usize,
+        cycle_bit: bool,
+        allocator: &mut impl MemoryAllocatable,
+    ) -> PciResult<Self> {
+        let ring_ptr_base_address = allocator.try_allocate_trb_ring(ring_size)?;
+        Ok(Self::new(ring_ptr_base_address, ring_size, cycle_bit))
+    }
     pub fn push(&mut self, trb: [u32; 4]) -> PciResult {
         self.write(trb)?;
 
