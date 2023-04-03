@@ -7,9 +7,7 @@ use crate::xhc::device_manager::endpoint_id::EndpointId;
 #[derive(Debug)]
 pub struct EndpointConfig {
     ep_id: EndpointId,
-
     ep_type: EndpointType,
-
     max_packet_size: u16,
     interval: u8,
 }
@@ -56,34 +54,6 @@ impl EndpointConfig {
         endpoint_ctx.set_tr_dequeue_pointer(tr_buff_addr);
         endpoint_ctx.set_endpoint_type(EndpointType::InterruptIn);
         endpoint_ctx.set_dequeue_cycle_state();
-    }
-
-    fn ep_type(&self) -> EndpointType {
-        match self.ep_type {
-            EndpointType::Control => EndpointType::Control,
-            EndpointType::IsochOut => {
-                if self.endpoint_id().is_control_in() {
-                    EndpointType::IsochIn
-                } else {
-                    EndpointType::IsochOut
-                }
-            }
-            EndpointType::BulkOut => {
-                if self.endpoint_id().is_control_in() {
-                    EndpointType::BulkIn
-                } else {
-                    EndpointType::BulkOut
-                }
-            }
-            EndpointType::InterruptIn => {
-                if self.endpoint_id().is_control_in() {
-                    EndpointType::InterruptIn
-                } else {
-                    EndpointType::InterruptOut
-                }
-            }
-            _ => self.ep_type,
-        }
     }
 }
 

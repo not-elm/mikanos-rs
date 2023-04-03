@@ -1,14 +1,14 @@
+use alloc::rc::Rc;
+use core::cell::RefCell;
+
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::device_collectable::single_device_collector::SingleDeviceCollector;
-use crate::xhc::device_manager::device_collectable::DeviceCollectable;
+use crate::xhc::device_manager::collectable::DeviceCollectable;
 use crate::xhc::device_manager::DeviceManager;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
 use crate::xhc::transfer::device_context::scratchpad_buffers_array_ptr::ScratchpadBuffersArrayPtr;
 use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
-use alloc::rc::Rc;
-use core::cell::RefCell;
 
 pub trait DeviceContextBaseAddressArrayPointerAccessible {
     fn write_device_context_array_addr(&mut self, device_context_addr: u64) -> PciResult;
@@ -34,19 +34,26 @@ pub trait DeviceContextBaseAddressArrayPointerAccessible {
     }
 }
 
-pub(crate) fn setup_device_manager<T>(
-    registers: &mut impl DeviceContextBaseAddressArrayPointerAccessible,
+pub(crate) fn setup_device_manager<U, T>(
+    registers: &mut Rc<RefCell<T>>,
     device_slots: u8,
     scratchpad_buffers_len: usize,
     allocator: &mut impl MemoryAllocatable,
-) -> PciResult<DeviceManager<T>>
+) -> PciResult<DeviceManager<T, U>>
 where
-    T: DeviceCollectable,
+    U: DeviceCollectable<T>,
+    T: DeviceContextBaseAddressArrayPointerAccessible
+        + DoorbellRegistersAccessible
+        + PortRegistersAccessible,
 {
-    let device_context_array =
-        registers.setup_device_context_array(device_slots, scratchpad_buffers_len, allocator)?;
+    let device_context_array = registers.borrow_mut().setup_device_context_array(
+        device_slots,
+        scratchpad_buffers_len,
+        allocator,
+    )?;
     Ok(DeviceManager::new(
-        T::new(device_slots),
+        U::new(device_slots),
         device_context_array,
+        registers,
     ))
 }

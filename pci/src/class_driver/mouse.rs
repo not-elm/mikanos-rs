@@ -9,12 +9,12 @@ use crate::error::{PciError, PciResult};
 
 const MOUSE_DATA_BUFF_SIZE: usize = 3;
 
-pub struct MouseDriver {
+pub struct Mouse {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
     current_pos: Vector2D<usize>,
 }
 
-impl MouseDriver {
+impl Mouse {
     pub fn new() -> Self {
         Self {
             current_pos: Vector2D::new(0, 0),

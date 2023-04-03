@@ -178,7 +178,7 @@ impl<M> InterrupterSetRegisterAccessible for External<M>
 where
     M: xhci::accessor::Mapper + Clone,
 {
-    fn write_event_ring_dequeue_pointer(
+    fn write_event_ring_dequeue_pointer_at(
         &mut self,
         index: usize,
         event_ring_segment_addr: u64,
@@ -192,7 +192,7 @@ where
         Ok(())
     }
 
-    fn write_event_ring_segment_table_pointer(
+    fn write_event_ring_segment_table_pointer_at(
         &mut self,
         index: usize,
         event_ring_segment_table_addr: u64,
@@ -206,7 +206,7 @@ where
         Ok(())
     }
 
-    fn write_interrupter_enable(&mut self, index: usize, is_enable: bool) -> PciResult {
+    fn write_interrupter_enable_at(&mut self, index: usize, is_enable: bool) -> PciResult {
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
@@ -222,7 +222,7 @@ where
         Ok(())
     }
 
-    fn write_interrupter_pending(&mut self, index: usize, is_pending: bool) -> PciResult {
+    fn write_interrupter_pending_at(&mut self, index: usize, is_pending: bool) -> PciResult {
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
@@ -238,7 +238,7 @@ where
         Ok(())
     }
 
-    fn read_event_ring_addr(&self, index: usize) -> u64 {
+    fn read_dequeue_pointer_addr_at(&self, index: usize) -> u64 {
         self.0
             .interrupter_register_set
             .interrupter(index)

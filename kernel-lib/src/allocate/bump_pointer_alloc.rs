@@ -11,6 +11,7 @@ pub(crate) struct BumpPointerAlloc {
 }
 
 impl BumpPointerAlloc {
+    #[allow(dead_code)]
     pub(crate) const fn new(head: usize, end: usize) -> Self {
         Self {
             head: UnsafeCell::new(head),
@@ -20,6 +21,7 @@ impl BumpPointerAlloc {
 }
 
 impl BumpPointerAlloc {
+    #[allow(dead_code)]
     pub fn init(&mut self, head: usize, end: usize) {
         *self.head.get_mut() = head;
         self.end = end;

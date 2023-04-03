@@ -1,5 +1,4 @@
 use core::mem::size_of;
-use core::ops::Add;
 
 use crate::xhc::device_manager::descriptor::descriptor::UsbDescriptor;
 use crate::xhc::device_manager::descriptor::endpoint_descriptor::{

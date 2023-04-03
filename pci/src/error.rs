@@ -11,6 +11,7 @@ pub enum PciError {
     InvalidHeaderType(HeaderTypeReason),
     InvalidFunction(FunctionReason),
     FailedAllocate(AllocateReason),
+    FailedOperateDevice(DeviceReason),
     FailedOperateToRegister(OperationReason),
     InvalidRegister(InvalidRegisterReason),
 }
@@ -38,6 +39,10 @@ pub enum DeviceContextReason {
         max_slots: u8,
         specified_slot_id: u8,
     },
+}
+#[derive(Debug)]
+pub enum DeviceReason {
+    NotExistsSlot(u8),
 }
 
 #[derive(Debug)]

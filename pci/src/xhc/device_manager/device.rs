@@ -1,4 +1,6 @@
+use alloc::rc::Rc;
 use alloc::vec::Vec;
+use core::cell::RefCell;
 use core::ptr::null_mut;
 
 use bitfield_struct::bitfield;
@@ -11,8 +13,8 @@ use xhci::ring::trb::transfer::{DataStage, SetupStage, StatusStage, TransferType
 
 use kernel_lib::println;
 
+use crate::class_driver::mouse::Mouse;
 use crate::error::{PciError, PciResult};
-use crate::usb::mouse::MouseDriver;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::descriptor::configuration_descriptor::{
     ConfigurationDescriptor, ConfigurationDescriptors,
@@ -28,18 +30,12 @@ use crate::xhc::transfer::event::event_trb::TargetEvent;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
 const DATA_BUFF: usize = 256;
-const DATA_BUFF_SIZE: usize = DATA_BUFF / 4;
-static mut M: Memory = Memory([0; 1024]);
-
-pub fn buff() -> &'static [u8] {
-    unsafe { &M.0 }
-}
-
-#[repr(align(64))]
-struct Memory([u8; 1024]);
 
 #[repr(C, align(64))]
-pub struct Device {
+pub struct Device<T>
+where
+    T: DoorbellRegistersAccessible,
+{
     input_context: InputContext,
     slot_id: u8,
     device_context: DeviceContext,
@@ -47,9 +43,10 @@ pub struct Device {
     phase: InitializePhase,
     data_buff: [u8; DATA_BUFF],
     hid_buff: [u8; 1024],
+    doorbell: Rc<RefCell<T>>,
     endpoint_configs: Vec<EndpointConfig>,
     setup_stage: Option<SetupStage>,
-    mouse: MouseDriver,
+    mouse: Mouse,
     interface_num: u16,
     ring2: TransferRing,
 }
@@ -71,14 +68,18 @@ struct InputContext(Input32Byte);
 #[derive(Debug)]
 struct DeviceContext(Device32Byte);
 
-impl Device {
+impl<T> Device<T>
+where
+    T: DoorbellRegistersAccessible,
+{
     pub fn new_with_init_default_control_pipe(
         parent_hub_slot_id: u8,
         port_speed: u8,
         slot_id: u8,
         allocator: &mut impl MemoryAllocatable,
+        doorbell: &Rc<RefCell<T>>,
     ) -> PciResult<Self> {
-        let mut me = Self::new(slot_id, allocator)?;
+        let mut me = Self::new(slot_id, allocator, doorbell)?;
 
         me.set_enable_slot_context();
         me.set_enable_endpoint(DeviceContextIndex::new(0, false));
@@ -95,10 +96,7 @@ impl Device {
         }
     }
 
-    pub fn start_initialize(
-        &mut self,
-        doorbell: &mut impl DoorbellRegistersAccessible,
-    ) -> PciResult {
+    pub fn start_initialize(&mut self) -> PciResult {
         self.phase = InitializePhase::Phase1;
         let buff = self.data_buff.as_mut_ptr();
         const DEVICE_DESCRIPTOR_TYPE: u16 = 1;
@@ -108,15 +106,10 @@ impl Device {
             0,
             buff,
             self.data_buff.len() as u16,
-            doorbell,
         )
     }
 
-    pub fn on_transfer_event_received(
-        &mut self,
-        transfer_event: TransferEvent,
-        doorbell: &mut impl DoorbellRegistersAccessible,
-    ) -> PciResult {
+    pub fn on_transfer_event_received(&mut self, transfer_event: TransferEvent) -> PciResult {
         let prev = self.setup_stage.ok_or(PciError::NullPointer)?;
         let mut setup_data = SetupStage::new();
         setup_data.set_request_type(prev.request_type());
@@ -132,7 +125,6 @@ impl Device {
                 setup_data,
                 null_mut(),
                 0,
-                doorbell,
             ),
             TargetEvent::DataStage(data_stage) => {
                 let data_stage_buff = data_stage.data_buffer_pointer() as *mut u8;
@@ -142,15 +134,11 @@ impl Device {
                     setup_data,
                     data_stage_buff,
                     (data_stage.trb_transfer_length() - residual_length) as u16,
-                    doorbell,
                 )
             }
         }
     }
-    pub fn on_endpoints_configured(
-        &mut self,
-        doorbell: &mut impl DoorbellRegistersAccessible,
-    ) -> PciResult {
+    pub fn on_endpoints_configured(&mut self) -> PciResult {
         let mut setup = SetupStage::new();
         let request_type = RequestType::new().with_ty(1).with_recipient(1);
 
@@ -159,13 +147,7 @@ impl Device {
         setup.set_request(11);
         setup.set_index(0);
 
-        self.control_out(
-            EndpointId::from_endpoint_num(0, true),
-            setup,
-            null_mut(),
-            0,
-            doorbell,
-        )
+        self.control_out(EndpointId::from_endpoint_num(0, true), setup, null_mut(), 0)
     }
     fn on_control_completed(
         &mut self,
@@ -173,26 +155,21 @@ impl Device {
         setup_data: SetupStage,
         buff: *mut u8,
         len: u16,
-        doorbell: &mut impl DoorbellRegistersAccessible,
     ) -> PciResult {
         match self.phase {
-            InitializePhase::Phase1 => self.initialize_phase1(buff, len, doorbell),
-            InitializePhase::Phase2 => self.initialize_phase2(buff, len, doorbell),
+            InitializePhase::Phase1 => self.initialize_phase1(buff, len),
+            InitializePhase::Phase2 => self.initialize_phase2(buff, len),
             InitializePhase::Phase3 => {
                 self.phase = InitializePhase::Completed;
                 self.configure_endpoints();
                 Ok(())
             }
-            InitializePhase::Completed => self.interrupter_in(ep_id, doorbell),
+            InitializePhase::Completed => self.interrupter_in(ep_id),
             _ => Err(PciError::NullPointer),
         }
     }
 
-    pub fn interrupter_in(
-        &mut self,
-        ep_id: EndpointId,
-        doorbell: &mut impl DoorbellRegistersAccessible,
-    ) -> PciResult {
+    pub fn interrupter_in(&mut self, ep_id: EndpointId) -> PciResult {
         self.mouse.on_data_received()?;
         self.phase = InitializePhase::Finish;
         let mut normal = xhci::ring::trb::transfer::Normal::new();
@@ -206,15 +183,9 @@ impl Device {
         normal.set_interrupt_on_completion();
 
         self.ring2.push(normal.into_raw())?;
-        doorbell.notify_at(1, 3, 0)
-        // self.notify(dci, doorbell)
+        self.notify(DeviceContextIndex::from_dci(3))
     }
-    fn initialize_phase1(
-        &mut self,
-        buff: *mut u8,
-        len: u16,
-        doorbell: &mut impl DoorbellRegistersAccessible,
-    ) -> PciResult {
+    fn initialize_phase1(&mut self, buff: *mut u8, len: u16) -> PciResult {
         let device_descriptor = unsafe { *(buff as *const DeviceDescriptor) };
         self.phase = InitializePhase::Phase2;
 
@@ -227,16 +198,10 @@ impl Device {
             0,
             data_buff,
             self.data_buff.len() as u16,
-            doorbell,
         )
     }
 
-    fn initialize_phase2(
-        &mut self,
-        buff: *mut u8,
-        len: u16,
-        doorbell: &mut impl DoorbellRegistersAccessible,
-    ) -> PciResult {
+    fn initialize_phase2(&mut self, buff: *mut u8, len: u16) -> PciResult {
         let conf_desc = unsafe { *(buff as *const ConfigurationDescriptor) };
         self.phase = InitializePhase::Phase3;
 
@@ -258,7 +223,6 @@ impl Device {
         self.set_configuration(
             EndpointId::from_endpoint_num(0, true),
             conf_desc.configuration_value as u16,
-            doorbell,
         )
     }
     fn configure_endpoints(&mut self) {
@@ -310,7 +274,6 @@ impl Device {
         desc_index: u16,
         buff: *mut u8,
         len: u16,
-        doorbell: &mut impl DoorbellRegistersAccessible,
     ) -> PciResult {
         let mut setup_data = SetupStage::new();
         setup_data.set_request_type(RequestType::new().with_direction(true).into());
@@ -319,15 +282,10 @@ impl Device {
         setup_data.set_index(0);
         setup_data.set_length(len);
 
-        self.control_in(ep_id, setup_data, buff, len, doorbell)
+        self.control_in(ep_id, setup_data, buff, len)
     }
 
-    fn set_configuration(
-        &mut self,
-        ep_id: EndpointId,
-        config_value: u16,
-        doorbell: &mut impl DoorbellRegistersAccessible,
-    ) -> PciResult {
+    fn set_configuration(&mut self, ep_id: EndpointId, config_value: u16) -> PciResult {
         let mut setup_data = SetupStage::new();
         // setup_data.set_request_type(RequestType::new().into());
         const CONFIGURATION: u8 = 9;
@@ -336,7 +294,7 @@ impl Device {
         setup_data.set_index(0);
         setup_data.set_length(0);
 
-        self.control_out(ep_id, setup_data, null_mut(), 0, doorbell)
+        self.control_out(ep_id, setup_data, null_mut(), 0)
     }
     fn control_in(
         &mut self,
@@ -344,7 +302,6 @@ impl Device {
         setup_data: SetupStage,
         buff: *mut u8,
         len: u16,
-        doorbell: &mut impl DoorbellRegistersAccessible,
     ) -> PciResult {
         let mut status = StatusStage::new();
 
@@ -367,7 +324,7 @@ impl Device {
             self.transfer_ring.push(status.into_raw())?;
             self.setup_stage = Some(setup_stage);
         }
-        self.notify(DeviceContextIndex::from_endpoint_id(ep_id), doorbell)
+        self.notify(DeviceContextIndex::from_endpoint_id(ep_id))
     }
     fn control_out(
         &mut self,
@@ -375,7 +332,6 @@ impl Device {
         setup_data: SetupStage,
         buff: *mut u8,
         len: u16,
-        doorbell: &mut impl DoorbellRegistersAccessible,
     ) -> PciResult {
         let mut status = StatusStage::new();
         status.set_direction();
@@ -399,7 +355,7 @@ impl Device {
             self.setup_stage = Some(setup_stage);
         }
 
-        self.notify(DeviceContextIndex::from_endpoint_id(ep_id), doorbell)
+        self.notify(DeviceContextIndex::from_endpoint_id(ep_id))
     }
     fn init_slot_context(&mut self, root_port_hub_id: u8, port_speed: u8) {
         let slot = self.input_context.0.device_mut().slot_mut();
@@ -426,18 +382,23 @@ impl Device {
         default_control_pipe.set_mult(0);
         default_control_pipe.set_error_count(3);
     }
-    fn new(slot_id: u8, allocator: &mut impl MemoryAllocatable) -> PciResult<Self> {
+    fn new(
+        slot_id: u8,
+        allocator: &mut impl MemoryAllocatable,
+        doorbell: &Rc<RefCell<T>>,
+    ) -> PciResult<Self> {
         Ok(Self {
             slot_id,
             input_context: InputContext(Input32Byte::default()),
             device_context: DeviceContext(Device32Byte::default()),
             transfer_ring: Self::allocate_transfer_ring(allocator)?,
+            doorbell: Rc::clone(doorbell),
             phase: InitializePhase::NotPrepared,
             data_buff: [0; DATA_BUFF],
             endpoint_configs: Vec::new(),
             setup_stage: None,
             hid_buff: [0; 1024],
-            mouse: MouseDriver::new(),
+            mouse: Mouse::new(),
             interface_num: 0,
             ring2: Self::allocate_transfer_ring(allocator)?,
         })
@@ -448,7 +409,7 @@ impl Device {
         Ok(TransferRing::new(transfer_ring_addr, 256, true))
     }
     pub fn device_context_addr(&self) -> u64 {
-        (&self.device_context.0 as *const xhci::context::Device32Byte) as u64
+        (&self.device_context.0 as *const Device32Byte) as u64
     }
     pub fn input_context_addr(&self) -> u64 {
         (&self.input_context.0 as *const Input32Byte) as u64
@@ -467,12 +428,10 @@ impl Device {
             .set_add_context_flag(device_context_index.value());
     }
 
-    fn notify(
-        &self,
-        dci: DeviceContextIndex,
-        doorbell: &mut impl DoorbellRegistersAccessible,
-    ) -> PciResult {
-        doorbell.notify_at(self.slot_id as usize, dci.as_u8(), 0)
+    fn notify(&self, dci: DeviceContextIndex) -> PciResult {
+        self.doorbell
+            .borrow_mut()
+            .notify_at(self.slot_id as usize, dci.as_u8(), 0)
     }
 }
 

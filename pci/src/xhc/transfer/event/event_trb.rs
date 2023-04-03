@@ -1,8 +1,6 @@
 use xhci::ring::trb::event::TransferEvent;
 use xhci::ring::trb::transfer::{DataStage, Normal, StatusStage};
 
-use kernel_lib::serial_println;
-
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]

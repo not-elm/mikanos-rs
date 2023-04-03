@@ -17,7 +17,7 @@ pub mod configuration_space;
 pub mod error;
 pub mod pci_device_searcher;
 pub mod xhc;
-pub mod usb;
+pub mod class_driver;
 
 declaration_volatile_accessible!();
 pub(crate) fn flag_to_num(flag: bool) -> usize {
