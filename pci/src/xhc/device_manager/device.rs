@@ -90,10 +90,7 @@ where
         Ok(me)
     }
     pub fn is_init(&self) -> bool {
-        match self.phase {
-            InitializePhase::Completed => true,
-            _ => false,
-        }
+        matches!(self.phase, InitializePhase::Completed)
     }
 
     pub fn start_initialize(&mut self) -> PciResult {

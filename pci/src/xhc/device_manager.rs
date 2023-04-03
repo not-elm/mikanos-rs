@@ -3,7 +3,7 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::event::TransferEvent;
 
-use crate::error::{DeviceContextReason, PciError, PciResult};
+use crate::error::{DeviceContextReason, DeviceReason, PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::DeviceCollectable;
 use crate::xhc::device_manager::device::Device;
@@ -61,14 +61,14 @@ where
     ) -> PciResult<u64> {
         let port_id = self.try_addressing_port_id()?;
 
-        self.devices.new_set(
+        let device = self.devices.new_set(
             port_id,
             self.registers.borrow().read_port_speed_at(port_id)?,
             slot_id,
             allocator,
             &self.registers,
         )?;
-        let device = self.devices.mut_at(slot_id).unwrap();
+
         self.device_context_array
             .set_device_context_at(slot_id as usize, device.device_context_addr());
 
@@ -109,5 +109,12 @@ where
             .ok_or(PciError::FailedOperateDeviceContext(
                 DeviceContextReason::NotExistsAddressingPort,
             ))
+    }
+    fn device_mut_at(&mut self, slot_id: u8) -> PciResult<&mut Device<T>> {
+        self.devices
+            .mut_at(slot_id)
+            .ok_or(PciError::FailedOperateDevice(DeviceReason::NotExistsSlot(
+                slot_id,
+            )))
     }
 }
