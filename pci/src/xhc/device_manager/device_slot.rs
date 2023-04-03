@@ -3,25 +3,25 @@ use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::ptr::null_mut;
 
-use bitfield_struct::bitfield;
 use xhci::context::{
     Device32Byte, DeviceHandler, EndpointState, EndpointType, Input32Byte, InputHandler,
 };
 use xhci::ring::trb::event::TransferEvent;
 use xhci::ring::trb::transfer::Direction::{In, Out};
-use xhci::ring::trb::transfer::{DataStage, SetupStage, StatusStage, TransferType};
+use xhci::ring::trb::transfer::{DataStage, SetupStage, TransferType};
 
-use kernel_lib::println;
+use kernel_lib::{println, serial_println};
 
 use crate::class_driver::mouse::Mouse;
 use crate::error::{PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::control_pipe::ControlPipe;
+use crate::xhc::device_manager::control_pipe::request::Request;
+use crate::xhc::device_manager::control_pipe::request_type::RequestType;
+use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
 use crate::xhc::device_manager::descriptor::configuration_descriptor::{
     ConfigurationDescriptor, ConfigurationDescriptors,
 };
 use crate::xhc::device_manager::descriptor::descriptor::UsbDescriptor;
-use crate::xhc::device_manager::descriptor::device_descriptor::DeviceDescriptor;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::endpoint_config::EndpointConfig;
 use crate::xhc::device_manager::endpoint_id::EndpointId;
@@ -52,15 +52,6 @@ where
     mouse: Mouse,
     interface_num: u16,
     ring2: TransferRing,
-}
-
-#[bitfield(u8)]
-pub struct RequestType {
-    #[bits(5)]
-    pub recipient: u8,
-    #[bits(2)]
-    pub ty: u8,
-    pub direction: bool,
 }
 
 #[repr(C, align(64))]
@@ -99,13 +90,15 @@ where
     pub fn start_initialize(&mut self) -> PciResult {
         self.phase = InitializePhase::Phase1;
         let buff = self.data_buff.as_mut_ptr();
+
         const DEVICE_DESCRIPTOR_TYPE: u16 = 1;
-        self.get_descriptor(
-            EndpointId::from_endpoint_num(0, true),
-            DEVICE_DESCRIPTOR_TYPE,
-            0,
-            buff,
-            self.data_buff.len() as u16,
+        let data_buff_addr = buff as u64;
+        let len = self.data_buff.len() as u32;
+        serial_println!("Start Init");
+        self.default_control_pipe.control_in().with_data(
+            Request::get_descriptor(DEVICE_DESCRIPTOR_TYPE, 0, len as u16),
+            data_buff_addr,
+            len,
         )
     }
 
@@ -139,15 +132,11 @@ where
         }
     }
     pub fn on_endpoints_configured(&mut self) -> PciResult {
-        let mut setup = SetupStage::new();
         let request_type = RequestType::new().with_ty(1).with_recipient(1);
 
-        setup.set_value(0);
-        setup.set_request_type(request_type.0);
-        setup.set_request(11);
-        setup.set_index(0);
-
-        self.control_out(EndpointId::from_endpoint_num(0, true), setup, null_mut(), 0)
+        self.default_control_pipe
+            .control_out()
+            .no_data(Request::set_protocol(request_type))
     }
     fn on_control_completed(
         &mut self,
@@ -160,6 +149,7 @@ where
             InitializePhase::Phase1 => self.initialize_phase1(buff, len),
             InitializePhase::Phase2 => self.initialize_phase2(buff, len),
             InitializePhase::Phase3 => {
+                serial_println!("Phase 3");
                 self.phase = InitializePhase::Completed;
                 self.configure_endpoints();
                 Ok(())
@@ -186,22 +176,22 @@ where
         self.notify(DeviceContextIndex::from_dci(3))
     }
     fn initialize_phase1(&mut self, buff: *mut u8, len: u16) -> PciResult {
-        let device_descriptor = unsafe { *(buff as *const DeviceDescriptor) };
+        serial_println!("Phase 1");
         self.phase = InitializePhase::Phase2;
 
         const CONFIGURATION_TYPE: u16 = 2;
 
         let data_buff = self.data_buff.as_mut_ptr();
-        self.get_descriptor(
-            EndpointId::from_endpoint_num(0, true),
-            CONFIGURATION_TYPE,
-            0,
-            data_buff,
-            self.data_buff.len() as u16,
-        )
+        let data_buff_addr = data_buff as u64;
+        let len = self.data_buff.len();
+        let request = Request::get_descriptor(CONFIGURATION_TYPE, 0, len as u16);
+        self.default_control_pipe
+            .control_in()
+            .with_data(request, data_buff_addr, len as u32)
     }
 
     fn initialize_phase2(&mut self, buff: *mut u8, len: u16) -> PciResult {
+        serial_println!("Phase 2");
         let conf_desc = unsafe { *(buff as *const ConfigurationDescriptor) };
         self.phase = InitializePhase::Phase3;
 
@@ -269,15 +259,9 @@ where
     }
 
     fn set_configuration(&mut self, ep_id: EndpointId, config_value: u16) -> PciResult {
-        let mut setup_data = SetupStage::new();
-
-        const CONFIGURATION: u8 = 9;
-        setup_data.set_request(CONFIGURATION);
-        setup_data.set_value(config_value);
-        setup_data.set_index(0);
-        setup_data.set_length(0);
-
-        self.control_out(ep_id, setup_data, null_mut(), 0)
+        self.default_control_pipe
+            .control_out()
+            .no_data(Request::configuration(config_value))
     }
 
     fn init_slot_context(&mut self, root_port_hub_id: u8, port_speed: u8) {
@@ -298,7 +282,8 @@ where
         default_control_pipe.set_endpoint_type(EndpointType::Control);
         default_control_pipe.set_max_packet_size(max_packet_size(port_speed));
         default_control_pipe.set_max_burst_size(0);
-        default_control_pipe.set_tr_dequeue_pointer(self.default_control_pipe.);
+        default_control_pipe
+            .set_tr_dequeue_pointer(self.default_control_pipe.transfer_ring_base_addr());
         default_control_pipe.set_dequeue_cycle_state();
         default_control_pipe.set_interval(0);
         default_control_pipe.set_max_primary_streams(0);

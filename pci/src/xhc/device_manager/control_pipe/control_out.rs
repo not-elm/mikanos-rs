@@ -1,13 +1,13 @@
+use alloc::rc::Rc;
+use core::cell::RefCell;
+
+use xhci::ring::trb::transfer::{Direction, StatusStage, TransferType};
+
 use crate::error::PciResult;
-use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::{
     make_data_stage, make_setup_stage, ControlPipeTransfer,
 };
-use alloc::rc::Rc;
-use core::cell::RefCell;
-use xhci::ring::trb::transfer::{Direction, SetupStage, StatusStage, TransferType};
-
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
@@ -19,7 +19,7 @@ where
     slot_id: u8,
     device_context_index: DeviceContextIndex,
     doorbell: Rc<RefCell<T>>,
-    transfer_ring: TransferRing,
+    transfer_ring: Rc<RefCell<TransferRing>>,
 }
 
 impl<T> ControlOut<T>
@@ -30,14 +30,14 @@ where
         slot_id: u8,
         device_context_index: DeviceContextIndex,
         doorbell: &Rc<RefCell<T>>,
-        allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<ControlOut<T>> {
-        Ok(Self {
+        transfer_ring: &Rc<RefCell<TransferRing>>,
+    ) -> ControlOut<T> {
+        Self {
             slot_id,
             device_context_index,
             doorbell: Rc::clone(doorbell),
-            transfer_ring: TransferRing::new_with_alloc(32, true, allocator)?,
-        })
+            transfer_ring: Rc::clone(transfer_ring),
+        }
     }
 
     fn notify(&mut self) -> PciResult {
@@ -47,6 +47,10 @@ where
             0,
         )
     }
+
+    fn push(&mut self, trb_buff: [u32; 4]) -> PciResult {
+        self.transfer_ring.borrow_mut().push(trb_buff)
+    }
 }
 
 impl<T> ControlPipeTransfer for ControlOut<T>
@@ -55,31 +59,27 @@ where
 {
     fn no_data(&mut self, request: Request) -> PciResult {
         let setup_stage = make_setup_stage(request.into_setup_stage(), TransferType::No);
-        self.transfer_ring.push(setup_stage.into_raw())?;
+        self.push(setup_stage.into_raw())?;
 
         let mut status = new_status_stage_with_direction();
         status.set_interrupt_on_completion();
-        self.transfer_ring.push(status.into_raw())?;
+        self.push(status.into_raw())?;
         self.notify()
     }
 
     fn with_data(&mut self, request: Request, data_buff_addr: u64, len: u32) -> PciResult {
         let setup = make_setup_stage(request.into_setup_stage(), TransferType::Out);
-        self.transfer_ring.push(setup.into_raw())?;
+        self.push(setup.into_raw())?;
 
         let mut data_stage = make_data_stage(data_buff_addr, len, Direction::Out);
         data_stage.set_interrupt_on_completion();
-        self.transfer_ring.push(data_stage.into_raw())?;
+        self.push(data_stage.into_raw())?;
 
-        self.transfer_ring
-            .push(new_status_stage_with_direction().into_raw())?;
+        self.push(new_status_stage_with_direction().into_raw())?;
         self.notify()
     }
-
-    fn transfer_ring_base_addr(&self) -> u64 {
-        self.transfer_ring.base_address()
-    }
 }
+
 fn new_status_stage_with_direction() -> StatusStage {
     let mut status = StatusStage::new();
     status.set_direction();

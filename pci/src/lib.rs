@@ -6,18 +6,18 @@
 #![feature(maybe_uninit_slice)]
 #![feature(ptr_as_uninit)]
 #![feature(is_some_and)]
-
+#![feature(allocator_api)]
 extern crate alloc;
 
 use macros::declaration_volatile_accessible;
 
 use crate::error::{OperationReason, PciError, PciResult};
 
+pub mod class_driver;
 pub mod configuration_space;
 pub mod error;
 pub mod pci_device_searcher;
 pub mod xhc;
-pub mod class_driver;
 
 declaration_volatile_accessible!();
 pub(crate) fn flag_to_num(flag: bool) -> usize {

@@ -19,7 +19,7 @@ where
     slot_id: u8,
     device_context_index: DeviceContextIndex,
     doorbell: Rc<RefCell<T>>,
-    transfer_ring: TransferRing,
+    transfer_ring: Rc<RefCell<TransferRing>>,
 }
 
 impl<T> ControlIn<T>
@@ -30,14 +30,14 @@ where
         slot_id: u8,
         device_context_index: DeviceContextIndex,
         doorbell: &Rc<RefCell<T>>,
-        allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<ControlIn<T>> {
-        Ok(Self {
+        transfer_ring: &Rc<RefCell<TransferRing>>,
+    ) -> ControlIn<T> {
+        Self {
             slot_id,
             device_context_index,
             doorbell: Rc::clone(doorbell),
-            transfer_ring: TransferRing::new_with_alloc(32, true, allocator)?,
-        })
+            transfer_ring: Rc::clone(transfer_ring),
+        }
     }
 
     fn notify(&mut self) -> PciResult {
@@ -47,6 +47,10 @@ where
             0,
         )
     }
+
+    fn push(&mut self, trb_buff: [u32; 4]) -> PciResult {
+        self.transfer_ring.borrow_mut().push(trb_buff)
+    }
 }
 
 impl<T> ControlPipeTransfer for ControlIn<T>
@@ -55,28 +59,24 @@ where
 {
     fn no_data(&mut self, request: Request) -> PciResult {
         let setup_stage = make_setup_stage(request.into_setup_stage(), TransferType::No);
-        self.transfer_ring.push(setup_stage.into_raw())?;
+        self.push(setup_stage.into_raw())?;
 
         let mut status = StatusStage::new();
         status.set_direction();
         status.set_interrupt_on_completion();
-        self.transfer_ring.push(status.into_raw())?;
+        self.push(status.into_raw())?;
         self.notify()
     }
 
     fn with_data(&mut self, request: Request, buff_addr: u64, len: u32) -> PciResult {
         let setup = make_setup_stage(request.into_setup_stage(), TransferType::In);
-        self.transfer_ring.push(setup.into_raw())?;
+        self.push(setup.into_raw())?;
 
         let mut data_stage = make_data_stage(buff_addr, len, Direction::In);
         data_stage.set_interrupt_on_completion();
-        self.transfer_ring.push(data_stage.into_raw())?;
+        self.push(data_stage.into_raw())?;
 
-        self.transfer_ring.push(StatusStage::new().into_raw())?;
+        self.push(StatusStage::new().into_raw())?;
         self.notify()
-    }
-
-    fn transfer_ring_base_addr(&self) -> u64 {
-        self.transfer_ring.base_address()
     }
 }

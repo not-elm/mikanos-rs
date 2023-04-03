@@ -1,5 +1,7 @@
+use alloc::collections::BTreeSet;
 use alloc::rc::Rc;
 use core::cell::RefCell;
+use core::hash::Hash;
 
 use xhci::ring::trb::transfer::{DataStage, Direction, SetupStage, TransferType};
 
@@ -10,17 +12,22 @@ use crate::xhc::device_manager::control_pipe::control_out::ControlOut;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::transfer::transfer_ring::TransferRing;
 
-mod control_in;
-mod control_out;
-mod request;
+pub mod control_in;
+pub mod control_out;
+pub mod request;
+pub mod request_type;
+mod unstable_hash_map;
 
 pub struct ControlPipe<T>
 where
     T: DoorbellRegistersAccessible,
 {
+    transfer_ring: Rc<RefCell<TransferRing>>,
     control_in: ControlIn<T>,
     control_out: ControlOut<T>,
+    prev_setup_data_map: BTreeSet<u16, SetupStage>,
 }
 
 impl<T> ControlPipe<T>
@@ -33,17 +40,32 @@ where
         doorbell: &Rc<RefCell<T>>,
         allocator: &mut impl MemoryAllocatable,
     ) -> PciResult<Self> {
+        let transfer_ring = Rc::new(RefCell::new(TransferRing::new_with_alloc(
+            32, true, allocator,
+        )?));
+        let control_in = ControlIn::new(slot_id, device_context_index, doorbell, &transfer_ring);
+        let control_out = ControlOut::new(slot_id, device_context_index, doorbell, &transfer_ring);
         Ok(Self {
-            control_in: ControlIn::new(slot_id, device_context_index, doorbell, allocator)?,
-            control_out: ControlOut::new(slot_id, device_context_index, doorbell, allocator)?,
+            transfer_ring,
+            control_in,
+            control_out,
         })
+    }
+    pub fn control_in(&mut self) -> &mut ControlIn<T> {
+        &mut self.control_in
+    }
+
+    pub fn control_out(&mut self) -> &mut ControlOut<T> {
+        &mut self.control_out
+    }
+    pub fn transfer_ring_base_addr(&self) -> u64 {
+        self.transfer_ring.borrow().base_address()
     }
 }
 
 pub trait ControlPipeTransfer {
     fn no_data(&mut self, request: Request) -> PciResult;
     fn with_data(&mut self, request: Request, data_buff_addr: u64, len: u32) -> PciResult;
-    fn transfer_ring_base_addr(&self) -> u64;
 }
 
 pub(crate) fn make_setup_stage(setup_data: SetupStage, transfer_type: TransferType) -> SetupStage {
