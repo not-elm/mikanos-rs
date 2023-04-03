@@ -10,8 +10,6 @@ use xhci::ring::trb::event::TransferEvent;
 use xhci::ring::trb::transfer::Direction::{In, Out};
 use xhci::ring::trb::transfer::{DataStage, SetupStage, TransferType};
 
-use kernel_lib::{println, serial_println};
-
 use crate::class_driver::mouse::Mouse;
 use crate::error::{PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
@@ -30,7 +28,8 @@ use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegist
 use crate::xhc::transfer::event::event_trb::TargetEvent;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
-pub mod phase0;
+mod phase;
+pub mod phase1;
 
 const DATA_BUFF: usize = 256;
 
@@ -48,7 +47,6 @@ where
     hid_buff: [u8; 1024],
     doorbell: Rc<RefCell<T>>,
     endpoint_configs: Vec<EndpointConfig>,
-    setup_stage: Option<SetupStage>,
     mouse: Mouse,
     interface_num: u16,
     ring2: TransferRing,
@@ -94,7 +92,7 @@ where
         const DEVICE_DESCRIPTOR_TYPE: u16 = 1;
         let data_buff_addr = buff as u64;
         let len = self.data_buff.len() as u32;
-        serial_println!("Start Init");
+
         self.default_control_pipe.control_in().with_data(
             Request::get_descriptor(DEVICE_DESCRIPTOR_TYPE, 0, len as u16),
             data_buff_addr,
@@ -103,7 +101,8 @@ where
     }
 
     pub fn on_transfer_event_received(&mut self, transfer_event: TransferEvent) -> PciResult {
-        let prev = self.setup_stage.ok_or(PciError::NullPointer)?;
+        let prev = transfer_event.trb_pointer() as *const SetupStage;
+        let prev = unsafe { *prev };
         let mut setup_data = SetupStage::new();
         setup_data.set_request_type(prev.request_type());
         setup_data.set_request(prev.request());
@@ -113,9 +112,8 @@ where
 
         match TargetEvent::new(transfer_event.trb_pointer()).ok_or(PciError::NullPointer)? {
             TargetEvent::Normal(normal) => Ok(()),
-            TargetEvent::StatusStage(status) => self.on_control_completed(
+            TargetEvent::StatusStage(_) => self.on_control_completed(
                 EndpointId::from_addr(transfer_event.endpoint_id() as usize),
-                setup_data,
                 null_mut(),
                 0,
             ),
@@ -124,7 +122,6 @@ where
                 let residual_length = transfer_event.trb_transfer_length();
                 self.on_control_completed(
                     EndpointId::from_addr(transfer_event.endpoint_id() as usize),
-                    setup_data,
                     data_stage_buff,
                     (data_stage.trb_transfer_length() - residual_length) as u16,
                 )
@@ -138,18 +135,11 @@ where
             .control_out()
             .no_data(Request::set_protocol(request_type))
     }
-    fn on_control_completed(
-        &mut self,
-        ep_id: EndpointId,
-        setup_data: SetupStage,
-        buff: *mut u8,
-        len: u16,
-    ) -> PciResult {
+    fn on_control_completed(&mut self, ep_id: EndpointId, buff: *mut u8, len: u16) -> PciResult {
         match self.phase {
             InitializePhase::Phase1 => self.initialize_phase1(buff, len),
             InitializePhase::Phase2 => self.initialize_phase2(buff, len),
             InitializePhase::Phase3 => {
-                serial_println!("Phase 3");
                 self.phase = InitializePhase::Completed;
                 self.configure_endpoints();
                 Ok(())
@@ -168,15 +158,12 @@ where
         normal.set_interrupt_on_short_packet();
         normal.set_trb_transfer_length(3);
 
-        let dci = DeviceContextIndex::from_endpoint_id(ep_id);
-
         normal.set_interrupt_on_completion();
 
         self.ring2.push(normal.into_raw())?;
         self.notify(DeviceContextIndex::from_dci(3))
     }
     fn initialize_phase1(&mut self, buff: *mut u8, len: u16) -> PciResult {
-        serial_println!("Phase 1");
         self.phase = InitializePhase::Phase2;
 
         const CONFIGURATION_TYPE: u16 = 2;
@@ -191,7 +178,6 @@ where
     }
 
     fn initialize_phase2(&mut self, buff: *mut u8, len: u16) -> PciResult {
-        serial_println!("Phase 2");
         let conf_desc = unsafe { *(buff as *const ConfigurationDescriptor) };
         self.phase = InitializePhase::Phase3;
 
@@ -277,7 +263,7 @@ where
             .input_context
             .0
             .device_mut()
-            .endpoint_mut(DeviceContextIndex::new(0, false).value());
+            .endpoint_mut(DeviceContextIndex::default().value());
 
         default_control_pipe.set_endpoint_type(EndpointType::Control);
         default_control_pipe.set_max_packet_size(max_packet_size(port_speed));
@@ -309,7 +295,7 @@ where
             phase: InitializePhase::NotPrepared,
             data_buff: [0; DATA_BUFF],
             endpoint_configs: Vec::new(),
-            setup_stage: None,
+
             hid_buff: [0; 1024],
             mouse: Mouse::new(),
             interface_num: 0,
@@ -348,35 +334,7 @@ where
     }
 }
 
-fn make_setup_stage(setup_data: SetupStage, transfer_type: TransferType) -> SetupStage {
-    let mut setup = SetupStage::new();
-    setup.set_request_type(setup_data.request_type());
-    setup.set_request(setup_data.request());
-    setup.set_value(setup_data.value());
-    setup.set_index(setup_data.index());
-    setup.set_length(setup_data.length());
-    setup.set_transfer_type(transfer_type);
-    setup
-}
-
-fn make_data_stage(data_buff_addr: u64, length: u32, dir_in: bool) -> DataStage {
-    // // Standard
-    let mut data_stage = DataStage::new();
-
-    data_stage.set_data_buffer_pointer(data_buff_addr);
-    data_stage.set_trb_transfer_length(length);
-    data_stage.set_td_size(0);
-    if dir_in {
-        data_stage.set_direction(In);
-    } else {
-        data_stage.set_direction(Out);
-    }
-
-    data_stage
-}
-
 fn max_packet_size(port_speed: u8) -> u16 {
-    println!("Port Speed = {}", port_speed);
     match port_speed {
         3 => 64,
         4 => 512,

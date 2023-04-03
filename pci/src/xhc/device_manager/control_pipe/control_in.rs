@@ -1,13 +1,13 @@
+use alloc::rc::Rc;
+use core::cell::RefCell;
+
+use xhci::ring::trb::transfer::{Direction, StatusStage, TransferType};
+
 use crate::error::PciResult;
-use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::{
     make_data_stage, make_setup_stage, ControlPipeTransfer,
 };
-use alloc::rc::Rc;
-use core::cell::RefCell;
-use xhci::ring::trb::transfer::{Direction, SetupStage, StatusStage, TransferType};
-
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
@@ -58,7 +58,7 @@ where
     T: DoorbellRegistersAccessible,
 {
     fn no_data(&mut self, request: Request) -> PciResult {
-        let setup_stage = make_setup_stage(request.into_setup_stage(), TransferType::No);
+        let setup_stage = make_setup_stage(request.setup_stage(), TransferType::No);
         self.push(setup_stage.into_raw())?;
 
         let mut status = StatusStage::new();
@@ -69,7 +69,7 @@ where
     }
 
     fn with_data(&mut self, request: Request, buff_addr: u64, len: u32) -> PciResult {
-        let setup = make_setup_stage(request.into_setup_stage(), TransferType::In);
+        let setup = make_setup_stage(request.setup_stage(), TransferType::In);
         self.push(setup.into_raw())?;
 
         let mut data_stage = make_data_stage(buff_addr, len, Direction::In);

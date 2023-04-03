@@ -1,7 +1,5 @@
-use alloc::collections::BTreeSet;
 use alloc::rc::Rc;
 use core::cell::RefCell;
-use core::hash::Hash;
 
 use xhci::ring::trb::transfer::{DataStage, Direction, SetupStage, TransferType};
 
@@ -10,6 +8,7 @@ use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::control_in::ControlIn;
 use crate::xhc::device_manager::control_pipe::control_out::ControlOut;
 use crate::xhc::device_manager::control_pipe::request::Request;
+use crate::xhc::device_manager::control_pipe::unstable_hash_map::UnstableHashMap;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
@@ -27,7 +26,6 @@ where
     transfer_ring: Rc<RefCell<TransferRing>>,
     control_in: ControlIn<T>,
     control_out: ControlOut<T>,
-    prev_setup_data_map: BTreeSet<u16, SetupStage>,
 }
 
 impl<T> ControlPipe<T>
@@ -58,6 +56,7 @@ where
     pub fn control_out(&mut self) -> &mut ControlOut<T> {
         &mut self.control_out
     }
+
     pub fn transfer_ring_base_addr(&self) -> u64 {
         self.transfer_ring.borrow().base_address()
     }

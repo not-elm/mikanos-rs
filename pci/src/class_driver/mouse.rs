@@ -3,7 +3,6 @@ use core::cmp::max;
 use common_lib::vector::Vector2D;
 use kernel_lib::gop::console::draw_cursor;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::serial_println;
 
 use crate::error::{PciError, PciResult};
 
@@ -35,7 +34,6 @@ impl Mouse {
         );
 
         draw(self.current_pos, PixelColor::new(0x00, 0xFF, 0x00))?;
-        serial_println!("Mouse Move {:?}", self.current_pos);
 
         Ok(())
     }
@@ -46,7 +44,6 @@ impl Mouse {
 }
 
 fn draw(pos: Vector2D<usize>, color: PixelColor) -> PciResult {
-    serial_println!("{:?}", pos);
     draw_cursor(pos, color).map_err(|_| PciError::NullPointer)
 }
 

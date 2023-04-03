@@ -1,5 +1,3 @@
-use kernel_lib::println;
-
 use crate::error::PciResult;
 use crate::xhc::registers::internal::capability_registers::CapabilityRegisters;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
@@ -41,7 +39,6 @@ impl RegistersOperation for Internal {
             .filter(|port| port.is_connect())
             .for_each(|port| {
                 port.reset();
-                println!("Port = {:?}", port);
             });
 
         Ok(())

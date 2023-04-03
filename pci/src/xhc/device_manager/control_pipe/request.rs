@@ -33,11 +33,11 @@ impl Request {
         setup.set_index(0);
         SetProtocol(setup)
     }
-    pub fn into_setup_stage(self) -> SetupStage {
+    pub fn setup_stage(&self) -> SetupStage {
         match self {
-            GetDescriptor(setup) => setup,
-            Configuration(setup) => setup,
-            SetProtocol(setup) => setup,
+            GetDescriptor(setup) => *setup,
+            Configuration(setup) => *setup,
+            SetProtocol(setup) => *setup,
         }
     }
 }

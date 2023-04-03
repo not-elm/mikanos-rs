@@ -1,5 +1,3 @@
-use kernel_lib::println;
-
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::device_context::scratchpad_buffer_ptr::ScratchpadBufferPtr;
@@ -28,7 +26,7 @@ impl ScratchpadBuffersArrayPtr {
     ) -> PciResult<u64> {
         let scratchpad_buffers_array_address =
             allocator.try_allocate_max_scratchpad_buffers(scratchpad_buffers_len)?;
-        println!("scratchpad_buffers_len={}", scratchpad_buffers_len);
+
         for i in 0..scratchpad_buffers_len {
             let scratchpad_buff = scratchpad_buffers_array_address as *mut ScratchpadBufferPtr;
             let scratchpad_buff = scratchpad_buff.add(i);

@@ -91,6 +91,3 @@ unsafe fn step_next_bound_if_over(ptr: *mut u8, bytes: usize, bound: usize) -> *
         ptr
     }
 }
-
-#[cfg(test)]
-mod tests {}

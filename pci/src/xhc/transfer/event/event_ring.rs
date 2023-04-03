@@ -39,7 +39,7 @@ where
     pub fn next_dequeue_pointer(&mut self) -> PciResult {
         let dequeue_pointer_addr = self.read_dequeue_pointer_addr();
         let next_addr = dequeue_pointer_addr + trb_byte_size();
-        if self.transfer_ring.is_end_address(next_addr) {
+        if self.transfer_ring.is_over_address(next_addr) {
             self.transfer_ring.toggle_cycle_bit();
             self.write_dequeue_pointer(self.transfer_ring.base_address())
         } else {

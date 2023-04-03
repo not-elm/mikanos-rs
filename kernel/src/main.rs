@@ -41,7 +41,7 @@ macros::declaration_volatile_accessible!();
 //     memory_map: &MemoryMapIter,
 // ) {
 //     let address = KERNEL_STACK.end_addr();
-//     serial_println!("address={:x}", address);
+//
 //     unsafe {
 //         asm!(
 //             "mov rsp, {0}",

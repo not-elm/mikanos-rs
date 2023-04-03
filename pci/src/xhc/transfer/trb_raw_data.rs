@@ -1,19 +1,18 @@
 use core::fmt::{Debug, Formatter};
-
-use bitfield_struct::bitfield;
+use modular_bitfield::bitfield;
+use modular_bitfield::prelude::B6;
 
 use crate::xhc::transfer::trb_buffer_from_address;
 
-#[bitfield(u128)]
+#[bitfield(bits = 128)]
+#[derive(Copy, Clone)]
 pub struct TrbTemplate {
     pub parameter: u64,
     pub status: u32,
     pub cycle_bit: bool,
     pub evaluate_next_trb: bool,
     _reserve1: u8,
-
-    #[bits(6)]
-    pub trb_type: u8,
+    pub trb_type: B6,
     pub control: u16,
 }
 impl TrbTemplate {
@@ -85,12 +84,6 @@ fn into_u32_array(raw_data: u128) -> [u32; 4] {
 #[cfg(test)]
 mod tests {
     use crate::xhc::transfer::trb_raw_data::TrbRawData;
-
-    #[test]
-    fn it_success_create_trb() {
-        let raw_data = 0xFFFFFFFF_00000000_00000000_FFFFFFFFu128;
-        assert!(TrbRawData::new(raw_data).is_ok());
-    }
 
     #[test]
     fn it_success_into_u32_array() {

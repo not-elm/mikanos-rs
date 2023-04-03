@@ -17,7 +17,7 @@ impl TransferRing {
         Self {
             ring_ptr_base_address,
             ring_ptr_address: ring_ptr_base_address,
-            ring_end_address: ring_ptr_base_address + trb_byte_size() * (ring_size) as u64,
+            ring_end_address: ring_ptr_base_address + trb_byte_size() * (ring_size - 1) as u64,
             ring_size,
             cycle_bit,
         }
@@ -68,7 +68,9 @@ impl TransferRing {
     pub fn is_end_address(&self, address: u64) -> bool {
         self.ring_end_address <= address
     }
-
+    pub fn is_over_address(&self, address: u64) -> bool {
+        self.ring_end_address < address
+    }
     pub fn cycle_bit(&self) -> bool {
         self.cycle_bit
     }
@@ -119,17 +121,17 @@ mod tests {
         let mut ring = TransferRing::new(buff.as_ptr() as u64, 32, true);
         let enable_slot_trb =
             TrbRawData::from(xhci::ring::trb::command::EnableSlot::new().into_raw());
-        let is_ok = ring.push(enable_slot_trb).is_ok();
+        let is_ok = ring.push(enable_slot_trb.into_u32_array()).is_ok();
 
         assert!(is_ok);
         let enable_slot_buff: [u32; 4] = enable_slot_trb.into();
         let buff = buff.as_ptr().cast::<u32>();
         unsafe {
             let buff = core::slice::from_raw_parts(buff, 4);
-            assert_eq!(buff[0], enable_slot_buff[3]);
-            assert_eq!(buff[1], enable_slot_buff[2]);
-            assert_eq!(buff[2], enable_slot_buff[1]);
-            assert_eq!(buff[3], enable_slot_buff[0] | 1);
+            assert_eq!(buff[0], enable_slot_buff[0]);
+            assert_eq!(buff[1], enable_slot_buff[1]);
+            assert_eq!(buff[2], enable_slot_buff[2]);
+            assert_eq!(buff[3], enable_slot_buff[3] | 1);
             assert_eq!(
                 ring.ring_ptr_address,
                 ring.ring_ptr_base_address + trb_byte_size()
@@ -145,7 +147,7 @@ mod tests {
         let enable_slot_trb =
             TrbRawData::try_from(xhci::ring::trb::command::EnableSlot::new().into_raw()).unwrap();
 
-        assert!(ring.push(enable_slot_trb).is_ok());
+        assert!(ring.push(enable_slot_trb.into_u32_array()).is_ok());
 
         let mut link = xhci::ring::trb::Link::new();
         link.set_toggle_cycle();

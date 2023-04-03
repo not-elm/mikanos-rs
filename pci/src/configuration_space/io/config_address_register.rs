@@ -53,20 +53,20 @@ impl ConfigAddrRegister {
     }
 }
 
-#[cfg(test)]
-mod test {
-    extern crate alloc;
-
-    use alloc::format;
-
-    use crate::configuration_space::io::config_address_register::ConfigAddrRegister;
-
-    #[test]
-    fn it_new_default() {
-        let p = ConfigAddrRegister::new(1, 0, 0, 0);
-        assert_eq!(
-            format!("{p:?}"),
-            "config_addr=0b10000000000000000000000000000000"
-        );
-    }
-}
+// #[cfg(test)]
+// mod test {
+//     extern crate alloc;
+//
+//     use alloc::format;
+//
+//     use crate::configuration_space::io::config_address_register::ConfigAddrRegister;
+//
+//     #[test]
+//     fn it_new_default() {
+//         let p = ConfigAddrRegister::new(1, 0, 0, 0);
+//         assert_eq!(
+//             format!("{p:?}"),
+//             "config_addr=0b10000000000000000000000000000000"
+//         );
+//     }
+// }

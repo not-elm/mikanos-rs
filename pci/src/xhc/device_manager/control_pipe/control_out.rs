@@ -58,7 +58,7 @@ where
     T: DoorbellRegistersAccessible,
 {
     fn no_data(&mut self, request: Request) -> PciResult {
-        let setup_stage = make_setup_stage(request.into_setup_stage(), TransferType::No);
+        let setup_stage = make_setup_stage(request.setup_stage(), TransferType::No);
         self.push(setup_stage.into_raw())?;
 
         let mut status = new_status_stage_with_direction();
@@ -68,7 +68,7 @@ where
     }
 
     fn with_data(&mut self, request: Request, data_buff_addr: u64, len: u32) -> PciResult {
-        let setup = make_setup_stage(request.into_setup_stage(), TransferType::Out);
+        let setup = make_setup_stage(request.setup_stage(), TransferType::Out);
         self.push(setup.into_raw())?;
 
         let mut data_stage = make_data_stage(data_buff_addr, len, Direction::Out);
