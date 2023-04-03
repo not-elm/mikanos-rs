@@ -4,11 +4,11 @@ use core::cell::RefCell;
 use xhci::ring::trb::transfer::{DataStage, Direction, SetupStage, TransferType};
 
 use crate::error::PciResult;
-use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+
 use crate::xhc::device_manager::control_pipe::control_in::ControlIn;
 use crate::xhc::device_manager::control_pipe::control_out::ControlOut;
 use crate::xhc::device_manager::control_pipe::request::Request;
-use crate::xhc::device_manager::control_pipe::unstable_hash_map::UnstableHashMap;
+
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
@@ -36,11 +36,9 @@ where
         slot_id: u8,
         device_context_index: DeviceContextIndex,
         doorbell: &Rc<RefCell<T>>,
-        allocator: &mut impl MemoryAllocatable,
+        transfer_ring: TransferRing,
     ) -> PciResult<Self> {
-        let transfer_ring = Rc::new(RefCell::new(TransferRing::new_with_alloc(
-            32, true, allocator,
-        )?));
+        let transfer_ring = Rc::new(RefCell::new(transfer_ring));
         let control_in = ControlIn::new(slot_id, device_context_index, doorbell, &transfer_ring);
         let control_out = ControlOut::new(slot_id, device_context_index, doorbell, &transfer_ring);
         Ok(Self {

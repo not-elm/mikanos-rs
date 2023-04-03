@@ -16,3 +16,8 @@ impl EndpointId {
         self.0
     }
 }
+impl Default for EndpointId {
+    fn default() -> Self {
+        EndpointId::from_endpoint_num(0, true)
+    }
+}

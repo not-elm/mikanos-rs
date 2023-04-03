@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(packed)]
 pub struct InterfaceDescriptor {
     pub length: u8,
@@ -17,5 +17,8 @@ pub const INTERFACE_DESCRIPTOR_TYPE: u8 = 4;
 impl InterfaceDescriptor {
     pub fn is_mouse(&self) -> bool {
         self.interface_class == 3 && self.interface_sub_class == 1 && self.interface_protocol == 2
+    }
+    pub fn is_keyboard(&self) -> bool {
+        self.interface_class == 3 && self.interface_sub_class == 1 && self.interface_protocol == 1
     }
 }

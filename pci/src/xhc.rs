@@ -13,7 +13,6 @@ use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::single_device_collector::SingleDeviceCollector;
 use crate::xhc::device_manager::collectable::DeviceCollectable;
-use crate::xhc::device_manager::endpoint_id::EndpointId;
 use crate::xhc::device_manager::DeviceManager;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
 use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
@@ -23,7 +22,8 @@ use crate::xhc::registers::traits::interrupter_set_register_accessible::setup_ev
 use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
 use crate::xhc::registers::traits::usb_command_register_accessible::setup_command_ring;
 use crate::xhc::transfer::command_ring::CommandRing;
-use crate::xhc::transfer::event::event_trb::{EventTrb, TargetEvent};
+use crate::xhc::transfer::event::event_trb::EventTrb;
+use crate::xhc::transfer::event::target_event::TargetEvent;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 pub mod allocator;
@@ -31,23 +31,23 @@ pub mod device_manager;
 pub mod registers;
 pub mod transfer;
 
-pub struct XhcController<T, U, I>
+pub struct XhcController<T, U, Memory>
 where
     T: RegistersOperation
         + InterrupterSetRegisterAccessible
         + PortRegistersAccessible
         + DoorbellRegistersAccessible,
-    U: DeviceCollectable<T>,
-    I: MemoryAllocatable,
+    U: DeviceCollectable<T, Memory>,
+    Memory: MemoryAllocatable,
 {
     registers: Rc<RefCell<T>>,
     event_ring: EventRing<T>,
     command_ring: CommandRing<T>,
-    device_manager: DeviceManager<T, U>,
-    allocator: I,
+    device_manager: DeviceManager<T, U, Memory>,
+    allocator: Rc<RefCell<Memory>>,
 }
 
-impl<T, I> XhcController<T, SingleDeviceCollector<T>, I>
+impl<T, Memory> XhcController<T, SingleDeviceCollector<T, Memory>, Memory>
 where
     T: RegistersOperation
         + CapabilityRegistersAccessible
@@ -57,9 +57,9 @@ where
         + PortRegistersAccessible
         + ConfigRegisterAccessible
         + DeviceContextBaseAddressArrayPointerAccessible,
-    I: MemoryAllocatable,
+    Memory: MemoryAllocatable,
 {
-    pub fn new(mut registers: T, mut allocator: I) -> PciResult<Self> {
+    pub fn new(mut registers: T, mut allocator: Memory) -> PciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
 
         registers.borrow_mut().reset()?;
@@ -81,7 +81,7 @@ where
             event_ring,
             command_ring,
             device_manager,
-            allocator,
+            allocator: Rc::new(RefCell::new(allocator)),
         })
     }
 
@@ -120,16 +120,11 @@ where
         transfer_event: TransferEvent,
         target_event: TargetEvent,
     ) -> PciResult {
-        if let TargetEvent::Normal(normal) = target_event {
-            self.device_manager
-                .device_slot_at(transfer_event.slot_id())
-                .unwrap()
-                .interrupter_in(EndpointId::from_addr(3))?;
-            return Ok(());
-        }
-        let is_init = self
-            .device_manager
-            .initialize_phase_at(transfer_event.slot_id(), transfer_event)?;
+        let is_init = self.device_manager.process_transfer_event(
+            transfer_event.slot_id(),
+            transfer_event,
+            target_event,
+        )?;
 
         if is_init {
             self.command_ring.push_configure_endpoint(
@@ -163,7 +158,7 @@ where
     fn address_device(&mut self, completion: CommandCompletion) -> PciResult {
         let input_context_addr = self
             .device_manager
-            .address_device(completion.slot_id(), &mut self.allocator)?;
+            .address_device(completion.slot_id(), &self.allocator)?;
         self.command_ring
             .push_address_command(input_context_addr, completion.slot_id())
     }
@@ -184,19 +179,3 @@ pub(crate) fn bit_mask_zeros_lower_for(bits: u32, target_value: usize) -> usize 
     // 下位5Bitsは予約領域
     target_value & !mask
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use crate::xhc::bit_mask_zeros_lower_for;
-//
-//     #[test]
-//     fn it_mask_lower_3_bits() {
-//         assert_eq!(bit_mask_zeros_lower_for(3, 0b1000_0111), 0b1000_0000);
-//     }
-//
-//     #[test]
-//     fn it_mask_lower_5_bits() {
-//         let addr = 0b1000_0000_0001_1111;
-//         assert_eq!(bit_mask_zeros_lower_for(5, addr), 0b1000_0000_0000_0000);
-//     }
-// }

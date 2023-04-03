@@ -1,6 +1,7 @@
 use xhci::ring::trb::event::TransferEvent;
-use xhci::ring::trb::transfer::{DataStage, Normal, StatusStage};
+use xhci::ring::trb::transfer::{DataStage, StatusStage};
 
+use crate::xhc::transfer::event::target_event::TargetEvent;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]
@@ -14,31 +15,6 @@ pub enum EventTrb {
     NotSupport {
         trb_type: u8,
     },
-}
-
-#[derive(Debug)]
-pub enum TargetEvent {
-    Normal(Normal),
-    DataStage(DataStage),
-    StatusStage(StatusStage),
-}
-
-impl TargetEvent {
-    pub fn new(target_pointer_addr: u64) -> Option<Self> {
-        let raw_data_data = TrbRawData::from_addr(target_pointer_addr);
-        match raw_data_data.template().trb_type() {
-            1 => Some(TargetEvent::Normal(
-                Normal::try_from(raw_data_data.into_u32_array()).ok()?,
-            )),
-            3 => Some(TargetEvent::DataStage(
-                DataStage::try_from(raw_data_data.into_u32_array()).ok()?,
-            )),
-            4 => Some(TargetEvent::StatusStage(
-                StatusStage::try_from(raw_data_data.into_u32_array()).ok()?,
-            )),
-            _ => None,
-        }
-    }
 }
 
 impl EventTrb {

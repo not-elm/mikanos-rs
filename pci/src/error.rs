@@ -43,6 +43,8 @@ pub enum DeviceContextReason {
 #[derive(Debug)]
 pub enum DeviceReason {
     NotExistsSlot(u8),
+    InvalidTargetEvent,
+    InvalidPhase { current_phase: usize },
 }
 
 #[derive(Debug)]

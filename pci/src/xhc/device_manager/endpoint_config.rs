@@ -1,6 +1,6 @@
-use xhci::context::{EndpointHandler, EndpointType};
+use xhci::context::{EndpointHandler, EndpointState, EndpointType};
 
-use crate::xhc::device_manager::descriptor::endpoint_descriptor::EndpointDescriptor;
+use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::EndpointDescriptor;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::endpoint_id::EndpointId;
 
@@ -13,7 +13,7 @@ pub struct EndpointConfig {
 }
 
 impl EndpointConfig {
-    pub fn new(endpoint: EndpointDescriptor) -> Self {
+    pub fn new(endpoint: &EndpointDescriptor) -> Self {
         Self {
             ep_id: EndpointId::from_endpoint_num(
                 endpoint.endpoint_address.number() as usize,
@@ -49,13 +49,14 @@ impl EndpointConfig {
         endpoint_ctx.set_max_packet_size(self.max_packet_size);
         endpoint_ctx.set_interval(self.interval - 1);
         endpoint_ctx.set_average_trb_length(1);
-
+        endpoint_ctx.set_endpoint_state(EndpointState::Running);
         endpoint_ctx.set_error_count(3);
         endpoint_ctx.set_tr_dequeue_pointer(tr_buff_addr);
         endpoint_ctx.set_endpoint_type(EndpointType::InterruptIn);
         endpoint_ctx.set_dequeue_cycle_state();
+        
     }
-}
+}   
 
 fn to_endpoint_type(v: u8) -> EndpointType {
     match v {

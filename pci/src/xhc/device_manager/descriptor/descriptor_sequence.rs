@@ -1,36 +1,24 @@
 use core::mem::size_of;
 
-use crate::xhc::device_manager::descriptor::descriptor::UsbDescriptor;
-use crate::xhc::device_manager::descriptor::endpoint_descriptor::{
+use crate::xhc::device_manager::descriptor::structs::configuration_descriptor::{
+    ConfigurationDescriptor, CONFIGURATION_DESCRIPTOR_TYPE,
+};
+use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::{
     EndpointDescriptor, ENDPOINT_DESCRIPTOR_TYPE,
 };
-use crate::xhc::device_manager::descriptor::hid_descriptor::{HidDescriptor, HID_DESCRIPTOR_TYPE};
-use crate::xhc::device_manager::descriptor::interface_descriptor::{
+use crate::xhc::device_manager::descriptor::structs::hid_descriptor::{HidDescriptor, HID_DESCRIPTOR_TYPE};
+use crate::xhc::device_manager::descriptor::structs::interface_descriptor::{
     InterfaceDescriptor, INTERFACE_DESCRIPTOR_TYPE,
 };
+use crate::xhc::device_manager::descriptor::Descriptor;
 
-#[repr(packed)]
-#[derive(Debug, Copy, Clone)]
-pub struct ConfigurationDescriptor {
-    pub length: u8,
-    pub descriptor_type: u8,
-    pub total_length: u16,
-    pub num_interfaces: u8,
-    pub configuration_value: u8,
-    pub configuration_id: u8,
-    pub attributes: u8,
-    pub max_power: u8,
-}
-
-pub struct ConfigurationDescriptors {
+pub struct DescriptorSequence {
     descriptor_ptr: *mut u8,
     index: usize,
     len: usize,
 }
 
-pub(crate) const CONFIGURATION_DESCRIPTOR_TYPE: u8 = 2;
-
-impl ConfigurationDescriptors {
+impl DescriptorSequence {
     pub fn new(descriptor_ptr: *mut u8, len: usize) -> Self {
         Self {
             descriptor_ptr,
@@ -40,8 +28,8 @@ impl ConfigurationDescriptors {
     }
 }
 
-impl Iterator for ConfigurationDescriptors {
-    type Item = UsbDescriptor;
+impl Iterator for DescriptorSequence {
+    type Item = Descriptor;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.len <= self.index {
@@ -56,7 +44,7 @@ impl Iterator for ConfigurationDescriptors {
     }
 }
 
-unsafe fn convert_to_descriptor(ptr: *mut u8) -> (usize, UsbDescriptor) {
+unsafe fn convert_to_descriptor(ptr: *mut u8) -> (usize, Descriptor) {
     let descriptor_type = *ptr.add(1);
 
     fn convert<T>(ptr: *mut u8) -> (usize, T) {
@@ -66,21 +54,21 @@ unsafe fn convert_to_descriptor(ptr: *mut u8) -> (usize, UsbDescriptor) {
     match descriptor_type {
         CONFIGURATION_DESCRIPTOR_TYPE => {
             let (size, descriptor) = convert::<ConfigurationDescriptor>(ptr);
-            (size, UsbDescriptor::Configuration(descriptor))
+            (size, Descriptor::Configuration(descriptor))
         }
         INTERFACE_DESCRIPTOR_TYPE => {
             let (size, descriptor) = convert::<InterfaceDescriptor>(ptr);
-            (size, UsbDescriptor::Interface(descriptor))
+            (size, Descriptor::Interface(descriptor))
         }
         ENDPOINT_DESCRIPTOR_TYPE => {
             let (size, descriptor) = convert::<EndpointDescriptor>(ptr);
 
-            (size, UsbDescriptor::Endpoint(descriptor))
+            (size, Descriptor::Endpoint(descriptor))
         }
         HID_DESCRIPTOR_TYPE => {
             let (size, descriptor) = convert::<HidDescriptor>(ptr);
-            (size, UsbDescriptor::Hid(descriptor))
+            (size, Descriptor::Hid(descriptor))
         }
-        _ => (0, UsbDescriptor::NotSupport),
+        _ => (0, Descriptor::NotSupport),
     }
 }

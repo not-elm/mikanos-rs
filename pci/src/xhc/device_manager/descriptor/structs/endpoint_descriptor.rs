@@ -1,7 +1,7 @@
 use bitfield_struct::bitfield;
 
 #[repr(packed)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EndpointDescriptor {
     pub length: u8,
     pub descriptor_type: u8,
