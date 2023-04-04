@@ -3,7 +3,7 @@ use core::cell::RefCell;
 use core::marker::PhantomData;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
+
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::error::{DeviceContextReason, DeviceReason, PciError, PciResult};
@@ -27,34 +27,32 @@ pub mod endpoint_id;
 pub mod initialize_phase;
 mod input_context;
 
-pub struct DeviceManager<T, U, Mouse, Memory>
+pub struct DeviceManager<Doorbell, Collectable, Memory>
 where
-    T: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
-    U: DeviceCollectable<T, Memory>,
+    Doorbell: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
+    Collectable: DeviceCollectable<Doorbell, Memory>,
     Memory: MemoryAllocatable,
-    Mouse: MouseSubscriber + Clone,
 {
-    devices: U,
+    devices: Collectable,
     device_context_array: DeviceContextArrayPtr,
     addressing_port_id: Option<u8>,
-    registers: Rc<RefCell<T>>,
-    mouse_driver_factory: MouseDriverFactory<Mouse>,
+    registers: Rc<RefCell<Doorbell>>,
+    mouse_driver_factory: MouseDriverFactory,
     _maker: PhantomData<Memory>,
 }
 
-impl<T, U, Mouse, Memory> DeviceManager<T, U, Mouse, Memory>
+impl<Doorbell, Collectable, Memory> DeviceManager<Doorbell, Collectable, Memory>
 where
-    T: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
-    U: DeviceCollectable<T, Memory>,
+    Doorbell: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
+    Collectable: DeviceCollectable<Doorbell, Memory>,
     Memory: MemoryAllocatable,
-    Mouse: MouseSubscriber + Clone,
 {
     pub fn new(
-        devices: U,
+        devices: Collectable,
         device_context_array: DeviceContextArrayPtr,
-        registers: &Rc<RefCell<T>>,
-        mouse_driver_factory: MouseDriverFactory<T>,
-    ) -> DeviceManager<T, U, Mouse, Memory> {
+        registers: &Rc<RefCell<Doorbell>>,
+        mouse_driver_factory: MouseDriverFactory,
+    ) -> DeviceManager<Doorbell, Collectable, Memory> {
         Self {
             devices,
             device_context_array,
@@ -67,7 +65,7 @@ where
     pub fn set_addressing_port_id(&mut self, port_id: u8) {
         self.addressing_port_id = Some(port_id);
     }
-    pub fn device_slot_at(&mut self, slot_id: u8) -> Option<&mut Device<T, Memory>> {
+    pub fn device_slot_at(&mut self, slot_id: u8) -> Option<&mut Device<Doorbell, Memory>> {
         self.devices.mut_at(slot_id)
     }
     pub fn address_device(
@@ -83,6 +81,7 @@ where
             slot_id,
             allocator,
             &self.registers,
+            self.mouse_driver_factory.clone(),
         )?;
 
         self.device_context_array
@@ -106,8 +105,8 @@ where
         transfer_event: TransferEvent,
         target_event: TargetEvent,
     ) -> PciResult<bool> {
-        let device = self.device_mut_at(slot_id)?;
-        let init_status = device.on_transfer_event_received(transfer_event, target_event)?;
+        let deive = self.device_mut_at(slot_id)?;
+        let init_status = deive.on_transfer_event_received(transfer_event, target_event)?;
         Ok(init_status.is_initialised())
     }
 
@@ -127,7 +126,7 @@ where
                 DeviceContextReason::NotExistsAddressingPort,
             ))
     }
-    fn device_mut_at(&mut self, slot_id: u8) -> PciResult<&mut Device<T, Memory>> {
+    fn device_mut_at(&mut self, slot_id: u8) -> PciResult<&mut Device<Doorbell, Memory>> {
         self.devices
             .mut_at(slot_id)
             .ok_or(PciError::FailedOperateDevice(DeviceReason::NotExistsSlot(

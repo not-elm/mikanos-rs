@@ -1,28 +1,34 @@
-use crate::class_driver::mouse::mouse_default_driver::MouseDefaultDriver;
-use crate::class_driver::mouse::mouse_subscribe_driver::{MouseSubscribeDriver, MouseSubscriber};
-use crate::class_driver::ClassDriverOperate;
 use alloc::boxed::Box;
 
-pub enum MouseDriverFactory<T: MouseSubscriber> {
+use crate::class_driver::mouse::mouse_default_driver::MouseDefaultDriver;
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscribeDriver;
+use crate::class_driver::ClassDriverOperate;
+
+use super::mouse_subscribable::MouseSubscribable;
+#[derive(Clone)]
+pub enum MouseDriverFactory {
     Default,
-    Subscribe(T),
+    Subscribe(Box<dyn MouseSubscribable>),
 }
 
-impl<T: MouseSubscriber> MouseDriverFactory<T> {
-    pub fn subscriber(subscriber: T) -> Self {
-        Self::Subscribe(subscriber)
+impl MouseDriverFactory {
+    pub fn subscriber(subscriber: impl MouseSubscribable + 'static) -> Self {
+        Self::Subscribe(Box::new(subscriber))
     }
 }
-impl<T: MouseSubscriber + Clone> MouseDriverFactory<T> {
+
+impl MouseDriverFactory {
     pub fn fact(&self) -> Box<dyn ClassDriverOperate> {
         match self {
             Self::Default => Box::new(MouseDefaultDriver::new()),
-            Self::Subscribe(subscriber) => Box::new(MouseSubscribeDriver::new(subscriber.clone())),
+            Self::Subscribe(subscriber) => {
+                Box::new(MouseSubscribeDriver::new(dyn_clone::clone(subscriber)))
+            }
         }
     }
 }
 
-impl<T: MouseSubscriber> Default for MouseDriverFactory<T> {
+impl Default for MouseDriverFactory {
     fn default() -> Self {
         Self::Default
     }

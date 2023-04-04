@@ -5,7 +5,7 @@ use kernel_lib::serial_println;
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
+
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use registers::traits::registers_operation::RegistersOperation;
@@ -34,27 +34,26 @@ pub mod device_manager;
 pub mod registers;
 pub mod transfer;
 
-pub struct XhcController<T, U, Mouse, Memory>
+pub struct XhcController<Register, Collectable, Memory>
 where
-    T: RegistersOperation
+    Register: RegistersOperation
         + InterrupterSetRegisterAccessible
         + PortRegistersAccessible
         + DoorbellRegistersAccessible
         + 'static,
-    U: DeviceCollectable<T, Memory>,
+    Collectable: DeviceCollectable<Register, Memory>,
     Memory: MemoryAllocatable,
-    Mouse: MouseSubscriber + Clone,
 {
-    registers: Rc<RefCell<T>>,
-    event_ring: EventRing<T>,
-    command_ring: CommandRing<T>,
-    device_manager: DeviceManager<T, U, Mouse, Memory>,
+    registers: Rc<RefCell<Register>>,
+    event_ring: EventRing<Register>,
+    command_ring: CommandRing<Register>,
+    device_manager: DeviceManager<Register, Collectable, Memory>,
     allocator: Rc<RefCell<Memory>>,
 }
 
-impl<T, Memory, Mouse> XhcController<T, SingleDeviceCollector<T, Memory>, Mouse, Memory>
+impl<Register, Memory> XhcController<Register, SingleDeviceCollector<Register, Memory>, Memory>
 where
-    T: RegistersOperation
+    Register: RegistersOperation
         + CapabilityRegistersAccessible
         + InterrupterSetRegisterAccessible
         + UsbCommandRegisterAccessible
@@ -64,12 +63,11 @@ where
         + DeviceContextBaseAddressArrayPointerAccessible
         + 'static,
     Memory: MemoryAllocatable,
-    Mouse: MouseSubscriber + Clone,
 {
     pub fn new(
-        registers: T,
+        registers: Register,
         mut allocator: Memory,
-        mouse_driver_factory: MouseDriverFactory<Mouse>,
+        mouse_driver_factory: MouseDriverFactory,
     ) -> PciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
 
@@ -116,6 +114,7 @@ where
     }
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
+        serial_println!("{:?}", event_trb);
         match event_trb {
             EventTrb::TransferEvent {
                 transfer_event,

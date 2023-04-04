@@ -1,11 +1,12 @@
+use alloc::boxed::Box;
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
 use xhci::ring::trb::transfer::Normal;
 
+use crate::class_driver::ClassDriverOperate;
 use kernel_lib::serial_println;
 
-use crate::class_driver::{ClassDriver, ClassDriverOperate};
 use crate::error::PciResult;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::endpoint_config::EndpointConfig;
@@ -17,7 +18,7 @@ where
     T: DoorbellRegistersAccessible,
 {
     slot_id: u8,
-    class_driver: ClassDriver,
+    class_driver: Box<dyn ClassDriverOperate>,
     endpoint_config: EndpointConfig,
     transfer_ring: TransferRing,
     doorbell: Rc<RefCell<T>>,
@@ -29,7 +30,7 @@ where
 {
     pub fn new(
         slot_id: u8,
-        class_driver: ClassDriver,
+        class_driver: Box<dyn ClassDriverOperate>,
         endpoint_config: &EndpointConfig,
         transfer_ring: TransferRing,
         doorbell: &Rc<RefCell<T>>,

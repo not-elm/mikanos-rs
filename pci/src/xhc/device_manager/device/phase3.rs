@@ -1,13 +1,10 @@
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use core::borrow::Borrow;
 
-use xhci::context::{Device32Byte, DeviceHandler, Input32Byte, InputHandler};
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::interrupt_in::InterruptIn;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::descriptor::hid::HidDeviceDescriptors;
@@ -20,30 +17,33 @@ use crate::xhc::transfer::event::target_event::TargetEvent;
 use super::phase4::Phase4;
 
 pub struct Phase3 {
+    mouse_driver_factory: MouseDriverFactory,
     hid_device_descriptor_vec: Vec<HidDeviceDescriptors>,
 }
 
 impl Phase3 {
-    pub fn new(hid_device_descriptor_vec: Vec<HidDeviceDescriptors>) -> Self {
+    pub fn new(
+        mouse_driver_factory: MouseDriverFactory,
+        hid_device_descriptor_vec: Vec<HidDeviceDescriptors>,
+    ) -> Self {
         Self {
+            mouse_driver_factory,
             hid_device_descriptor_vec,
         }
     }
 
-    fn interrupters<Memory, Doorbell, Mouse>(
+    fn interrupters<Memory, Doorbell>(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
-        mouse_driver_factory: &MouseDriverFactory<Mouse>,
     ) -> Vec<InterruptIn<Doorbell>>
     where
         Memory: MemoryAllocatable,
         Doorbell: DoorbellRegistersAccessible,
-        Mouse: MouseSubscriber + Clone,
     {
         self.hid_device_descriptor_vec
             .iter()
             .filter_map(|hid| {
-                let class_driver = hid.class_driver(mouse_driver_factory)?;
+                let class_driver = hid.class_driver(&self.mouse_driver_factory)?;
                 let transfer_ring = slot.try_alloc_transfer_ring(32).ok()?;
 
                 Some(InterruptIn::new(
@@ -58,19 +58,17 @@ impl Phase3 {
     }
 }
 
-impl<Memory, Doorbell: 'static, Mouse> Phase<Memory, Doorbell, Mouse> for Phase3
+impl<Doorbell: 'static, Memory> Phase<Doorbell, Memory> for Phase3
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
-    Mouse: MouseSubscriber + Clone,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-        mouse_driver_factory: &MouseDriverFactory<Mouse>,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell, Mouse>>>)> {
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         slot.input_context_mut().clear_control();
         slot.copy_device_context_to_input();
         slot.input_context_mut().set_enable_slot_context();

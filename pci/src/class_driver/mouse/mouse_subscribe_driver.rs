@@ -1,28 +1,21 @@
+use alloc::boxed::Box;
+
+use dyn_clone::DynClone;
+
+use common_lib::vector::Vector2D;
+
+use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use crate::class_driver::mouse::{MouseButton, MOUSE_DATA_BUFF_SIZE};
 use crate::class_driver::ClassDriverOperate;
 use crate::error::PciResult;
-use common_lib::vector::Vector2D;
 
-pub trait MouseSubscriber {
-    fn subscribe(
-        &mut self,
-        prev_cursor: Vector2D<usize>,
-        current_cursor: Vector2D<usize>,
-        button: MouseButton,
-    );
-}
-pub struct MouseSubscribeDriver<T>
-where
-    T: MouseSubscriber,
-{
+pub struct MouseSubscribeDriver {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
     current_pos: Vector2D<usize>,
-    subscriber: T,
+    subscriber: Box<dyn MouseSubscribable>,
 }
-impl<T> ClassDriverOperate for MouseSubscribeDriver<T>
-where
-    T: MouseSubscriber,
-{
+
+impl ClassDriverOperate for MouseSubscribeDriver {
     fn on_data_received(&mut self) -> PciResult {
         if self.data_buff.iter().all(|b| *b == 0) {
             return Ok(());
@@ -46,11 +39,8 @@ where
     }
 }
 
-impl<T> MouseSubscribeDriver<T>
-where
-    T: MouseSubscriber,
-{
-    pub fn new(subscriber: T) -> Self {
+impl MouseSubscribeDriver {
+    pub fn new(subscriber: Box<dyn MouseSubscribable>) -> Self {
         Self {
             current_pos: Vector2D::new(0, 0),
             data_buff: [0; MOUSE_DATA_BUFF_SIZE],

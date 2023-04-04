@@ -1,4 +1,3 @@
-use kernel_lib::serial_println;
 use xhci::ring::trb::event::TransferEvent;
 use xhci::ring::trb::transfer::{DataStage, StatusStage};
 

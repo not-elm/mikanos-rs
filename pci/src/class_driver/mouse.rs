@@ -2,6 +2,7 @@ use common_lib::vector::Vector2D;
 
 mod mouse_default_driver;
 pub mod mouse_driver_factory;
+pub mod mouse_subscribable;
 pub mod mouse_subscribe_driver;
 
 const MOUSE_DATA_BUFF_SIZE: usize = 3;

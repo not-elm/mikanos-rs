@@ -32,9 +32,10 @@ where
     }
 }
 
-impl<T, Memory> DeviceCollectable<T, Memory> for SingleDeviceCollector<T, Memory>
+impl<Doorbell, Memory> DeviceCollectable<Doorbell, Memory>
+    for SingleDeviceCollector<Doorbell, Memory>
 where
-    T: DoorbellRegistersAccessible + 'static,
+    Doorbell: DoorbellRegistersAccessible + 'static,
     Memory: MemoryAllocatable,
 {
     fn new(device_slots: u8) -> Self {
@@ -43,7 +44,7 @@ where
             device: None,
         }
     }
-    fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device<T, Mouse, Memory>> {
+    fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device<Doorbell, Memory>> {
         self.check_specify_slot_id(slot_id).ok()?;
 
         self.device.as_mut().and_then(|device| {
@@ -55,7 +56,7 @@ where
         })
     }
 
-    fn set(&mut self, device_slot: Device<T, Mouse, Memory>) -> PciResult {
+    fn set(&mut self, device_slot: Device<Doorbell, Memory>) -> PciResult {
         self.check_specify_slot_id(device_slot.slot_id())?;
         self.device = Some(device_slot);
         Ok(())

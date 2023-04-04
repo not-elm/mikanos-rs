@@ -4,7 +4,7 @@ use core::cell::RefCell;
 use core::marker::PhantomData;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
+
 use xhci::context::EndpointType;
 use xhci::ring::trb::event::TransferEvent;
 
@@ -29,26 +29,23 @@ mod phase3;
 mod phase4;
 
 #[repr(C, align(64))]
-pub struct Device<Doorbell, Mouse, Memory>
+pub struct Device<Doorbell, Memory>
 where
     Doorbell: DoorbellRegistersAccessible,
     Memory: MemoryAllocatable,
-    Mouse: MouseSubscriber + Clone,
 {
     slot_id: u8,
-
-    phase: Box<dyn Phase<Memory, Mouse, Doorbell>>,
+    phase: Box<dyn Phase<Doorbell, Memory>>,
     doorbell: Rc<RefCell<Doorbell>>,
     slot: DeviceSlot<Memory, Doorbell>,
     device_descriptor_buff: [u8; DATA_BUFF_SIZE],
     _maker: PhantomData<Memory>,
 }
 
-impl<Doorbell: 'static, Mouse, Memory> Device<Doorbell, Mouse, Memory>
+impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
 where
     Doorbell: DoorbellRegistersAccessible,
     Memory: MemoryAllocatable,
-    Mouse: MouseSubscriber + Clone,
 {
     pub fn device_context_addr(&self) -> u64 {
         self.slot.device_context().device_context_addr()
@@ -66,8 +63,9 @@ where
         slot_id: u8,
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
+        mouse_driver_factory: MouseDriverFactory,
     ) -> PciResult<Self> {
-        let mut me = Self::new(slot_id, allocator, doorbell)?;
+        let mut me = Self::new(slot_id, allocator, doorbell, mouse_driver_factory)?;
 
         me.slot.input_context_mut().set_enable_slot_context();
         me.slot
@@ -98,14 +96,10 @@ where
         &mut self,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-        mouse_driver_factory: &MouseDriverFactory<Mouse>,
     ) -> PciResult<InitStatus> {
-        let (init_status, phase) = self.phase.on_transfer_event_received(
-            &mut self.slot,
-            transfer_event,
-            target_event,
-            mouse_driver_factory,
-        )?;
+        let (init_status, phase) =
+            self.phase
+                .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
         if let Some(phase) = phase {
             self.phase = phase;
         }
@@ -132,7 +126,7 @@ where
 
     fn init_default_control_pipe(&mut self, port_speed: u8) {
         let tr_dequeue_addr = self.slot.default_control_pipe().transfer_ring_base_addr();
-        let mut control = self.slot.input_context_mut();
+        let control = self.slot.input_context_mut();
         let default_control_pipe = control.endpoint_mut_at(DeviceContextIndex::default().value());
 
         default_control_pipe.set_endpoint_type(EndpointType::Control);
@@ -149,13 +143,14 @@ where
         slot_id: u8,
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
+        mouse_driver_factory: MouseDriverFactory,
     ) -> PciResult<Self> {
         let slot = DeviceSlot::new(slot_id, doorbell, allocator)?;
-        let phase = Box::new(Phase1::new());
+        let phase = Box::new(Phase1::new(mouse_driver_factory));
         Ok(Self {
             slot_id,
-            doorbell: Rc::clone(doorbell),
             phase,
+            doorbell: Rc::clone(doorbell),
             slot,
             device_descriptor_buff: [0; DATA_BUFF_SIZE],
             _maker: PhantomData,

@@ -13,3 +13,4 @@ macros = { path = "../macros", features = ["extra-traits"] }
 xhci = { workspace = true }
 modular-bitfield = { workspace = true }
 common-lib = { path = "../common-lib" }
+dyn-clone = { workspace = true }

@@ -1,11 +1,10 @@
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use core::cell::RefMut;
 
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
+
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -21,27 +20,25 @@ use crate::xhc::device_manager::device::phase3::Phase3;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
-pub struct Phase2 {}
+pub struct Phase2 {mouse_driver_factory: MouseDriverFactory}
 
 impl Phase2 {
-    pub fn new() -> Phase2 {
-        Self {}
+    pub fn new(mouse_driver_factory: MouseDriverFactory) -> Phase2 {
+        Self {mouse_driver_factory}
     }
 }
 
-impl<Memory, Doorbell: 'static, Mouse> Phase<Memory, Doorbell, Mouse> for Phase2
+impl<Doorbell: 'static, Memory> Phase<Doorbell, Memory> for Phase2
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
-    Mouse: MouseSubscriber + Clone,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-        _mouse_driver_factory: &MouseDriverFactory<Mouse>,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell, Mouse>>>)> {
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         let data_stage = target_event.data_stage()?;
 
         let conf_desc_buff = data_stage.data_buffer_pointer() as *mut u8;
@@ -68,7 +65,7 @@ where
 
         Ok((
             InitStatus::not(),
-            Some(Box::new(Phase3::new(hid_device_descriptors))),
+            Some(Box::new(Phase3::new(self.mouse_driver_factory.clone(), hid_device_descriptors))),
         ))
     }
 }

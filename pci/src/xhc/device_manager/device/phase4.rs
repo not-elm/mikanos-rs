@@ -1,14 +1,9 @@
-use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use xhci::ring::trb::event::TransferEvent;
 
-use kernel_lib::serial_println;
-
 use crate::class_driver::interrupt_in::InterruptIn;
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
@@ -32,23 +27,17 @@ where
     }
 }
 
-impl<Memory, Doorbell: 'static, Mouse> Phase<Memory, Doorbell, Mouse> for Phase4<Doorbell>
+impl<Doorbell: 'static, Memory> Phase<Doorbell, Memory> for Phase4<Doorbell>
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
-    Mouse: MouseSubscriber + Clone,
 {
     fn on_transfer_event_received(
         &mut self,
         _slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
-        target_event: TargetEvent,
-        _mouse_driver_factory: &MouseDriverFactory<Mouse>,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell, Mouse>>>)> {
-        if target_event.normal().is_err() {
-            return Ok((InitStatus::not(), None));
-        }
-
+        _target_event: TargetEvent,
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         for interrupt in self.interrupters.iter_mut() {
             interrupt.interrupter_in()?;
         }

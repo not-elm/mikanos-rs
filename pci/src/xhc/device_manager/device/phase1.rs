@@ -1,9 +1,8 @@
 use alloc::boxed::Box;
 
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::mouse_driver_factory::{MouseDriverFactory, self};
 use xhci::ring::trb::event::TransferEvent;
 
-use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -15,27 +14,25 @@ use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegist
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
 /// コンフィグディスクリプタを取得します。
-pub struct Phase1 {}
+pub struct Phase1 {mouse_driver_factory: MouseDriverFactory}
 
 impl Phase1 {
-    pub fn new() -> Phase1 {
-        Self {}
+    pub fn new(mouse_driver_factory: MouseDriverFactory) -> Phase1 {
+        Self {mouse_driver_factory}
     }
 }
 
-impl<Memory, Doorbell: 'static, Mouse> Phase<Memory, Doorbell, Mouse> for Phase1
+impl<Doorbell: 'static, Memory> Phase<Doorbell, Memory> for Phase1
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
-    Mouse: MouseSubscriber + Clone,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
-        target_event: TargetEvent,
-        _mouse_driver_factory: &MouseDriverFactory<Mouse>,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell, Mouse>>>)> {
+        _target_event: TargetEvent,
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         // target_event.status_stage()?;
         const CONFIGURATION_TYPE: u16 = 2;
 
@@ -46,6 +43,6 @@ where
             .control_in()
             .with_data(request, data_buff_addr, len)?;
 
-        Ok((InitStatus::not(), Some(Box::new(Phase2::new()))))
+        Ok((InitStatus::not(), Some(Box::new(Phase2::new(self.mouse_driver_factory.clone())))))
     }
 }
