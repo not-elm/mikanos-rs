@@ -39,5 +39,5 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Box<dyn Phase<Memory, Doorbell>>)>;
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell>>>)>;
 }

@@ -34,7 +34,7 @@ where
 
 impl<T, Memory> DeviceCollectable<T, Memory> for SingleDeviceCollector<T, Memory>
 where
-    T: DoorbellRegistersAccessible,
+    T: DoorbellRegistersAccessible + 'static,
     Memory: MemoryAllocatable,
 {
     fn new(device_slots: u8) -> Self {

@@ -3,8 +3,9 @@ use core::cmp::max;
 use common_lib::vector::Vector2D;
 use kernel_lib::gop::console::draw_cursor;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
+use kernel_lib::serial_println;
 
-use crate::class_driver::ClassDriver;
+use crate::class_driver::ClassDriverOperate;
 use crate::error::{PciError, PciResult};
 
 const MOUSE_DATA_BUFF_SIZE: usize = 3;
@@ -14,8 +15,9 @@ pub struct Mouse {
     current_pos: Vector2D<usize>,
 }
 
-impl ClassDriver for Mouse {
+impl ClassDriverOperate for Mouse {
     fn on_data_received(&mut self) -> PciResult {
+        serial_println!("{:?}", self.data_buff);
         if self.data_buff.iter().all(|b| *b == 0) {
             return Ok(());
         }

@@ -10,7 +10,7 @@ pub mod single_device_collector;
 
 pub trait DeviceCollectable<T, Memory>
 where
-    T: DoorbellRegistersAccessible,
+    T: DoorbellRegistersAccessible + 'static,
     Memory: MemoryAllocatable,
 {
     fn new(slot_id: u8) -> Self;

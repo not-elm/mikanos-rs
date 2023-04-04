@@ -27,7 +27,7 @@ impl Phase2 {
     }
 }
 
-impl<Memory, Doorbell> Phase<Memory, Doorbell> for Phase2
+impl<Memory, Doorbell: 'static> Phase<Memory, Doorbell> for Phase2
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
@@ -37,7 +37,7 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Box<dyn Phase<Memory, Doorbell>>)> {
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell>>>)> {
         let data_stage = target_event.data_stage()?;
 
         let conf_desc_buff = data_stage.data_buffer_pointer() as *mut u8;
@@ -64,7 +64,7 @@ where
 
         Ok((
             InitStatus::not(),
-            Box::new(Phase3::new(hid_device_descriptors)),
+            Some(Box::new(Phase3::new(hid_device_descriptors))),
         ))
     }
 }

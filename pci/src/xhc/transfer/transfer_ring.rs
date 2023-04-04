@@ -1,3 +1,5 @@
+use kernel_lib::serial_println;
+
 use crate::error::{PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
@@ -68,8 +70,8 @@ impl TransferRing {
     pub fn is_end_address(&self, address: u64) -> bool {
         self.ring_end_address <= address
     }
-    pub fn is_over_address(&self, address: u64) -> bool {
-        self.ring_end_address < address
+    pub fn is_end_event_address(&self, address: u64) -> bool {
+        self.ring_end_address + trb_byte_size() <= address
     }
     pub fn cycle_bit(&self) -> bool {
         self.cycle_bit
@@ -77,9 +79,10 @@ impl TransferRing {
     fn rollback(&mut self) -> PciResult {
         let mut link = xhci::ring::trb::Link::new();
         link.set_toggle_cycle();
+        link.set_ring_segment_pointer(self.ring_ptr_base_address);
 
         self.write(link.into_raw())?;
-
+        serial_println!("Rollback");
         self.ring_ptr_address = self.ring_ptr_base_address;
         self.toggle_cycle_bit();
         Ok(())

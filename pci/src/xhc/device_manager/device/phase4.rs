@@ -1,7 +1,10 @@
+use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use xhci::ring::trb::event::TransferEvent;
+
+use kernel_lib::serial_println;
 
 use crate::class_driver::interrupt_in::InterruptIn;
 use crate::error::PciResult;
@@ -37,13 +40,11 @@ where
         _slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Box<dyn Phase<Memory, Doorbell>>)> {
-        target_event.normal()?;
-
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell>>>)> {
         for interrupt in self.interrupters.iter_mut() {
             interrupt.interrupter_in()?;
         }
-        let interrupters: Vec<InterruptIn<Doorbell>> = self.interrupters.iter().collect();
-        Ok((InitStatus::not(), Box::new(Phase4::new(interrupters))))
+
+        Ok((InitStatus::not(), None))
     }
 }

@@ -4,7 +4,7 @@ use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::Endpoi
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::endpoint_id::EndpointId;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EndpointConfig {
     ep_id: EndpointId,
     ep_type: EndpointType,
@@ -54,9 +54,8 @@ impl EndpointConfig {
         endpoint_ctx.set_tr_dequeue_pointer(tr_buff_addr);
         endpoint_ctx.set_endpoint_type(EndpointType::InterruptIn);
         endpoint_ctx.set_dequeue_cycle_state();
-        
     }
-}   
+}
 
 fn to_endpoint_type(v: u8) -> EndpointType {
     match v {

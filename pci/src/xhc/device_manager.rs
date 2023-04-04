@@ -20,14 +20,14 @@ pub mod control_pipe;
 pub mod descriptor;
 mod device_context;
 pub(crate) mod device_context_index;
-mod endpoint_config;
+pub(crate) mod endpoint_config;
 pub mod endpoint_id;
 pub mod initialize_phase;
 mod input_context;
 
 pub struct DeviceManager<T, U, Memory>
 where
-    T: DoorbellRegistersAccessible + PortRegistersAccessible,
+    T: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
     U: DeviceCollectable<T, Memory>,
     Memory: MemoryAllocatable,
 {
@@ -40,7 +40,7 @@ where
 
 impl<T, U, Memory> DeviceManager<T, U, Memory>
 where
-    T: DoorbellRegistersAccessible + PortRegistersAccessible,
+    T: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
     U: DeviceCollectable<T, Memory>,
     Memory: MemoryAllocatable,
 {

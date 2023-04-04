@@ -41,7 +41,7 @@ where
     _maker: PhantomData<Memory>,
 }
 
-impl<Doorbell, Memory> Device<Doorbell, Memory>
+impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
 where
     Doorbell: DoorbellRegistersAccessible,
     Memory: MemoryAllocatable,
@@ -98,7 +98,9 @@ where
         let (init_status, phase) =
             self.phase
                 .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
-        self.phase = phase;
+        if let Some(phase) = phase {
+            self.phase = phase;
+        }
 
         Ok(init_status)
     }

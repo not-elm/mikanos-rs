@@ -1,6 +1,7 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
+use kernel_lib::serial_println;
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
@@ -36,7 +37,8 @@ where
     T: RegistersOperation
         + InterrupterSetRegisterAccessible
         + PortRegistersAccessible
-        + DoorbellRegistersAccessible,
+        + DoorbellRegistersAccessible
+        + 'static,
     U: DeviceCollectable<T, Memory>,
     Memory: MemoryAllocatable,
 {
@@ -56,10 +58,11 @@ where
         + DoorbellRegistersAccessible
         + PortRegistersAccessible
         + ConfigRegisterAccessible
-        + DeviceContextBaseAddressArrayPointerAccessible,
+        + DeviceContextBaseAddressArrayPointerAccessible
+        + 'static,
     Memory: MemoryAllocatable,
 {
-    pub fn new(mut registers: T, mut allocator: Memory) -> PciResult<Self> {
+    pub fn new(registers: T, mut allocator: Memory) -> PciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
 
         registers.borrow_mut().reset()?;

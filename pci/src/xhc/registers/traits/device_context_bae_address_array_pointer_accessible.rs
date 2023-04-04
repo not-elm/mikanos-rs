@@ -45,7 +45,8 @@ where
     U: DeviceCollectable<T, M>,
     T: DeviceContextBaseAddressArrayPointerAccessible
         + DoorbellRegistersAccessible
-        + PortRegistersAccessible,
+        + PortRegistersAccessible
+        + 'static,
 {
     let device_context_array = registers.borrow_mut().setup_device_context_array(
         device_slots,
