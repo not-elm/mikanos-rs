@@ -48,10 +48,6 @@ impl MouseDefaultDriver {
             data_buff: [0; MOUSE_DATA_BUFF_SIZE],
         }
     }
-
-    pub fn data_buff_addr(&self) -> u64 {
-        self.data_buff.as_ptr() as u64
-    }
 }
 
 fn draw(pos: Vector2D<usize>, color: PixelColor) -> PciResult {

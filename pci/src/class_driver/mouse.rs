@@ -1,9 +1,9 @@
 use core::cmp::max;
 
+use common_lib::vector::Vector2D;
+
 use crate::class_driver::boot_protocol_buffer::BootProtocolBuffer;
 use crate::class_driver::mouse::MouseButton::{Button1, Button2, Button3, DeviceSpecific};
-use common_lib::vector::Vector2D;
-use kernel_lib::serial_println;
 
 mod mouse_default_driver;
 pub mod mouse_driver_factory;
@@ -39,7 +39,7 @@ pub(crate) fn current_cursor_pos(prev_pos: Vector2D<usize>, data_buff: &[i8]) ->
 /// [HID]: https://www.usb.org/sites/default/files/documents/hid1_11.pdf
 pub(crate) fn mouse_button_boot_protocol(data_buff: BootProtocolBuffer) -> Option<MouseButton> {
     let button_data = data_buff.buff()[0];
-    serial_println!("buff data {:?}", data_buff.buff());
+
     match button_data {
         0b0000_0000 => None,
         0b0000_0001 => Some(Button1),

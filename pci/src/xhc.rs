@@ -12,6 +12,7 @@ use transfer::event::event_ring::EventRing;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::collectable::device_map::DeviceMap;
 use crate::xhc::device_manager::collectable::single_device_collector::SingleDeviceCollector;
 use crate::xhc::device_manager::collectable::DeviceCollectable;
 use crate::xhc::device_manager::DeviceManager;
@@ -49,7 +50,7 @@ where
     allocator: Rc<RefCell<Memory>>,
 }
 
-impl<Register, Memory> XhcController<Register, SingleDeviceCollector<Register, Memory>, Memory>
+impl<Register, Memory> XhcController<Register, DeviceMap<Register, Memory>, Memory>
 where
     Register: RegistersOperation
         + CapabilityRegistersAccessible

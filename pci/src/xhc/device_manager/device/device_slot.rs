@@ -71,9 +71,7 @@ where
     pub fn input_context_mut(&mut self) -> &mut InputContext {
         &mut self.input_context
     }
-    pub fn input_context_slot_mut(&mut self) -> &mut dyn SlotHandler {
-        self.input_context.slot_mut()
-    }
+
     pub fn device_context(&self) -> &DeviceContext {
         &self.device_context
     }
@@ -81,9 +79,7 @@ where
         self.input_context
             .copy_from_device_context(self.device_context.slot())
     }
-    pub fn device_context_mut(&mut self) -> &mut DeviceContext {
-        &mut self.device_context
-    }
+
     pub fn default_control_pipe(&self) -> &ControlPipe<Doorbell> {
         &self.default_control_pipe
     }

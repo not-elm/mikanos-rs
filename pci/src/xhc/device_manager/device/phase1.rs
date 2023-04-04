@@ -1,6 +1,6 @@
 use alloc::boxed::Box;
 
-use crate::class_driver::mouse::mouse_driver_factory::{MouseDriverFactory, self};
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::error::PciResult;
@@ -14,11 +14,15 @@ use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegist
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
 /// コンフィグディスクリプタを取得します。
-pub struct Phase1 {mouse_driver_factory: MouseDriverFactory}
+pub struct Phase1 {
+    mouse_driver_factory: MouseDriverFactory,
+}
 
 impl Phase1 {
     pub fn new(mouse_driver_factory: MouseDriverFactory) -> Phase1 {
-        Self {mouse_driver_factory}
+        Self {
+            mouse_driver_factory,
+        }
     }
 }
 
@@ -43,6 +47,9 @@ where
             .control_in()
             .with_data(request, data_buff_addr, len)?;
 
-        Ok((InitStatus::not(), Some(Box::new(Phase2::new(self.mouse_driver_factory.clone())))))
+        Ok((
+            InitStatus::not(),
+            Some(Box::new(Phase2::new(self.mouse_driver_factory.clone()))),
+        ))
     }
 }

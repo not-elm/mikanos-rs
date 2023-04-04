@@ -11,6 +11,7 @@ pub struct TrbTemplate {
     pub status: u32,
     pub cycle_bit: bool,
     pub evaluate_next_trb: bool,
+    #[allow(non_snake_case)]
     _reserve1: u8,
     pub trb_type: B6,
     pub control: u16,

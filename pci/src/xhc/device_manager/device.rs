@@ -156,11 +156,6 @@ where
             _maker: PhantomData,
         })
     }
-    fn allocate_transfer_ring(allocator: &mut impl MemoryAllocatable) -> PciResult<TransferRing> {
-        let transfer_ring_addr = allocator.try_allocate_trb_ring(256)?;
-
-        Ok(TransferRing::new(transfer_ring_addr, 256, true))
-    }
 }
 
 fn max_packet_size(port_speed: u8) -> u16 {

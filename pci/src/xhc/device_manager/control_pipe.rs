@@ -17,7 +17,7 @@ pub mod control_in;
 pub mod control_out;
 pub mod request;
 pub mod request_type;
-mod unstable_hash_map;
+pub mod unstable_hash_map;
 
 pub struct ControlPipe<T>
 where
