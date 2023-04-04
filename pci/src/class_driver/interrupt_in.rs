@@ -5,8 +5,6 @@ use core::cell::RefCell;
 use xhci::ring::trb::transfer::Normal;
 
 use crate::class_driver::ClassDriverOperate;
-use kernel_lib::serial_println;
-
 use crate::error::PciResult;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::endpoint_config::EndpointConfig;
@@ -58,7 +56,7 @@ where
         normal.set_trb_transfer_length(self.class_driver.data_buff_len());
 
         normal.set_interrupt_on_completion();
-        serial_println!("{:?}", normal);
+
         self.transfer_ring.push(normal.into_raw())?;
         self.notify()
     }

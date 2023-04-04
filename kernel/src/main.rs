@@ -18,13 +18,17 @@ use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
 use kernel_lib::allocate::init_alloc;
 use kernel_lib::error::KernelResult;
-use kernel_lib::gop::console::{fill_rect_using_global, init_console};
+use kernel_lib::gop::console::{
+    draw_cursor, erase_cursor, fill_rect_using_global, init_console, CONSOLE_BACKGROUND_COLOR,
+};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::segment::setup_segments;
 use kernel_lib::{println, serial_println};
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use pci::class_driver::mouse::MouseButton;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
+
 use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
 use pci::xhc::registers::external::External;
@@ -70,20 +74,33 @@ pub extern "sysv64" fn kernel_main(
     serial_println!("Hello Serial Port!");
     println!("Hello Kernel!");
 
-    fill_background(PixelColor::new(0, 0, 0x22), frame_buffer_config).unwrap();
+    fill_background(CONSOLE_BACKGROUND_COLOR, frame_buffer_config).unwrap();
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
 
     let external = External::new(mmio_base_addr(), IdentityMapper());
     let mut xhc_controller = XhcController::new(
         external,
         MikanOSPciMemoryAllocator::new(),
-        MouseDriverFactory::Default,
+        MouseDriverFactory::subscriber(on_mouse_move),
     )
     .unwrap();
 
     xhc_controller.start_event_pooling().unwrap();
 
     common_lib::assembly::hlt_forever();
+}
+
+fn on_mouse_move(
+    prev_cursor: Vector2D<usize>,
+    current_cursor: Vector2D<usize>,
+    button: MouseButton,
+) -> Result<(), ()> {
+    let color = match button {
+        MouseButton::Left => PixelColor::new(0xFF, 0xFF, 0x00),
+        _ => PixelColor::new(0xFF, 0x00, 0xFF),
+    };
+    erase_cursor(prev_cursor).map_err(|_| ())?;
+    draw_cursor(current_cursor, color).map_err(|_| ())
 }
 
 #[derive(Clone, Debug)]

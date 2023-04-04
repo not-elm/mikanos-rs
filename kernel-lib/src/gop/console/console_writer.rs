@@ -5,9 +5,10 @@ use common_lib::vector::Vector2D;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
-use crate::gop::pixel::{fill_rect, select_pixel_writer};
+use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::{fill_rect, select_pixel_writer};
 
 type ImplCharWritable = impl CharWritable;
 pub type ImplPixelWritable = impl PixelWritable;
@@ -105,12 +106,10 @@ impl ConsoleWriter {
         Ok(())
     }
 
-
     fn chart_at(&self, pos: Vector2D<usize>) -> char {
         self.chars[pos.y()][pos.x()]
     }
     fn up_shift_lines(&mut self) -> KernelResult {
-
         // self.clear_display()?;
         self.shift_chars();
         self.flush()?;
@@ -151,10 +150,9 @@ impl ConsoleWriter {
             &mut self.pixel_writer,
             Vector2D::new(0, y * 16),
             to,
-            PixelColor::new(0x00, 0x00, 0x00),
+            CONSOLE_BACKGROUND_COLOR,
         )
     }
-
 
     fn max_y(&self) -> usize {
         self.chars.len() - 1

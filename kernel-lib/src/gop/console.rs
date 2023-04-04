@@ -18,6 +18,7 @@ pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
 
 pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
 
+pub const CONSOLE_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x33, 0x33, 0x33);
 const CURSOR_WIDTH: usize = 15;
 const CURSOR_HEIGHT: usize = 24;
 const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
@@ -71,7 +72,7 @@ pub fn draw_cursor(pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
             if c == '@' {
                 get_mut_console().write_pixel(
                     Vector2D::new(pos.x() + dx, pos.y() + dy),
-                    PixelColor::new(0, 0, 0),
+                    CONSOLE_BACKGROUND_COLOR,
                 )?;
             } else if c == '.' {
                 get_mut_console().write_pixel(Vector2D::new(pos.x() + dx, pos.y() + dy), color)?;
@@ -80,6 +81,10 @@ pub fn draw_cursor(pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
     }
 
     Ok(())
+}
+
+pub fn erase_cursor(pos: Vector2D<usize>) -> KernelResult {
+    draw_cursor(pos, CONSOLE_BACKGROUND_COLOR)
 }
 
 pub fn fill_rect_using_global(

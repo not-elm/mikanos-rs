@@ -1,10 +1,7 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use kernel_lib::serial_println;
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
-
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
@@ -12,6 +9,7 @@ use registers::traits::registers_operation::RegistersOperation;
 use registers::traits::usb_command_register_accessible::UsbCommandRegisterAccessible;
 use transfer::event::event_ring::EventRing;
 
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::single_device_collector::SingleDeviceCollector;
@@ -114,7 +112,6 @@ where
     }
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
-        serial_println!("{:?}", event_trb);
         match event_trb {
             EventTrb::TransferEvent {
                 transfer_event,

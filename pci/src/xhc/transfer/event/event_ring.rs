@@ -1,8 +1,6 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use kernel_lib::serial_println;
-
 use crate::error::PciResult;
 use crate::xhc::registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use crate::xhc::transfer::event::event_trb::EventTrb;
@@ -48,7 +46,6 @@ where
         let dequeue_pointer_addr = self.read_dequeue_pointer_addr();
         let next_addr = dequeue_pointer_addr + trb_byte_size();
         if self.transfer_ring.is_end_event_address(next_addr) {
-            serial_println!("END");
             self.transfer_ring.toggle_cycle_bit();
             self.write_dequeue_pointer(self.segment_base_addr)
         } else {

@@ -1,13 +1,11 @@
 use alloc::boxed::Box;
 
-use dyn_clone::DynClone;
-
 use common_lib::vector::Vector2D;
 
 use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
-use crate::class_driver::mouse::{MouseButton, MOUSE_DATA_BUFF_SIZE};
+use crate::class_driver::mouse::{current_cursor_pos, MouseButton, MOUSE_DATA_BUFF_SIZE};
 use crate::class_driver::ClassDriverOperate;
-use crate::error::PciResult;
+use crate::error::{PciError, PciResult};
 
 pub struct MouseSubscribeDriver {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
@@ -22,8 +20,10 @@ impl ClassDriverOperate for MouseSubscribeDriver {
         }
 
         let prev_cursor = self.current_pos.clone();
+        self.current_pos = current_cursor_pos(prev_cursor, &self.data_buff);
         self.subscriber
-            .subscribe(prev_cursor, self.current_pos, MouseButton::Left);
+            .subscribe(prev_cursor, self.current_pos, MouseButton::Left)
+            .map_err(|_| PciError::UserError)?;
 
         //TODO BUTTON
 

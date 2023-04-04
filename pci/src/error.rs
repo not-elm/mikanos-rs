@@ -4,6 +4,7 @@ pub type PciResult<T = ()> = Result<T, PciError>;
 
 #[derive(Debug)]
 pub enum PciError {
+    UserError,
     InvalidTrb(u128),
     FailedOperateTransferRing,
     NullPointer,
@@ -40,6 +41,7 @@ pub enum DeviceContextReason {
         specified_slot_id: u8,
     },
 }
+
 #[derive(Debug)]
 pub enum DeviceReason {
     NotExistsSlot(u8),
