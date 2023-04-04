@@ -13,7 +13,6 @@ use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::device_map::DeviceMap;
-use crate::xhc::device_manager::collectable::single_device_collector::SingleDeviceCollector;
 use crate::xhc::device_manager::collectable::DeviceCollectable;
 use crate::xhc::device_manager::DeviceManager;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;

@@ -1,7 +1,5 @@
 use alloc::boxed::Box;
 
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::error::PciResult;

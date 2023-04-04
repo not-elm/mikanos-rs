@@ -19,7 +19,6 @@ use crate::xhc::device_manager::device::phase1::Phase1;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::event::target_event::TargetEvent;
-use crate::xhc::transfer::transfer_ring::TransferRing;
 
 mod device_slot;
 mod phase;
