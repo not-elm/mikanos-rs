@@ -43,7 +43,7 @@ where
             device: None,
         }
     }
-    fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device<T, Memory>> {
+    fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device<T, Mouse, Memory>> {
         self.check_specify_slot_id(slot_id).ok()?;
 
         self.device.as_mut().and_then(|device| {
@@ -55,7 +55,7 @@ where
         })
     }
 
-    fn set(&mut self, device_slot: Device<T, Memory>) -> PciResult {
+    fn set(&mut self, device_slot: Device<T, Mouse, Memory>) -> PciResult {
         self.check_specify_slot_id(device_slot.slot_id())?;
         self.device = Some(device_slot);
         Ok(())

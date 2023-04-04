@@ -1,5 +1,7 @@
 use alloc::boxed::Box;
 
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::error::PciResult;
@@ -29,15 +31,17 @@ impl InitStatus {
     }
 }
 
-pub trait Phase<Memory, Doorbell>
+pub trait Phase<Memory, Doorbell, Mouse>
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
+    Mouse: MouseSubscriber + Clone,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell>>>)>;
+        mouse_driver_factory: &MouseDriverFactory<Mouse>,
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell, Mouse>>>)>;
 }

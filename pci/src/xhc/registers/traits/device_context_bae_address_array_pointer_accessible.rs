@@ -1,3 +1,5 @@
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
@@ -34,12 +36,13 @@ pub trait DeviceContextBaseAddressArrayPointerAccessible {
     }
 }
 
-pub(crate) fn setup_device_manager<U, T, M>(
+pub(crate) fn setup_device_manager<U, T, Mouse, M>(
     registers: &mut Rc<RefCell<T>>,
     device_slots: u8,
     scratchpad_buffers_len: usize,
     allocator: &mut impl MemoryAllocatable,
-) -> PciResult<DeviceManager<T, U, M>>
+    mouse_driver_factory: MouseDriverFactory<Mouse>,
+) -> PciResult<DeviceManager<T, U, Mouse, M>>
 where
     M: MemoryAllocatable,
     U: DeviceCollectable<T, M>,
@@ -47,6 +50,7 @@ where
         + DoorbellRegistersAccessible
         + PortRegistersAccessible
         + 'static,
+    Mouse: MouseSubscriber + Clone,
 {
     let device_context_array = registers.borrow_mut().setup_device_context_array(
         device_slots,
@@ -57,5 +61,6 @@ where
         U::new(device_slots),
         device_context_array,
         registers,
+        mouse_driver_factory,
     ))
 }

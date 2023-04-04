@@ -2,6 +2,8 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::marker::PhantomData;
 
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::error::{DeviceContextReason, DeviceReason, PciError, PciResult};
@@ -25,35 +27,40 @@ pub mod endpoint_id;
 pub mod initialize_phase;
 mod input_context;
 
-pub struct DeviceManager<T, U, Memory>
+pub struct DeviceManager<T, U, Mouse, Memory>
 where
     T: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
     U: DeviceCollectable<T, Memory>,
     Memory: MemoryAllocatable,
+    Mouse: MouseSubscriber + Clone,
 {
     devices: U,
     device_context_array: DeviceContextArrayPtr,
     addressing_port_id: Option<u8>,
     registers: Rc<RefCell<T>>,
+    mouse_driver_factory: MouseDriverFactory<Mouse>,
     _maker: PhantomData<Memory>,
 }
 
-impl<T, U, Memory> DeviceManager<T, U, Memory>
+impl<T, U, Mouse, Memory> DeviceManager<T, U, Mouse, Memory>
 where
     T: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
     U: DeviceCollectable<T, Memory>,
     Memory: MemoryAllocatable,
+    Mouse: MouseSubscriber + Clone,
 {
     pub fn new(
         devices: U,
         device_context_array: DeviceContextArrayPtr,
         registers: &Rc<RefCell<T>>,
-    ) -> DeviceManager<T, U, Memory> {
+        mouse_driver_factory: MouseDriverFactory<T>,
+    ) -> DeviceManager<T, U, Mouse, Memory> {
         Self {
             devices,
             device_context_array,
             addressing_port_id: None,
             registers: Rc::clone(registers),
+            mouse_driver_factory,
             _maker: PhantomData,
         }
     }
@@ -103,6 +110,7 @@ where
         let init_status = device.on_transfer_event_received(transfer_event, target_event)?;
         Ok(init_status.is_initialised())
     }
+
     pub fn configure_endpoint(&mut self, slot_id: u8) -> PciResult {
         let device = self
             .devices
@@ -112,6 +120,7 @@ where
             ))?;
         device.on_endpoints_configured()
     }
+
     fn try_addressing_port_id(&self) -> PciResult<u8> {
         self.addressing_port_id
             .ok_or(PciError::FailedOperateDeviceContext(

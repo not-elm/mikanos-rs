@@ -1,7 +1,9 @@
 use alloc::boxed::Box;
 
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use xhci::ring::trb::event::TransferEvent;
 
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -21,17 +23,19 @@ impl Phase1 {
     }
 }
 
-impl<Memory, Doorbell: 'static> Phase<Memory, Doorbell> for Phase1
+impl<Memory, Doorbell: 'static, Mouse> Phase<Memory, Doorbell, Mouse> for Phase1
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
+    Mouse: MouseSubscriber + Clone,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell>>>)> {
+        _mouse_driver_factory: &MouseDriverFactory<Mouse>,
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell, Mouse>>>)> {
         // target_event.status_stage()?;
         const CONFIGURATION_TYPE: u16 = 2;
 

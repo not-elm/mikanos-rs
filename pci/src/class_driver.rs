@@ -9,10 +9,6 @@ pub trait ClassDriverOperate {
     fn data_buff_len(&self) -> u32;
 }
 
-pub enum ClassDriver {
-    Mouse(mouse::Mouse),
-}
-
 impl ClassDriverOperate for ClassDriver {
     fn on_data_received(&mut self) -> PciResult {
         match self {

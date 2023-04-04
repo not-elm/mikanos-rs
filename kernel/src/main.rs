@@ -22,6 +22,7 @@ use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::segment::setup_segments;
 use kernel_lib::{println, serial_println};
+use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
@@ -73,8 +74,12 @@ pub extern "sysv64" fn kernel_main(
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
 
     let external = External::new(mmio_base_addr(), IdentityMapper());
-    let mut xhc_controller =
-        XhcController::new(external, MikanOSPciMemoryAllocator::new()).unwrap();
+    let mut xhc_controller = XhcController::new(
+        external,
+        MikanOSPciMemoryAllocator::new(),
+        MouseDriverFactory::Default,
+    )
+    .unwrap();
 
     xhc_controller.start_event_pooling().unwrap();
 

@@ -4,6 +4,8 @@ use core::cell::RefCell;
 use kernel_lib::serial_println;
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use registers::traits::registers_operation::RegistersOperation;
@@ -32,7 +34,7 @@ pub mod device_manager;
 pub mod registers;
 pub mod transfer;
 
-pub struct XhcController<T, U, Memory>
+pub struct XhcController<T, U, Mouse, Memory>
 where
     T: RegistersOperation
         + InterrupterSetRegisterAccessible
@@ -41,15 +43,16 @@ where
         + 'static,
     U: DeviceCollectable<T, Memory>,
     Memory: MemoryAllocatable,
+    Mouse: MouseSubscriber + Clone,
 {
     registers: Rc<RefCell<T>>,
     event_ring: EventRing<T>,
     command_ring: CommandRing<T>,
-    device_manager: DeviceManager<T, U, Memory>,
+    device_manager: DeviceManager<T, U, Mouse, Memory>,
     allocator: Rc<RefCell<Memory>>,
 }
 
-impl<T, Memory> XhcController<T, SingleDeviceCollector<T, Memory>, Memory>
+impl<T, Memory, Mouse> XhcController<T, SingleDeviceCollector<T, Memory>, Mouse, Memory>
 where
     T: RegistersOperation
         + CapabilityRegistersAccessible
@@ -61,8 +64,13 @@ where
         + DeviceContextBaseAddressArrayPointerAccessible
         + 'static,
     Memory: MemoryAllocatable,
+    Mouse: MouseSubscriber + Clone,
 {
-    pub fn new(registers: T, mut allocator: Memory) -> PciResult<Self> {
+    pub fn new(
+        registers: T,
+        mut allocator: Memory,
+        mouse_driver_factory: MouseDriverFactory<Mouse>,
+    ) -> PciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
 
         registers.borrow_mut().reset()?;
@@ -70,8 +78,13 @@ where
         registers.borrow_mut().write_max_device_slots_enabled(8)?;
 
         let scratchpad_buffers_len = registers.borrow().read_max_scratchpad_buffers_len();
-        let device_manager =
-            setup_device_manager(&mut registers, 8, scratchpad_buffers_len, &mut allocator)?;
+        let device_manager = setup_device_manager(
+            &mut registers,
+            8,
+            scratchpad_buffers_len,
+            &mut allocator,
+            mouse_driver_factory,
+        )?;
 
         let command_ring = setup_command_ring(&mut registers, 32, &mut allocator)?;
 

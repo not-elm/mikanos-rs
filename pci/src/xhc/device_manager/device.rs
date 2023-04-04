@@ -3,6 +3,8 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::marker::PhantomData;
 
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use xhci::context::EndpointType;
 use xhci::ring::trb::event::TransferEvent;
 
@@ -27,24 +29,26 @@ mod phase3;
 mod phase4;
 
 #[repr(C, align(64))]
-pub struct Device<Doorbell, Memory>
+pub struct Device<Doorbell, Mouse, Memory>
 where
     Doorbell: DoorbellRegistersAccessible,
     Memory: MemoryAllocatable,
+    Mouse: MouseSubscriber + Clone,
 {
     slot_id: u8,
 
-    phase: Box<dyn Phase<Memory, Doorbell>>,
+    phase: Box<dyn Phase<Memory, Mouse, Doorbell>>,
     doorbell: Rc<RefCell<Doorbell>>,
     slot: DeviceSlot<Memory, Doorbell>,
     device_descriptor_buff: [u8; DATA_BUFF_SIZE],
     _maker: PhantomData<Memory>,
 }
 
-impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
+impl<Doorbell: 'static, Mouse, Memory> Device<Doorbell, Mouse, Memory>
 where
     Doorbell: DoorbellRegistersAccessible,
     Memory: MemoryAllocatable,
+    Mouse: MouseSubscriber + Clone,
 {
     pub fn device_context_addr(&self) -> u64 {
         self.slot.device_context().device_context_addr()
@@ -94,10 +98,14 @@ where
         &mut self,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
+        mouse_driver_factory: &MouseDriverFactory<Mouse>,
     ) -> PciResult<InitStatus> {
-        let (init_status, phase) =
-            self.phase
-                .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
+        let (init_status, phase) = self.phase.on_transfer_event_received(
+            &mut self.slot,
+            transfer_event,
+            target_event,
+            mouse_driver_factory,
+        )?;
         if let Some(phase) = phase {
             self.phase = phase;
         }

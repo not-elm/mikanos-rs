@@ -6,6 +6,8 @@ use xhci::context::{Device32Byte, DeviceHandler, Input32Byte, InputHandler};
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::interrupt_in::InterruptIn;
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::descriptor::hid::HidDeviceDescriptors;
@@ -28,18 +30,20 @@ impl Phase3 {
         }
     }
 
-    fn interrupters<Memory, Doorbell>(
+    fn interrupters<Memory, Doorbell, Mouse>(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
+        mouse_driver_factory: &MouseDriverFactory<Mouse>,
     ) -> Vec<InterruptIn<Doorbell>>
     where
         Memory: MemoryAllocatable,
         Doorbell: DoorbellRegistersAccessible,
+        Mouse: MouseSubscriber + Clone,
     {
         self.hid_device_descriptor_vec
             .iter()
             .filter_map(|hid| {
-                let class_driver = hid.class_driver()?;
+                let class_driver = hid.class_driver(mouse_driver_factory)?;
                 let transfer_ring = slot.try_alloc_transfer_ring(32).ok()?;
 
                 Some(InterruptIn::new(
@@ -54,17 +58,19 @@ impl Phase3 {
     }
 }
 
-impl<Memory, Doorbell: 'static> Phase<Memory, Doorbell> for Phase3
+impl<Memory, Doorbell: 'static, Mouse> Phase<Memory, Doorbell, Mouse> for Phase3
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
+    Mouse: MouseSubscriber + Clone,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell>>>)> {
+        mouse_driver_factory: &MouseDriverFactory<Mouse>,
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell, Mouse>>>)> {
         slot.input_context_mut().clear_control();
         slot.copy_device_context_to_input();
         slot.input_context_mut().set_enable_slot_context();

@@ -4,6 +4,8 @@ use core::cell::RefMut;
 
 use xhci::ring::trb::event::TransferEvent;
 
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::mouse_subscribe_driver::MouseSubscriber;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -27,17 +29,19 @@ impl Phase2 {
     }
 }
 
-impl<Memory, Doorbell: 'static> Phase<Memory, Doorbell> for Phase2
+impl<Memory, Doorbell: 'static, Mouse> Phase<Memory, Doorbell, Mouse> for Phase2
 where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
+    Mouse: MouseSubscriber + Clone,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell>>>)> {
+        _mouse_driver_factory: &MouseDriverFactory<Mouse>,
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Memory, Doorbell, Mouse>>>)> {
         let data_stage = target_event.data_stage()?;
 
         let conf_desc_buff = data_stage.data_buffer_pointer() as *mut u8;
