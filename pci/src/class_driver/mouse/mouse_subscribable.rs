@@ -11,20 +11,20 @@ pub trait MouseSubscribable: DynClone {
         &mut self,
         prev_cursor: Vector2D<usize>,
         current_cursor: Vector2D<usize>,
-        button: MouseButton,
+        button: Option<MouseButton>,
     ) -> Result<(), ()>;
 }
 dyn_clone::clone_trait_object!(MouseSubscribable);
 
 impl<T> MouseSubscribable for T
 where
-    T: Fn(Vector2D<usize>, Vector2D<usize>, MouseButton) -> Result<(), ()> + Clone,
+    T: Fn(Vector2D<usize>, Vector2D<usize>, Option<MouseButton>) -> Result<(), ()> + Clone,
 {
     fn subscribe(
         &mut self,
         prev_cursor: Vector2D<usize>,
         current_cursor: Vector2D<usize>,
-        button: MouseButton,
+        button: Option<MouseButton>,
     ) -> Result<(), ()> {
         self(prev_cursor, current_cursor, button)
     }

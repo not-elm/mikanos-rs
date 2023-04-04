@@ -93,12 +93,17 @@ pub extern "sysv64" fn kernel_main(
 fn on_mouse_move(
     prev_cursor: Vector2D<usize>,
     current_cursor: Vector2D<usize>,
-    button: MouseButton,
+    button: Option<MouseButton>,
 ) -> Result<(), ()> {
-    let color = match button {
-        MouseButton::Left => PixelColor::new(0xFF, 0xFF, 0x00),
-        _ => PixelColor::new(0xFF, 0x00, 0xFF),
-    };
+    let color = button
+        .map(|b| match b {
+            MouseButton::Button1 => PixelColor::yellow(),
+            MouseButton::Button2 => PixelColor::new(0x13, 0xA9, 0xDB),
+            MouseButton::Button3 => PixelColor::new(0x35, 0xFA, 0x66),
+            _ => PixelColor::white(),
+        })
+        .unwrap_or(PixelColor::white());
+
     erase_cursor(prev_cursor).map_err(|_| ())?;
     draw_cursor(current_cursor, color).map_err(|_| ())
 }

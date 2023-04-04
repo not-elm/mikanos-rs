@@ -1,5 +1,3 @@
-use kernel_lib::serial_println;
-
 use crate::error::{PciError, PciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
@@ -82,7 +80,7 @@ impl TransferRing {
         link.set_ring_segment_pointer(self.ring_ptr_base_address);
 
         self.write(link.into_raw())?;
-        serial_println!("Rollback");
+
         self.ring_ptr_address = self.ring_ptr_base_address;
         self.toggle_cycle_bit();
         Ok(())

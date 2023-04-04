@@ -2,8 +2,11 @@ use alloc::boxed::Box;
 
 use common_lib::vector::Vector2D;
 
+use crate::class_driver::boot_protocol_buffer::BootProtocolBuffer;
 use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
-use crate::class_driver::mouse::{current_cursor_pos, MouseButton, MOUSE_DATA_BUFF_SIZE};
+use crate::class_driver::mouse::{
+    current_cursor_pos, mouse_button_boot_protocol, MOUSE_DATA_BUFF_SIZE,
+};
 use crate::class_driver::ClassDriverOperate;
 use crate::error::{PciError, PciResult};
 
@@ -22,10 +25,12 @@ impl ClassDriverOperate for MouseSubscribeDriver {
         let prev_cursor = self.current_pos.clone();
         self.current_pos = current_cursor_pos(prev_cursor, &self.data_buff);
         self.subscriber
-            .subscribe(prev_cursor, self.current_pos, MouseButton::Left)
+            .subscribe(
+                prev_cursor,
+                self.current_pos,
+                mouse_button_boot_protocol(BootProtocolBuffer::new(&self.data_buff)),
+            )
             .map_err(|_| PciError::UserError)?;
-
-        //TODO BUTTON
 
         Ok(())
     }

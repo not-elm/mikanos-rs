@@ -18,7 +18,7 @@ pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
 
 pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
 
-pub const CONSOLE_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x33, 0x33, 0x33);
+pub const CONSOLE_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x11, 0x11, 0x11);
 const CURSOR_WIDTH: usize = 15;
 const CURSOR_HEIGHT: usize = 24;
 const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [

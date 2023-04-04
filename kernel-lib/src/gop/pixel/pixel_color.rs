@@ -23,6 +23,20 @@ impl PixelColor {
             b: 0xFF,
         }
     }
+    pub fn yellow() -> Self {
+        Self {
+            r: 0xFF,
+            g: 0xFF,
+            b: 0x00,
+        }
+    }
+    pub fn blue() -> Self {
+        Self {
+            r: 0x00,
+            g: 0x00,
+            b: 0xFF,
+        }
+    }
 
     pub fn r(&self) -> u8 {
         self.r
