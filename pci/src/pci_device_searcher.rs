@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::configuration_space::common_header::class_code::ClassCode;
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::common_header::sub_class::Subclass;
@@ -6,6 +8,7 @@ use crate::configuration_space::device::device_slots::DeviceSlots;
 use crate::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
 use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
 use crate::configuration_space::device::function::Function;
+use crate::configuration_space::device::header_type::general_header::GeneralHeader;
 use crate::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
 use crate::configuration_space::ConfigurationSpace;
 
@@ -14,6 +17,12 @@ pub struct PciDeviceSearcher {
     device_slot: Option<u16>,
     sub_class: Option<Subclass>,
     class_code: Option<ClassCode>,
+}
+
+impl Default for PciDeviceSearcher {
+    fn default() -> Self {
+        PciDeviceSearcher::new()
+    }
 }
 
 impl PciDeviceSearcher {
@@ -49,6 +58,15 @@ impl PciDeviceSearcher {
     pub fn search(&self) -> Option<ConfigurationSpace> {
         find_pci_device_with(self)
     }
+
+    // pub fn all_search(&self) -> Vec<ConfigurationSpace> {
+    //     DeviceSlots::new(0)
+    //         .filter_map(|function| match function {
+    //             Function::Single(single) => find_from_single(self, single),
+    //             Function::Multiple(multiple) => multiple.filter_map(|f| find),
+    //         })
+    //         .collect()
+    // }
 }
 
 fn find_pci_device_with(target: &PciDeviceSearcher) -> Option<ConfigurationSpace> {

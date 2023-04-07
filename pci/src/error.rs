@@ -8,6 +8,7 @@ pub enum PciError {
     InvalidTrb(u128),
     FailedOperateTransferRing,
     NullPointer,
+    IllegalEnumValue(usize),
     FailedOperateDeviceContext(DeviceContextReason),
     InvalidHeaderType(HeaderTypeReason),
     InvalidFunction(FunctionReason),

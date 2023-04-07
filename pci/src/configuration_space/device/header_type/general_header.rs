@@ -1,5 +1,7 @@
+use crate::configuration_space::capability_header::capability_id::CapabilityId;
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::ConfigurationSpace;
+use crate::error::PciResult;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 
 /// Header Type 0x0のデバイスを表します。
@@ -15,6 +17,15 @@ impl GeneralHeader {
         let bar0 = self.as_config_space().fetch_data_offset_at(0x10) as usize;
         let bar1 = self.as_config_space().fetch_data_offset_at(0x14) as usize;
         MemoryMappedAddr::new((bar1 << 32) | (bar0 & 0xFF_FF_FF_F0))
+    }
+    pub fn capability_id(&self) -> PciResult<CapabilityId> {
+        let cap_ptr = self.capability_pointer();
+
+        let cap_id = self.as_config_space().fetch_data_offset_at(cap_ptr) as u8;
+        CapabilityId::try_from_u8(cap_id)
+    }
+    pub fn capability_pointer(&self) -> u8 {
+        (self.as_config_space().fetch_data_offset_at(0x34) & 0xFF) as u8
     }
 }
 

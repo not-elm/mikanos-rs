@@ -9,6 +9,7 @@ use crate::configuration_space::device::header_type::pci_to_pci_bride_header::Pc
 use crate::configuration_space::io::asm::{fetch_config_data, write_config_addr};
 use crate::configuration_space::io::config_address_register::ConfigAddrRegister;
 
+pub mod capability_header;
 pub mod common_header;
 pub mod device;
 pub mod io;

@@ -35,6 +35,7 @@ else
     -drive if=ide,index=0,media=disk,format=raw,file='disk.img' \
     -device nec-usb-xhci,id=xhci \
     -device usb-mouse \
+    -device usb-kbd \
     -serial stdio
 fi
 

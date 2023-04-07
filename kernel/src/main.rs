@@ -28,7 +28,6 @@ use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::class_driver::mouse::MouseButton;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
-
 use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
 use pci::xhc::registers::external::External;
@@ -114,10 +113,10 @@ struct IdentityMapper();
 
 impl xhci::accessor::Mapper for IdentityMapper {
     unsafe fn map(&mut self, phys_start: usize, _bytes: usize) -> NonZeroUsize {
-        return NonZeroUsize::new_unchecked(phys_start);
+        NonZeroUsize::new_unchecked(phys_start)
     }
 
-    fn unmap(&mut self, _virt_start: usize, _bytes: usize) {}
+    fn unmap(&mut self, _virtual_start: usize, _bytes: usize) {}
 }
 
 #[allow(dead_code)]
