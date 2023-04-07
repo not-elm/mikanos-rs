@@ -5,14 +5,14 @@ use core::alloc::GlobalAlloc;
 use core::cell::UnsafeCell;
 use core::ptr;
 
-pub(crate) struct BumpPointerAlloc {
+pub struct BumpPointerAlloc {
     head: UnsafeCell<usize>,
     end: usize,
 }
 
 impl BumpPointerAlloc {
     #[allow(dead_code)]
-    pub(crate) const fn new(head: usize, end: usize) -> Self {
+    pub const fn new(head: usize, end: usize) -> Self {
         Self {
             head: UnsafeCell::new(head),
             end,

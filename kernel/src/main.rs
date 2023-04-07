@@ -14,9 +14,9 @@ use core::panic::PanicInfo;
 
 use uefi::table::boot::{MemoryMapIter, MemoryType};
 
+use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
-use kernel_lib::allocate::init_alloc;
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{
     draw_cursor, erase_cursor, fill_rect_using_global, init_console, CONSOLE_BACKGROUND_COLOR,
@@ -35,6 +35,7 @@ use pci::xhc::registers::external::External;
 use pci::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
+pub mod allocate;
 mod qemu;
 #[cfg(test)]
 mod test_runner;

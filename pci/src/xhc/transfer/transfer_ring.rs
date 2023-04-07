@@ -155,10 +155,11 @@ mod tests {
         let link_buff = link.into_raw();
         unsafe {
             let buff = buff.as_ptr().add(1).cast::<u32>();
-            assert_eq!(buff.read_volatile(), link_buff[0]);
-            assert_eq!(buff.add(1).read_volatile(), link_buff[1]);
-            assert_eq!(buff.add(2).read_volatile(), link_buff[2]);
-            assert_eq!(buff.add(3).read_volatile(), link_buff[3] | 1);
+            let buff = core::slice::from_raw_parts(buff, 4);
+            assert_eq!(buff[0], (ring.ring_ptr_base_address & 0xFFFF_FFFF) as u32);
+            assert_eq!(buff[1], (ring.ring_ptr_base_address >> 32) as u32);
+            assert_eq!(buff[2], link_buff[2]);
+            assert_eq!(buff[3], link_buff[3] | 1);
             assert_eq!(ring.ring_ptr_address, ring.ring_ptr_base_address);
             assert!(!ring.cycle_bit);
         }
