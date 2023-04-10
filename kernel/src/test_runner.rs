@@ -10,6 +10,7 @@ use crate::serial_println;
 
 mod macros_test;
 mod xhci;
+mod msi;
 
 pub trait Testable {
     fn run(&self) -> ();

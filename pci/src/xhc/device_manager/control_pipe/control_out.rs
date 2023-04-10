@@ -41,15 +41,20 @@ where
     }
 
     fn notify(&mut self) -> PciResult {
-        self.doorbell.borrow_mut().notify_at(
-            self.slot_id as usize,
-            self.device_context_index.as_u8(),
-            0,
-        )
+        self.doorbell
+            .borrow_mut()
+            .notify_at(
+                self.slot_id as usize,
+                self.device_context_index
+                    .as_u8(),
+                0,
+            )
     }
 
     fn push(&mut self, trb_buff: [u32; 4]) -> PciResult {
-        self.transfer_ring.borrow_mut().push(trb_buff)
+        self.transfer_ring
+            .borrow_mut()
+            .push(trb_buff)
     }
 }
 
@@ -63,6 +68,7 @@ where
 
         let mut status = new_status_stage_with_direction();
         status.set_interrupt_on_completion();
+
         self.push(status.into_raw())?;
         self.notify()
     }
@@ -73,6 +79,8 @@ where
 
         let mut data_stage = make_data_stage(data_buff_addr, len, Direction::Out);
         data_stage.set_interrupt_on_completion();
+        data_stage.set_interrupt_on_short_packet();
+
         self.push(data_stage.into_raw())?;
 
         self.push(new_status_stage_with_direction().into_raw())?;

@@ -1,6 +1,3 @@
-use pci::configuration_space::common_header::class_code::ClassCode;
-use pci::configuration_space::common_header::sub_class::Subclass;
-use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhc::registers::internal::capability_registers::capability_length::CapabilityLength;
 use pci::xhc::registers::internal::capability_registers::structural_parameters1::StructuralParameters1Offset;
 use pci::xhc::registers::internal::capability_registers::structural_parameters2::StructuralParameters2Offset;
@@ -13,20 +10,12 @@ use pci::xhc::registers::internal::operational_registers::operation_registers_of
 use pci::xhc::registers::internal::operational_registers::OperationalRegisters;
 use pci::xhc::registers::internal::operational_registers::usb_status_register::usb_status_register_offset::UsbStatusRegisterOffset;
 
+use crate::first_general_header;
+
 mod registers;
 
 pub(crate) fn mmio_base_addr() -> MemoryMappedAddr {
-    let mouse = PciDeviceSearcher::new()
-        .class_code(ClassCode::SerialBus)
-        .sub_class(Subclass::Usb)
-        .search()
-        .unwrap()
-        .cast_device()
-        .expect_single()
-        .unwrap()
-        .expect_general()
-        .unwrap();
-
+    let mouse = first_general_header();
     mouse.mmio_base_addr()
 }
 

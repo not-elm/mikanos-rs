@@ -3,6 +3,7 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
+use kernel_lib::serial_println;
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use registers::traits::registers_operation::RegistersOperation;
@@ -69,11 +70,17 @@ where
     ) -> PciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
 
-        registers.borrow_mut().reset()?;
+        registers
+            .borrow_mut()
+            .reset()?;
 
-        registers.borrow_mut().write_max_device_slots_enabled(8)?;
+        registers
+            .borrow_mut()
+            .write_max_device_slots_enabled(8)?;
 
-        let scratchpad_buffers_len = registers.borrow().read_max_scratchpad_buffers_len();
+        let scratchpad_buffers_len = registers
+            .borrow()
+            .read_max_scratchpad_buffers_len();
         let device_manager = setup_device_manager(
             &mut registers,
             8,
@@ -85,6 +92,12 @@ where
         let command_ring = setup_command_ring(&mut registers, 32, &mut allocator)?;
 
         let (_, event_ring) = setup_event_ring(&mut registers, 1, 32, &mut allocator)?;
+        registers
+            .borrow_mut()
+            .write_interrupter_enable_at(0, true)?;
+        registers
+            .borrow_mut()
+            .write_interrupter_pending_at(0, true)?;
 
         registers.borrow_mut().run()?;
 
@@ -96,22 +109,40 @@ where
             allocator: Rc::new(RefCell::new(allocator)),
         })
     }
-
-    pub fn start_event_pooling(&mut self) -> PciResult {
+    pub fn reset_port(&mut self) {
+        self.registers
+            .borrow_mut()
+            .reset_all();
+    }
+    pub fn start_event_pooling(&mut self) -> ! {
         loop {
-            self.check_event()?;
+            let _ = self
+                .process_event()
+                .map(|p| p.unwrap());
         }
     }
 
-    pub fn check_event(&mut self) -> PciResult {
-        if let Some(event_trb) = self.event_ring.read_event_trb() {
-            self.on_event(event_trb)?;
+    pub fn process_all_events(&mut self) {
+        while self
+            .process_event()
+            .map(|p| p.unwrap())
+            .is_some()
+        {}
+    }
+
+    pub fn process_event(&mut self) -> Option<PciResult> {
+        if let Some(event_trb) = self
+            .event_ring
+            .read_event_trb()
+        {
+            return Some(self.on_event(event_trb));
         }
 
-        Ok(())
+        None
     }
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
+        serial_println!("{:?}\n", event_trb);
         match event_trb {
             EventTrb::TransferEvent {
                 transfer_event,
@@ -124,7 +155,8 @@ where
             EventTrb::NotSupport { .. } => {}
         };
 
-        self.event_ring.next_dequeue_pointer()
+        self.event_ring
+            .next_dequeue_pointer()
     }
 
     fn on_transfer_event(
@@ -132,20 +164,19 @@ where
         transfer_event: TransferEvent,
         target_event: TargetEvent,
     ) -> PciResult {
-        let is_init = self.device_manager.process_transfer_event(
-            transfer_event.slot_id(),
-            transfer_event,
-            target_event,
-        )?;
+        let is_init = self
+            .device_manager
+            .process_transfer_event(transfer_event.slot_id(), transfer_event, target_event)?;
 
         if is_init {
-            self.command_ring.push_configure_endpoint(
-                self.device_manager
-                    .device_slot_at(transfer_event.slot_id())
-                    .unwrap()
-                    .input_context_addr(),
-                transfer_event.slot_id(),
-            )?;
+            self.command_ring
+                .push_configure_endpoint(
+                    self.device_manager
+                        .device_slot_at(transfer_event.slot_id())
+                        .unwrap()
+                        .input_context_addr(),
+                    transfer_event.slot_id(),
+                )?;
         }
         Ok(())
     }
@@ -157,7 +188,9 @@ where
         {
             9 => self.address_device(completion), // Enable Slot
             11 => self.init_device(completion),   // Address Device
-            12 => self.device_manager.configure_endpoint(completion.slot_id()),
+            12 => self
+                .device_manager
+                .configure_endpoint(completion.slot_id()),
             _ => Ok(()),
         }
     }
@@ -180,8 +213,13 @@ where
         self.registers
             .borrow_mut()
             .clear_port_reset_change_at(port_id)?;
-        self.command_ring.push_enable_slot()?;
-        self.device_manager.set_addressing_port_id(port_id);
+
+        self.device_manager
+            .set_addressing_port_id(port_id);
+
+        self.command_ring
+            .push_enable_slot()?;
+
         Ok(())
     }
 }

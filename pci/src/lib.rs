@@ -27,6 +27,7 @@ pub(crate) fn flag_to_num(flag: bool) -> usize {
         0
     }
 }
+
 pub(crate) fn wait_update_32bits_register_for<Addr, Offset>(
     wait_limit_count: usize,
     expect_value: u32,

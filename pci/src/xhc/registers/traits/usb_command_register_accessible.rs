@@ -18,7 +18,8 @@ where
     T: UsbCommandRegisterAccessible + DoorbellRegistersAccessible,
 {
     let command_ring_addr = allocator.try_allocate_trb_ring(command_ring_size)?;
-    let command_ring = CommandRing::new(command_ring_addr, command_ring_size, registers);
+    let command_ring =
+        CommandRing::new(command_ring_addr & !0b111111, command_ring_size, registers);
     registers
         .borrow_mut()
         .write_command_ring_addr(command_ring_addr)?;

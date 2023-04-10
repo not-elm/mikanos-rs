@@ -1,4 +1,3 @@
-use crate::configuration_space::capability_header::capability_id::CapabilityId::{Msi, MsiX};
 use crate::error::{PciError, PciResult};
 
 #[repr(u8)]
@@ -11,8 +10,8 @@ pub enum CapabilityId {
 impl CapabilityId {
     pub fn try_from_u8(v: u8) -> PciResult<Self> {
         match v {
-            0x05 => Ok(Msi),
-            0x11 => Ok(MsiX),
+            0x05 => Ok(CapabilityId::Msi),
+            0x11 => Ok(CapabilityId::MsiX),
             _ => Err(PciError::IllegalEnumValue(v as usize)),
         }
     }

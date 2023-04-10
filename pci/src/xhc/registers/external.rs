@@ -27,8 +27,11 @@ where
         let e = unsafe {
             xhci::extended_capabilities::List::new(
                 mmio_addr.addr(),
-                registers.capability.hccparams1.read_volatile(),
-                mapper.clone(),
+                registers
+                    .capability
+                    .hccparams1
+                    .read_volatile(),
+                mapper,
             )
             .unwrap()
         };
@@ -51,16 +54,26 @@ where
 {
     fn reset(&mut self) -> PciResult {
         let registers = self.registers_mut();
-        registers.operational.usbcmd.update_volatile(|usb_cmd| {
-            usb_cmd.clear_interrupter_enable();
-            usb_cmd.clear_host_system_error_enable();
-            usb_cmd.clear_enable_wrap_event();
-        });
+        registers
+            .operational
+            .usbcmd
+            .update_volatile(|usb_cmd| {
+                usb_cmd.clear_host_system_error_enable();
+                usb_cmd.clear_enable_wrap_event();
+            });
 
-        while !registers.operational.usbsts.read_volatile().hc_halted() {}
-        registers.operational.usbcmd.update_volatile(|usb_cmd| {
-            usb_cmd.set_host_controller_reset();
-        });
+        while !registers
+            .operational
+            .usbsts
+            .read_volatile()
+            .hc_halted()
+        {}
+        registers
+            .operational
+            .usbcmd
+            .update_volatile(|usb_cmd| {
+                usb_cmd.set_host_controller_reset();
+            });
         while registers
             .operational
             .usbsts
@@ -72,43 +85,35 @@ where
     }
 
     fn run(&mut self) -> PciResult {
-        self.0.operational.usbcmd.update_volatile(|u| {
-            u.set_interrupter_enable();
-        });
+        self.0
+            .operational
+            .usbcmd
+            .update_volatile(|u| {
+                u.set_interrupter_enable();
+            });
+
         self.0
             .interrupter_register_set
             .interrupter_mut(0)
             .imod
-            .update_volatile(|moderation| {
-                moderation.set_interrupt_moderation_interval(4000);
+            .update_volatile(|u| {
+                u.set_interrupt_moderation_interval(4000);
             });
-        self.0.operational.usbcmd.update_volatile(|u| {
-            u.set_run_stop();
-        });
-
-        while self.0.operational.usbsts.read_volatile().hc_halted() {}
-
-        let connect_index = self
-            .0
-            .port_register_set
-            .into_iter()
-            .position(|p| p.portsc.current_connect_status())
-            .unwrap();
-
         self.0
-            .port_register_set
-            .update_volatile_at(connect_index, |p| {
-                p.portsc.set_port_reset();
-                p.portsc.set_wake_on_connect_enable();
+            .operational
+            .usbcmd
+            .update_volatile(|u| {
+                u.set_run_stop();
             });
 
         while self
             .0
-            .port_register_set
-            .read_volatile_at(connect_index)
-            .portsc
-            .port_reset()
+            .operational
+            .usbsts
+            .read_volatile()
+            .hc_halted()
         {}
+
 
         Ok(())
     }
@@ -150,11 +155,14 @@ where
     fn write_command_ring_addr(&mut self, command_ring_addr: u64) -> PciResult {
         let registers = self.registers_mut();
 
-        registers.operational.crcr.update_volatile(|crcr| {
-            crcr.set_ring_cycle_state();
+        registers
+            .operational
+            .crcr
+            .update_volatile(|crcr| {
+                crcr.set_ring_cycle_state();
 
-            crcr.set_command_ring_pointer(command_ring_addr);
-        });
+                crcr.set_command_ring_pointer(command_ring_addr);
+            });
 
         Ok(())
     }
@@ -283,7 +291,8 @@ where
             .port_register_set
             .update_volatile_at(port_index(port_id), |port| {
                 port.portsc.set_port_reset();
-                port.portsc.set_wake_on_connect_enable();
+                port.portsc
+                    .set_wake_on_connect_enable();
             });
         while self
             .0
@@ -317,10 +326,37 @@ where
         self.registers_mut()
             .port_register_set
             .update_volatile_at(port_index(port_id), |port| {
-                port.portsc.clear_port_reset_change();
+                port.portsc
+                    .set_0_port_reset_change();
             });
 
         Ok(())
+    }
+
+    fn reset_all(&mut self) {
+        let connect_index = self
+            .0
+            .port_register_set
+            .into_iter()
+            .position(|p| {
+                p.portsc
+                    .current_connect_status()
+            })
+            .unwrap();
+
+        self.0
+            .port_register_set
+            .update_volatile_at(connect_index, |p| {
+                p.portsc.set_port_reset();
+            });
+
+        while self
+            .0
+            .port_register_set
+            .read_volatile_at(connect_index)
+            .portsc
+            .port_reset()
+        {}
     }
 }
 

@@ -2,9 +2,11 @@ use alloc::boxed::Box;
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
+use kernel_lib::serial_println;
 use xhci::ring::trb::transfer::Normal;
 
 use crate::class_driver::ClassDriverOperate;
+use crate::configuration_space::msi::msi_capability_register::structs::message_data::interrupt_vector::InterruptVector;
 use crate::error::PciResult;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::endpoint_config::EndpointConfig;
@@ -48,29 +50,46 @@ where
     T: DoorbellRegistersAccessible,
 {
     pub fn interrupter_in(&mut self) -> PciResult {
-        self.class_driver.on_data_received()?;
+        serial_println!("INTERRUPT IN");
+        self.class_driver
+            .on_data_received()?;
         let mut normal = Normal::new();
-        normal.set_data_buffer_pointer(self.class_driver.data_buff_addr());
+        normal.set_data_buffer_pointer(
+            self.class_driver
+                .data_buff_addr(),
+        );
 
-        normal.set_interrupt_on_short_packet();
-        normal.set_trb_transfer_length(self.class_driver.data_buff_len());
+        // normal.set_interrupt_on_short_packet();
+        normal.set_trb_transfer_length(
+            self.class_driver
+                .data_buff_len(),
+        );
 
         normal.set_interrupt_on_completion();
-
-        self.transfer_ring.push(normal.into_raw())?;
+       
+        self.transfer_ring
+            .push(normal.into_raw())?;
+        serial_println!("************************");
         self.notify()
     }
     pub fn endpoint_config(&self) -> &EndpointConfig {
         &self.endpoint_config
     }
     pub fn transfer_ring_addr(&self) -> u64 {
-        self.transfer_ring.base_address()
+        self.transfer_ring
+            .base_address()
     }
     fn notify(&mut self) -> PciResult {
-        self.doorbell.borrow_mut().notify_at(
-            self.slot_id as usize,
-            DeviceContextIndex::from_endpoint_id(self.endpoint_config.endpoint_id()).as_u8(),
-            0,
-        )
+        self.doorbell
+            .borrow_mut()
+            .notify_at(
+                self.slot_id as usize,
+                DeviceContextIndex::from_endpoint_id(
+                    self.endpoint_config
+                        .endpoint_id(),
+                )
+                .as_u8(),
+                0,
+            )
     }
 }

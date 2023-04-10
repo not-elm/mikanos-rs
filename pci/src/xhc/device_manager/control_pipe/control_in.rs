@@ -2,6 +2,7 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 
 use xhci::ring::trb::transfer::{Direction, StatusStage, TransferType};
+use crate::configuration_space::msi::msi_capability_register::structs::message_data::interrupt_vector::InterruptVector;
 
 use crate::error::PciResult;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -41,15 +42,20 @@ where
     }
 
     fn notify(&mut self) -> PciResult {
-        self.doorbell.borrow_mut().notify_at(
-            self.slot_id as usize,
-            self.device_context_index.as_u8(),
-            0,
-        )
+        self.doorbell
+            .borrow_mut()
+            .notify_at(
+                self.slot_id as usize,
+                self.device_context_index
+                    .as_u8(),
+                0,
+            )
     }
 
     fn push(&mut self, trb_buff: [u32; 4]) -> PciResult {
-        self.transfer_ring.borrow_mut().push(trb_buff)
+        self.transfer_ring
+            .borrow_mut()
+            .push(trb_buff)
     }
 }
 
@@ -74,6 +80,8 @@ where
 
         let mut data_stage = make_data_stage(buff_addr, len, Direction::In);
         data_stage.set_interrupt_on_completion();
+        data_stage.set_interrupt_on_short_packet();
+
         self.push(data_stage.into_raw())?;
 
         self.push(StatusStage::new().into_raw())?;

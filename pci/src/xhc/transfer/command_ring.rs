@@ -35,7 +35,8 @@ where
         configure_endpoint_trb.set_slot_id(slot_id);
         configure_endpoint_trb.set_input_context_pointer(input_context_addr);
 
-        self.transfer_ring.push(configure_endpoint_trb.into_raw())?;
+        self.transfer_ring
+            .push(configure_endpoint_trb.into_raw())?;
         self.notify()
     }
     pub fn push_address_command(&mut self, input_context_addr: u64, slot_id: u8) -> PciResult {
@@ -43,7 +44,8 @@ where
         address_command.set_input_context_pointer(input_context_addr);
         address_command.set_slot_id(slot_id);
 
-        self.transfer_ring.push(address_command.into_raw())?;
+        self.transfer_ring
+            .push(address_command.into_raw())?;
         self.notify()
     }
 
@@ -54,6 +56,8 @@ where
     }
 
     fn notify(&mut self) -> PciResult {
-        self.doorbell.borrow_mut().notify_at(0, 0, 0)
+        self.doorbell
+            .borrow_mut()
+            .notify_at(0, 0, 0)
     }
 }

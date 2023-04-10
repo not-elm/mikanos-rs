@@ -95,8 +95,10 @@ dependencies = [
  "linked_list_allocator",
  "macros",
  "pci",
+ "pic8259",
  "spin 0.9.5",
  "uefi",
+ "volatile",
  "x86_64",
  "xhci",
 ]
@@ -109,6 +111,7 @@ dependencies = [
  "cc",
  "common-lib",
  "lazy_static",
+ "modular-bitfield",
  "once",
  "spin 0.9.5",
  "uart_16550",
@@ -228,6 +231,15 @@ dependencies = [
  "macros",
  "modular-bitfield",
  "xhci",
+]
+
+[[package]]
+name = "pic8259"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "761e92187c0fc0c3db574a512609df5fd99b0ee237132858281d68a0cdc189c8"
+dependencies = [
+ "x86_64",
 ]
 
 [[package]]
