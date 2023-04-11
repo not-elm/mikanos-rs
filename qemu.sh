@@ -30,7 +30,7 @@ elif [ "$QEMU_STATE" = "test" ]; then
 
 else
   qemu-system-x86_64 \
-    -m 2G \
+    -m 1G \
     -bios OVMF.fd \
     -drive if=ide,index=0,media=disk,format=raw,file='disk.img' \
     -device nec-usb-xhci,id=xhci \

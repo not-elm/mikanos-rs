@@ -92,12 +92,7 @@ where
         let command_ring = setup_command_ring(&mut registers, 32, &mut allocator)?;
 
         let (_, event_ring) = setup_event_ring(&mut registers, 1, 32, &mut allocator)?;
-        registers
-            .borrow_mut()
-            .write_interrupter_enable_at(0, true)?;
-        registers
-            .borrow_mut()
-            .write_interrupter_pending_at(0, true)?;
+
 
         registers.borrow_mut().run()?;
 
@@ -147,7 +142,9 @@ where
             EventTrb::TransferEvent {
                 transfer_event,
                 target_event,
-            } => self.on_transfer_event(transfer_event, target_event)?,
+            } => {
+                self.on_transfer_event(transfer_event, target_event)?;
+            }
             EventTrb::CommandCompletionEvent(completion) => {
                 self.process_completion_event(completion)?
             }

@@ -64,6 +64,7 @@ where
 {
     fn no_data(&mut self, request: Request) -> PciResult {
         let setup_stage = make_setup_stage(request.setup_stage(), TransferType::No);
+
         self.push(setup_stage.into_raw())?;
 
         let mut status = new_status_stage_with_direction();

@@ -1,5 +1,6 @@
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use xhci::context::EndpointType;
 
 use xhci::ring::trb::event::TransferEvent;
 
@@ -44,7 +45,9 @@ impl Phase3 {
             .iter()
             .filter_map(|hid| {
                 let class_driver = hid.class_driver(&self.mouse_driver_factory)?;
-                let transfer_ring = slot.try_alloc_transfer_ring(32).ok()?;
+                let transfer_ring = slot
+                    .try_alloc_transfer_ring(32)
+                    .ok()?;
 
                 Some(InterruptIn::new(
                     slot.id(),
@@ -69,21 +72,33 @@ where
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
-        slot.input_context_mut().clear_control();
+        slot.input_context_mut()
+            .clear_control();
         slot.copy_device_context_to_input();
-        slot.input_context_mut().set_enable_slot_context();
+        slot.input_context_mut()
+            .set_enable_slot_context();
 
-        slot.input_context_mut().slot_mut().set_context_entries(31);
+        slot.input_context_mut()
+            .slot_mut()
+            .set_context_entries(31);
         let interrupters = self.interrupters(slot);
-        interrupters.iter().for_each(|interrupt| {
-            let config = interrupt.endpoint_config();
-            slot.input_context_mut()
-                .set_enable_endpoint(DeviceContextIndex::from_endpoint_id(config.endpoint_id()));
-            let endpoint_ctx = slot
-                .input_context_mut()
-                .endpoint_mut_at(config.device_context_index().value());
-            config.write_endpoint_context(interrupt.transfer_ring_addr(), endpoint_ctx);
-        });
+
+        interrupters
+            .iter()
+            .for_each(|interrupt| {
+                let config = interrupt.endpoint_config();
+
+                let dci = DeviceContextIndex::from_endpoint_id(config.endpoint_id());
+
+                slot.input_context_mut()
+                    .set_enable_endpoint(dci);
+
+                let endpoint_ctx = slot
+                    .input_context_mut()
+                    .endpoint_mut_at(dci.value());
+
+                config.write_endpoint_context(interrupt.transfer_ring_addr(), endpoint_ctx);
+            });
 
         Ok((
             InitStatus::initialized(),

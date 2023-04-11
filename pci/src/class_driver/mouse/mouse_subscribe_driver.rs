@@ -18,7 +18,11 @@ pub struct MouseSubscribeDriver {
 
 impl ClassDriverOperate for MouseSubscribeDriver {
     fn on_data_received(&mut self) -> PciResult {
-        if self.data_buff.iter().all(|b| *b == 0) {
+        if self
+            .data_buff
+            .iter()
+            .all(|b| *b == 0)
+        {
             return Ok(());
         }
 
@@ -40,7 +44,7 @@ impl ClassDriverOperate for MouseSubscribeDriver {
     }
 
     fn data_buff_len(&self) -> u32 {
-        3
+        MOUSE_DATA_BUFF_SIZE as u32
     }
 }
 

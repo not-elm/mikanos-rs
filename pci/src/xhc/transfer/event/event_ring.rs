@@ -24,7 +24,9 @@ where
     pub fn new(segment_base_addr: u64, ring_size: usize, interrupter_set: &Rc<RefCell<T>>) -> Self {
         Self {
             transfer_ring: TransferRing::new(
-                interrupter_set.borrow().read_dequeue_pointer_addr_at(0),
+                interrupter_set
+                    .borrow_mut()
+                    .read_dequeue_pointer_addr_at(0),
                 ring_size,
                 true,
             ),
@@ -45,8 +47,12 @@ where
     pub fn next_dequeue_pointer(&mut self) -> PciResult {
         let dequeue_pointer_addr = self.read_dequeue_pointer_addr();
         let next_addr = dequeue_pointer_addr + trb_byte_size();
-        if self.transfer_ring.is_end_event_address(next_addr) {
-            self.transfer_ring.toggle_cycle_bit();
+        if self
+            .transfer_ring
+            .is_end_event_address(next_addr)
+        {
+            self.transfer_ring
+                .toggle_cycle_bit();
             self.write_dequeue_pointer(self.segment_base_addr)
         } else {
             self.write_dequeue_pointer(next_addr)
@@ -55,7 +61,7 @@ where
 
     fn read_dequeue_pointer_addr(&self) -> u64 {
         self.interrupter_set
-            .borrow()
+            .borrow_mut()
             .read_dequeue_pointer_addr_at(0)
     }
     fn write_dequeue_pointer(&mut self, addr: u64) -> PciResult {

@@ -15,7 +15,7 @@ use core::panic::PanicInfo;
 
 use uefi::table::boot::{MemoryMapIter, MemoryType};
 use volatile::Volatile;
-use x86_64::instructions::interrupts::{enable, enable_and_hlt};
+use x86_64::instructions::interrupts::{disable, enable, enable_and_hlt};
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 use allocate::init_alloc;
@@ -29,7 +29,6 @@ use kernel_lib::gop::console::{
     CONSOLE_BACKGROUND_COLOR, draw_cursor, erase_cursor, fill_rect_using_global, init_console,
 };
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::interrupt::interrupt_descriptor::init_gdt;
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::class_driver::mouse::MouseButton;
 use pci::configuration_space::common_header::class_code::ClassCode;
@@ -77,7 +76,7 @@ pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
 extern "x86-interrupt" fn IntHandlerXHCI(stack_frame: InterruptStackFrame) {
     unsafe {
         QUEUE.enqueue(32);
-        println!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
+        serial_println!("++++++++++++++++++++++++++++");
         // ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET).notify_end_of_interrupt(0x40);
         //
         #[allow(clippy::unwrap_used)]
@@ -181,11 +180,13 @@ pub extern "sysv64" fn kernel_main(
     // });
     loop {
         serial_println!("{}", unsafe { QUEUE.count() });
+        disable();
         let a = unsafe { QUEUE.count() == 0 };
         if a {
             enable_and_hlt();
             continue;
         }
+        enable();
         let a = unsafe { QUEUE.dequeue().unwrap() };
         xhc_controller.process_all_events();
     }
@@ -282,8 +283,8 @@ fn enable_msi() -> PciResult {
             TriggerMode::Level,
             InterruptVector::Xhci,
             DeliveryMode::Fixed,
+            0,
         )?;
-        serial_println!("{:?}", msi);
     }
     Ok(())
 }

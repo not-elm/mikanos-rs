@@ -4,7 +4,6 @@ use alloc::vec::Vec;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -20,11 +19,15 @@ use crate::xhc::device_manager::device::phase3::Phase3;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
-pub struct Phase2 {mouse_driver_factory: MouseDriverFactory}
+pub struct Phase2 {
+    mouse_driver_factory: MouseDriverFactory,
+}
 
 impl Phase2 {
     pub fn new(mouse_driver_factory: MouseDriverFactory) -> Phase2 {
-        Self {mouse_driver_factory}
+        Self {
+            mouse_driver_factory,
+        }
     }
 }
 
@@ -58,6 +61,10 @@ where
             .filter_map(|(index, interface)| map_hid_descriptors(index, interface, &descriptors))
             .collect();
 
+
+        slot.input_context_mut()
+            .set_config(conf_desc.configuration_value);
+
         set_configuration(
             conf_desc.configuration_value as u16,
             slot.default_control_pipe_mut(),
@@ -65,10 +72,15 @@ where
 
         Ok((
             InitStatus::not(),
-            Some(Box::new(Phase3::new(self.mouse_driver_factory.clone(), hid_device_descriptors))),
+            Some(Box::new(Phase3::new(
+                self.mouse_driver_factory
+                    .clone(),
+                hid_device_descriptors,
+            ))),
         ))
     }
 }
+
 
 fn set_configuration<T: DoorbellRegistersAccessible>(
     config_value: u16,
@@ -79,17 +91,18 @@ fn set_configuration<T: DoorbellRegistersAccessible>(
         .no_data(Request::configuration(config_value))
 }
 
+
 fn filter_interface((index, device): (usize, &Descriptor)) -> Option<(usize, InterfaceDescriptor)> {
-    if let Some(interface) = device.interface() {
-        Some((index, interface.clone()))
-    } else {
-        None
-    }
+    device
+        .interface()
+        .map(|interface| (index, interface.clone()))
 }
+
 
 fn filter_mouse_or_keyboard((_, interface): (usize, &InterfaceDescriptor)) -> bool {
     interface.is_mouse() || interface.is_keyboard()
 }
+
 
 fn map_hid_descriptors(
     index: usize,

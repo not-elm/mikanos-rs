@@ -1,5 +1,7 @@
 use core::fmt::Debug;
 
+use kernel_lib::serial_println;
+
 use crate::error::PciResult;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
@@ -58,8 +60,7 @@ where
             .operational
             .usbcmd
             .update_volatile(|usb_cmd| {
-                usb_cmd.clear_host_system_error_enable();
-                usb_cmd.clear_enable_wrap_event();
+                usb_cmd.clear_run_stop();
             });
 
         while !registers
@@ -97,7 +98,7 @@ where
             .interrupter_mut(0)
             .imod
             .update_volatile(|u| {
-                u.set_interrupt_moderation_interval(4000);
+                u.set_interrupt_moderation_interval(100);
             });
         self.0
             .operational
@@ -191,12 +192,33 @@ where
         index: usize,
         event_ring_segment_addr: u64,
     ) -> PciResult {
+        self.0
+            .operational
+            .usbsts
+            .update_volatile(|sts| {
+                sts.set_0_event_interrupt();
+            });
+        self.registers_mut()
+            .interrupter_register_set
+            .interrupter_mut(0)
+            .iman
+            .update_volatile(|i| {
+                serial_println!("{:?}", i);
+                i.set_interrupt_enable();
+                i.set_0_interrupt_pending();
+            });
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
             .erdp
             .update_volatile(|erdp| erdp.set_event_ring_dequeue_pointer(event_ring_segment_addr));
-
+        self.0
+            .interrupter_register_set
+            .interrupter_mut(0)
+            .erdp
+            .update_volatile(|sts| {
+                sts.set_0_event_handler_busy();
+            });
         Ok(())
     }
 
@@ -246,7 +268,7 @@ where
         Ok(())
     }
 
-    fn read_dequeue_pointer_addr_at(&self, index: usize) -> u64 {
+    fn read_dequeue_pointer_addr_at(&mut self, index: usize) -> u64 {
         self.0
             .interrupter_register_set
             .interrupter(index)
@@ -291,8 +313,6 @@ where
             .port_register_set
             .update_volatile_at(port_index(port_id), |port| {
                 port.portsc.set_port_reset();
-                port.portsc
-                    .set_wake_on_connect_enable();
             });
         while self
             .0

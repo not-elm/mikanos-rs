@@ -34,7 +34,7 @@ where
 {
     fn on_transfer_event_received(
         &mut self,
-        _slot: &mut DeviceSlot<Memory, Doorbell>,
+        slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {

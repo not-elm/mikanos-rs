@@ -56,7 +56,9 @@ impl MemoryAllocatable for MikanOSPciMemoryAllocator {
         let align_ptr = self.align_ptr(align);
         let align_ptr = step_next_bound_if_over(align_ptr, bytes, page_bounds);
 
-        let next_ptr = align_ptr.byte_add(bytes).add(0x1000);
+        let next_ptr = align_ptr
+            .byte_add(bytes)
+            .add(0x1000);
 
         if self.end_addr() < next_ptr as u64 {
             return None;

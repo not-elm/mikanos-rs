@@ -1,3 +1,4 @@
+use core::cmp::min;
 use core::fmt::{Debug, Formatter};
 
 use kernel_lib::serial_println;
@@ -114,6 +115,7 @@ where
         trigger_mode: TriggerMode,
         vector: InterruptVector,
         delivery_mode: DeliveryMode,
+        multiple_msg_enable: u8,
     ) -> PciResult {
         self.control.update(
             &mut self.io,
@@ -123,8 +125,8 @@ where
                 serial_println!("CONTROL {:?}", control);
                 control.set_msi_enable();
 
-                // let capable = control.multiple_msg_capable();
-                // control.set_multiple_msg_enable(0);
+                let capable = control.multiple_msg_capable();
+                control.set_multiple_msg_enable(min(capable, multiple_msg_enable));
             },
         )?;
         self.message_address.update(

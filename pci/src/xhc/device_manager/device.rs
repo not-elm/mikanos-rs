@@ -26,7 +26,10 @@ mod phase1;
 mod phase2;
 mod phase3;
 mod phase4;
-
+pub static DUMMY: [u8; 1024] = [0; 1024];
+fn DUMMY_ADDR() -> u64 {
+    DUMMY.as_ptr() as u64
+}
 #[repr(C, align(64))]
 pub struct Device<Doorbell, Memory>
 where
@@ -47,10 +50,14 @@ where
     Memory: MemoryAllocatable,
 {
     pub fn device_context_addr(&self) -> u64 {
-        self.slot.device_context().device_context_addr()
+        self.slot
+            .device_context()
+            .device_context_addr()
     }
     pub fn input_context_addr(&self) -> u64 {
-        self.slot.input_context().input_context_addr()
+        self.slot
+            .input_context()
+            .input_context_addr()
     }
     pub fn slot_id(&self) -> u8 {
         self.slot_id
@@ -66,7 +73,9 @@ where
     ) -> PciResult<Self> {
         let mut me = Self::new(slot_id, allocator, doorbell, mouse_driver_factory)?;
 
-        me.slot.input_context_mut().set_enable_slot_context();
+        me.slot
+            .input_context_mut()
+            .set_enable_slot_context();
         me.slot
             .input_context_mut()
             .set_enable_endpoint(DeviceContextIndex::default());
@@ -78,17 +87,24 @@ where
     }
 
     pub fn start_initialize(&mut self) -> PciResult {
-        let buff = self.device_descriptor_buff.as_mut_ptr();
+        let buff = self
+            .device_descriptor_buff
+            .as_mut_ptr();
 
         const DEVICE_DESCRIPTOR_TYPE: u16 = 1;
         let data_buff_addr = buff as u64;
-        let len = self.device_descriptor_buff.len() as u32;
+        let len = self
+            .device_descriptor_buff
+            .len() as u32;
 
-        self.slot.default_control_pipe_mut().control_in().with_data(
-            Request::get_descriptor(DEVICE_DESCRIPTOR_TYPE, 0, len as u16),
-            data_buff_addr,
-            len,
-        )
+        self.slot
+            .default_control_pipe_mut()
+            .control_in()
+            .with_data(
+                Request::get_descriptor(DEVICE_DESCRIPTOR_TYPE, 0, len as u16),
+                data_buff_addr,
+                len,
+            )
     }
 
     pub fn on_transfer_event_received(
@@ -96,9 +112,9 @@ where
         transfer_event: TransferEvent,
         target_event: TargetEvent,
     ) -> PciResult<InitStatus> {
-        let (init_status, phase) =
-            self.phase
-                .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
+        let (init_status, phase) = self
+            .phase
+            .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
         if let Some(phase) = phase {
             self.phase = phase;
         }
@@ -106,7 +122,9 @@ where
         Ok(init_status)
     }
     pub fn on_endpoints_configured(&mut self) -> PciResult {
-        let request_type = RequestType::new().with_ty(1).with_recipient(1);
+        let request_type = RequestType::new()
+            .with_ty(1)
+            .with_recipient(1);
 
         self.slot
             .default_control_pipe_mut()
@@ -124,7 +142,10 @@ where
     }
 
     fn init_default_control_pipe(&mut self, port_speed: u8) {
-        let tr_dequeue_addr = self.slot.default_control_pipe().transfer_ring_base_addr();
+        let tr_dequeue_addr = self
+            .slot
+            .default_control_pipe()
+            .transfer_ring_base_addr();
         let control = self.slot.input_context_mut();
         let default_control_pipe = control.endpoint_mut_at(DeviceContextIndex::default().value());
 

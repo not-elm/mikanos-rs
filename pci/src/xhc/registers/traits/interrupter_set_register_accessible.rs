@@ -1,9 +1,10 @@
+use alloc::rc::Rc;
+use core::cell::RefCell;
+
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::event::event_ring::EventRing;
 use crate::xhc::transfer::event::event_ring_segment_table::EventRingSegmentTable;
-use alloc::rc::Rc;
-use core::cell::RefCell;
 
 pub trait InterrupterSetRegisterAccessible {
     fn write_event_ring_dequeue_pointer_at(
@@ -20,7 +21,7 @@ pub trait InterrupterSetRegisterAccessible {
     fn write_interrupter_enable_at(&mut self, index: usize, is_enable: bool) -> PciResult;
     fn write_interrupter_pending_at(&mut self, index: usize, is_pending: bool) -> PciResult;
 
-    fn read_dequeue_pointer_addr_at(&self, index: usize) -> u64;
+    fn read_dequeue_pointer_addr_at(&mut self, index: usize) -> u64;
     fn write_event_ring_segment_table_size(&mut self, index: usize, size: u16) -> PciResult;
 }
 
@@ -39,6 +40,7 @@ where
     registers
         .borrow_mut()
         .write_event_ring_segment_table_size(0, event_ring_segment_table_size)?;
+
     registers
         .borrow_mut()
         .write_event_ring_dequeue_pointer_at(0, event_ring_segment_addr)?;
