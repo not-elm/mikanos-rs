@@ -46,48 +46,15 @@ use pci::xhc::registers::external::External;
 use pci::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
-static mut QUEUE: VectorQueue<u32> = VectorQueue::new();
 static mut IDTA: InterruptDescriptorTable = InterruptDescriptorTable::new();
-//
-// static mut XHC: Once<
-//     XhcController<
-//         External<IdentityMapper>,
-//         DeviceMap<External<IdentityMapper>, MikanOSPciMemoryAllocator>,
-//         MikanOSPciMemoryAllocator,
-//     >,
-// > = Once::new();
 
-// 読み書き可能でヒープに確保
-pub fn init_idt() {
-    unsafe {
-        // IDT.breakpoint
-        //     .set_handler_fn(double_fault_handler);
-        let a = IDTA[0x40].set_handler_fn(IntHandlerXHCI);
-
-        IDTA.load();
-    }
-}
-
-
-pub const PIC_1_OFFSET: u8 = 0x40;
-pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
 
 // new
-extern "x86-interrupt" fn IntHandlerXHCI(stack_frame: InterruptStackFrame) {
+extern "x86-interrupt" fn int_handler_xhci(stack_frame: InterruptStackFrame) {
     unsafe {
         QUEUE.enqueue(32);
-        serial_println!("++++++++++++++++++++++++++++");
-        // ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET).notify_end_of_interrupt(0x40);
-        //
-        #[allow(clippy::unwrap_used)]
-        let mut memory = Volatile::new(unsafe {
-            (0xfee000b0 as *mut u32)
-                .as_mut()
-                .unwrap()
-        });
-        memory.write(0);
 
-        // *end_of_interrupt_register_ptr = 0;
+        (0xfee000b0 as *mut u32).write_volatile(0);
     }
 }
 
@@ -132,7 +99,6 @@ pub extern "sysv64" fn kernel_main(
 
     init_console(*frame_buffer_config);
 
-    init_idt();
     #[cfg(test)]
     test_main();
     serial_println!("Hello Serial Port!");
@@ -140,16 +106,16 @@ pub extern "sysv64" fn kernel_main(
 
     fill_background(CONSOLE_BACKGROUND_COLOR, frame_buffer_config).unwrap();
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
-    let addr = unsafe { ((IntHandlerXHCI) as *const ()) as u64 };
 
-    // unsafe {
-    //     set_idt_entry(&mut IDT[0x40], make_idt_attr(14, 0, true, 0), addr,
-    // GetCS());     LoadIDT(
-    //         (core::mem::size_of::<InterruptDescriptor>() * (IDT.len() - 1)) as
-    // u16,         IDT.as_ptr() as u64,
-    //     );
-    // }
+    unsafe {
+        set_idt_entry(&mut IDT[0x40], make_idt_attr(14, 0, true, 0), addr, GetCS());
+        LoadIDT(
+            (core::mem::size_of::<InterruptDescriptor>() * (IDT.len() - 1)) as u16,
+            IDT.as_ptr() as u64,
+        );
+    }
 
+    x86_64::registers::segmentation::CS::get_reg()
     enable_msi().unwrap();
     enable();
     let external = External::new(mmio_base_addr(), IdentityMapper());
@@ -160,24 +126,10 @@ pub extern "sysv64" fn kernel_main(
     )
     .unwrap();
 
-    // unsafe {
-    //     XHC.call_once(|| xhc_controller);
-    //     XHC.get_mut()
-    //         .unwrap()
-    //         .reset_port();
-    // }
 
     xhc_controller.reset_port();
-    serial_println!("{:?}", RealIoMemoryAccessor::new());
 
-    // xhc_controller
-    //     .start_event_pooling()
-    //     .unwrap();
-    // let queue_waiter = unsafe { InterruptQueueWaiter::new(&mut QUEUE) };
-    // queue_waiter.for_each(|event| {
-    //     serial_println!("Interrupt!");
-    //     xhc_controller.process_all_events();
-    // });
+
     loop {
         serial_println!("{}", unsafe { QUEUE.count() });
         disable();

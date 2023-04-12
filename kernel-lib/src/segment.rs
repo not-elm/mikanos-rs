@@ -6,6 +6,7 @@ use crate::segment::descriptor::DescriptorA;
 pub const DOUBLE_FAULT_IST_INDEX: u16 = 0;
 
 mod descriptor;
+pub mod asm;
 
 static mut GDT: [u64; 8] = [0; 8];
 

@@ -1,8 +1,6 @@
 use modular_bitfield::bitfield;
 use modular_bitfield::prelude::{B2, B3, B4, B5};
 
-const IDT_SIZE: usize = 256;
-pub static mut IDT: [InterruptDescriptor; IDT_SIZE] = [InterruptDescriptor::new(); IDT_SIZE];
 
 #[bitfield(bits = 16)]
 #[derive(Debug, Copy, Clone, BitfieldSpecifier)]
