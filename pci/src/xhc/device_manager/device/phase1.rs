@@ -1,9 +1,10 @@
 use alloc::boxed::Box;
 
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use kernel_lib::serial_println;
 use xhci::ring::trb::event::TransferEvent;
 
+use kernel_lib::serial_println;
+
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -37,11 +38,8 @@ where
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
-        target_event: TargetEvent,
+        _target_event: TargetEvent,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
-        let data_stage = target_event.data_stage()?;
-        let a = data_stage.data_buffer_pointer() as *const DeviceDescriptor;
-        serial_println!("{:?}", unsafe { *a });
         const CONFIGURATION_TYPE: u16 = 2;
 
         let data_buff_addr = slot.data_buff_addr();

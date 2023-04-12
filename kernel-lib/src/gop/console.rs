@@ -3,6 +3,7 @@ use core::fmt::Write;
 use spin::Mutex;
 
 use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::rectangle::Rectangle;
 use common_lib::vector::Vector2D;
 
 use crate::error::KernelResult;
@@ -57,7 +58,10 @@ impl GlobalConsole {
     }
 
     pub fn get_mut(&mut self) -> &mut ConsoleWriter {
-        self.0.as_mut().unwrap().get_mut()
+        self.0
+            .as_mut()
+            .unwrap()
+            .get_mut()
     }
 }
 
@@ -83,6 +87,15 @@ pub fn draw_cursor(pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
     Ok(())
 }
 
+
+pub fn is_drawable_cursor_pos(
+    frame_buffer_rec: Rectangle<usize>,
+    cursor_pos: Vector2D<usize>,
+) -> bool {
+    let cursor_pos = cursor_pos + Vector2D::new(CURSOR_WIDTH, CURSOR_HEIGHT);
+    frame_buffer_rec.is_inner(cursor_pos)
+}
+
 pub fn erase_cursor(pos: Vector2D<usize>) -> KernelResult {
     draw_cursor(pos, CONSOLE_BACKGROUND_COLOR)
 }
@@ -93,7 +106,11 @@ pub fn fill_rect_using_global(
     color: PixelColor,
 ) -> KernelResult {
     fill_rect(
-        unsafe { CONSOLE.get_mut().pixel_writer() },
+        unsafe {
+            CONSOLE
+                .get_mut()
+                .pixel_writer()
+        },
         origin,
         to,
         color,
@@ -106,7 +123,9 @@ pub fn get_mut_console() -> &'static mut ConsoleWriter {
 
 #[doc(hidden)]
 pub fn _print(s: core::fmt::Arguments) {
-    get_mut_console().write_fmt(s).unwrap();
+    get_mut_console()
+        .write_fmt(s)
+        .unwrap();
 }
 
 #[macro_export]

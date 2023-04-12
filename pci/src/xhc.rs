@@ -137,7 +137,6 @@ where
     }
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
-        serial_println!("{:?}\n", event_trb);
         match event_trb {
             EventTrb::TransferEvent {
                 transfer_event,

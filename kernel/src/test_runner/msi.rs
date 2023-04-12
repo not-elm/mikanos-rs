@@ -13,11 +13,3 @@ fn it_interrupt_capability_registers_has_one_or_more() {
             .is_some()
     );
 }
-#[test_case]
-fn a() {
-    let io = RealIoMemoryAccessor::new();
-    InterruptCapabilityRegisterIter::new(first_general_header(), io)
-        .for_each(|r| {
-        serial_println!("{:?}", r);
-    })
-}
