@@ -29,9 +29,10 @@ use kernel_lib::gop::console::{
     CONSOLE_BACKGROUND_COLOR, draw_cursor, erase_cursor, fill_rect_using_global, init_console,
 };
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
+use kernel_lib::interrupt::asm::sti;
 use kernel_lib::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
+use kernel_lib::interrupt::sti;
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use pci::class_driver::mouse::MouseButton;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::configuration_space::device::header_type::general_header::GeneralHeader;
@@ -135,7 +136,8 @@ pub extern "sysv64" fn kernel_main(
     // }
 
     enable_msi().unwrap();
-    enable();
+    sti();
+
     let external = External::new(mmio_base_addr(), IdentityMapper());
     let mut xhc_controller = XhcController::new(
         external,

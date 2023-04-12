@@ -1,8 +1,5 @@
-use modular_bitfield::bitfield;
 use modular_bitfield::prelude::{B2, B3, B4, B5};
-
-const IDT_SIZE: usize = 256;
-pub static mut IDT: [InterruptDescriptor; IDT_SIZE] = [InterruptDescriptor::new(); IDT_SIZE];
+use modular_bitfield::{bitfield, BitfieldSpecifier};
 
 #[bitfield(bits = 16)]
 #[derive(Debug, Copy, Clone, BitfieldSpecifier)]
@@ -35,7 +32,7 @@ pub fn make_idt_attr(
     present: bool,
     interrupt_stack_table: u8,
 ) -> InterruptDescriptorAttribute {
-    InterruptDescriptorAttribute::new()
+    InterruptDescriptor::new()
         .with_descriptor_type(descriptor_type)
         .with_descriptor_privilege_level(descriptor_privilege_level)
         .with_present(present)

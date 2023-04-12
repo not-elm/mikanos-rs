@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use common_lib::queue::queueing::Queueing;
 
-use crate::interrupt::{cli, sti_and_hlt};
+use crate::interrupt::asm::{cli, sti_and_hlt};
 
 pub struct InterruptQueueWaiter<Queue, Value>
 where
