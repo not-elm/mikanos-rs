@@ -9,7 +9,7 @@ pub struct Vector2D<T> {
 
 impl<T> Add for Vector2D<T>
 where
-    T: Add + Copy + Clone + Debug,
+    T: Add + Copy + Clone + Debug + PartialOrd + PartialEq,
 {
     type Output = Vector2D<T::Output>;
 
@@ -21,7 +21,7 @@ where
     }
 }
 
-impl<T> AddAssign for Vector2D<T>
+impl<T: Copy + PartialOrd> AddAssign for Vector2D<T>
 where
     T: AddAssign + Copy + Clone + Debug,
 {
@@ -31,7 +31,7 @@ where
     }
 }
 
-impl<T: Copy + Clone + core::fmt::Debug> Vector2D<T> {
+impl<T: Copy + PartialOrd> Vector2D<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
@@ -48,18 +48,17 @@ impl<T: Copy + Clone + core::fmt::Debug> Vector2D<T> {
 }
 
 
-impl<T: PartialOrd + Copy> Vector2D<T> {
-    pub fn is_over_x(&self, other: Vector2D<T>) -> bool {
+impl<T: PartialOrd> Vector2D<T> {
+    pub fn is_over_x(&self, other: &Vector2D<T>) -> bool {
         self.x < other.x
     }
 
 
-    pub fn is_over_y(&self, other: Vector2D<T>) -> bool {
+    pub fn is_over_y(&self, other: &Vector2D<T>) -> bool {
         self.y < other.y
     }
 
-
-    pub fn is_over(&self, other: Vector2D<T>) -> bool {
+    pub fn is_over(&self, other: &Vector2D<T>) -> bool {
         self.is_over_x(other) || self.is_over_y(other)
     }
 }
