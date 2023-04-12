@@ -63,7 +63,7 @@ pub fn init_idt() {
         // IDT.breakpoint
         //     .set_handler_fn(double_fault_handler);
         let a = IDTA[0x40].set_handler_fn(IntHandlerXHCI);
-
+        
         IDTA.load();
     }
 }
@@ -80,13 +80,13 @@ extern "x86-interrupt" fn IntHandlerXHCI(stack_frame: InterruptStackFrame) {
         // ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET).notify_end_of_interrupt(0x40);
         //
         #[allow(clippy::unwrap_used)]
-        let mut memory = Volatile::new(unsafe {
+            let mut memory = Volatile::new(unsafe {
             (0xfee000b0 as *mut u32)
                 .as_mut()
                 .unwrap()
         });
         memory.write(0);
-
+        
         // *end_of_interrupt_register_ptr = 0;
     }
 }
@@ -95,6 +95,7 @@ pub mod allocate;
 mod qemu;
 #[cfg(test)]
 mod test_runner;
+mod interrupt;
 #[cfg(test)]
 macros::declaration_volatile_accessible!();
 // #[no_mangle]
@@ -127,21 +128,21 @@ pub extern "sysv64" fn kernel_main(
     _memory_map: &MemoryMapIter,
 ) {
     // unsafe { setup_segments() };
-
+    
     init_alloc();
-
+    
     init_console(*frame_buffer_config);
-
+    
     init_idt();
     #[cfg(test)]
     test_main();
     serial_println!("Hello Serial Port!");
     println!("Hello Kernel!");
-
+    
     fill_background(CONSOLE_BACKGROUND_COLOR, frame_buffer_config).unwrap();
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
     let addr = unsafe { ((IntHandlerXHCI) as *const ()) as u64 };
-
+    
     // unsafe {
     //     set_idt_entry(&mut IDT[0x40], make_idt_attr(14, 0, true, 0), addr,
     // GetCS());     LoadIDT(
@@ -149,7 +150,7 @@ pub extern "sysv64" fn kernel_main(
     // u16,         IDT.as_ptr() as u64,
     //     );
     // }
-
+    
     enable_msi().unwrap();
     enable();
     let external = External::new(mmio_base_addr(), IdentityMapper());
@@ -158,18 +159,18 @@ pub extern "sysv64" fn kernel_main(
         MikanOSPciMemoryAllocator::new(),
         MouseDriverFactory::subscriber(on_mouse_move),
     )
-    .unwrap();
-
+        .unwrap();
+    
     // unsafe {
     //     XHC.call_once(|| xhc_controller);
     //     XHC.get_mut()
     //         .unwrap()
     //         .reset_port();
     // }
-
+    
     xhc_controller.reset_port();
     serial_println!("{:?}", RealIoMemoryAccessor::new());
-
+    
     // xhc_controller
     //     .start_event_pooling()
     //     .unwrap();
@@ -190,26 +191,8 @@ pub extern "sysv64" fn kernel_main(
         let a = unsafe { QUEUE.dequeue().unwrap() };
         xhc_controller.process_all_events();
     }
-
+    
     common_lib::assembly::hlt_forever();
-}
-
-fn on_mouse_move(
-    prev_cursor: Vector2D<usize>,
-    current_cursor: Vector2D<usize>,
-    button: Option<MouseButton>,
-) -> Result<(), ()> {
-    let color = button
-        .map(|b| match b {
-            MouseButton::Button1 => PixelColor::yellow(),
-            MouseButton::Button2 => PixelColor::new(0x13, 0xA9, 0xDB),
-            MouseButton::Button3 => PixelColor::new(0x35, 0xFA, 0x66),
-            _ => PixelColor::white(),
-        })
-        .unwrap_or(PixelColor::white());
-
-    erase_cursor(prev_cursor).map_err(|_| ())?;
-    draw_cursor(current_cursor, color).map_err(|_| ())
 }
 
 #[derive(Clone, Debug)]
@@ -219,7 +202,7 @@ impl xhci::accessor::Mapper for IdentityMapper {
     unsafe fn map(&mut self, phys_start: usize, _bytes: usize) -> NonZeroUsize {
         NonZeroUsize::new_unchecked(phys_start)
     }
-
+    
     fn unmap(&mut self, _virtual_start: usize, _bytes: usize) {}
 }
 
@@ -273,7 +256,7 @@ pub fn first_general_header() -> GeneralHeader {
 fn enable_msi() -> PciResult {
     let io = RealIoMemoryAccessor::new();
     let bsp_local_apic_id: u8 = unsafe { *(0xfee00020 as *mut u32) >> 24 } as u8;
-
+    
     for mut msi in InterruptCapabilityRegisterIter::new(first_general_header(), io)
         .filter_map(|register| register.ok())
         .filter_map(|register| register.msi())

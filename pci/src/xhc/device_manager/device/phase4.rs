@@ -12,15 +12,15 @@ use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegist
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
 pub struct Phase4<Doorbell>
-where
-    Doorbell: DoorbellRegistersAccessible,
+    where
+        Doorbell: DoorbellRegistersAccessible,
 {
     interrupters: Vec<InterruptIn<Doorbell>>,
 }
 
 impl<D> Phase4<D>
-where
-    D: DoorbellRegistersAccessible,
+    where
+        D: DoorbellRegistersAccessible,
 {
     pub fn new(interrupters: Vec<InterruptIn<D>>) -> Self {
         Self { interrupters }
@@ -28,9 +28,9 @@ where
 }
 
 impl<Doorbell: 'static, Memory> Phase<Doorbell, Memory> for Phase4<Doorbell>
-where
-    Memory: MemoryAllocatable,
-    Doorbell: DoorbellRegistersAccessible,
+    where
+        Memory: MemoryAllocatable,
+        Doorbell: DoorbellRegistersAccessible,
 {
     fn on_transfer_event_received(
         &mut self,
@@ -39,9 +39,9 @@ where
         _target_event: TargetEvent,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         for interrupt in self.interrupters.iter_mut() {
-            interrupt.interrupter_in()?;
+            interrupt.get_report(slot.default_control_pipe_mut())?;
         }
-
+        
         Ok((InitStatus::not(), None))
     }
 }
