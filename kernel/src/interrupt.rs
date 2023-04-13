@@ -1,18 +1,23 @@
+use kernel_lib::error::KernelResult;
+use kernel_lib::interrupt::gate_type::GateType;
 use kernel_lib::interrupt::IDT;
+use kernel_lib::interrupt::interrupt_descriptor_attribute::InterruptDescriptorAttribute;
+use kernel_lib::interrupt::interrupt_vector::InterruptVector;
+
+use self::mouse::interrupt_mouse_handler;
 
 pub mod mouse;
 
-pub fn init_idt() {
+pub fn init_idt() -> KernelResult {
     unsafe {
-        // unsafe {
-        //     set_idt_entry(&mut IDT[0x40], make_idt_attr(14, 0, true, 0), addr,
-        // GetCS());     LoadIDT(
-        //         (core::mem::size_of::<InterruptDescriptor>() * (IDT.len() - 1)) as
-        // u16,         IDT.as_ptr() as u64,
-        //     );
-        // }
+        let type_attribute = InterruptDescriptorAttribute::new()
+            .with_gate_type(GateType::InterruptGate)
+            .with_present(true);
 
-        // IDT[InterruptVector::Xhci as usize].entry();
+
+        IDT[InterruptVector::Xhci].set_handler(interrupt_mouse_handler, type_attribute)?;
         IDT.load();
     }
+
+    Ok(())
 }

@@ -12,7 +12,7 @@ use crate::configuration_space::msi::msi_capability_register::access::msi_capabi
 use crate::configuration_space::msi::msi_capability_register::structs::control::Control;
 use crate::configuration_space::msi::msi_capability_register::structs::message_address::MessageAddress;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
-use crate::configuration_space::msi::msi_capability_register::structs::message_data::interrupt_vector::InterruptVector;
+use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::level_for_trigger_mode::LevelForTriggerMode;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::MessageData;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;

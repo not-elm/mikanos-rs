@@ -14,7 +14,7 @@ bitfield-struct = { workspace = true }
 modular-bitfield = { workspace = true }
 lazy_static = { workspace = true }
 uart_16550 = "0.2.0"
-
+macros = { path = "../macros", features = ["extra-traits"] }
 
 [build-dependencies]
 cc = { version = "1.0" }

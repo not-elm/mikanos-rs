@@ -3,6 +3,7 @@ use core::ops::{Index, IndexMut};
 use crate::interrupt::asm::load_idt;
 use crate::interrupt::idt_descriptor::IdtDescriptor;
 use crate::interrupt::interrupt_descriptor::InterruptDescriptor;
+use crate::interrupt::interrupt_vector::InterruptVector;
 
 const IDT_SIZE: usize = 256;
 
@@ -45,5 +46,20 @@ impl Index<usize> for InterruptDescriptorTable {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.0[index]
+    }
+}
+
+
+impl Index<InterruptVector> for InterruptDescriptorTable {
+    type Output = InterruptDescriptor;
+
+    fn index(&self, index: InterruptVector) -> &Self::Output {
+        &self[index as usize]
+    }
+}
+
+impl IndexMut<InterruptVector> for InterruptDescriptorTable {
+    fn index_mut(&mut self, index: InterruptVector) -> &mut Self::Output {
+        &mut self[index as usize]
     }
 }

@@ -11,7 +11,6 @@ proc-macro = true
 quote = "1.0.23"
 proc-macro2 = "1.0.51"
 syn = { version = "1.0.14", features = ["full", "extra-traits"] }
-kernel-lib = { path = "../kernel-lib" }
 
 
 [features]

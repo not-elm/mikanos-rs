@@ -20,7 +20,7 @@ impl InterruptVector {
 
 #[cfg(test)]
 mod tests {
-    use crate::configuration_space::msi::msi_capability_register::structs::message_data::interrupt_vector::InterruptVector;
+    use crate::interrupt::interrupt_vector::InterruptVector;
 
     #[test]
     fn it_cast_xhci_vector_integer() {

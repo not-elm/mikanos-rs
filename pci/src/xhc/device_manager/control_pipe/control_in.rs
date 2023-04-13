@@ -1,8 +1,8 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
+use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 use xhci::ring::trb::transfer::{Direction, StatusStage, TransferType};
-use crate::configuration_space::msi::msi_capability_register::structs::message_data::interrupt_vector::InterruptVector;
 
 use crate::error::PciResult;
 use crate::xhc::device_manager::control_pipe::request::Request;

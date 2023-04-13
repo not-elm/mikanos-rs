@@ -150,12 +150,22 @@ fn from_phantom(phantom_data: Option<Type>) -> Ident {
 #[allow(dead_code)]
 fn extract_phantom_type(phantom_data: Type) -> Result<Ident, ()> {
     if let Type::Path(path) = phantom_data {
-        let path_segment = path.path.segments.first().unwrap();
+        let path_segment = path
+            .path
+            .segments
+            .first()
+            .unwrap();
         if let PathArguments::AngleBracketed(angle) = path_segment.clone().arguments {
             let generic_argument = angle.args.first().unwrap();
             if let GenericArgument::Type(ty) = generic_argument {
                 if let Type::Path(type_path) = ty {
-                    return Ok(type_path.path.segments.first().unwrap().ident.clone());
+                    return Ok(type_path
+                        .path
+                        .segments
+                        .first()
+                        .unwrap()
+                        .ident
+                        .clone());
                 }
             }
         }

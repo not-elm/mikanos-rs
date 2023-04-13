@@ -7,5 +7,6 @@ pub type KernelResult<T = ()> = Result<T, KernelError>;
 pub enum KernelError {
     ExceededFrameBufferSize,
     NotSupportCharacter,
+    FailedCast,
     TryFromIntError(TryFromIntError),
 }

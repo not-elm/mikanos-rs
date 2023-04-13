@@ -3,11 +3,10 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::marker::PhantomData;
 
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-
 use xhci::context::EndpointType;
 use xhci::ring::trb::event::TransferEvent;
 
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -26,10 +25,7 @@ mod phase1;
 mod phase2;
 mod phase3;
 mod phase4;
-pub static DUMMY: [u8; 1024] = [0; 1024];
-fn DUMMY_ADDR() -> u64 {
-    DUMMY.as_ptr() as u64
-}
+
 #[repr(C, align(64))]
 pub struct Device<Doorbell, Memory>
 where

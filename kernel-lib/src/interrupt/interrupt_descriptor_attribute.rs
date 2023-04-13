@@ -1,13 +1,16 @@
 use modular_bitfield::bitfield;
-use modular_bitfield::prelude::{B2, B3, B4, B5};
+use modular_bitfield::prelude::{B2};
 
-#[bitfield(bits = 16)]
+
+
+use super::gate_type::GateType;
+
+#[bitfield]
+#[repr(u8)]
 #[derive(Debug, Copy, Clone, BitfieldSpecifier)]
 pub struct InterruptDescriptorAttribute {
-    pub interrupt_stack_table: B3,
-    #[skip]
-    __: B5,
-    pub descriptor_type: B4,
+    pub gate_type: GateType,
+    #[allow(non_snake_case)]
     #[skip]
     __: bool,
     pub descriptor_privilege_level: B2,

@@ -1,12 +1,18 @@
 #![feature(option_as_slice)]
 #![feature(type_alias_impl_trait)]
 #![feature(strict_provenance)]
+#![feature(abi_x86_interrupt)]
 #![feature(once_cell)]
 #![feature(sync_unsafe_cell)]
 #![no_std]
+
+use macros::declaration_volatile_accessible;
 #[cfg(test)]
 extern crate alloc;
 
+declaration_volatile_accessible!();
+
+pub mod apic;
 pub mod error;
 pub mod gop;
 pub mod interrupt;
