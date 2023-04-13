@@ -18,21 +18,21 @@ use uefi::table::boot::MemoryMapIter;
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
-use kernel_lib::{println, serial_println, VolatileAccessible as OtherVolatileAccessible};
 use kernel_lib::apic::LocalApicRegisters;
 use kernel_lib::error::KernelResult;
-use kernel_lib::gop::console::{CONSOLE_BACKGROUND_COLOR, fill_rect_using_global, init_console};
+use kernel_lib::gop::console::{fill_rect_using_global, init_console, CONSOLE_BACKGROUND_COLOR};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
+use kernel_lib::{println, serial_println, VolatileAccessible as OtherVolatileAccessible};
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::configuration_space::device::header_type::general_header::GeneralHeader;
 use pci::configuration_space::io::io_memory_accessible::real_memory_accessor::RealIoMemoryAccessor;
-use pci::configuration_space::msi::InterruptCapabilityRegisterIter;
 use pci::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
 use pci::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
+use pci::configuration_space::msi::InterruptCapabilityRegisterIter;
 use pci::error::PciResult;
 use pci::pci_device_searcher::PciDeviceSearcher;
 use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
@@ -105,14 +105,14 @@ pub extern "sysv64" fn kernel_main(
             frame_buffer_config.vertical_resolution,
         )),
     )
-        .unwrap();
+    .unwrap();
 
 
     xhc_controller.reset_port();
 
     let queue_waiter = unsafe { InterruptQueueWaiter::new(&mut INTERRUPT_QUEUE) };
     queue_waiter.for_each(|_| {
-        xhc_controller.process_all_events();
+        xhc_controller.process_event();
     });
 
     common_lib::assembly::hlt_forever();
@@ -167,7 +167,9 @@ pub fn first_general_header() -> GeneralHeader {
 
 fn enable_msi() -> PciResult {
     let io = RealIoMemoryAccessor::new();
-    let bsp_local_apic_id: u8 = LocalApicRegisters::default().local_apic_id().read_volatile();
+    let bsp_local_apic_id: u8 = LocalApicRegisters::default()
+        .local_apic_id()
+        .read_volatile();
 
     for mut msi in InterruptCapabilityRegisterIter::new(first_general_header(), io)
         .filter_map(|register| register.ok())

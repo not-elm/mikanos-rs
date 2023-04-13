@@ -67,6 +67,6 @@ where
     fn write_dequeue_pointer(&mut self, addr: u64) -> PciResult {
         self.interrupter_set
             .borrow_mut()
-            .write_event_ring_dequeue_pointer_at(0, addr)
+            .update_dequeue_pointer_at(0, addr)
     }
 }

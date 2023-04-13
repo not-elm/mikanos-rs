@@ -10,6 +10,6 @@ pub struct LocalApicId(usize);
 
 impl LocalApicId {
     pub fn new(addr: LocalApicRegistersAddr) -> Self {
-        Self(addr.addr())
+        Self::new_uncheck(addr.addr())
     }
 }

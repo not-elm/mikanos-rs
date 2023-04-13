@@ -1,7 +1,5 @@
 use core::fmt::Debug;
 
-use kernel_lib::serial_println;
-
 use crate::error::PciResult;
 use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
@@ -192,32 +190,12 @@ where
         index: usize,
         event_ring_segment_addr: u64,
     ) -> PciResult {
-        self.0
-            .operational
-            .usbsts
-            .update_volatile(|sts| {
-                sts.set_0_event_interrupt();
-            });
-        self.registers_mut()
-            .interrupter_register_set
-            .interrupter_mut(0)
-            .iman
-            .update_volatile(|i| {
-                i.set_interrupt_enable();
-                i.set_0_interrupt_pending();
-            });
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
             .erdp
             .update_volatile(|erdp| erdp.set_event_ring_dequeue_pointer(event_ring_segment_addr));
-        self.0
-            .interrupter_register_set
-            .interrupter_mut(0)
-            .erdp
-            .update_volatile(|sts| {
-                sts.set_0_event_handler_busy();
-            });
+
         Ok(())
     }
 

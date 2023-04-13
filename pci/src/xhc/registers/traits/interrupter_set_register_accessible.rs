@@ -23,6 +23,12 @@ pub trait InterrupterSetRegisterAccessible {
 
     fn read_dequeue_pointer_addr_at(&mut self, index: usize) -> u64;
     fn write_event_ring_segment_table_size(&mut self, index: usize, size: u16) -> PciResult;
+
+    fn update_dequeue_pointer_at(&mut self, index: usize, dequeue_pointer_addr: u64) -> PciResult {
+        self.write_interrupter_pending_at(index, true)?;
+        self.write_event_ring_dequeue_pointer_at(index, dequeue_pointer_addr)?;
+        Ok(())
+    }
 }
 
 pub(crate) fn setup_event_ring<T>(

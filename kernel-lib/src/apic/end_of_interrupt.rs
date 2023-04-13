@@ -6,12 +6,12 @@ use crate::apic::LocalApicRegistersAddr;
 #[derive(VolatileBits)]
 #[volatile_type(u64)]
 #[add_addr_bytes(0xB0)]
-#[volatile_type(u8)]
+#[volatile_type(u32)]
 pub struct EndOfInterrupt(usize);
 
 impl EndOfInterrupt {
     pub fn new(addr: LocalApicRegistersAddr) -> Self {
-        Self(addr.addr())
+        Self::new_uncheck(addr.0)
     }
 
 
