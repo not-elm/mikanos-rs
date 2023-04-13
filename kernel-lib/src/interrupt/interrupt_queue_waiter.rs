@@ -2,8 +2,7 @@ use core::marker::PhantomData;
 
 use common_lib::queue::queueing::Queueing;
 
-use crate::interrupt::{cli, sti_and_hlt};
-use crate::serial_println;
+use crate::interrupt::asm::{cli, sti_and_hlt};
 
 pub struct InterruptQueueWaiter<Queue, Value>
 where
@@ -35,7 +34,7 @@ where
         let mut value = self.queue.dequeue();
         while value.is_none() {
             sti_and_hlt();
-            serial_println!("STI");
+
             value = self.queue.dequeue();
         }
         cli();

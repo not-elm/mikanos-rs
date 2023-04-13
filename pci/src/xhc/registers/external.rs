@@ -203,7 +203,6 @@ where
             .interrupter_mut(0)
             .iman
             .update_volatile(|i| {
-                serial_println!("{:?}", i);
                 i.set_interrupt_enable();
                 i.set_0_interrupt_pending();
             });

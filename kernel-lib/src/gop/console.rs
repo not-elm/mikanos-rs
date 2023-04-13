@@ -3,6 +3,7 @@ use core::fmt::Write;
 use spin::Mutex;
 
 use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::rectangle::Rectangle;
 use common_lib::vector::Vector2D;
 
 use crate::error::KernelResult;
@@ -14,13 +15,18 @@ use crate::gop::pixel::pixel_color::PixelColor;
 pub mod console_builder;
 pub mod console_writer;
 
+
 pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
 
 pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
 
 pub const CONSOLE_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x11, 0x11, 0x11);
+
 const CURSOR_WIDTH: usize = 15;
+
 const CURSOR_HEIGHT: usize = 24;
+
+
 const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
     b"@              ",
     b"@@             ",
@@ -48,6 +54,7 @@ const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
     b"         @@@   ",
 ];
 
+
 impl GlobalConsole {
     pub fn init(&mut self, frame_buffer_config: FrameBufferConfig) {
         let console = ConsoleBuilder::new()
@@ -57,9 +64,13 @@ impl GlobalConsole {
     }
 
     pub fn get_mut(&mut self) -> &mut ConsoleWriter {
-        self.0.as_mut().unwrap().get_mut()
+        self.0
+            .as_mut()
+            .unwrap()
+            .get_mut()
     }
 }
+
 
 pub fn init_console(frame_buffer_config: FrameBufferConfig) {
     unsafe { CONSOLE.init(frame_buffer_config) };
@@ -83,9 +94,20 @@ pub fn draw_cursor(pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
     Ok(())
 }
 
+
+pub fn is_drawable_cursor_pos(
+    frame_buffer_rec: Rectangle<usize>,
+    cursor_pos: Vector2D<usize>,
+) -> bool {
+    let cursor_pos = cursor_pos + Vector2D::new(CURSOR_WIDTH, CURSOR_HEIGHT);
+    frame_buffer_rec.is_inner(cursor_pos)
+}
+
+
 pub fn erase_cursor(pos: Vector2D<usize>) -> KernelResult {
     draw_cursor(pos, CONSOLE_BACKGROUND_COLOR)
 }
+
 
 pub fn fill_rect_using_global(
     origin: Vector2D<usize>,
@@ -93,26 +115,36 @@ pub fn fill_rect_using_global(
     color: PixelColor,
 ) -> KernelResult {
     fill_rect(
-        unsafe { CONSOLE.get_mut().pixel_writer() },
+        unsafe {
+            CONSOLE
+                .get_mut()
+                .pixel_writer()
+        },
         origin,
         to,
         color,
     )
 }
 
+
 pub fn get_mut_console() -> &'static mut ConsoleWriter {
     unsafe { CONSOLE.get_mut() }
 }
 
+
 #[doc(hidden)]
 pub fn _print(s: core::fmt::Arguments) {
-    get_mut_console().write_fmt(s).unwrap();
+    get_mut_console()
+        .write_fmt(s)
+        .unwrap();
 }
+
 
 #[macro_export]
 macro_rules! print {
     ($($args:tt)*) => ($crate::gop::console::_print(format_args!($($args)*)));
 }
+
 
 #[macro_export]
 macro_rules! println {

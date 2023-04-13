@@ -13,9 +13,7 @@ use core::alloc::Layout;
 use core::num::NonZeroUsize;
 use core::panic::PanicInfo;
 
-use uefi::table::boot::{MemoryMapIter, MemoryType};
-use volatile::Volatile;
-use x86_64::instructions::interrupts::{disable, enable, enable_and_hlt};
+use uefi::table::boot::MemoryMapIter;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 use allocate::init_alloc;
@@ -26,11 +24,11 @@ use common_lib::vector::Vector2D;
 use kernel_lib::{println, serial_println};
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{
-    CONSOLE_BACKGROUND_COLOR, draw_cursor, erase_cursor, fill_rect_using_global, init_console,
+    CONSOLE_BACKGROUND_COLOR, fill_rect_using_global, init_console,
 };
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
+use kernel_lib::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use pci::class_driver::mouse::MouseButton;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::configuration_space::device::header_type::general_header::GeneralHeader;
@@ -46,19 +44,36 @@ use pci::xhc::registers::external::External;
 use pci::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
+use crate::interrupt::mouse::MouseSubscriber;
+
+static mut QUEUE: VectorQueue<u32> = VectorQueue::new();
 static mut IDTA: InterruptDescriptorTable = InterruptDescriptorTable::new();
 
 
-// new
-extern "x86-interrupt" fn int_handler_xhci(stack_frame: InterruptStackFrame) {
+// 読み書き可能でヒープに確保
+pub fn init_idt() {
     unsafe {
+        // IDT.breakpoint
+        //     .set_handler_fn(double_fault_handler);
+        let a = IDTA[0x40].set_handler_fn(int_handler_xhci);
+
+        IDTA.load();
+    }
+}
+
+
+extern "x86-interrupt" fn int_handler_xhci(_stack_frame: InterruptStackFrame) {
+    unsafe {
+        serial_println!("+++++++++++++");
         QUEUE.enqueue(32);
+
 
         (0xfee000b0 as *mut u32).write_volatile(0);
     }
 }
 
 pub mod allocate;
+mod interrupt;
 mod qemu;
 #[cfg(test)]
 mod test_runner;
@@ -83,10 +98,6 @@ macros::declaration_volatile_accessible!();
 //         )
 //     }
 // }
-extern "C" {
-    fn LoadIDT(limit: u16, offset: u64);
-    fn GetCS() -> u16;
-}
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(
@@ -99,6 +110,7 @@ pub extern "sysv64" fn kernel_main(
 
     init_console(*frame_buffer_config);
 
+    init_idt();
     #[cfg(test)]
     test_main();
     serial_println!("Hello Serial Port!");
@@ -106,62 +118,32 @@ pub extern "sysv64" fn kernel_main(
 
     fill_background(CONSOLE_BACKGROUND_COLOR, frame_buffer_config).unwrap();
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
+    let addr = unsafe { ((int_handler_xhci) as *const ()) as u64 };
 
-    unsafe {
-        set_idt_entry(&mut IDT[0x40], make_idt_attr(14, 0, true, 0), addr, GetCS());
-        LoadIDT(
-            (core::mem::size_of::<InterruptDescriptor>() * (IDT.len() - 1)) as u16,
-            IDT.as_ptr() as u64,
-        );
-    }
-
-    x86_64::registers::segmentation::CS::get_reg()
     enable_msi().unwrap();
-    enable();
+
     let external = External::new(mmio_base_addr(), IdentityMapper());
     let mut xhc_controller = XhcController::new(
         external,
         MikanOSPciMemoryAllocator::new(),
-        MouseDriverFactory::subscriber(on_mouse_move),
+        MouseDriverFactory::subscriber(MouseSubscriber::new(
+            frame_buffer_config.horizontal_resolution,
+            frame_buffer_config.vertical_resolution,
+        )),
     )
     .unwrap();
 
 
     xhc_controller.reset_port();
 
-
-    loop {
-        serial_println!("{}", unsafe { QUEUE.count() });
-        disable();
-        let a = unsafe { QUEUE.count() == 0 };
-        if a {
-            enable_and_hlt();
-            continue;
-        }
-        enable();
-        let a = unsafe { QUEUE.dequeue().unwrap() };
+    let queue_waiter = unsafe { InterruptQueueWaiter::new(&mut QUEUE) };
+    queue_waiter.for_each(|_| {
+        serial_println!("Interrupt!");
         xhc_controller.process_all_events();
-    }
+    });
+
 
     common_lib::assembly::hlt_forever();
-}
-
-fn on_mouse_move(
-    prev_cursor: Vector2D<usize>,
-    current_cursor: Vector2D<usize>,
-    button: Option<MouseButton>,
-) -> Result<(), ()> {
-    let color = button
-        .map(|b| match b {
-            MouseButton::Button1 => PixelColor::yellow(),
-            MouseButton::Button2 => PixelColor::new(0x13, 0xA9, 0xDB),
-            MouseButton::Button3 => PixelColor::new(0x35, 0xFA, 0x66),
-            _ => PixelColor::white(),
-        })
-        .unwrap_or(PixelColor::white());
-
-    erase_cursor(prev_cursor).map_err(|_| ())?;
-    draw_cursor(current_cursor, color).map_err(|_| ())
 }
 
 #[derive(Clone, Debug)]
@@ -175,17 +157,6 @@ impl xhci::accessor::Mapper for IdentityMapper {
     fn unmap(&mut self, _virtual_start: usize, _bytes: usize) {}
 }
 
-#[allow(dead_code)]
-fn is_available(memory_type: MemoryType) -> bool {
-    match memory_type {
-        MemoryType::BOOT_SERVICES_CODE
-        | MemoryType::BOOT_SERVICES_DATA
-        | MemoryType::MMIO
-        | MemoryType::MMIO_PORT_SPACE
-        | MemoryType::CONVENTIONAL => true,
-        _ => false,
-    }
-}
 
 #[allow(dead_code)]
 fn fill_background(color: PixelColor, config: &FrameBufferConfig) -> KernelResult {

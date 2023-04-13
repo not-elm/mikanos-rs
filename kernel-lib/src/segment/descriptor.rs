@@ -1,19 +1,17 @@
-use bitfield_struct::bitfield;
+use modular_bitfield::bitfield;
+use modular_bitfield::prelude::{B2, B4};
 
 /// Segment Descriptor
-#[bitfield(u64)]
-pub struct DescriptorA {
+#[bitfield(bits = 64)]
+pub struct SegmentDescriptor {
     pub limit_low: u16,
     pub base_low: u16,
     pub base_middle: u8,
-    #[bits(4)]
-    pub descriptor_type: u8,
+    pub descriptor_type: B4,
     pub system_segment: bool,
-    #[bits(2)]
-    pub descriptor_privilege_level: usize,
+    pub descriptor_privilege_level: B2,
     pub preset: bool,
-    #[bits(4)]
-    pub limit_high: u8,
+    pub limit_high: B4,
     pub available: bool,
     pub long_mode: bool,
     pub default_operation_size: bool,
