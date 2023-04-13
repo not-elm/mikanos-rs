@@ -13,9 +13,7 @@ use core::alloc::Layout;
 use core::num::NonZeroUsize;
 use core::panic::PanicInfo;
 
-use uefi::table::boot::{MemoryMapIter, MemoryType};
-use volatile::Volatile;
-use x86_64::instructions::interrupts::{disable, enable, enable_and_hlt};
+use uefi::table::boot::MemoryMapIter;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 use allocate::init_alloc;
@@ -26,12 +24,10 @@ use common_lib::vector::Vector2D;
 use kernel_lib::{println, serial_println};
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{
-    CONSOLE_BACKGROUND_COLOR, draw_cursor, erase_cursor, fill_rect_using_global, init_console,
+    CONSOLE_BACKGROUND_COLOR, fill_rect_using_global, init_console,
 };
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::interrupt::asm::sti;
 use kernel_lib::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
-use kernel_lib::interrupt::sti;
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
@@ -68,6 +64,7 @@ pub fn init_idt() {
 
 extern "x86-interrupt" fn int_handler_xhci(_stack_frame: InterruptStackFrame) {
     unsafe {
+        serial_println!("+++++++++++++");
         QUEUE.enqueue(32);
 
 
@@ -101,10 +98,6 @@ macros::declaration_volatile_accessible!();
 //         )
 //     }
 // }
-extern "C" {
-    fn LoadIDT(limit: u16, offset: u64);
-    fn GetCS() -> u16;
-}
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(
@@ -127,16 +120,7 @@ pub extern "sysv64" fn kernel_main(
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
     let addr = unsafe { ((int_handler_xhci) as *const ()) as u64 };
 
-    // unsafe {
-    //     set_idt_entry(&mut IDT[0x40], make_idt_attr(14, 0, true, 0), addr,
-    // GetCS());     LoadIDT(
-    //         (core::mem::size_of::<InterruptDescriptor>() * (IDT.len() - 1)) as
-    // u16,         IDT.as_ptr() as u64,
-    //     );
-    // }
-
     enable_msi().unwrap();
-    sti();
 
     let external = External::new(mmio_base_addr(), IdentityMapper());
     let mut xhc_controller = XhcController::new(

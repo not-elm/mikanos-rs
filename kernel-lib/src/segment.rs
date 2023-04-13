@@ -1,11 +1,8 @@
-use core::mem::size_of;
-
-use crate::paging::setup_identity_page_table;
-use crate::segment::descriptor::SegmentDescriptor;
-
 pub const DOUBLE_FAULT_IST_INDEX: u16 = 0;
 
-mod descriptor;
+
+pub mod asm;
+pub mod descriptor;
 
 static mut GDT: [u64; 8] = [0; 8];
 //

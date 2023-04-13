@@ -3,8 +3,8 @@
 #![feature(strict_provenance)]
 #![feature(once_cell)]
 #![feature(sync_unsafe_cell)]
-
-
+#![no_std]
+#[cfg(test)]
 extern crate alloc;
 
 pub mod error;
