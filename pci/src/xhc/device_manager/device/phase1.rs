@@ -2,14 +2,11 @@ use alloc::boxed::Box;
 
 use xhci::ring::trb::event::TransferEvent;
 
-use kernel_lib::serial_println;
-
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
-use crate::xhc::device_manager::descriptor::structs::device_descriptor::DeviceDescriptor;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase};
 use crate::xhc::device_manager::device::phase2::Phase2;

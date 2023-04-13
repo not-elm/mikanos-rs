@@ -1,4 +1,4 @@
-use xhci::context::{Device32Byte, Device64Byte, DeviceHandler, SlotHandler};
+use xhci::context::{Device32Byte, DeviceHandler, SlotHandler};
 
 #[repr(C, align(64))]
 #[derive(Debug)]

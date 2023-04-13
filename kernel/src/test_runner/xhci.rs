@@ -29,12 +29,12 @@ pub(crate) fn operational_registers() -> OperationalRegisters {
 
 #[allow(dead_code)]
 pub(crate) fn hcs_params1_offset() -> StructuralParameters1Offset {
-    StructuralParameters1Offset::new(crate::mmio_base_addr())
+    StructuralParameters1Offset::new(mmio_base_addr())
 }
 
 #[allow(dead_code)]
 pub(crate) fn hcs_params2_offset() -> StructuralParameters2Offset {
-    StructuralParameters2Offset::new(crate::mmio_base_addr())
+    StructuralParameters2Offset::new(mmio_base_addr())
 }
 
 #[allow(dead_code)]

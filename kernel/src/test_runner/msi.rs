@@ -1,4 +1,3 @@
-use kernel_lib::serial_println;
 use pci::configuration_space::io::io_memory_accessible::real_memory_accessor::RealIoMemoryAccessor;
 use pci::configuration_space::msi::InterruptCapabilityRegisterIter;
 

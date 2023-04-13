@@ -10,7 +10,6 @@
 extern crate alloc;
 
 use core::alloc::Layout;
-use core::num::NonZeroUsize;
 use core::panic::PanicInfo;
 
 use uefi::table::boot::MemoryMapIter;
@@ -18,31 +17,15 @@ use uefi::table::boot::MemoryMapIter;
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
-use kernel_lib::apic::LocalApicRegisters;
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{fill_rect_using_global, init_console, CONSOLE_BACKGROUND_COLOR};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
-use kernel_lib::interrupt::interrupt_vector::InterruptVector;
-use kernel_lib::{println, serial_println, VolatileAccessible as OtherVolatileAccessible};
-use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use pci::configuration_space::common_header::class_code::ClassCode;
-use pci::configuration_space::common_header::sub_class::Subclass;
-use pci::configuration_space::device::header_type::general_header::GeneralHeader;
-use pci::configuration_space::io::io_memory_accessible::real_memory_accessor::RealIoMemoryAccessor;
-use pci::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
-use pci::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
-use pci::configuration_space::msi::InterruptCapabilityRegisterIter;
-use pci::error::PciResult;
-use pci::pci_device_searcher::PciDeviceSearcher;
-use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
-use pci::xhc::registers::external::External;
-use pci::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
-use pci::xhc::XhcController;
+use kernel_lib::{println, serial_println};
 
 use crate::interrupt::init_idt;
-use crate::interrupt::mouse::INTERRUPT_QUEUE;
 use crate::usb::mouse::MouseSubscriber;
+use crate::usb::xhci::start_xhci_host_controller;
+use crate::usb::{enable_msi, first_general_header};
 
 pub mod allocate;
 mod interrupt;
@@ -94,39 +77,20 @@ pub extern "sysv64" fn kernel_main(
     fill_background(CONSOLE_BACKGROUND_COLOR, frame_buffer_config).unwrap();
     fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
 
-    enable_msi().unwrap();
+    let general_header = first_general_header();
+    enable_msi(general_header.clone()).unwrap();
 
-    let external = External::new(mmio_base_addr(), IdentityMapper());
-    let mut xhc_controller = XhcController::new(
-        external,
-        MikanOSPciMemoryAllocator::new(),
-        MouseDriverFactory::subscriber(MouseSubscriber::new(
+    start_xhci_host_controller(
+        general_header.mmio_base_addr(),
+        MouseSubscriber::new(
             frame_buffer_config.horizontal_resolution,
             frame_buffer_config.vertical_resolution,
-        )),
+        ),
     )
     .unwrap();
 
 
-    xhc_controller.reset_port();
-
-    let queue_waiter = unsafe { InterruptQueueWaiter::new(&mut INTERRUPT_QUEUE) };
-    queue_waiter.for_each(|_| {
-        xhc_controller.process_event();
-    });
-
     common_lib::assembly::hlt_forever();
-}
-
-#[derive(Clone, Debug)]
-struct IdentityMapper();
-
-impl xhci::accessor::Mapper for IdentityMapper {
-    unsafe fn map(&mut self, phys_start: usize, _bytes: usize) -> NonZeroUsize {
-        NonZeroUsize::new_unchecked(phys_start)
-    }
-
-    fn unmap(&mut self, _virtual_start: usize, _bytes: usize) {}
 }
 
 
@@ -151,45 +115,6 @@ fn fill_bottom_bar(color: PixelColor, config: &FrameBufferConfig) -> KernelResul
     )
 }
 
-
-pub fn first_general_header() -> GeneralHeader {
-    PciDeviceSearcher::new()
-        .class_code(ClassCode::SerialBus)
-        .sub_class(Subclass::Usb)
-        .search()
-        .unwrap()
-        .cast_device()
-        .expect_single()
-        .unwrap()
-        .expect_general()
-        .unwrap()
-}
-
-fn enable_msi() -> PciResult {
-    let io = RealIoMemoryAccessor::new();
-    let bsp_local_apic_id: u8 = LocalApicRegisters::default()
-        .local_apic_id()
-        .read_volatile();
-
-    for mut msi in InterruptCapabilityRegisterIter::new(first_general_header(), io)
-        .filter_map(|register| register.ok())
-        .filter_map(|register| register.msi())
-    {
-        msi.enable(
-            bsp_local_apic_id,
-            TriggerMode::Level,
-            InterruptVector::Xhci,
-            DeliveryMode::Fixed,
-            0,
-        )?;
-    }
-    Ok(())
-}
-
-#[allow(dead_code)]
-fn mmio_base_addr() -> MemoryMappedAddr {
-    first_general_header().mmio_base_addr()
-}
 
 /// この関数はパニック時に呼ばれる
 #[panic_handler]

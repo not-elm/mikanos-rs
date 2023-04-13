@@ -1,7 +1,7 @@
 use core::cmp::min;
 use core::fmt::{Debug, Formatter};
 
-use kernel_lib::serial_println;
+use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 
 use crate::configuration_space::ConfigurationSpace;
 use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
@@ -12,7 +12,6 @@ use crate::configuration_space::msi::msi_capability_register::access::msi_capabi
 use crate::configuration_space::msi::msi_capability_register::structs::control::Control;
 use crate::configuration_space::msi::msi_capability_register::structs::message_address::MessageAddress;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
-use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::level_for_trigger_mode::LevelForTriggerMode;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::MessageData;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
@@ -122,7 +121,6 @@ where
             &self.configuration_space,
             self.msi_cap_addr,
             |control| {
-                serial_println!("CONTROL {:?}", control);
                 control.set_msi_enable();
 
                 let capable = control.multiple_msg_capable();

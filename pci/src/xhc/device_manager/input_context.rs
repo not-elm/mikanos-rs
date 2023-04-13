@@ -1,6 +1,4 @@
-use xhci::context::{
-    EndpointHandler, Input32Byte, Input64Byte, InputControlHandler, InputHandler, SlotHandler,
-};
+use xhci::context::{EndpointHandler, Input32Byte, InputHandler, SlotHandler};
 
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 
@@ -70,11 +68,6 @@ impl InputContext {
 
     pub fn input_context_addr(&self) -> u64 {
         (&self.0 as *const Input32Byte) as u64
-    }
-
-
-    fn control_mut(&mut self) -> &mut dyn InputControlHandler {
-        self.0.control_mut()
     }
 }
 

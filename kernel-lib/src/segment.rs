@@ -4,7 +4,7 @@ pub const DOUBLE_FAULT_IST_INDEX: u16 = 0;
 pub mod asm;
 pub mod descriptor;
 
-static mut GDT: [u64; 8] = [0; 8];
+// static mut GDT: [u64; 8] = [0; 8];
 //
 // fn set_code_segment(
 //     descriptor_type: u8,

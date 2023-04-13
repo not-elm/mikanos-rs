@@ -4,12 +4,12 @@ use common_lib::queue::queueing::Queueing;
 use common_lib::queue::vector_queue::VectorQueue;
 use kernel_lib::apic::LocalApicRegisters;
 
-pub static mut INTERRUPT_QUEUE: VectorQueue<u32> = VectorQueue::new();
+pub static mut INTERRUPT_MOUSE_QUEUE: VectorQueue<()> = VectorQueue::new();
 
 
 pub extern "x86-interrupt" fn interrupt_mouse_handler(_stack_frame: InterruptStackFrame) {
     unsafe {
-        INTERRUPT_QUEUE.enqueue(32);
+        INTERRUPT_MOUSE_QUEUE.enqueue(());
     }
 
     LocalApicRegisters::default()

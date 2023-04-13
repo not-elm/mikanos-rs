@@ -1,7 +1,6 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 use xhci::ring::trb::transfer::{Direction, StatusStage, TransferType};
 
 use crate::error::PciResult;

@@ -1,4 +1,4 @@
-use crate::mmio_base_addr;
+use crate::test_runner::xhci::mmio_base_addr;
 use pci::xhc::registers::internal::capability_registers::capability_length::CapabilityLength;
 use pci::xhc::registers::internal::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
 

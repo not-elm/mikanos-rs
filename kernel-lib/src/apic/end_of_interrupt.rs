@@ -15,6 +15,7 @@ impl EndOfInterrupt {
     }
 
 
+    /// 割り込み処理が終了したことを通知します。
     pub fn eoi(&self) {
         self.write_volatile(0);
     }

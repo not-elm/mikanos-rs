@@ -1,6 +1,5 @@
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use xhci::context::EndpointType;
 
 use xhci::ring::trb::event::TransferEvent;
 
