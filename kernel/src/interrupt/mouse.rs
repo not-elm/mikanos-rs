@@ -14,5 +14,5 @@ pub extern "x86-interrupt" fn interrupt_mouse_handler(_stack_frame: InterruptSta
 
     LocalApicRegisters::default()
         .end_of_interrupt()
-        .eoi();
+        .notify();
 }

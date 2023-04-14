@@ -8,7 +8,7 @@ use crate::{
     interrupt::interrupt_descriptor_attribute::InterruptDescriptorAttribute,
     segment::asm::read_code_segment,
 };
-use crate::error::{KernelError, KernelResult};
+use crate::error::KernelResult;
 
 pub type InterruptHandler = extern "x86-interrupt" fn(stack_frame: InterruptStackFrame);
 
@@ -35,7 +35,7 @@ impl InterruptDescriptor {
         handler: InterruptHandler,
         type_attributes: InterruptDescriptorAttribute,
     ) -> KernelResult {
-        let offset = u64::try_from(handler as usize).map_err(|_| KernelError::FailedCast)?;
+        let offset = handler as usize;
         self.set_type_attributes(type_attributes);
         self.set_offset_low((offset & 0xffff) as u16);
         self.set_offset_middle(((offset >> 16) & 0xffff) as u16);
