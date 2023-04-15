@@ -28,6 +28,7 @@ use crate::usb::xhci::start_xhci_host_controller;
 use crate::usb::{enable_msi, first_general_header};
 
 pub mod allocate;
+mod entry_point;
 mod interrupt;
 mod qemu;
 #[cfg(test)]
@@ -35,25 +36,8 @@ mod test_runner;
 mod usb;
 #[cfg(test)]
 macros::declaration_volatile_accessible!();
-// #[no_mangle]
-// pub extern "sysv64" fn kernel_entry_point(
-//     frame_buffer_config: &FrameBufferConfig,
-//     memory_map: &MemoryMapIter,
-// ) {
-//     let address = KERNEL_STACK.end_addr();
-//
-//     unsafe {
-//         asm!(
-//             "mov rsp, {0}",
-//             "call kernel_main",
-//
-//             in(reg) address,
-//             in("rdi") frame_buffer_config,
-//             in("esi") memory_map,
-//             clobber_abi("sysv64")
-//         )
-//     }
-// }
+
+kernel_entry_point!();
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(

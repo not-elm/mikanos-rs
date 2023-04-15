@@ -98,15 +98,4 @@ SetCR3:
     ret
 ; #@@range_end(set_cr3)
 
-; #@@range_begin(set_main_stack)
 
-extern kernel_main
-
-global kernel_entry_point
-kernel_entry_point:
-    mov rsp, kernel_main_stack + 1024 * 1024
-    call kernel_main
-.fin:
-    hlt
-    jmp .fin
-; #@@range_end(set_main_stack)

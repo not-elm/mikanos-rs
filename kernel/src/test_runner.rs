@@ -9,11 +9,11 @@ use crate::qemu::{exit_qemu, QemuExitCode};
 use crate::serial_println;
 
 mod macros_test;
-mod xhci;
 mod msi;
+mod xhci;
 
 pub trait Testable {
-    fn run(&self) -> ();
+    fn run(&self);
 }
 
 impl<T> Testable for T
