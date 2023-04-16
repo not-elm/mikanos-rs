@@ -22,6 +22,7 @@ use kernel_lib::gop::console::{fill_rect_using_global, init_console, CONSOLE_BAC
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::{println, serial_println};
 
+use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
@@ -29,6 +30,7 @@ use crate::usb::{enable_msi, first_general_header};
 
 pub mod allocate;
 mod entry_point;
+mod gdt;
 mod interrupt;
 mod qemu;
 #[cfg(test)]
@@ -38,20 +40,22 @@ mod usb;
 macros::declaration_volatile_accessible!();
 
 kernel_entry_point!();
+extern "C" {
+    fn SetDSAll(v: u16);
+}
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
     _memory_map: &MemoryMapIter,
 ) {
-    // unsafe { setup_segments() };
+    init_gdt();
+
+    init_idt().unwrap();
 
     init_alloc();
 
     init_console(*frame_buffer_config);
-
-    init_idt().unwrap();
-
 
     #[cfg(test)]
     test_main();

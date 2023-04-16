@@ -1,12 +1,14 @@
 use core::marker::PhantomData;
 
+use x86_64::instructions::interrupts::enable_and_hlt;
+
 use common_lib::queue::queueing::Queueing;
 
-use crate::interrupt::asm::{cli, sti_and_hlt};
+use crate::interrupt::asm::cli;
 
 pub struct InterruptQueueWaiter<Queue, Value>
-    where
-        Queue: Queueing<Value> + 'static,
+where
+    Queue: Queueing<Value> + 'static,
 {
     queue: &'static mut Queue,
     _maker: PhantomData<Value>,
@@ -14,8 +16,8 @@ pub struct InterruptQueueWaiter<Queue, Value>
 
 
 impl<Queue, Value> InterruptQueueWaiter<Queue, Value>
-    where
-        Queue: Queueing<Value> + 'static,
+where
+    Queue: Queueing<Value> + 'static,
 {
     pub fn new(queue: &'static mut Queue) -> InterruptQueueWaiter<Queue, Value> {
         Self {
@@ -26,15 +28,16 @@ impl<Queue, Value> InterruptQueueWaiter<Queue, Value>
 }
 
 impl<Queue, Value> Iterator for InterruptQueueWaiter<Queue, Value>
-    where
-        Queue: Queueing<Value>,
+where
+    Queue: Queueing<Value>,
 {
     type Item = Value;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut value = self.queue.dequeue();
+
         while value.is_none() {
-            sti_and_hlt();
+            enable_and_hlt();
 
             value = self.queue.dequeue();
         }

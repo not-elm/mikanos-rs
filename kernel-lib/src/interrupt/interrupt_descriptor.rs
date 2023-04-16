@@ -2,13 +2,15 @@ use modular_bitfield::{
     bitfield,
     specifiers::{B3, B5},
 };
-use x86_64::structures::idt::InterruptStackFrame;
+use x86_64::instructions::segmentation::Segment;
+use x86_64::registers::segmentation::CS;
+use x86_64::structures::idt::{InterruptStackFrame, PageFaultErrorCode};
 
-use crate::{
-    interrupt::interrupt_descriptor_attribute::InterruptDescriptorAttribute,
-    segment::asm::read_code_segment,
-};
 use crate::error::KernelResult;
+use crate::interrupt::interrupt_descriptor_attribute::InterruptDescriptorAttribute;
+
+pub type PageFaultHandler =
+    extern "x86-interrupt" fn(stack_frame: InterruptStackFrame, error_code: PageFaultErrorCode);
 
 pub type InterruptHandler = extern "x86-interrupt" fn(stack_frame: InterruptStackFrame);
 
@@ -30,6 +32,20 @@ pub struct InterruptDescriptor {
 
 
 impl InterruptDescriptor {
+    pub fn set_page_fault_handler(
+        &mut self,
+        handler: PageFaultHandler,
+        type_attributes: InterruptDescriptorAttribute,
+    ) -> KernelResult {
+        let offset = handler as usize;
+        self.set_type_attributes(type_attributes);
+        self.set_offset_low(offset as u16);
+        self.set_offset_middle((offset >> 16) as u16);
+        self.set_offset_high((offset >> 32) as u32);
+        self.set_segment_selector(CS::get_reg().0);
+
+        Ok(())
+    }
     pub fn set_handler(
         &mut self,
         handler: InterruptHandler,
@@ -37,10 +53,10 @@ impl InterruptDescriptor {
     ) -> KernelResult {
         let offset = handler as usize;
         self.set_type_attributes(type_attributes);
-        self.set_offset_low((offset & 0xffff) as u16);
-        self.set_offset_middle(((offset >> 16) & 0xffff) as u16);
+        self.set_offset_low(offset as u16);
+        self.set_offset_middle((offset >> 16) as u16);
         self.set_offset_high((offset >> 32) as u32);
-        self.set_segment_selector(read_code_segment());
+        self.set_segment_selector(CS::get_reg().0);
 
         Ok(())
     }

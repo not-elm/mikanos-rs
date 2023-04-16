@@ -18,5 +18,5 @@ pub mod gop;
 pub mod interrupt;
 pub mod paging;
 pub mod register;
-pub mod segment;
+pub mod segmentation;
 pub mod serial;

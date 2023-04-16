@@ -4,7 +4,6 @@ use crate::apic::LocalApicRegistersAddr;
 
 /// EOI
 #[derive(VolatileBits)]
-#[volatile_type(u64)]
 #[add_addr_bytes(0xB0)]
 #[volatile_type(u32)]
 pub struct EndOfInterrupt(usize);
