@@ -8,5 +8,16 @@ pub enum KernelError {
     ExceededFrameBufferSize,
     NotSupportCharacter,
     FailedCast,
+    FailedAllocate(AllocateReason),
     TryFromIntError(TryFromIntError),
+}
+
+
+#[derive(Debug)]
+pub enum AllocateReason {
+    InitializeGlobalAllocator,
+    OverFrame {
+        max_frame_id: usize,
+        frame_id: usize,
+    },
 }

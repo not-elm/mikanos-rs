@@ -6,11 +6,13 @@
 extern crate alloc;
 
 use uefi::prelude::*;
+use uefi::proto::media::file::FileMode;
 use uefi_services::println;
 
-use crate::file::open_root_dir;
+use crate::file::{open_file, open_root_dir};
 use crate::gop::{open_gop, write_all_pixels_with_same};
 use crate::kernel::boot_allocator::BootAllocator;
+use crate::memory_map::save_memory_map;
 
 mod error;
 mod file;
@@ -26,6 +28,15 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     println!("Hello, Mikan Rust World!");
 
     let mut root_dir = open_root_dir(handle, &system_table).unwrap();
+    save_memory_map(
+        open_file(&mut root_dir, "memory_map", FileMode::CreateReadWrite)
+            .unwrap()
+            .into_regular_file()
+            .unwrap(),
+        &mut system_table,
+    )
+    .unwrap();
+
     let entry_point = kernel::process::load_kernel(
         &mut root_dir,
         &"kernel.elf",

@@ -47,7 +47,7 @@ kernel_entry_point!();
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
-    _memory_map: &MemoryMapIter,
+    memory_map: &MemoryMapIter<'static>,
 ) {
     init_gdt();
 
@@ -55,9 +55,11 @@ pub extern "sysv64" fn kernel_main(
 
     init_paging_table();
 
-    init_alloc();
-
     init_console(*frame_buffer_config);
+
+
+    init_alloc(memory_map.clone()).unwrap();
+
 
     #[cfg(test)]
     test_main();

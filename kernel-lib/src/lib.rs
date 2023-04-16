@@ -12,6 +12,7 @@ use macros::declaration_volatile_accessible;
 
 declaration_volatile_accessible!();
 
+pub mod allocator;
 pub mod apic;
 pub mod control_registers;
 pub mod error;

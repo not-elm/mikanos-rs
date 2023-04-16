@@ -4,11 +4,14 @@ use uefi::prelude::{Boot, SystemTable};
 use uefi::proto::media::file::{File, RegularFile};
 use uefi::table::boot::MemoryDescriptor;
 
-use crate::{error, kib};
 use crate::error::from_sfs_write_result;
+use crate::{error, kib};
 
 #[allow(dead_code)]
-pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTable<Boot>) -> error::Result<()> {
+pub(crate) fn save_memory_map(
+    mut file: RegularFile,
+    system_table: &mut SystemTable<Boot>,
+) -> error::Result<()> {
     let header = b"Index,Type,PhysicalStart,NumberOfPages,Attribute\n";
     file.write(header).unwrap();
 
@@ -30,10 +33,14 @@ pub(crate) fn save_memory_map(mut file: RegularFile, system_table: &mut SystemTa
 }
 
 
-unsafe fn write_memory_descriptor_info(i: usize, file: &mut RegularFile, memory_descriptor: &MemoryDescriptor) -> error::Result<()> {
+unsafe fn write_memory_descriptor_info(
+    i: usize,
+    file: &mut RegularFile,
+    memory_descriptor: &MemoryDescriptor,
+) -> error::Result<()> {
     let mut index = format!("{} |", i);
     let mut memory_type = format!("{:?} | ", memory_descriptor.ty);
-    let mut phys_start = format!("{} | ", memory_descriptor.phys_start);
+    let mut phys_start = format!("0x{:X} | ", memory_descriptor.phys_start);
     let mut page_count = format!("{} | ", memory_descriptor.page_count);
     let mut attribute = format!("{:?}\n", memory_descriptor.att);
     from_sfs_write_result(file.write(index.as_bytes_mut()))?;

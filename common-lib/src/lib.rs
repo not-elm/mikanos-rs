@@ -5,7 +5,9 @@ extern crate alloc;
 
 pub mod assembly;
 pub mod frame_buffer;
+pub mod math;
 pub mod nums;
 pub mod queue;
-pub mod vector;
 pub mod rectangle;
+pub mod unit;
+pub mod vector;
