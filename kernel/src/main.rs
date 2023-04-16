@@ -40,9 +40,7 @@ mod usb;
 macros::declaration_volatile_accessible!();
 
 kernel_entry_point!();
-extern "C" {
-    fn SetDSAll(v: u16);
-}
+
 
 #[no_mangle]
 pub extern "sysv64" fn kernel_main(
