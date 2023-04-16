@@ -24,6 +24,7 @@ use kernel_lib::{println, serial_println};
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
+use crate::paging::init_paging_table;
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
 use crate::usb::{enable_msi, first_general_header};
@@ -32,6 +33,7 @@ pub mod allocate;
 mod entry_point;
 mod gdt;
 mod interrupt;
+mod paging;
 mod qemu;
 #[cfg(test)]
 mod test_runner;
@@ -50,6 +52,8 @@ pub extern "sysv64" fn kernel_main(
     init_gdt();
 
     init_idt().unwrap();
+
+    init_paging_table();
 
     init_alloc();
 
