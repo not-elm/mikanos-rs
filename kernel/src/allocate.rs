@@ -10,7 +10,7 @@ static mut MEMORY_POOL: [u8; 4096 * 32] = [0; 4096 * 32];
 #[global_allocator]
 static mut HEAP: BitmapAllocator<MemoryMapRange> = BitmapAllocator::uninit();
 
-pub fn init_alloc(memory_map: MemoryMapIter) -> KernelResult {
+pub fn init_alloc(memory_map: MemoryMapIter<'static>) -> KernelResult {
     unsafe { HEAP.init(MemoryMapRange::new(memory_map)) }
 }
 // #[global_allocator]

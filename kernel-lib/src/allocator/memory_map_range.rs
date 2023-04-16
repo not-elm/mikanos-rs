@@ -9,19 +9,19 @@ pub struct MemoryMapRange<'memory> {
 }
 
 
-impl MemoryMapRange {
-    pub fn new(iter: MemoryMapIter) -> MemoryMapRange {
+impl<'memory> MemoryMapRange<'memory> {
+    pub fn new(iter: MemoryMapIter<'memory>) -> MemoryMapRange<'memory> {
         MemoryMapRange { iter, frame_id: 0 }
     }
 }
 
 
-impl MemoryMapFrameIterable for MemoryMapRange {
+impl<'memory> MemoryMapFrameIterable<'memory> for MemoryMapRange<'memory> {
     fn last_id(&self) -> usize {
         self.iter.len() - 1
     }
 
-    fn get(&mut self, frame_id: usize) -> Option<MemoryMapFrame> {
+    fn get(&mut self, frame_id: usize) -> Option<MemoryMapFrame<'memory>> {
         self.nth(frame_id)
     }
 }
