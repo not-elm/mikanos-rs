@@ -5,25 +5,24 @@ use core::ptr::null_mut;
 use spin::Mutex;
 
 use common_lib::math::Align;
+use common_lib::physical_address::PhysicalAddress;
 
 use crate::allocator::bitmap_memory_manager::BitmapMemoryFrameManager;
-use crate::allocator::memory_map_frame_iterable::MemoryMapFrameIterable;
-use crate::allocator::FRAME_SIZE;
+use crate::allocator::memory_map::frame_iterable::MemoryMapFrameIterable;
 use crate::error::{AllocateReason, KernelError, KernelResult};
 use crate::serial_println;
 
 pub struct BitmapFrameAllocator<MemoryMap>(OnceCell<Mutex<BitmapMemoryFrameManager<MemoryMap>>>)
-where
-    MemoryMap: MemoryMapFrameIterable;
+    where
+        MemoryMap: MemoryMapFrameIterable;
 
 unsafe impl<MemoryMap> Sync for BitmapFrameAllocator<MemoryMap> where
     MemoryMap: MemoryMapFrameIterable
-{
-}
+{}
 
 impl<MemoryMap> BitmapFrameAllocator<MemoryMap>
-where
-    MemoryMap: MemoryMapFrameIterable + Clone,
+    where
+        MemoryMap: MemoryMapFrameIterable + Clone,
 {
     pub const fn uninit() -> BitmapFrameAllocator<MemoryMap> {
         Self(OnceCell::new())
@@ -39,45 +38,41 @@ where
 
 
 unsafe impl<MemoryMap> GlobalAlloc for BitmapFrameAllocator<MemoryMap>
-where
-    MemoryMap: MemoryMapFrameIterable + Clone,
+    where
+        MemoryMap: MemoryMapFrameIterable + Clone,
 {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        serial_println!("allocate layout {:?}", layout);
         let mut manager = self.0.get().unwrap().lock();
-        let frame = manager.allocate_frame(layout);
+        let phys_addr = manager.allocate_frame(layout);
 
-        let addr = frame
-            .and_then(|frame| {
-                frame
-                    .descriptor()
-                    .phys_start
+        phys_addr
+            .and_then(|phys_addr| {
+                phys_addr
+                    .raw()
                     .align_up(layout.align())
             })
             .map(|address| address as *mut u8)
-            .unwrap_or(null_mut());
-
-        serial_println!("allocated  0x{:x}", addr as u64);
-        addr
+            .inspect(|address| {
+                serial_println!("PTR {}", core::ptr::read_volatile(*address));
+                core::ptr::write_bytes(*address, 0, layout.size());
+            })
+            .unwrap()
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        let phs_addr = ptr as u64;
+        serial_println!("FREE");
+        let phs_addr = PhysicalAddress::new(ptr as u64);
+        serial_println!("FREE Ptr {}", ptr.is_null());
+        if !ptr.is_null() {
+            core::ptr::write_bytes(ptr, 0, layout.size());
+            core::ptr::drop_in_place(ptr);
+        }
+
         let mut manager = self.0.get().unwrap().lock();
-        let frame = manager
+        manager
             .memory_map_mut()
-            .find(|frame| {
-                let frame_addr = frame.descriptor().phys_start;
-                frame_addr <= phs_addr && phs_addr <= (frame_addr + FRAME_SIZE as u64)
-            })
-            .unwrap();
-
-
-        self.0
-            .get()
-            .unwrap()
-            .lock()
-            .free_frames(frame.id(), layout)
+            .frame_contains_address(phs_addr)
+            .and_then(|frame| manager.free_frames(frame.id(), layout).ok())
             .unwrap();
     }
 }

@@ -3,6 +3,7 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
+use kernel_lib::serial_println;
 use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
 use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use registers::traits::registers_operation::RegistersOperation;
@@ -33,14 +34,14 @@ pub mod registers;
 pub mod transfer;
 
 pub struct XhcController<Register, Collectable, Memory>
-where
-    Register: RegistersOperation
+    where
+        Register: RegistersOperation
         + InterrupterSetRegisterAccessible
         + PortRegistersAccessible
         + DoorbellRegistersAccessible
         + 'static,
-    Collectable: DeviceCollectable<Register, Memory>,
-    Memory: MemoryAllocatable,
+        Collectable: DeviceCollectable<Register, Memory>,
+        Memory: MemoryAllocatable,
 {
     registers: Rc<RefCell<Register>>,
     event_ring: EventRing<Register>,
@@ -50,8 +51,8 @@ where
 }
 
 impl<Register, Memory> XhcController<Register, DeviceMap<Register, Memory>, Memory>
-where
-    Register: RegistersOperation
+    where
+        Register: RegistersOperation
         + CapabilityRegistersAccessible
         + InterrupterSetRegisterAccessible
         + UsbCommandRegisterAccessible
@@ -60,7 +61,7 @@ where
         + ConfigRegisterAccessible
         + DeviceContextBaseAddressArrayPointerAccessible
         + 'static,
-    Memory: MemoryAllocatable,
+        Memory: MemoryAllocatable,
 {
     pub fn new(
         registers: Register,
@@ -129,6 +130,7 @@ where
             .event_ring
             .read_event_trb()
         {
+            serial_println!("{:?}", event_trb);
             return Some(self.on_event(event_trb));
         }
 

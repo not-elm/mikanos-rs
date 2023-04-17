@@ -3,6 +3,7 @@
 #![feature(strict_provenance)]
 #![feature(abi_x86_interrupt)]
 #![feature(sync_unsafe_cell)]
+#![feature(result_option_inspect)]
 #![no_std]
 
 #[cfg(test)]

@@ -18,17 +18,17 @@ use x86_64::VirtAddr;
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::vector::Vector2D;
-use kernel_lib::error::KernelResult;
-use kernel_lib::gop::console::{fill_rect_using_global, init_console, CONSOLE_BACKGROUND_COLOR};
-use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::{println, serial_println};
+use kernel_lib::error::KernelResult;
+use kernel_lib::gop::console::{CONSOLE_BACKGROUND_COLOR, fill_rect_using_global, init_console};
+use kernel_lib::gop::pixel::pixel_color::PixelColor;
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::paging::init_paging_table;
+use crate::usb::{enable_msi, first_general_header};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
-use crate::usb::{enable_msi, first_general_header};
 
 pub mod allocate;
 mod entry_point;
@@ -59,7 +59,7 @@ pub extern "sysv64" fn kernel_main(
     init_console(*frame_buffer_config);
 
     init_alloc(memory_map.clone()).unwrap();
-
+    // init_alloc();
 
     #[cfg(test)]
     test_main();
@@ -79,7 +79,7 @@ pub extern "sysv64" fn kernel_main(
             frame_buffer_config.vertical_resolution,
         ),
     )
-    .unwrap();
+        .unwrap();
 
     common_lib::assembly::hlt_forever();
 }
@@ -112,6 +112,7 @@ fn fill_bottom_bar(color: PixelColor, config: &FrameBufferConfig) -> KernelResul
 #[cfg(not(test))]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
+    serial_println!("{:?}", info);
     common_lib::assembly::hlt_forever();
 }
 

@@ -2,7 +2,7 @@ use core::ops::{Index, IndexMut};
 
 use common_lib::nums::FlagConvertible;
 
-use crate::allocator::memory_map_frame_iterable::MemoryMapFrameIterable;
+use crate::allocator::memory_map::frame_iterable::MemoryMapFrameIterable;
 use crate::allocator::{FRAME_SIZE, MAX_MEMORY_SIZE};
 use crate::error::AllocateReason::OverFrame;
 use crate::error::{KernelError, KernelResult};
@@ -39,8 +39,13 @@ impl AllocateMap {
             allocate_map_buff: [0; ALLOCATE_MAP_BUFF_SIZE],
         }
     }
+    pub fn mark_allocate_multi_frames(&mut self, base_frame_id: usize, frames: usize) -> KernelResult {
+        for frame_id in base_frame_id..base_frame_id + frames {
+            self.mark_allocate_frame(frame_id)?;
+        }
 
-
+        Ok(())
+    }
     pub fn mark_allocate_frame(&mut self, frame_id: usize) -> KernelResult {
         self.error_if_over_id(frame_id)?;
 

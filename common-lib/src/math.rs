@@ -1,6 +1,6 @@
-pub fn frame_size_from_bytes(bytes: usize, frame_size: usize) -> usize {
+pub fn frame_count_from_bytes(bytes: usize, frame_size: usize) -> usize {
     if frame_size == 0 {
-        return bytes;
+        return 1;
     }
 
     let diff = bytes % frame_size;
@@ -38,24 +38,24 @@ impl Align<u64> for u64 {
 mod tests {
     use core::assert_eq;
 
-    use crate::math::frame_size_from_bytes;
+    use crate::math::frame_count_from_bytes;
 
     const FRAME_SIZE: usize = 4096;
 
     #[test]
     fn it_frame_size_1() {
-        assert_eq!(frame_size_from_bytes(1, FRAME_SIZE), 1);
+        assert_eq!(frame_count_from_bytes(1, FRAME_SIZE), 1);
     }
 
 
     #[test]
     fn it_frame_size_2() {
-        assert_eq!(frame_size_from_bytes(FRAME_SIZE * 2, FRAME_SIZE), 2);
+        assert_eq!(frame_count_from_bytes(FRAME_SIZE * 2, FRAME_SIZE), 2);
     }
 
 
     #[test]
     fn it_frame_size_3() {
-        assert_eq!(frame_size_from_bytes((FRAME_SIZE * 2) + 1, FRAME_SIZE), 3);
+        assert_eq!(frame_count_from_bytes((FRAME_SIZE * 2) + 1, FRAME_SIZE), 3);
     }
 }

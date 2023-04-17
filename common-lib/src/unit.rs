@@ -3,10 +3,10 @@ pub const fn kib(bytes: usize) -> usize {
 }
 
 pub const fn mib(bytes: usize) -> usize {
-    1024 * kib(bytes)
+    bytes * 1024 * kib(1)
 }
 
 
 pub const fn gib(bytes: usize) -> usize {
-    1024 * mib(bytes)
+    bytes * 1024 * mib(1)
 }

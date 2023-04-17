@@ -2,6 +2,7 @@ use common_lib::rectangle::Rectangle;
 use common_lib::vector::Vector2D;
 use kernel_lib::gop::console::{draw_cursor, erase_cursor, is_drawable_cursor_pos};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
+use kernel_lib::serial_println;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
 
@@ -35,6 +36,7 @@ impl MouseSubscribable for MouseSubscriber {
         }
 
         if is_drawable_cursor_pos(self.frame_buffer_rect, current_cursor) {
+            serial_println!("DRAW {:?}", current_cursor);
             let color = button
                 .map(|b| match b {
                     MouseButton::Button1 => PixelColor::yellow(),
