@@ -13,6 +13,14 @@ impl FlagConvertible for usize {
     }
 }
 
+
+impl FlagConvertible for u128 {
+    fn is_true(&self) -> bool {
+        *self != 0
+    }
+}
+
+
 impl FlagConvertible for u64 {
     fn is_true(&self) -> bool {
         *self != 0

@@ -1,10 +1,8 @@
 use core::marker::PhantomData;
 
-use x86_64::instructions::interrupts::enable_and_hlt;
-
 use common_lib::queue::queueing::Queueing;
 
-use crate::interrupt::asm::cli;
+use crate::interrupt::asm::{cli, sti_and_hlt};
 
 pub struct InterruptQueueWaiter<Queue, Value>
 where
@@ -37,7 +35,7 @@ where
         let mut value = self.queue.dequeue();
 
         while value.is_none() {
-            enable_and_hlt();
+            sti_and_hlt();
 
             value = self.queue.dequeue();
         }

@@ -1,63 +1,71 @@
 use core::alloc::Layout;
 
 use common_lib::math::frame_count_from_bytes;
-use common_lib::physical_address::PhysicalAddress;
 
 use crate::allocator::allocate_map::AllocateMap;
-use crate::allocator::FRAME_SIZE;
 use crate::allocator::memory_map::frame_iterable::MemoryMapFrameIterable;
+use crate::allocator::memory_map::frame_range::FrameRange;
+use crate::allocator::FRAME_SIZE;
 use crate::error::KernelResult;
-use crate::serial_println;
 
 pub struct BitmapMemoryFrameManager<MemoryMap>
-    where
-        MemoryMap: MemoryMapFrameIterable,
+where
+    MemoryMap: MemoryMapFrameIterable,
 {
     allocate_map: AllocateMap,
     memory_map: MemoryMap,
-    frame_id: usize,
 }
 
 
 impl<MemoryMap> BitmapMemoryFrameManager<MemoryMap>
-    where
-        MemoryMap: MemoryMapFrameIterable,
+where
+    MemoryMap: MemoryMapFrameIterable,
 {
     pub fn new(memory_map: MemoryMap) -> KernelResult<BitmapMemoryFrameManager<MemoryMap>> {
         let allocate_map = AllocateMap::new();
         Ok(Self {
             allocate_map,
             memory_map,
-            frame_id: 0,
         })
     }
 
 
-    pub fn allocate_frame(&mut self, layout: Layout) -> Option<PhysicalAddress> {
+    pub fn allocate(&mut self, layout: Layout) -> Option<FrameRange> {
         let frames = frame_count_from_bytes(layout.size(), FRAME_SIZE);
-        self.frame_id = 0;
+        self.allocate_frames(frames)
+    }
+
+
+    pub fn allocate_frames(&mut self, frames: usize) -> Option<FrameRange> {
+        let mut frame_id = 0;
+
 
         loop {
-            self.return_none_if_over_frames(self.frame_id, frames)?;
+            self.return_none_if_over_frames(frame_id, frames)?;
             if self
                 .allocate_map
-                .is_allocatable_multi_frames(self.frame_id, frames)
+                .is_allocatable_multi_frames(frame_id, frames)
             {
                 break;
             }
-            self.frame_id += 1;
+            frame_id += 1;
         }
 
-        serial_println!("Allocate Frames {} Frame Id = {}", frames, self.frame_id);
-        self.allocate_map.mark_allocate_multi_frames(self.frame_id, frames).ok()?;
-        let frame = self
+
+        self.allocate_map
+            .mark_allocate_multi_frames(frame_id, frames)
+            .ok()?;
+
+        let base_frame = self
             .memory_map
-            .frame_at(self.frame_id)?;
+            .frame_at(frame_id)?;
 
-        self.frame_id += frames;
-        Some(frame.base_phys_addr())
+        let end_frame = self
+            .memory_map
+            .frame_at(frame_id + (frames - 1))?;
+
+        Some(FrameRange::new(base_frame, end_frame))
     }
-
 
     pub fn free_frames(&mut self, frame_id: usize, layout: Layout) -> KernelResult {
         self.allocate_map
@@ -67,7 +75,7 @@ impl<MemoryMap> BitmapMemoryFrameManager<MemoryMap>
     }
 
 
-    pub(crate) fn memory_map_mut(&mut self) -> &mut MemoryMap {
+    pub fn memory_map_mut(&mut self) -> &mut MemoryMap {
         &mut self.memory_map
     }
 
@@ -77,7 +85,12 @@ impl<MemoryMap> BitmapMemoryFrameManager<MemoryMap>
     }
 
     fn return_none_if_over_id(&self, frame_id: usize) -> Option<()> {
-        if self.memory_map.last_id().unwrap() < frame_id {
+        if self
+            .memory_map
+            .last_id()
+            .unwrap()
+            < frame_id
+        {
             None
         } else {
             Some(())

@@ -1,7 +1,6 @@
 use core::num::NonZeroUsize;
 
 use kernel_lib::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
-use kernel_lib::serial_println;
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::error::PciResult;
@@ -27,7 +26,6 @@ pub fn start_xhci_host_controller(
 
     let queue_waiter = unsafe { InterruptQueueWaiter::new(&mut INTERRUPT_MOUSE_QUEUE) };
     queue_waiter.for_each(|_| {
-        serial_println!("XHCI");
         xhc_controller.process_all_events();
     });
 

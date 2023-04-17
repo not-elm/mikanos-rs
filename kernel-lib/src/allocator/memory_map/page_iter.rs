@@ -4,13 +4,13 @@ use common_lib::physical_address::PhysicalAddress;
 use crate::allocator::FRAME_SIZE;
 
 #[derive(Debug, Clone)]
-pub struct PageRange {
+pub struct PageIter {
     frame: MemoryDescriptor,
     page_no: u64,
 }
 
 
-impl PageRange {
+impl PageIter {
     pub fn new(frame: MemoryDescriptor) -> Self {
         Self {
             frame,
@@ -20,7 +20,7 @@ impl PageRange {
 }
 
 
-impl Iterator for PageRange {
+impl Iterator for PageIter {
     type Item = PhysicalAddress;
 
     fn next(&mut self) -> Option<Self::Item> {

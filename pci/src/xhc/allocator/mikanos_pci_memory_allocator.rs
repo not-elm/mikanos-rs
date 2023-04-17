@@ -16,7 +16,7 @@ pub struct MikanOSPciMemoryAllocator {
 
 impl MikanOSPciMemoryAllocator {
     pub fn new() -> Self {
-        let address = unsafe { PCI_MEMORY_POOL.0.as_ptr() as u64 };
+        let address = PCI_MEMORY_POOL.0.as_ptr() as u64;
 
         Self {
             address,

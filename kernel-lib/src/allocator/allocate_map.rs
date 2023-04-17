@@ -7,16 +7,16 @@ use crate::allocator::{FRAME_SIZE, MAX_MEMORY_SIZE};
 use crate::error::AllocateReason::OverFrame;
 use crate::error::{KernelError, KernelResult};
 
-const MAP_LINE_SIZE: usize = 8 * 64;
+const MAP_LINE_SIZE: usize = 128;
 
-const MAX_FRAME_COUNT: usize = MAX_MEMORY_SIZE / FRAME_SIZE;
+pub const MAX_FRAME_COUNT: usize = MAX_MEMORY_SIZE / FRAME_SIZE;
 
 const ALLOCATE_MAP_BUFF_SIZE: usize = MAX_FRAME_COUNT / MAP_LINE_SIZE;
 
 
 #[derive(Debug)]
 pub struct AllocateMap {
-    allocate_map_buff: [u64; ALLOCATE_MAP_BUFF_SIZE],
+    allocate_map_buff: [u128; ALLOCATE_MAP_BUFF_SIZE],
 }
 
 impl AllocateMap {
@@ -39,7 +39,11 @@ impl AllocateMap {
             allocate_map_buff: [0; ALLOCATE_MAP_BUFF_SIZE],
         }
     }
-    pub fn mark_allocate_multi_frames(&mut self, base_frame_id: usize, frames: usize) -> KernelResult {
+    pub fn mark_allocate_multi_frames(
+        &mut self,
+        base_frame_id: usize,
+        frames: usize,
+    ) -> KernelResult {
         for frame_id in base_frame_id..base_frame_id + frames {
             self.mark_allocate_frame(frame_id)?;
         }
@@ -103,7 +107,7 @@ impl AllocateMap {
 }
 
 impl Index<usize> for AllocateMap {
-    type Output = u64;
+    type Output = u128;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.allocate_map_buff[index]

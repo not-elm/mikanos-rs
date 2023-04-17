@@ -1,82 +1,79 @@
-use uefi::table::boot::{MemoryDescriptor, MemoryMapIter, MemoryType};
+use core::ops::{Bound, Range, RangeBounds};
 
 use common_lib::physical_address::PhysicalAddress;
 
-use crate::allocator::FRAME_SIZE;
-use crate::allocator::memory_map::frame_iterable::{MemoryMapFrame, MemoryMapFrameIterable};
-use crate::allocator::memory_map::page_range::PageRange;
+use crate::allocator::memory_map::frame::Frame;
 
 #[derive(Debug, Clone)]
-pub struct FrameRange<'memory> {
-    frame_id: usize,
-    memory_map: MemoryMapIter<'memory>,
-    page_range: PageRange,
-    // FrameIDからアドレスを取得するために保持
-    clone_memory_map: MemoryMapIter<'memory>,
+pub struct FrameRange {
+    base: Frame,
+    end: Frame,
 }
 
 
-impl<'memory> FrameRange<'memory> {
-    pub fn new(mut memory_map: MemoryMapIter<'memory>) -> Option<FrameRange<'memory>> {
-        let clone_memory_map = memory_map.clone();
-        let first_descriptor = next_available(&mut memory_map)?;
-        Some(FrameRange {
-            frame_id: 0,
-            memory_map,
-            page_range: PageRange::new(first_descriptor),
-            clone_memory_map,
-        })
-    }
-}
-
-impl<'memory> MemoryMapFrameIterable for FrameRange<'memory> {
-    fn last_id(&self) -> Option<usize> {
-        let clone = Self::new(self.clone_memory_map.clone())?;
-        let frame = clone.into_iter().last()?;
-        Some(frame.id())
+impl FrameRange {
+    pub fn new(base: Frame, end: Frame) -> Self {
+        Self { base, end }
     }
 
-    fn frame_at(&mut self, frame_id: usize) -> Option<MemoryMapFrame> {
-        let clone = Self::new(self.clone_memory_map.clone())?;
-        let frame = clone.into_iter().find(|frame| frame.id() == frame_id)?;
-        Some(frame)
+
+    pub fn base(&self) -> &Frame {
+        &self.base
     }
 
-    fn frame_contains_address(&mut self, phys_addr: PhysicalAddress) -> Option<MemoryMapFrame> {
-        let clone = Self::new(self.clone_memory_map.clone())?;
-        let frame = clone.into_iter().find(|frame| frame.contains(phys_addr))?;
-        Some(frame)
+    pub fn end(&self) -> &Frame {
+        &self.end
     }
-}
 
-impl<'memory> Iterator for FrameRange<'memory> {
-    type Item = MemoryMapFrame;
+    pub fn address_range(&self) -> Range<PhysicalAddress> {
+        self.base.base_phys_addr()..self.end.end_phys_addr()
+    }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(phys_addr) = self.page_range.next() {
-            let frame = MemoryMapFrame::new(self.frame_id, phys_addr, phys_addr.add_u64(FRAME_SIZE as u64)?);
-            self.frame_id += 1;
-            Some(frame)
-        } else {
-            self.page_range = PageRange::new(next_available(&mut self.memory_map)?);
-            self.next()
-        }
+    pub fn is_contain_address(&self, phys_addr: PhysicalAddress) -> bool {
+        self.address_range()
+            .contains(&phys_addr)
     }
 }
 
 
-fn next_available(memory_map: &mut MemoryMapIter) -> Option<MemoryDescriptor> {
-    loop {
-        let frame = memory_map.next()?;
-        if is_available(frame) {
-            return Some(*frame);
-        }
-    };
+impl RangeBounds<Frame> for FrameRange {
+    fn start_bound(&self) -> Bound<&Frame> {
+        Bound::Included(self.base())
+    }
+
+    fn end_bound(&self) -> Bound<&Frame> {
+        Bound::Included(self.end())
+    }
 }
 
-fn is_available(memory_descriptor: &MemoryDescriptor) -> bool {
-    matches!(
-        memory_descriptor.ty,
-        MemoryType::CONVENTIONAL
-    )
+
+#[cfg(test)]
+mod tests {
+    use common_lib::physical_address::PhysicalAddress;
+
+    use crate::allocator::memory_map::frame::Frame;
+    use crate::allocator::memory_map::frame_range::FrameRange;
+
+    #[test]
+    fn it_range() {
+        let range = FrameRange::new(
+            Frame::new(0, PhysicalAddress::new(0), PhysicalAddress::new(1)),
+            Frame::new(1, PhysicalAddress::new(30), PhysicalAddress::new(60)),
+        );
+
+        assert_eq!(
+            range
+                .address_range()
+                .start
+                .raw(),
+            0
+        );
+        assert_eq!(
+            range
+                .address_range()
+                .end
+                .raw(),
+            60
+        );
+    }
 }
