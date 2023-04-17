@@ -1,3 +1,5 @@
+use core::arch::asm;
+
 use spin::Mutex;
 use x86_64::instructions::segmentation::{Segment, CS};
 use x86_64::registers::segmentation::SS;
@@ -25,7 +27,15 @@ unsafe fn init_gdt_unsafe() {
     GDT.get_mut().load();
     CS::set_reg(code_segment);
     SS::set_reg(stack_segment);
-
+    let x: u16 = 0;
+    asm!(
+        "mov ds, {0:x}",
+        "mov es, {0:x}",
+        "mov fs, {0:x}",
+        "mov gs, {0:x}",
+        in(reg) x,
+        options(nostack, preserves_flags)
+    );
     assert_eq!(read_code_segment(), code_segment.0);
     assert_eq!(read_stack_segment(), stack_segment.0);
 }

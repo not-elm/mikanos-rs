@@ -24,7 +24,7 @@ macro_rules! kernel_entry_point {
         #[no_mangle]
         pub extern "sysv64" fn kernel_entry_point(
             frame_buffer_config: &common_lib::frame_buffer::FrameBufferConfig,
-            memory_map: &uefi::table::boot::MemoryMapIter,
+            memory_map: &uefi::table::boot::MemoryMapIter<'static>,
         ){
             let kernel_stack_end_addr = KERNEL_STACK.end_addr();
 

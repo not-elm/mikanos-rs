@@ -2,7 +2,7 @@ use crate::xhc::allocator::aligned_address::AlignedAddress;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 
 const MEMORY_SIZE: usize = 4096 * 32;
-static mut MEMORY_POOL: MemoryPool = MemoryPool([0u8; MEMORY_SIZE]);
+static PCI_MEMORY_POOL: MemoryPool = MemoryPool([0u8; MEMORY_SIZE]);
 
 #[repr(C, align(64))]
 #[derive(Debug)]
@@ -16,7 +16,7 @@ pub struct MikanOSPciMemoryAllocator {
 
 impl MikanOSPciMemoryAllocator {
     pub fn new() -> Self {
-        let address = unsafe { MEMORY_POOL.0.as_ptr() as u64 };
+        let address = unsafe { PCI_MEMORY_POOL.0.as_ptr() as u64 };
 
         Self {
             address,

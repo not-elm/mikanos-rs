@@ -6,7 +6,6 @@ use crate::allocator::memory_map_frame_iterable::MemoryMapFrameIterable;
 use crate::allocator::{FRAME_SIZE, MAX_MEMORY_SIZE};
 use crate::error::AllocateReason::OverFrame;
 use crate::error::{KernelError, KernelResult};
-use crate::serial_println;
 
 const MAP_LINE_SIZE: usize = 8 * 64;
 
@@ -21,22 +20,21 @@ pub struct AllocateMap {
 }
 
 impl AllocateMap {
-    pub fn from_memory_map<'memory, MemoryMap>(memory_map: &MemoryMap) -> KernelResult<Self>
+    pub fn from_memory_map<MemoryMap>(memory_map: &MemoryMap) -> KernelResult<Self>
     where
-        MemoryMap: MemoryMapFrameIterable<'memory> + Clone,
+        MemoryMap: MemoryMapFrameIterable + Clone,
     {
-        serial_println!("Start");
         let mut me = AllocateMap::new();
-        serial_println!("END");
+
         for frame in memory_map.clone() {
             me.mark_allocate_frame(frame.id())?;
         }
-        serial_println!("FRA");
+
         Ok(me)
     }
 
 
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             allocate_map_buff: [0; ALLOCATE_MAP_BUFF_SIZE],
         }
@@ -88,14 +86,14 @@ impl AllocateMap {
 
     fn error_if_over_id(&self, frame_id: usize) -> KernelResult {
         let max_frame_id = (self.allocate_map_buff.len() * MAP_LINE_SIZE) - 1;
-        return if max_frame_id < frame_id {
+        if max_frame_id < frame_id {
             Err(KernelError::FailedAllocate(OverFrame {
                 max_frame_id,
                 frame_id,
             }))
         } else {
             Ok(())
-        };
+        }
     }
 }
 

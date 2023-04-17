@@ -13,6 +13,7 @@ use core::alloc::Layout;
 use core::panic::PanicInfo;
 
 use uefi::table::boot::MemoryMapIter;
+use x86_64::VirtAddr;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
@@ -57,7 +58,6 @@ pub extern "sysv64" fn kernel_main(
 
     init_console(*frame_buffer_config);
 
-
     init_alloc(memory_map.clone()).unwrap();
 
 
@@ -80,7 +80,6 @@ pub extern "sysv64" fn kernel_main(
         ),
     )
     .unwrap();
-
 
     common_lib::assembly::hlt_forever();
 }

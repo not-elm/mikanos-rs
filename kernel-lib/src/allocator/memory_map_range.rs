@@ -16,25 +16,25 @@ impl<'memory> MemoryMapRange<'memory> {
 }
 
 
-impl<'memory> MemoryMapFrameIterable<'memory> for MemoryMapRange<'memory> {
+impl<'memory> MemoryMapFrameIterable for MemoryMapRange<'memory> {
     fn last_id(&self) -> usize {
         self.iter.len() - 1
     }
 
-    fn get(&mut self, frame_id: usize) -> Option<MemoryMapFrame<'memory>> {
+    fn get(&mut self, frame_id: usize) -> Option<MemoryMapFrame> {
         self.nth(frame_id)
     }
 }
 
 impl<'memory> Iterator for MemoryMapRange<'memory> {
-    type Item = MemoryMapFrame<'memory>;
+    type Item = MemoryMapFrame;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let descriptor = self.iter.next()?;
             self.frame_id += 1;
             if is_available(descriptor) {
-                return Some(MemoryMapFrame::new(self.frame_id - 1, descriptor));
+                return Some(MemoryMapFrame::new(self.frame_id - 1, *descriptor));
             }
         }
     }
@@ -42,10 +42,8 @@ impl<'memory> Iterator for MemoryMapRange<'memory> {
 
 
 fn is_available(memory_descriptor: &MemoryDescriptor) -> bool {
-    match memory_descriptor.ty {
-        MemoryType::CONVENTIONAL
-        | MemoryType::BOOT_SERVICES_CODE
-        | MemoryType::BOOT_SERVICES_DATA => true,
-        _ => false,
-    }
+    matches!(
+        memory_descriptor.ty,
+        MemoryType::CONVENTIONAL | MemoryType::BOOT_SERVICES_CODE | MemoryType::BOOT_SERVICES_DATA
+    )
 }
