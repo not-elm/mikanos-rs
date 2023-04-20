@@ -1,5 +1,7 @@
 pub mod vector;
 pub mod size;
+pub mod unit;
+pub mod rectangle;
 
 pub fn frame_count_from_bytes(bytes: usize, frame_size: usize) -> usize {
     if frame_size == 0 {

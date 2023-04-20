@@ -1,4 +1,4 @@
-use common_lib::unit::{gib, kib};
+use common_lib::math::unit::{gib, kib};
 
 pub mod allocate_map;
 pub mod bitmap_memory_allocator;

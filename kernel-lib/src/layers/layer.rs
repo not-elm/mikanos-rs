@@ -1,5 +1,6 @@
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
+use crate::error::KernelResult;
 
 use crate::gop::pixel::pixel_writable::PixelWritable;
 use crate::layers::window::Window;
@@ -19,7 +20,7 @@ impl<'window, Writer> Layer<'window, Writer> {
             windows: BTreeMap::new(),
         }
     }
-    
+
     pub fn id(&self) -> usize {
         self.id
     }
@@ -39,13 +40,14 @@ impl<'window, Writer> Layer<'window, Writer> {
 }
 
 impl<'window, Writer> Layer<'window, Writer> where Writer: PixelWritable {
-    pub fn draw_all(&mut self) {
-        self
+    pub fn draw_all(&mut self) -> KernelResult {
+        for window in self
             .windows
-            .values_mut()
-            .for_each(|window| {
-                window.draw(&mut self.pixel_writer)
-            });
+            .values_mut(){
+            window.draw(&mut self.pixel_writer)?;
+        }
+
+        Ok(())
     }
 }
 

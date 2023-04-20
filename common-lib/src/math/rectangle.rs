@@ -41,7 +41,7 @@ impl<T: PartialEq + Copy + PartialOrd> PartialEq for Rectangle<T> {
 #[cfg(test)]
 mod tests {
     use crate::math::vector::Vector2D;
-    use crate::rectangle::Rectangle;
+    use crate::math::rectangle::Rectangle;
 
     #[test]
     fn it_partial_eq_rectangle() {

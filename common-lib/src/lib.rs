@@ -8,8 +8,7 @@ pub mod frame_buffer;
 pub mod math;
 pub mod nums;
 pub mod queue;
-pub mod rectangle;
-pub mod unit;
 pub mod physical_address;
+pub mod repeat;
 
 

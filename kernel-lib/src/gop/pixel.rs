@@ -13,6 +13,9 @@ pub mod pixel_color;
 pub mod pixel_writable;
 pub mod rgb_pixel_writer;
 
+#[cfg(feature = "alloc")]
+pub mod mock_buffer_pixel_writer;
+
 pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl PixelWritable {
     #[cfg(not(test))]
     match frame_buffer_config.pixel_format {

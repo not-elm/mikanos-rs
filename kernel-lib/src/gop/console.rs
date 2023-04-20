@@ -4,7 +4,7 @@ use spin::Mutex;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
-use common_lib::rectangle::Rectangle;
+use common_lib::math::rectangle::Rectangle;
 
 use crate::error::KernelResult;
 use crate::gop::console::console_builder::ConsoleBuilder;
