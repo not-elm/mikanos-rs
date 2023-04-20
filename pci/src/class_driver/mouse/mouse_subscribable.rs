@@ -1,6 +1,8 @@
-use crate::class_driver::mouse::MouseButton;
-use common_lib::vector::Vector2D;
 use dyn_clone::DynClone;
+
+use common_lib::math::vector::Vector2D;
+
+use crate::class_driver::mouse::MouseButton;
 
 /// 前回と現在のマウスカーソルの座標を元にユーザー定義の処理を行います。
 ///
@@ -17,8 +19,8 @@ pub trait MouseSubscribable: DynClone {
 dyn_clone::clone_trait_object!(MouseSubscribable);
 
 impl<T> MouseSubscribable for T
-where
-    T: Fn(Vector2D<usize>, Vector2D<usize>, Option<MouseButton>) -> Result<(), ()> + Clone,
+    where
+        T: Fn(Vector2D<usize>, Vector2D<usize>, Option<MouseButton>) -> Result<(), ()> + Clone,
 {
     fn subscribe(
         &mut self,

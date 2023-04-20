@@ -1,11 +1,11 @@
 use core::cmp::max;
 
-use common_lib::vector::Vector2D;
+use common_lib::math::vector::Vector2D;
 use kernel_lib::gop::console::draw_cursor;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 
-use crate::class_driver::mouse::{cursor_pos, MOUSE_DATA_BUFF_SIZE};
 use crate::class_driver::ClassDriverOperate;
+use crate::class_driver::mouse::{cursor_pos, MOUSE_DATA_BUFF_SIZE};
 use crate::error::{PciError, PciResult};
 
 pub struct MouseDefaultDriver {

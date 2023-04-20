@@ -1,13 +1,16 @@
+use common_lib::frame_buffer::FrameBufferConfig;
+
 use crate::error::KernelResult;
 use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use common_lib::frame_buffer::FrameBufferConfig;
 
 pub struct BgrPixelWriter {
     frame_buffer_ptr: *mut u8,
     frame_buffer_config: FrameBufferConfig,
 }
+
+
 impl BgrPixelWriter {
     pub fn new(frame_buffer_config: FrameBufferConfig) -> Self {
         let frame_buffer_ptr = frame_buffer_config.frame_buffer_base_ptr();

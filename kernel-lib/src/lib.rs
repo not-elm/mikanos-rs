@@ -6,7 +6,7 @@
 #![feature(result_option_inspect)]
 #![no_std]
 
-#[cfg(test)]
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
 use macros::declaration_volatile_accessible;
@@ -23,3 +23,5 @@ pub mod paging;
 pub mod register;
 pub mod segmentation;
 pub mod serial;
+#[cfg(feature = "alloc")]
+pub mod layers;

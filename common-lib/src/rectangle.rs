@@ -1,4 +1,4 @@
-use crate::vector::Vector2D;
+use crate::math::vector::Vector2D;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Rectangle<T: Copy + PartialOrd> {
@@ -40,8 +40,8 @@ impl<T: PartialEq + Copy + PartialOrd> PartialEq for Rectangle<T> {
 
 #[cfg(test)]
 mod tests {
+    use crate::math::vector::Vector2D;
     use crate::rectangle::Rectangle;
-    use crate::vector::Vector2D;
 
     #[test]
     fn it_partial_eq_rectangle() {

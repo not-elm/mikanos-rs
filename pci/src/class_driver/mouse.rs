@@ -1,6 +1,6 @@
 use core::cmp::max;
 
-use common_lib::vector::Vector2D;
+use common_lib::math::vector::Vector2D;
 
 use crate::class_driver::boot_protocol_buffer::BootProtocolBuffer;
 use crate::class_driver::mouse::MouseButton::{Button1, Button2, Button3, DeviceSpecific};

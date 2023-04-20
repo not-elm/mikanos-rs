@@ -18,3 +18,8 @@ macros = { path = "../macros", features = ["extra-traits"] }
 
 [build-dependencies]
 cc = { version = "1.0" }
+
+
+[features]
+default = ["alloc"]
+alloc = []

@@ -1,14 +1,14 @@
 use core::fmt::Error;
 
 use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::vector::Vector2D;
+use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
+use crate::gop::pixel::{fill_rect, select_pixel_writer};
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::gop::pixel::{fill_rect, select_pixel_writer};
 
 type ImplCharWritable = impl CharWritable;
 pub type ImplPixelWritable = impl PixelWritable;
@@ -168,7 +168,7 @@ mod tests {
     use alloc::format;
 
     use common_lib::frame_buffer::FrameBufferConfig;
-    use common_lib::vector::Vector2D;
+    use common_lib::math::vector::Vector2D;
 
     use crate::gop::console::console_builder::ConsoleBuilder;
     use crate::gop::console::console_writer::HEIGHT;

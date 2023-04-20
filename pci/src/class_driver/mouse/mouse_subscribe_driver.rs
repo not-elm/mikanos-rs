@@ -1,13 +1,13 @@
 use alloc::boxed::Box;
 
-use common_lib::vector::Vector2D;
+use common_lib::math::vector::Vector2D;
 
 use crate::class_driver::boot_protocol_buffer::BootProtocolBuffer;
-use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
+use crate::class_driver::ClassDriverOperate;
 use crate::class_driver::mouse::{
     current_cursor_pos, mouse_button_boot_protocol, MOUSE_DATA_BUFF_SIZE,
 };
-use crate::class_driver::ClassDriverOperate;
+use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use crate::error::{PciError, PciResult};
 
 pub struct MouseSubscribeDriver {

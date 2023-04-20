@@ -1,6 +1,6 @@
-use crate::error::KernelResult;
-use common_lib::vector::Vector2D;
+use common_lib::math::vector::Vector2D;
 
+use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 

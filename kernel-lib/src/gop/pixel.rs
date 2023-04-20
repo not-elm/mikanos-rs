@@ -1,5 +1,5 @@
 use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::vector::Vector2D;
+use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;

@@ -1,5 +1,5 @@
+use common_lib::math::vector::Vector2D;
 use common_lib::rectangle::Rectangle;
-use common_lib::vector::Vector2D;
 use kernel_lib::gop::console::{draw_cursor, erase_cursor, is_drawable_cursor_pos};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
