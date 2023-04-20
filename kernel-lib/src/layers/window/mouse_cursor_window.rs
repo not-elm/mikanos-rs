@@ -2,6 +2,7 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
+use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 use crate::layers::window::Window;
@@ -47,10 +48,7 @@ pub struct MouseCursorWindow {
 
 impl MouseCursorWindow {
     pub fn new(scale: Vector2D<usize>) -> Self {
-        let widow_size = Size::new(
-            CURSOR_WIDTH * scale.x(),
-            CURSOR_HEIGHT * scale.y(),
-        );
+        let widow_size = Size::new(CURSOR_WIDTH * scale.x(), CURSOR_HEIGHT * scale.y());
         Self {
             scale,
             color: PixelColor::white(),
@@ -80,7 +78,7 @@ impl MouseCursorWindow {
     unsafe fn write_line(&mut self, y: usize, writer: &mut dyn PixelWritable) -> KernelResult {
         for x in 0..CURSOR_WIDTH {
             for _ in 0..self.scale.x() {
-                writer.write(x, y, &self.color)?;
+                writer.write(x, y, &cursor_color_at(x, y))?;
             }
         }
 
@@ -102,15 +100,28 @@ impl Default for MouseCursorWindow {
     }
 }
 
+
+fn cursor_color_at(x: usize, y: usize) -> PixelColor {
+    let c = char::from(CURSOR_SHAPE[y][x]);
+    if c == '@' {
+        CONSOLE_BACKGROUND_COLOR
+    } else if c == '.' {
+        PixelColor::white()
+    } else {
+        PixelColor::black()
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use common_lib::math::size::Size;
     use common_lib::math::vector::Vector2D;
 
-    use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
     use crate::gop::pixel::mock_buffer_pixel_writer::MockBufferPixelWriter;
-    use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::layers::window::mouse_cursor_window::{CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH, MouseCursorWindow};
+    use crate::layers::window::mouse_cursor_window::{
+        cursor_color_at, MouseCursorWindow, CURSOR_HEIGHT, CURSOR_WIDTH,
+    };
     use crate::layers::window::Window;
 
     #[test]
@@ -123,7 +134,10 @@ mod tests {
     #[test]
     fn it_scale2() {
         let window = MouseCursorWindow::new(Vector2D::new(2, 2));
-        assert_eq!(window.window_size(), Size::new(CURSOR_WIDTH * 2, CURSOR_HEIGHT * 2));
+        assert_eq!(
+            window.window_size(),
+            Size::new(CURSOR_WIDTH * 2, CURSOR_HEIGHT * 2)
+        );
     }
 
 
@@ -131,18 +145,12 @@ mod tests {
     fn it_write_cursor_not_scale() {
         let mut window = MouseCursorWindow::new(Vector2D::new(1, 1));
         let mut writer = MockBufferPixelWriter::new(100, 100);
-        assert!(window.draw(&mut writer).is_ok());
+        assert!(window
+            .draw(&mut writer)
+            .is_ok());
         for y in 0..CURSOR_HEIGHT {
             for x in 0..CURSOR_WIDTH {
-                let c = char::from(CURSOR_SHAPE[y][x]);
-                let color = if c == '@' {
-                    CONSOLE_BACKGROUND_COLOR
-                } else if c == '.' {
-                    PixelColor::white()
-                } else {
-                    PixelColor::black()
-                };
-                assert_eq!(writer.pixel_at(x, y), color.r());
+                assert_eq!(writer.pixel_at(x, y), cursor_color_at(x, y));
             }
         }
     }

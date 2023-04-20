@@ -1,49 +1,60 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use common_lib::frame_buffer::FrameBufferConfig;
-
 use crate::error::{KernelError, KernelResult};
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 
+#[allow(dead_code)]
 pub(crate) struct MockBufferPixelWriter {
-    buff: Vec<Vec<u8>>,
+    width: usize,
+    buff: Vec<u8>,
 }
 
 impl MockBufferPixelWriter {
     #[allow(dead_code)]
     pub fn new(width: usize, height: usize) -> Self {
         Self {
-            buff: vec![vec![0; width]; height]
+            width,
+            buff: vec![0; width * height],
         }
     }
 
-    pub fn height(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.buff.len()
     }
 
-    pub fn width(&self) -> usize {
-        self.buff[0].len()
-    }
-
-    pub fn pixel_at(&self, x: usize, y: usize) -> u8 {
-        self.buff[y][x]
+    #[allow(dead_code)]
+    pub fn pixel_at(&self, x: usize, y: usize) -> PixelColor {
+        let pixel_pos = calc_pos(x, y, self.width);
+        PixelColor::new(
+            self.buff[pixel_pos],
+            self.buff[pixel_pos + 1],
+            self.buff[pixel_pos + 2],
+        )
     }
 }
+
+
+fn calc_pos(x: usize, y: usize, width: usize) -> usize {
+    4 * (width * y + x)
+}
+
 
 impl Drop for MockBufferPixelWriter {
     fn drop(&mut self) {}
 }
 
+
 impl PixelWritable for MockBufferPixelWriter {
     unsafe fn write(&mut self, x: usize, y: usize, color: &PixelColor) -> KernelResult {
-        if self.height() <= y || self.width() + 2 <= x {
+        let pixel_pos = calc_pos(x, y, self.width);
+        if self.len() <= pixel_pos + 2 {
             return Err(KernelError::ExceededFrameBufferSize);
         }
-        self.buff[y][x] = color.r();
-        self.buff[y][x + 1] = color.g();
-        self.buff[y][x + 2] = color.b();
+        self.buff[pixel_pos] = color.r();
+        self.buff[pixel_pos + 1] = color.g();
+        self.buff[pixel_pos + 2] = color.b();
 
         Ok(())
     }
@@ -59,19 +70,21 @@ mod tests {
     #[test]
     fn it_new() {
         let mock = MockBufferPixelWriter::new(3, 5);
-        assert_eq!(mock.buff.len(), 5);
-        mock.buff.iter().for_each(|line| {
-            assert_eq!(line.len(), 3)
-        });
+        assert_eq!(mock.buff.len(), 15);
     }
 
 
     #[test]
     fn it_write() {
         let mut mock = MockBufferPixelWriter::new(10, 10);
-        unsafe { assert!(mock.write(0, 0, &PixelColor::new(0xFF, 0x33, 0x11)).is_ok()); }
-        assert_eq!(mock.buff[0][0], 0xFF);
-        assert_eq!(mock.buff[0][1], 0x33);
-        assert_eq!(mock.buff[0][2], 0x11);
+        let color = PixelColor::new(0xFF, 0x33, 0x11);
+        unsafe {
+            assert!(mock
+                .write(0, 0, &color)
+                .is_ok());
+        }
+
+
+        assert_eq!(mock.pixel_at(0, 0), color);
     }
 }
