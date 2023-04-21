@@ -57,9 +57,9 @@ pub extern "sysv64" fn kernel_main(
 
     init_paging_table();
 
-    init_console(*frame_buffer_config);
-
     init_alloc(memory_map.clone()).unwrap();
+
+    init_console(*frame_buffer_config);
 
     init_layers(*frame_buffer_config);
 

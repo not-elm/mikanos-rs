@@ -1,8 +1,4 @@
-use alloc::boxed::Box;
-use alloc::rc::Rc;
 use core::cell::OnceCell;
-use core::ops::DerefMut;
-use core::slice::Windows;
 
 use spin::{Mutex, MutexGuard};
 
@@ -47,11 +43,11 @@ impl GlobalLayers {
 unsafe impl Sync for GlobalLayers {}
 
 pub fn init_layers(frame_buffer_config: FrameBufferConfig) {
-   unsafe{
-       LAYERS.init(frame_buffer_config);
-       let mut layers = LAYERS.lock();
-       let layer = layers.new_layer();
-       layer
-           .add_window("mouse", MouseCursorWindow::default());
-   }
+    unsafe {
+        LAYERS.init(frame_buffer_config);
+        let mut layers = LAYERS.lock();
+        let layer = layers.new_layer();
+        layer
+            .add_window("mouse", MouseCursorWindow::default());
+    }
 }

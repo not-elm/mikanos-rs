@@ -5,7 +5,7 @@ use crate::error::KernelResult;
 use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::layers::window::Window;
+use crate::layers::window::WindowBuffer;
 
 const CURSOR_WIDTH: usize = 15;
 
@@ -89,12 +89,10 @@ impl MouseCursorWindow {
 }
 
 
-impl Window for MouseCursorWindow {
+impl WindowBuffer for MouseCursorWindow {
     fn draw(&mut self, writer: &mut dyn PixelWritable) -> KernelResult {
         unsafe { self.write_row(writer) }
     }
-
-
 }
 
 
@@ -124,9 +122,9 @@ mod tests {
 
     use crate::gop::pixel::mock_buffer_pixel_writer::MockBufferPixelWriter;
     use crate::layers::window::mouse_cursor_window::{
-        cursor_color_at, MouseCursorWindow, CURSOR_HEIGHT, CURSOR_WIDTH,
+        cursor_color_at, CURSOR_HEIGHT, CURSOR_WIDTH, MouseCursorWindow,
     };
-    use crate::layers::window::Window;
+    use crate::layers::window::WindowBuffer;
 
     #[test]
     fn it_no_scale() {

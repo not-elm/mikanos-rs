@@ -1,4 +1,3 @@
-use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 
 use crate::error::KernelResult;
@@ -7,7 +6,7 @@ use crate::layers::window::Window;
 
 pub struct Layer<'window, Writer> {
     pixel_writer: Writer,
-    windows: BTreeMap<&'window str, Box<dyn Window + 'window>>,
+    windows: BTreeMap<&'window str, Window>,
 }
 
 
@@ -20,19 +19,19 @@ impl<'window, Writer> Layer<'window, Writer> {
     }
 
 
-    pub fn and_add_window(mut self, key: &'window str, window: impl Window + 'window) -> Self {
+    pub fn and_add_window(mut self, key: &'window str, window: Window) -> Self {
         self.add_window(key, window);
         self
     }
 
 
-    pub fn add_window(&mut self, key: &'window str, window: impl Window + 'window) {
+    pub fn add_window(&mut self, key: &'window str, window: Window) {
         self.windows
-            .insert(key, Box::new(window));
+            .insert(key, window);
     }
 
 
-    pub fn window_mut_at(&'window mut self, key: &'window str) -> Option<&'window mut Box<dyn Window + 'window>> {
+    pub fn window_mut_at(&'window mut self, key: &'window str) -> Option<&mut Window> {
         self.windows
             .get_mut(key)
     }

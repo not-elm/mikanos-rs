@@ -6,7 +6,6 @@ use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;
-use crate::gop::pixel::bgr_pixel_writer::BgrPixelWriter;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 use crate::gop::pixel::rgb_pixel_writer::RgbPixelWriter;
