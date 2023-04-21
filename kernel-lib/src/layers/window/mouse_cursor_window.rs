@@ -39,12 +39,14 @@ const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
     b"         @@@   ",
 ];
 
+
 #[derive(Debug)]
 pub struct MouseCursorWindow {
     scale: Vector2D<usize>,
     color: PixelColor,
     widow_size: Size,
 }
+
 
 impl MouseCursorWindow {
     pub fn new(scale: Vector2D<usize>) -> Self {

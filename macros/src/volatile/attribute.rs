@@ -5,8 +5,14 @@ use syn::{Attribute, ItemStruct, Lit, Meta, MetaList, NestedMeta, Type};
 /// Note: NewTypeパターンの構造体(フィールドが1つの場合)を前提
 pub(crate) fn parse_inner_type(struct_item: ItemStruct) -> (Type, Option<Type>) {
     let mut iter = struct_item.fields.iter();
-    let first_type = iter.next().expect("should be inner field!").clone().ty;
-    let second = iter.next().map(|f| f.ty.clone());
+    let first_type = iter
+        .next()
+        .expect("should be inner field!")
+        .clone()
+        .ty;
+    let second = iter
+        .next()
+        .map(|f| f.ty.clone());
     (first_type, second)
 }
 
@@ -25,8 +31,7 @@ pub(crate) fn parse_volatile_bits_attributes(
     item_struct
         .attrs
         .iter()
-        .map(|attr| parse_attribute(attr.clone()))
-        .flatten()
+        .filter_map(|attr| parse_attribute(attr.clone()))
         .for_each(|input_attribute| match input_attribute {
             InputAttribute::Bits(input_bits) => {
                 bits = Some(input_bits);
@@ -115,7 +120,10 @@ fn parse_meta_name_value(
     } else if attr_name == "volatile_type" {
         if let NestedMeta::Meta(Meta::Path(p)) = nested.first()? {
             return Some(InputAttribute::VolatileType(
-                p.segments.first()?.ident.clone(),
+                p.segments
+                    .first()?
+                    .ident
+                    .clone(),
             ));
         }
     } else if attr_name == "offset_bit" {

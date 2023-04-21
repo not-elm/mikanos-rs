@@ -1,7 +1,5 @@
 use modular_bitfield::bitfield;
-use modular_bitfield::prelude::{B2};
-
-
+use modular_bitfield::prelude::B2;
 
 use super::gate_type::GateType;
 
