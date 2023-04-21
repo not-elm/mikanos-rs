@@ -1,10 +1,15 @@
+use alloc::rc::Rc;
+use core::cell::RefCell;
+
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;
+use crate::gop::pixel::bgr_pixel_writer::BgrPixelWriter;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::rgb_pixel_writer::RgbPixelWriter;
 
 pub mod bgr_pixel_writer;
 mod enum_pixel_writer;
@@ -15,6 +20,17 @@ pub mod rgb_pixel_writer;
 
 #[cfg(feature = "alloc")]
 pub mod mock_buffer_pixel_writer;
+
+pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn PixelWritable>> {
+    match frame_buffer_config.pixel_format {
+        common_lib::frame_buffer::PixelFormat::Rgb => {
+            Rc::new(RefCell::new(RgbPixelWriter::new(frame_buffer_config)))
+        }
+        common_lib::frame_buffer::PixelFormat::Bgr => {
+            Rc::new(RefCell::new(RgbPixelWriter::new(frame_buffer_config)))
+        }
+    }
+}
 
 pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl PixelWritable {
     #[cfg(not(test))]

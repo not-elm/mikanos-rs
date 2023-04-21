@@ -32,6 +32,12 @@ impl<'window, Writer> Layer<'window, Writer> {
     }
 
 
+    pub fn window_mut_at(&'window mut self, key: &'window str) -> Option<&'window mut Box<dyn Window + 'window>> {
+        self.windows
+            .get_mut(key)
+    }
+
+
     pub fn remove_window(&mut self, key: &str) {
         self.windows.remove(key);
     }
@@ -39,8 +45,8 @@ impl<'window, Writer> Layer<'window, Writer> {
 
 
 impl<'window, Writer> Layer<'window, Writer>
-where
-    Writer: PixelWritable,
+    where
+        Writer: PixelWritable,
 {
     pub fn draw_all(&mut self) -> KernelResult {
         for window in self.windows.values_mut() {

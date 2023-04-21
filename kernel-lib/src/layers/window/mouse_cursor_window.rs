@@ -93,6 +93,8 @@ impl Window for MouseCursorWindow {
     fn draw(&mut self, writer: &mut dyn PixelWritable) -> KernelResult {
         unsafe { self.write_row(writer) }
     }
+
+
 }
 
 

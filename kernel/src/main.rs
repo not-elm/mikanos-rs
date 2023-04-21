@@ -24,6 +24,7 @@ use kernel_lib::gop::pixel::pixel_color::PixelColor;
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
+use crate::layers::init_layers;
 use crate::paging::init_paging_table;
 use crate::usb::{enable_msi, first_general_header};
 use crate::usb::mouse::MouseSubscriber;
@@ -38,6 +39,7 @@ mod qemu;
 #[cfg(test)]
 mod test_runner;
 mod usb;
+mod layers;
 #[cfg(test)]
 macros::declaration_volatile_accessible!();
 
@@ -59,6 +61,7 @@ pub extern "sysv64" fn kernel_main(
 
     init_alloc(memory_map.clone()).unwrap();
 
+    init_layers(*frame_buffer_config);
 
     #[cfg(test)]
     test_main();

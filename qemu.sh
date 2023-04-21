@@ -13,7 +13,6 @@ if [ "$QEMU_STATE" = "debug" ]; then
     -S \
     -m 1G \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
-
 elif [ "$QEMU_STATE" = "test" ]; then
   qemu-system-x86_64 \
     -drive if=pflash,format=raw,readonly,file=OVMF_CODE.fd \

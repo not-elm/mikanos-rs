@@ -4,6 +4,7 @@ use kernel_lib::gop::console::{draw_cursor, erase_cursor, is_drawable_cursor_pos
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
+use crate::layers::LAYERS;
 
 #[derive(Debug, Clone)]
 pub struct MouseSubscriber {
@@ -44,8 +45,10 @@ impl MouseSubscribable for MouseSubscriber {
                 })
                 .unwrap_or(PixelColor::white());
 
+            let  l = unsafe{LAYERS.layer_at(0).unwrap()};
 
-            draw_cursor(current_cursor, color).map_err(|_| ())?;
+            l.draw_all().unwrap();
+            // draw_cursor(current_cursor, color).map_err(|_| ())?;
         }
         Ok(())
     }
