@@ -1,12 +1,13 @@
+use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::layers::window::Window;
+use crate::layers::window::{Window, WindowDrawable};
 
 pub struct Layer<'window, Writer> {
     pixel_writer: Writer,
-    windows: BTreeMap<&'window str, Window>,
+    windows: BTreeMap<&'window str, Window<Box<dyn WindowDrawable>>>,
 }
 
 
@@ -19,21 +20,17 @@ impl<'window, Writer> Layer<'window, Writer> {
     }
 
 
-    pub fn and_add_window(mut self, key: &'window str, window: Window) -> Self {
-        self.add_window(key, window);
-        self
+    pub fn add_window(&mut self, key: &'window str, window: Window<impl WindowDrawable>) {
+        self.windows
+            .insert(key, window.into_dyn());
     }
 
 
-    pub fn add_window(&mut self, key: &'window str, window: Window) {
-        self.windows
-            .insert(key, window);
-    }
-
-
-    pub fn window_mut_at(&'window mut self, key: &'window str) -> Option<&mut Window> {
-        self.windows
-            .get_mut(key)
+    pub fn window_mut_at(
+        &'window mut self,
+        key: &'window str,
+    ) -> Option<&mut Window<Box<dyn WindowDrawable>>> {
+        self.windows.get_mut(key)
     }
 
 
@@ -44,12 +41,15 @@ impl<'window, Writer> Layer<'window, Writer> {
 
 
 impl<'window, Writer> Layer<'window, Writer>
-    where
-        Writer: PixelWritable,
+where
+    Writer: PixelWritable,
 {
     pub fn draw_all(&mut self) -> KernelResult {
         for window in self.windows.values_mut() {
-            window.draw(&mut self.pixel_writer)?;
+            let pos = window.pos();
+            window
+                .drawer()
+                .draw(pos, &mut self.pixel_writer)?;
         }
 
         Ok(())

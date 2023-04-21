@@ -8,8 +8,8 @@ pub struct Vector2D<T> {
 }
 
 impl<T> Add for Vector2D<T>
-    where
-        T: Add + Copy + Clone + Debug + PartialOrd + PartialEq,
+where
+    T: Add + Copy + Clone + Debug + PartialOrd + PartialEq,
 {
     type Output = Vector2D<T::Output>;
 
@@ -22,8 +22,8 @@ impl<T> Add for Vector2D<T>
 }
 
 impl<T: Copy + PartialOrd> AddAssign for Vector2D<T>
-    where
-        T: AddAssign + Copy + Clone + Debug,
+where
+    T: AddAssign + Copy + Clone + Debug,
 {
     fn add_assign(&mut self, rhs: Self) {
         self.x += rhs.x;
@@ -67,6 +67,13 @@ impl<T: PartialOrd> Vector2D<T> {
 impl<T: PartialEq> PartialEq for Vector2D<T> {
     fn eq(&self, other: &Self) -> bool {
         self.x == other.x && self.y == other.y
+    }
+}
+
+
+impl Default for Vector2D<usize> {
+    fn default() -> Self {
+        Self::new(0, 0)
     }
 }
 

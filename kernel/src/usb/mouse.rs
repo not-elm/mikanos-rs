@@ -1,9 +1,10 @@
-use common_lib::math::vector::Vector2D;
 use common_lib::math::rectangle::Rectangle;
-use kernel_lib::gop::console::{draw_cursor, erase_cursor, is_drawable_cursor_pos};
+use common_lib::math::vector::Vector2D;
+use kernel_lib::gop::console::{erase_cursor, is_drawable_cursor_pos};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
+
 use crate::layers::LAYERS;
 
 #[derive(Debug, Clone)]
@@ -45,9 +46,17 @@ impl MouseSubscribable for MouseSubscriber {
                 })
                 .unwrap_or(PixelColor::white());
 
-            let  l = unsafe{LAYERS.layer_at(0).unwrap()};
+            let layer = unsafe { LAYERS.layer_at(0).unwrap() };
+            {
+                layer
+                    .window_mut_at("mouse")
+                    .ok_or(())?
+                    .move_window(current_cursor);
+            };
 
-            l.draw_all().unwrap();
+
+            let layer = unsafe { LAYERS.layer_at(0).unwrap() };
+            layer.draw_all().unwrap();
             // draw_cursor(current_cursor, color).map_err(|_| ())?;
         }
         Ok(())

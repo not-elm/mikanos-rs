@@ -20,6 +20,9 @@ pub mod rgb_pixel_writer;
 #[cfg(feature = "alloc")]
 pub mod mock_buffer_pixel_writer;
 
+#[cfg(feature = "alloc")]
+pub mod rc_pixel_writer;
+
 pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn PixelWritable>> {
     match frame_buffer_config.pixel_format {
         common_lib::frame_buffer::PixelFormat::Rgb => {
@@ -82,7 +85,9 @@ mod tests {
     #[test]
     fn it_works() {
         let config = FrameBufferConfig::new(0, 3, 6, 3, 2, PixelFormat::Rgb);
-        assert!(calc_pixel_pos(&config, 0, 0).map(|p| p == 0).is_ok())
+        assert!(calc_pixel_pos(&config, 0, 0)
+            .map(|p| p == 0)
+            .is_ok())
     }
 
     #[test]
