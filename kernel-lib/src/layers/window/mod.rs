@@ -4,6 +4,8 @@ use common_lib::math::vector::Vector2D;
 
 use crate::layers::window::drawers::WindowDrawable;
 use common_lib::transform::Transform2D;
+use crate::error::{KernelError, KernelResult};
+use crate::error::LayerReason::InvalidCastWindowDrawer;
 
 pub mod drawers;
 
@@ -44,6 +46,18 @@ impl<Draw> Window<Draw> {
     }
 }
 
+impl Window<Box<dyn WindowDrawable>> {
+    pub fn drawer_down_cast_mut<D>(&mut self) -> KernelResult<&mut D>
+    where
+        D: WindowDrawable,
+    {
+        self.drawer
+            .any_mut()
+            .downcast_mut()
+            .ok_or(KernelError::FailedOperateLayer(InvalidCastWindowDrawer))
+    }
+}
+
 
 impl<'draw, Draw> Window<Draw>
 where
@@ -61,5 +75,28 @@ where
 
     pub fn into_dyn(self) -> Window<Box<dyn WindowDrawable>> {
         Window::new(Box::new(self.drawer), self.transform)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
+    use crate::layers::window::drawers::WindowDrawable;
+    use crate::layers::window::Window;
+    use alloc::boxed::Box;
+    use common_lib::math::size::Size;
+    use common_lib::math::vector::Vector2D;
+    use common_lib::transform::Transform2D;
+
+    #[test]
+    fn it_down_cast_to_mouse_cursor_drawer() {
+        let mut window: Window<Box<dyn WindowDrawable>> = Window::new(
+            Box::new(MouseCursorDrawer::default()),
+            Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
+        );
+        assert!(window
+            .drawer_down_cast_mut::<MouseCursorDrawer>()
+            .is_some());
     }
 }

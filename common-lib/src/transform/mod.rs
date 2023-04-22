@@ -28,7 +28,7 @@ impl Transform2D {
 
 
     pub fn rect(&self) -> Rectangle<usize> {
-        Rectangle::from_size(self.pos, self.size)
+        Rectangle::from_pos_and_size(self.pos, self.size)
     }
 
 

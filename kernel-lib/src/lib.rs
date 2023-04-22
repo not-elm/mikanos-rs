@@ -4,7 +4,8 @@
 #![feature(abi_x86_interrupt)]
 #![feature(sync_unsafe_cell)]
 #![feature(result_option_inspect)]
-#![no_std]
+#![feature(slice_flatten)]
+#![cfg_attr(not(test), no_std)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;

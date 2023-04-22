@@ -12,6 +12,6 @@ edition = "2021"
 
 
 [features]
-default = []
+default = ["alloc"]
 
 alloc = []

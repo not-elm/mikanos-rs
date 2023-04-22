@@ -11,3 +11,4 @@ pub mod physical_address;
 pub mod queue;
 pub mod repeat;
 pub mod transform;
+pub mod array;

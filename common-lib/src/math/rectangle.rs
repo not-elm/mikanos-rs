@@ -29,11 +29,21 @@ impl<T: Copy> Rectangle<T> {
 
 
 impl Rectangle<usize> {
-    pub fn from_size(pos: Vector2D<usize>, size: Size) -> Self {
+    pub fn from_pos_and_size(pos: Vector2D<usize>, size: Size) -> Self {
         Self::new(
             pos,
             Vector2D::new(pos.x() + size.width(), pos.y() + size.height()),
         )
+    }
+
+
+    pub fn from_size(size: Size) -> Self {
+        Self::from_pos_and_size(Vector2D::zeros(), size)
+    }
+
+
+    pub fn size(&self) -> Size {
+        Size::new(self.width(), self.height())
     }
 }
 
@@ -189,7 +199,7 @@ mod tests {
         let pos = Vector2D::new(5, 10);
         let size = Size::new(5, 10);
 
-        let rect = Rectangle::from_size(pos, size);
+        let rect = Rectangle::from_pos_and_size(pos, size);
 
         assert_eq!(rect.origin, pos);
 

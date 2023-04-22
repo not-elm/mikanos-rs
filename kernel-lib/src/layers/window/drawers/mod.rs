@@ -1,12 +1,13 @@
 use core::any::Any;
 
-use crate::error::KernelResult;
-use crate::gop::pixel::pixel_writable::PixelWritable;
 use common_lib::transform::Transform2D;
 
-pub mod mouse_cursor;
+use crate::error::KernelResult;
+use crate::gop::pixel::pixel_writable::PixelWritable;
+
 pub mod shape;
-mod cursor_buffer;
+
+pub mod cursor;
 
 
 pub trait WindowDrawable: Any {

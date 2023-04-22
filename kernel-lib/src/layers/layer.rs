@@ -11,7 +11,7 @@ use crate::layers::window::drawers::WindowDrawable;
 use crate::layers::window::Window;
 
 pub struct Layer<Writer> {
-    transform: Transform2D,
+    layer_transform: Transform2D,
     pixel_writer: Writer,
     windows: BTreeMap<&'static str, Window<Box<dyn WindowDrawable>>>,
 }
@@ -20,7 +20,7 @@ pub struct Layer<Writer> {
 impl<Writer> Layer<Writer> {
     pub const fn new(transform: Transform2D, pixel_writer: Writer) -> Self {
         Self {
-            transform,
+            layer_transform: transform,
             pixel_writer,
             windows: BTreeMap::new(),
         }
@@ -33,17 +33,16 @@ impl<Writer> Layer<Writer> {
     }
 
 
-    pub fn update_transform<F>(&mut self, key: &'static str, fun: F) -> KernelResult
+    pub fn update_window_transform<F>(&mut self, key: &'static str, fun: F) -> KernelResult
     where
         F: FnMut(&mut Transform2D),
     {
-        let update_transform = self.update(key, fun)?;
+        let window_transform = self.update(key, fun)?;
 
-
-        can_updated_transform(&self.transform, &update_transform)?;
+        can_updated_window_transform(&self.layer_transform, &window_transform)?;
 
         self.window_mut(key)?
-            .set_transform(update_transform);
+            .set_transform(window_transform);
 
         Ok(())
     }
@@ -75,13 +74,13 @@ impl<Writer> Layer<Writer> {
     where
         F: FnMut(&mut Transform2D),
     {
-        let window = self.window_mut(key)?;
+        let window = self.window_mut(key).unwrap();
 
-        let mut update_status = window.transform_ref().clone();
+        let mut window_transform = window.transform_ref().clone();
 
-        fun(&mut update_status);
+        fun(&mut window_transform);
 
-        Ok(update_status)
+        Ok(window_transform)
     }
 }
 
@@ -124,12 +123,15 @@ fn draw_all<'window>(
 }
 
 
-fn can_updated_transform(transform: &Transform2D, update_transform: &Transform2D) -> KernelResult {
-    if transform.with_in(update_transform) {
+fn can_updated_window_transform(
+    layer_transform: &Transform2D,
+    window_transform: &Transform2D,
+) -> KernelResult {
+    if layer_transform.with_in(window_transform) {
         Ok(())
     } else {
         Err(KernelError::FailedOperateLayer(
-            LayerReason::WindowSizeOver(update_transform.rect()),
+            LayerReason::WindowSizeOver(window_transform.rect()),
         ))
     }
 }
@@ -143,14 +145,14 @@ mod tests {
 
     use crate::gop::pixel::mock_buffer_pixel_writer::MockBufferPixelWriter;
     use crate::layers::layer::Layer;
-    use crate::layers::window::drawers::mouse_cursor::MouseCursorDrawer;
+    use crate::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
     use crate::layers::window::Window;
 
     #[test]
     fn it_success_update_window_position() {
         let mut layer = new_layer();
 
-        let update_result = layer.update_transform("test", |window_status| {
+        let update_result = layer.update_window_transform("test", |window_status| {
             window_status.set_pos(Vector2D::new(20, 20));
         });
 
@@ -166,7 +168,7 @@ mod tests {
     fn it_failed_update_window_position_when_over_size() {
         let mut layer = new_layer();
 
-        let update_result = layer.update_transform("test", |window_status| {
+        let update_result = layer.update_window_transform("test", |window_status| {
             window_status.set_pos(Vector2D::new(120, 120));
         });
 

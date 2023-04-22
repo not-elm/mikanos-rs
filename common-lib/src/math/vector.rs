@@ -56,17 +56,17 @@ where
 }
 
 impl<T: Copy> Vector2D<T> {
-    pub fn new(x: T, y: T) -> Self {
+    pub const fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
 
 
-    pub fn x(&self) -> T {
+    pub const fn x(&self) -> T {
         self.x
     }
 
 
-    pub fn y(&self) -> T {
+    pub const fn y(&self) -> T {
         self.y
     }
 }
@@ -96,15 +96,20 @@ impl<T: PartialEq> PartialEq for Vector2D<T> {
 
 
 impl Vector2D<usize> {
-    pub fn zeros() -> Vector2D<usize> {
-        Self::default()
+    pub const fn unit() -> Self {
+        Self::new(1, 1)
+    }
+
+
+    pub const fn zeros() -> Vector2D<usize> {
+        Self::new(0, 0)
     }
 }
 
 
 impl Default for Vector2D<usize> {
     fn default() -> Self {
-        Self::new(0, 0)
+        Self::zeros()
     }
 }
 

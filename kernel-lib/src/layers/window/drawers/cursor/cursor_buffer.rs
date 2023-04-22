@@ -1,7 +1,14 @@
 use alloc::vec::Vec;
 use core::iter::repeat;
 
+use common_lib::math::rectangle::Rectangle;
+use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
+use common_lib::transform::Transform2D;
+
+use crate::error::{KernelError, KernelResult, LayerReason};
+use crate::gop::pixel::pixel_color::PixelColor;
+use crate::layers::window::drawers::cursor::cursor_color_iter::CursorPixelIter;
 
 const CURSOR_WIDTH: usize = 15;
 
@@ -35,7 +42,7 @@ const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
     b"         @@@   ",
 ];
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(transparent)]
 pub struct CursorBuffer(Vec<Vec<u8>>);
 
@@ -59,6 +66,65 @@ impl CursorBuffer {
     pub fn no_scale() -> CursorBuffer {
         Self::new(Vector2D::unit())
     }
+
+
+    pub fn size(&self) -> Size {
+        Size::new(self.width(), self.height())
+    }
+
+
+    pub fn rect(&self) -> Rectangle<usize> {
+        Rectangle::from_size(self.size())
+    }
+
+
+    pub fn height(&self) -> usize {
+        self.0.len()
+    }
+
+
+    pub fn width(&self) -> usize {
+        self.0[0].len()
+    }
+
+
+    pub fn cursor_pixels(
+        &self,
+        transform: &Transform2D,
+        cursor_color: PixelColor,
+        border_color: PixelColor,
+    ) -> KernelResult<CursorPixelIter> {
+        if self.is_not_drawable(transform.rect(), transform.pos()) {
+            return Err(KernelError::FailedOperateLayer(
+                LayerReason::WindowSizeOver(transform.rect()),
+            ));
+        }
+        Ok(CursorPixelIter::new(
+            &self.0,
+            transform.pos(),
+            cursor_color,
+            border_color,
+        ))
+    }
+
+
+    fn is_drawable(&self, window_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
+        if !window_rect
+            .size()
+            .into_rect()
+            .with_in_rect(&self.rect())
+        {
+            return false;
+        }
+
+        let cursor_pos = cursor_pos + self.size().as_vec2d();
+        window_rect.with_in_pos(&cursor_pos)
+    }
+
+
+    fn is_not_drawable(&self, layer_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
+        !self.is_drawable(layer_rect, cursor_pos)
+    }
 }
 
 
@@ -74,11 +140,16 @@ mod tests {
     use alloc::vec::Vec;
 
     use common_lib::array::array_eq;
+    use common_lib::math::rectangle::Rectangle;
+    use common_lib::math::size::Size;
     use common_lib::math::vector::Vector2D;
+    use common_lib::transform::Transform2D;
 
-    use crate::layers::window::drawers::cursor_buffer::{
+    use crate::gop::pixel::pixel_color::PixelColor;
+    use crate::layers::window::drawers::cursor::cursor_buffer::{
         CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
     };
+    use crate::layers::window::drawers::cursor::cursor_color_iter::{cursor_color_at, CursorPixel};
 
     #[test]
     fn it_no_scale() {
@@ -168,6 +239,105 @@ mod tests {
             .into_iter()
             .zip(buff)
             .for_each(|(e, a)| assert!(array_eq(e, a)));
+    }
+
+
+    #[test]
+    #[allow(clippy::needless_range_loop)]
+    fn it_collect_cursor_pixels() {
+        let cursor_buff = CursorBuffer::new(Vector2D::new(1, 1));
+
+        let pixels: Vec<CursorPixel> = cursor_buff
+            .cursor_pixels(
+                &Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
+                PixelColor::white(),
+                PixelColor::blue(),
+            )
+            .unwrap()
+            .collect();
+
+        assert_eq!(pixels.len(), CURSOR_WIDTH * CURSOR_HEIGHT);
+
+        for y in 0..CURSOR_HEIGHT {
+            for x in 0..CURSOR_WIDTH {
+                let index = x + (y * CURSOR_WIDTH);
+                assert_eq!(
+                    pixels[index].color(),
+                    cursor_color_at(
+                        char::from(CURSOR_SHAPE[y][x]),
+                        PixelColor::white(),
+                        PixelColor::blue()
+                    )
+                );
+                assert_eq!(pixels[index].pos(), Vector2D::new(x, y))
+            }
+        }
+    }
+
+
+    #[test]
+    fn it_drawable() {
+        let cursor_buff = CursorBuffer::new(Vector2D::new(1, 1));
+        assert!(cursor_buff.is_drawable(
+            Rectangle::new(Vector2D::zeros(), Vector2D::new(30, 30)),
+            Vector2D::unit(),
+        ))
+    }
+
+
+    #[test]
+    fn it_not_drawable_when_cursor_shape_is_over_layer_size() {
+        let cursor_buff = CursorBuffer::new(Vector2D::new(10, 10));
+        assert!(cursor_buff.is_not_drawable(
+            Rectangle::new(Vector2D::zeros(), Vector2D::new(30, 30)),
+            Vector2D::unit(),
+        ))
+    }
+
+
+    #[test]
+    fn it_not_drawable_when_cursor_position_exceeds_layer() {
+        let cursor_buff = CursorBuffer::new(Vector2D::new(1, 1));
+        assert!(cursor_buff.is_not_drawable(
+            Rectangle::new(Vector2D::zeros(), Vector2D::new(30, 30)),
+            Vector2D::new(30, 30),
+        ))
+    }
+
+
+    #[test]
+    fn it_not_drawable_when_cursor_position_exceeds_layer_width() {
+        let cursor_buff = CursorBuffer::new(Vector2D::new(1, 1));
+        assert!(cursor_buff.is_not_drawable(
+            Rectangle::new(Vector2D::zeros(), Vector2D::new(10 - 1 + CURSOR_WIDTH, 30)),
+            Vector2D::new(10, 0),
+        ))
+    }
+
+
+    #[test]
+    fn it_not_drawable_when_cursor_position_exceeds_layer_height() {
+        let cursor_buff = CursorBuffer::new(Vector2D::new(1, 1));
+        assert!(cursor_buff.is_not_drawable(
+            Rectangle::new(
+                Vector2D::zeros(),
+                Vector2D::new(CURSOR_WIDTH, 17 - 1 + CURSOR_HEIGHT),
+            ),
+            Vector2D::new(0, 17),
+        ))
+    }
+
+
+    #[test]
+    fn it_not_drawable_when_cursor_position_exceeds_layer_height_and_width() {
+        let cursor_buff = CursorBuffer::new(Vector2D::new(1, 1));
+        assert!(cursor_buff.is_not_drawable(
+            Rectangle::new(
+                Vector2D::zeros(),
+                Vector2D::new(110 - 1 + CURSOR_WIDTH, 17 - 1 + CURSOR_HEIGHT),
+            ),
+            Vector2D::new(110, 17),
+        ))
     }
 
 
