@@ -35,7 +35,9 @@ impl<'layer> GlobalLayers<'layer> {
     }
 }
 
+
 unsafe impl<'layer> Sync for GlobalLayers<'layer> {}
+
 
 pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     LAYERS.init(frame_buffer_config)?;

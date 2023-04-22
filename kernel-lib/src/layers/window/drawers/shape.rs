@@ -20,8 +20,8 @@ impl ShapeWDrawer {
 
 
 impl WindowDrawable for ShapeWDrawer {
-    fn draw(&mut self, status: &Transform2D, writer: &mut dyn PixelWritable) -> KernelResult {
-        fill_rect(writer, status, &self.color)
+    fn draw(&mut self, transform: &Transform2D, writer: &mut dyn PixelWritable) -> KernelResult {
+        fill_rect(writer, transform, &self.color)
     }
 
     fn any_mut(&mut self) -> &mut dyn Any {
@@ -39,11 +39,11 @@ impl Default for ShapeWDrawer {
 
 fn fill_rect(
     pixel_writer: &mut dyn PixelWritable,
-    status: &Transform2D,
+    transform: &Transform2D,
     color: &PixelColor,
 ) -> KernelResult {
-    let origin = status.pos();
-    let dest = status.pos() + status.size();
+    let origin = transform.pos();
+    let dest = transform.pos() + transform.size();
 
     for y in origin.y()..=dest.y() {
         for x in origin.x()..=dest.x() {

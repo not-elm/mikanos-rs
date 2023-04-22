@@ -69,12 +69,12 @@ impl MouseCursorDrawer {
 
     unsafe fn write_row(
         &mut self,
-        status: &Transform2D,
+        transform: &Transform2D,
         writer: &mut dyn PixelWritable,
     ) -> KernelResult {
         for y in 0..CURSOR_HEIGHT {
             for _ in 0..self.scale.y() {
-                self.write_line(status, y, writer)?;
+                self.write_line(transform, y, writer)?;
             }
         }
 
@@ -83,14 +83,14 @@ impl MouseCursorDrawer {
 
     unsafe fn write_line(
         &mut self,
-        status: &Transform2D,
+        transform: &Transform2D,
         y: usize,
         writer: &mut dyn PixelWritable,
     ) -> KernelResult {
         for x in 0..CURSOR_WIDTH {
             for _ in 0..self.scale.x() {
                 if let Some(color) = cursor_color_at(x, y, self.color, self.border_color) {
-                    writer.write(x + status.pos().x(), y + status.pos().y(), &color)?;
+                    writer.write(x + transform.pos().x(), y + transform.pos().y(), &color)?;
                 }
             }
         }
@@ -101,8 +101,8 @@ impl MouseCursorDrawer {
 
 
 impl WindowDrawable for MouseCursorDrawer {
-    fn draw(&mut self, status: &Transform2D, writer: &mut dyn PixelWritable) -> KernelResult {
-        unsafe { self.write_row(status, writer) }
+    fn draw(&mut self, transform: &Transform2D, writer: &mut dyn PixelWritable) -> KernelResult {
+        unsafe { self.write_row(transform, writer) }
     }
 
 
