@@ -1,6 +1,9 @@
 use core::num::TryFromIntError;
 
+use common_lib::math::rectangle::Rectangle;
+
 pub type KernelResult<T = ()> = Result<T, KernelError>;
+
 
 /// Errors emitted from kernel-lib
 #[derive(Debug)]
@@ -17,7 +20,9 @@ pub enum KernelError {
 
 #[derive(Debug)]
 pub enum LayerReason {
-    FailedInititialize,
+    FailedInitialize,
+    NotExistsKey,
+    WindowSizeOver(Rectangle<usize>),
 }
 
 

@@ -1,7 +1,5 @@
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::vector::Vector2D;
-use kernel_lib::error::KernelError;
-use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
 
@@ -28,9 +26,9 @@ impl MouseSubscriber {
 impl MouseSubscribable for MouseSubscriber {
     fn subscribe(
         &mut self,
-        prev_cursor: Vector2D<usize>,
-        current_cursor: Vector2D<usize>,
-        button: Option<MouseButton>,
+        _prev_cursor: Vector2D<usize>,
+        _current_cursor: Vector2D<usize>,
+        _button: Option<MouseButton>,
     ) -> Result<(), ()> {
         // if is_drawable_cursor_pos(self.frame_buffer_rect, prev_cursor) {
         //     erase_cursor(prev_cursor).map_err(|_| ())?;
@@ -40,34 +38,27 @@ impl MouseSubscribable for MouseSubscriber {
         //
         // }
 
-        let color = button
-            .map(|b| match b {
-                MouseButton::Button1 => PixelColor::yellow(),
-                MouseButton::Button2 => PixelColor::new(0x13, 0xA9, 0xDB),
-                MouseButton::Button3 => PixelColor::new(0x35, 0xFA, 0x66),
-                _ => PixelColor::white(),
-            })
-            .unwrap_or(PixelColor::white());
+        // let color = button
+        //     .map(|b| match b {
+        //         MouseButton::Button1 => PixelColor::yellow(),
+        //         MouseButton::Button2 => PixelColor::new(0x13, 0xA9, 0xDB),
+        //         MouseButton::Button3 => PixelColor::new(0x35, 0xFA, 0x66),
+        //         _ => PixelColor::white(),
+        //     })
+        //     .unwrap_or(PixelColor::white());
 
-        let mut mutex = LAYERS.mutex().lock();
-        let mut layer = mutex.layer_mut_at(0);
-
-
-        layer.window_mut_at("mouse");
-        // let layer = layers
-        //     .layer_mut_at(0)
-        //     .unwrap();
-        {
-            // layer
-            //     .window_mut_at("mouse")
-            //     .ok_or(())?
-            //     .move_window(current_cursor);
-        };
+        let layers = LAYERS.layers_mut();
+        let mut layers = layers.borrow_mut();
+        let layer = layers.layer_mut_at(0);
 
 
-        // let layer = LAYERS.layer_at(0).unwrap();
-        // layer.draw_all().unwrap();
-        // draw_cursor(current_cursor, color).map_err(|_| ())?;
+        let mouse_window = layer
+            .window_mut("mouse")
+            .map_err(|_| ())?;
+
+
+        layer.draw_all().unwrap();
+
         Ok(())
     }
 }

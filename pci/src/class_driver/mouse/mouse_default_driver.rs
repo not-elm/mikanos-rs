@@ -6,7 +6,7 @@ use crate::error::PciResult;
 
 pub struct MouseDefaultDriver {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
-    current_pos: Vector2D<usize>,
+    _current_pos: Vector2D<usize>,
 }
 
 impl ClassDriverOperate for MouseDefaultDriver {
@@ -44,7 +44,7 @@ impl ClassDriverOperate for MouseDefaultDriver {
 impl MouseDefaultDriver {
     pub fn new() -> Self {
         Self {
-            current_pos: Vector2D::new(0, 0),
+            _current_pos: Vector2D::new(0, 0),
             data_buff: [0; MOUSE_DATA_BUFF_SIZE],
         }
     }

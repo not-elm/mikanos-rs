@@ -1,22 +1,12 @@
 use alloc::boxed::Box;
-use core::any::Any;
 
-use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
-use crate::error::KernelResult;
-use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::layers::window::drawers::WindowDrawable;
 use crate::layers::window::status::WindowStatus;
 
 pub mod drawers;
 pub mod status;
-
-pub trait WindowDrawable: Any {
-    /// 現在のウィンドウの状態を描画します。
-    fn draw(&mut self, pos: Vector2D<usize>, writer: &mut dyn PixelWritable) -> KernelResult;
-    fn any_mut(&mut self) -> &mut dyn Any;
-}
 
 
 pub struct Window<Draw> {
@@ -26,25 +16,13 @@ pub struct Window<Draw> {
 
 
 impl<Draw> Window<Draw> {
-    pub const fn new(
-        drawer: Draw,
-        background_color: PixelColor,
-        color: PixelColor,
-        pos: Vector2D<usize>,
-        size: Size,
-    ) -> Window<Draw> {
-        Self {
-            drawer,
-            background_color,
-            color,
-            size,
-            pos,
-        }
+    pub const fn new(drawer: Draw, status: WindowStatus) -> Window<Draw> {
+        Self { drawer, status }
     }
 
 
     pub fn move_window(&mut self, pos: Vector2D<usize>) {
-        self.pos = pos;
+        self.status.set_pos(pos);
     }
 
 
@@ -53,8 +31,17 @@ impl<Draw> Window<Draw> {
     }
 
 
-    pub fn pos(&self) -> Vector2D<usize> {
-        self.pos
+    pub fn set_window_status(&mut self, window_status: WindowStatus) {
+        self.status = window_status;
+    }
+
+
+    pub fn status_ref(&self) -> &WindowStatus {
+        &self.status
+    }
+
+    pub fn status_mut(&mut self) -> &mut WindowStatus {
+        &mut self.status
     }
 }
 
@@ -74,12 +61,6 @@ where
 
 
     pub fn into_dyn(self) -> Window<Box<dyn WindowDrawable>> {
-        Window::new(
-            Box::new(self.drawer),
-            self.background_color,
-            self.color,
-            self.pos,
-            self.size,
-        )
+        Window::new(Box::new(self.drawer), self.status)
     }
 }

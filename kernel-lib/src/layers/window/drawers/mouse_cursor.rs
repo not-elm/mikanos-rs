@@ -7,6 +7,7 @@ use crate::error::KernelResult;
 use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::layers::window::status::WindowStatus;
 use crate::layers::window::WindowDrawable;
 
 pub const CURSOR_WIDTH: usize = 15;
@@ -71,12 +72,12 @@ impl MouseCursorDrawer {
 
     unsafe fn write_row(
         &mut self,
-        pos: Vector2D<usize>,
+        status: &WindowStatus,
         writer: &mut dyn PixelWritable,
     ) -> KernelResult {
         for y in 0..CURSOR_HEIGHT {
             for _ in 0..self.scale.y() {
-                self.write_line(pos, y, writer)?;
+                self.write_line(status, y, writer)?;
             }
         }
 
@@ -85,13 +86,17 @@ impl MouseCursorDrawer {
 
     unsafe fn write_line(
         &mut self,
-        pos: Vector2D<usize>,
+        status: &WindowStatus,
         y: usize,
         writer: &mut dyn PixelWritable,
     ) -> KernelResult {
         for x in 0..CURSOR_WIDTH {
             for _ in 0..self.scale.x() {
-                writer.write(x + pos.x(), y + pos.y(), &cursor_color_at(x, y))?;
+                writer.write(
+                    x + status.pos().x(),
+                    y + status.pos().y(),
+                    &cursor_color_at(x, y),
+                )?;
             }
         }
 
@@ -101,8 +106,8 @@ impl MouseCursorDrawer {
 
 
 impl WindowDrawable for MouseCursorDrawer {
-    fn draw(&mut self, pos: Vector2D<usize>, writer: &mut dyn PixelWritable) -> KernelResult {
-        unsafe { self.write_row(pos, writer) }
+    fn draw(&mut self, status: &WindowStatus, writer: &mut dyn PixelWritable) -> KernelResult {
+        unsafe { self.write_row(status, writer) }
     }
 
 
@@ -140,9 +145,7 @@ mod tests {
     use crate::layers::window::drawers::mouse_cursor::{
         cursor_color_at, MouseCursorDrawer, CURSOR_HEIGHT, CURSOR_WIDTH,
     };
-    use crate::layers::window::mouse_cursor_drawer::{
-        cursor_color_at, MouseCursorDrawer, CURSOR_HEIGHT, CURSOR_WIDTH,
-    };
+    use crate::layers::window::status::builder::WindowStatusBuilder;
     use crate::layers::window::WindowDrawable;
 
     #[test]
@@ -167,7 +170,12 @@ mod tests {
         let mut window = MouseCursorDrawer::new(Vector2D::new(1, 1));
         let mut writer = MockBufferPixelWriter::new(100, 100);
         assert!(window
-            .draw(&mut writer)
+            .draw(
+                &WindowStatusBuilder::new()
+                    .size(Size::new(100, 100))
+                    .build(),
+                &mut writer
+            )
             .is_ok());
         for y in 0..CURSOR_HEIGHT {
             for x in 0..CURSOR_WIDTH {

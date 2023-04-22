@@ -82,6 +82,13 @@ impl<T: PartialEq> PartialEq for Vector2D<T> {
 }
 
 
+impl Vector2D<usize> {
+    pub fn zeros() -> Vector2D<usize> {
+        Self::default()
+    }
+}
+
+
 impl Default for Vector2D<usize> {
     fn default() -> Self {
         Self::new(0, 0)

@@ -40,6 +40,7 @@ mod qemu;
 #[cfg(test)]
 mod test_runner;
 mod usb;
+
 #[cfg(test)]
 macros::declaration_volatile_accessible!();
 

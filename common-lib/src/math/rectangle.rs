@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 use core::ops::{Add, Sub};
 
+use crate::math::size::Size;
 use crate::math::vector::Vector2D;
 
 #[derive(Debug, Copy, Clone)]
@@ -27,12 +28,27 @@ impl<T: Copy> Rectangle<T> {
 }
 
 
+impl Rectangle<usize> {
+    pub fn from_size(pos: Vector2D<usize>, size: Size) -> Self {
+        Self::new(
+            pos,
+            Vector2D::new(pos.x() + size.width(), pos.y() + size.height()),
+        )
+    }
+}
+
+
 impl<T: Copy + PartialOrd> Rectangle<T> {
-    pub fn is_inner(&self, pos: Vector2D<T>) -> bool {
+    pub fn with_in_pos(&self, pos: &Vector2D<T>) -> bool {
         self.origin.x() <= pos.x()
             && self.origin.y() <= pos.y()
             && pos.x() <= self.end.x()
             && pos.y() <= self.end.y()
+    }
+
+
+    pub fn with_in_rect(&self, rect: &Rectangle<T>) -> bool {
+        self.with_in_pos(&rect.origin) && self.with_in_pos(&rect.end)
     }
 }
 
@@ -77,6 +93,7 @@ impl<T: PartialEq + Copy + PartialOrd> PartialEq for Rectangle<T> {
 #[cfg(test)]
 mod tests {
     use crate::math::rectangle::Rectangle;
+    use crate::math::size::Size;
     use crate::math::vector::Vector2D;
 
     #[test]
@@ -99,7 +116,7 @@ mod tests {
     fn it_inner() {
         let r = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(100, 100));
         let v = Vector2D::new(30, 30);
-        assert!(r.is_inner(v));
+        assert!(r.with_in_pos(&v));
     }
 
 
@@ -107,7 +124,7 @@ mod tests {
     fn it_less() {
         let r = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(100, 100));
         let v = Vector2D::new(-1, -1);
-        assert!(!r.is_inner(v));
+        assert!(!r.with_in_pos(&v));
     }
 
 
@@ -115,7 +132,7 @@ mod tests {
     fn it_over() {
         let r = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(100, 100));
         let v = Vector2D::new(111, 0);
-        assert!(!r.is_inner(v));
+        assert!(!r.with_in_pos(&v));
     }
 
 
@@ -148,14 +165,6 @@ mod tests {
 
 
     #[test]
-    fn it_correct_height_when_() {
-        let rect = Rectangle::new(Vector2D::new(10, 10), Vector2D::new(30, 30));
-
-        assert_eq!(rect.height(), 20);
-    }
-
-
-    #[test]
     fn it_correct_add_position() {
         let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30, 30));
         let moved_rect = rect + Vector2D::new(10, 10);
@@ -172,5 +181,74 @@ mod tests {
 
         assert_eq!(moved_rect.origin, Vector2D::new(10, 10));
         assert_eq!(moved_rect.end, Vector2D::new(40, 40));
+    }
+
+
+    #[test]
+    fn it_from_size() {
+        let pos = Vector2D::new(5, 10);
+        let size = Size::new(5, 10);
+
+        let rect = Rectangle::from_size(pos, size);
+
+        assert_eq!(rect.origin, pos);
+
+        assert_eq!(rect.width(), 5);
+        assert_eq!(rect.height(), 10);
+        assert_eq!(rect.end, Vector2D::new(10, 20));
+    }
+
+
+    #[test]
+    fn it_rect_with_in_parent() {
+        let parent = Rectangle::new(Vector2D::zeros(), Vector2D::new(30, 30));
+        let child = Rectangle::new(Vector2D::new(10, 10), Vector2D::new(20, 20));
+
+        assert!(parent.with_in_rect(&child));
+    }
+
+
+    #[test]
+    fn it_rect_with_in_parent_when_eq_size() {
+        let parent = Rectangle::new(Vector2D::zeros(), Vector2D::new(30, 30));
+        let child = Rectangle::new(Vector2D::zeros(), Vector2D::new(30, 30));
+
+        assert!(parent.with_in_rect(&child));
+    }
+
+
+    #[test]
+    fn it_rect_less_origin() {
+        let parent = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30, 30));
+        let child = Rectangle::new(Vector2D::new(-1, -1), Vector2D::new(30, 30));
+
+        assert!(!parent.with_in_rect(&child));
+    }
+
+
+    #[test]
+    fn it_rect_over_origin() {
+        let parent = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30, 30));
+        let child = Rectangle::new(Vector2D::new(40, 40), Vector2D::new(50, 50));
+
+        assert!(!parent.with_in_rect(&child));
+    }
+
+
+    #[test]
+    fn it_rect_less_end_than_parent_origin() {
+        let parent = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30, 30));
+        let child = Rectangle::new(Vector2D::new(-50, -50), Vector2D::new(-10, -10));
+
+        assert!(!parent.with_in_rect(&child));
+    }
+
+
+    #[test]
+    fn it_rect_over_origin_than_parent_end() {
+        let parent = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30, 30));
+        let child = Rectangle::new(Vector2D::new(50, 50), Vector2D::new(60, 60));
+
+        assert!(!parent.with_in_rect(&child));
     }
 }
