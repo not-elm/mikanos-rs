@@ -31,7 +31,7 @@ where
     }
 }
 
-impl<T: Copy + PartialOrd> Vector2D<T> {
+impl<T: Copy> Vector2D<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }

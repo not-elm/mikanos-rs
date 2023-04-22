@@ -1,6 +1,7 @@
+use core::any::Any;
+
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use core::any::Any;
 
 use crate::error::KernelResult;
 use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
@@ -8,9 +9,9 @@ use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 use crate::layers::window::WindowDrawable;
 
-const CURSOR_WIDTH: usize = 15;
+pub const CURSOR_WIDTH: usize = 15;
 
-const CURSOR_HEIGHT: usize = 24;
+pub const CURSOR_HEIGHT: usize = 24;
 
 
 const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
@@ -136,7 +137,10 @@ mod tests {
     use common_lib::math::vector::Vector2D;
 
     use crate::gop::pixel::mock_buffer_pixel_writer::MockBufferPixelWriter;
-    use crate::layers::window::mouse_cursor_window::{
+    use crate::layers::window::drawers::mouse_cursor::{
+        cursor_color_at, MouseCursorDrawer, CURSOR_HEIGHT, CURSOR_WIDTH,
+    };
+    use crate::layers::window::mouse_cursor_drawer::{
         cursor_color_at, MouseCursorDrawer, CURSOR_HEIGHT, CURSOR_WIDTH,
     };
     use crate::layers::window::WindowDrawable;

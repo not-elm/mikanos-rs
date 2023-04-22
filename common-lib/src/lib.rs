@@ -7,8 +7,6 @@ pub mod assembly;
 pub mod frame_buffer;
 pub mod math;
 pub mod nums;
-pub mod queue;
 pub mod physical_address;
+pub mod queue;
 pub mod repeat;
-
-

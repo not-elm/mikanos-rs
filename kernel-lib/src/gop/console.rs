@@ -4,7 +4,6 @@ use spin::Mutex;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
-use common_lib::math::rectangle::Rectangle;
 
 use crate::error::KernelResult;
 use crate::gop::console::console_builder::ConsoleBuilder;
@@ -21,38 +20,6 @@ pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
 pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
 
 pub const CONSOLE_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x11, 0x11, 0x11);
-
-const CURSOR_WIDTH: usize = 15;
-
-const CURSOR_HEIGHT: usize = 24;
-
-
-const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
-    b"@              ",
-    b"@@             ",
-    b"@.@            ",
-    b"@..@           ",
-    b"@...@          ",
-    b"@....@         ",
-    b"@.....@        ",
-    b"@......@       ",
-    b"@.......@      ",
-    b"@........@     ",
-    b"@.........@    ",
-    b"@..........@   ",
-    b"@...........@  ",
-    b"@............@ ",
-    b"@......@@@@@@@@",
-    b"@......@       ",
-    b"@....@@.@      ",
-    b"@...@ @.@      ",
-    b"@..@   @.@     ",
-    b"@.@    @.@     ",
-    b"@@      @.@    ",
-    b"@       @.@    ",
-    b"         @.@   ",
-    b"         @@@   ",
-];
 
 
 impl GlobalConsole {
@@ -74,38 +41,6 @@ impl GlobalConsole {
 
 pub fn init_console(frame_buffer_config: FrameBufferConfig) {
     unsafe { CONSOLE.init(frame_buffer_config) };
-}
-
-pub fn draw_cursor(pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
-    for dy in 0..CURSOR_HEIGHT {
-        for dx in 0..CURSOR_WIDTH {
-            let c = char::from(CURSOR_SHAPE[dy][dx]);
-            if c == '@' {
-                get_mut_console().write_pixel(
-                    Vector2D::new(pos.x() + dx, pos.y() + dy),
-                    CONSOLE_BACKGROUND_COLOR,
-                )?;
-            } else if c == '.' {
-                get_mut_console().write_pixel(Vector2D::new(pos.x() + dx, pos.y() + dy), color)?;
-            }
-        }
-    }
-
-    Ok(())
-}
-
-
-pub fn is_drawable_cursor_pos(
-    frame_buffer_rec: Rectangle<usize>,
-    cursor_pos: Vector2D<usize>,
-) -> bool {
-    let cursor_pos = cursor_pos + Vector2D::new(CURSOR_WIDTH, CURSOR_HEIGHT);
-    frame_buffer_rec.is_inner(cursor_pos)
-}
-
-
-pub fn erase_cursor(pos: Vector2D<usize>) -> KernelResult {
-    draw_cursor(pos, CONSOLE_BACKGROUND_COLOR)
 }
 
 

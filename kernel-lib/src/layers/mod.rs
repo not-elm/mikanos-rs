@@ -33,11 +33,10 @@ impl<'window> Layers<'window> {
     }
 
 
-    pub fn layer_mut_at(
-        &'window mut self,
-        index: usize,
-    ) -> Option<&'window mut Layer<'window, RcPixelWriter<'window>>> {
-        self.layers.get_mut(index)
+    pub fn layer_mut_at(&mut self, index: usize) -> &mut Layer<'window, RcPixelWriter<'window>> {
+        self.layers
+            .get_mut(index)
+            .unwrap()
     }
 
 

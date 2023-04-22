@@ -1,7 +1,10 @@
+use core::fmt::Debug;
+use core::ops::Sub;
+
 use crate::math::vector::Vector2D;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Rectangle<T: Copy + PartialOrd> {
+pub struct Rectangle<T: Copy> {
     origin: Vector2D<T>,
     end: Vector2D<T>,
 }
@@ -31,6 +34,18 @@ impl<T: Copy + PartialOrd> Rectangle<T> {
 }
 
 
+impl<T: Copy + Sub<Output = T>> Rectangle<T> {
+    pub fn width(&self) -> T {
+        self.end.x() - self.origin.x()
+    }
+
+
+    pub fn height(&self) -> T {
+        self.end.y() - self.origin.y()
+    }
+}
+
+
 impl<T: PartialEq + Copy + PartialOrd> PartialEq for Rectangle<T> {
     fn eq(&self, other: &Self) -> bool {
         self.origin == other.origin() && self.end == other.end()
@@ -40,8 +55,8 @@ impl<T: PartialEq + Copy + PartialOrd> PartialEq for Rectangle<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::math::vector::Vector2D;
     use crate::math::rectangle::Rectangle;
+    use crate::math::vector::Vector2D;
 
     #[test]
     fn it_partial_eq_rectangle() {
@@ -80,5 +95,33 @@ mod tests {
         let r = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(100, 100));
         let v = Vector2D::new(111, 0);
         assert!(!r.is_inner(v));
+    }
+
+
+    #[test]
+    fn it_correct_width_when_origin_zeros() {
+        let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(10, 10));
+        assert_eq!(rect.width(), 10);
+    }
+
+
+    #[test]
+    fn it_correct_width_when_origin_10() {
+        let rect = Rectangle::new(Vector2D::new(10, 10), Vector2D::new(100, 100));
+        assert_eq!(rect.width(), 90);
+    }
+
+
+    #[test]
+    fn it_correct_height_when_origin_zeros() {
+        let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(10, 10));
+        assert_eq!(rect.height(), 10);
+    }
+
+
+    #[test]
+    fn it_correct_height_when_origin_10() {
+        let rect = Rectangle::new(Vector2D::new(10, 10), Vector2D::new(30, 30));
+        assert_eq!(rect.height(), 20);
     }
 }

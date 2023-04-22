@@ -38,15 +38,15 @@ pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl Pixel
     #[cfg(not(test))]
     match frame_buffer_config.pixel_format {
         common_lib::frame_buffer::PixelFormat::Rgb => {
-            crate::gop::pixel::enum_pixel_writer::EnumPixelWriter::Rgb(frame_buffer_config)
+            enum_pixel_writer::EnumPixelWriter::Rgb(frame_buffer_config)
         }
         common_lib::frame_buffer::PixelFormat::Bgr => {
-            crate::gop::pixel::enum_pixel_writer::EnumPixelWriter::Bgr(frame_buffer_config)
+            enum_pixel_writer::EnumPixelWriter::Bgr(frame_buffer_config)
         }
     }
 
     #[cfg(test)]
-    crate::gop::pixel::mock_pixel_writer::MockPixelWriter::new(frame_buffer_config)
+    mock_pixel_writer::MockPixelWriter::new(frame_buffer_config)
 }
 
 pub fn fill_rect(
@@ -67,7 +67,7 @@ fn calc_pixel_pos(
     frame_buffer_config: &FrameBufferConfig,
     x: usize,
     y: usize,
-) -> crate::error::KernelResult<usize> {
+) -> KernelResult<usize> {
     if x > frame_buffer_config.horizontal_resolution || y > frame_buffer_config.vertical_resolution
     {
         return Err(ExceededFrameBufferSize);

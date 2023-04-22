@@ -1,4 +1,5 @@
 use crate::gop::pixel::pixel_color::PixelColor;
+use crate::layers::window::status::WindowStatus;
 use crate::layers::window::Window;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
@@ -64,7 +65,7 @@ impl WindowBuilder {
     }
 
 
-    pub fn build<Draw>(self, drawer: Draw) -> Window<Draw> {
+    pub fn build<Draw>(self, drawer: Draw) -> WindowStatus<Draw> {
         Window::new(
             drawer,
             self.background_color

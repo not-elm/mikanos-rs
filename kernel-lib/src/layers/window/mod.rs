@@ -7,9 +7,10 @@ use common_lib::math::vector::Vector2D;
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::layers::window::status::WindowStatus;
 
-pub mod builder;
-pub mod mouse_cursor_window;
+pub mod drawers;
+pub mod status;
 
 pub trait WindowDrawable: Any {
     /// 現在のウィンドウの状態を描画します。
@@ -20,10 +21,7 @@ pub trait WindowDrawable: Any {
 
 pub struct Window<Draw> {
     drawer: Draw,
-    background_color: PixelColor,
-    color: PixelColor,
-    size: Size,
-    pos: Vector2D<usize>,
+    status: WindowStatus,
 }
 
 

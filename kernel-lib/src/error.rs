@@ -9,8 +9,15 @@ pub enum KernelError {
     NotSupportCharacter,
     FailedCast,
     NumSizeOver,
+    FailedOperateLayer(LayerReason),
     FailedAllocate(AllocateReason),
     TryFromIntError(TryFromIntError),
+}
+
+
+#[derive(Debug)]
+pub enum LayerReason {
+    FailedInititialize,
 }
 
 
