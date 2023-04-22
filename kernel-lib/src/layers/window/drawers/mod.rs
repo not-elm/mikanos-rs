@@ -6,6 +6,7 @@ use common_lib::transform::Transform2D;
 
 pub mod mouse_cursor;
 pub mod shape;
+mod cursor_buffer;
 
 
 pub trait WindowDrawable: Any {
