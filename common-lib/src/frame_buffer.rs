@@ -1,3 +1,5 @@
+use crate::math::size::Size;
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct FrameBufferConfig {
@@ -34,6 +36,12 @@ impl FrameBufferConfig {
             pixel_format,
         }
     }
+
+
+    pub fn frame_size(&self) -> Size {
+        Size::new(self.horizontal_resolution, self.vertical_resolution)
+    }
+
 
     pub fn mock() -> Self {
         Self {

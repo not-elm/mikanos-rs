@@ -5,10 +5,10 @@ use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
-use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
-use crate::gop::pixel::{fill_rect, select_pixel_writer};
+use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::{fill_rect, select_pixel_writer};
 
 type ImplCharWritable = impl CharWritable;
 pub type ImplPixelWritable = impl PixelWritable;
@@ -62,7 +62,10 @@ impl ConsoleWriter {
         self.x
     }
     pub fn write_pixel(&mut self, pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
-        unsafe { self.pixel_writer.write(pos.x(), pos.y(), &color) }
+        unsafe {
+            self.pixel_writer
+                .write(pos.x(), pos.y(), &color)
+        }
     }
     pub fn write_str(&mut self, s: &str) -> KernelResult {
         for c in s.chars() {
@@ -150,7 +153,7 @@ impl ConsoleWriter {
             &mut self.pixel_writer,
             Vector2D::new(0, y * 16),
             to,
-            CONSOLE_BACKGROUND_COLOR,
+            DISPLAY_BACKGROUND_COLOR,
         )
     }
 
@@ -176,14 +179,18 @@ mod tests {
     #[test]
     fn it_new_line() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-        assert!(console.write_str("\n").is_ok());
+        assert!(console
+            .write_str("\n")
+            .is_ok());
         assert_eq!(console.y(), 1)
     }
 
     #[test]
     fn it_not_new_line() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-        assert!(console.write_str("test").is_ok());
+        assert!(console
+            .write_str("test")
+            .is_ok());
         assert_eq!(console.y(), 0)
     }
 
@@ -215,7 +222,9 @@ mod tests {
     fn it_scroll_display() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
         for i in 0..HEIGHT {
-            assert!(console.write_str(&format!("{}\n", i)).is_ok());
+            assert!(console
+                .write_str(&format!("{}\n", i))
+                .is_ok());
         }
 
         assert_eq!(console.chart_at(Vector2D::new(0, 0)), '1');
@@ -225,7 +234,9 @@ mod tests {
     fn it_end_when_scroll_display() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
         for i in 0..HEIGHT {
-            assert!(console.write_str(&format!("{}\n", i)).is_ok());
+            assert!(console
+                .write_str(&format!("{}\n", i))
+                .is_ok());
         }
 
         assert_eq!(console.chart_at(Vector2D::new(1, 0)), '\0');
@@ -235,8 +246,12 @@ mod tests {
     #[test]
     fn it_two_new_line() {
         let mut console = ConsoleBuilder::new().build(FrameBufferConfig::mock());
-        assert!(console.write_str("test\n").is_ok());
-        assert!(console.write_str("test\n").is_ok());
+        assert!(console
+            .write_str("test\n")
+            .is_ok());
+        assert!(console
+            .write_str("test\n")
+            .is_ok());
         assert_eq!(console.y(), 2);
         assert_eq!(console.x(), 0);
     }

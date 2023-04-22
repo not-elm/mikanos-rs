@@ -19,7 +19,7 @@ pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
 
 pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
 
-pub const CONSOLE_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x11, 0x11, 0x11);
+pub const DISPLAY_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x11, 0x11, 0x11);
 
 
 impl GlobalConsole {

@@ -1,15 +1,15 @@
 use alloc::rc::Rc;
-use core::cell::{OnceCell, RefCell};
+use core::cell::{OnceCell, RefCell, RefMut};
 
 use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::math::size::Size;
+use common_lib::transform::builder::Transform2DBuilder;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
+use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::gop::pixel::rc_pixel_writer;
-use kernel_lib::layers::layer_status::LayerStatusBuilder;
 use kernel_lib::layers::window::drawers::mouse_cursor::MouseCursorDrawer;
-use kernel_lib::layers::window::status::builder::WindowStatusBuilder;
+use kernel_lib::layers::window::drawers::shape::ShapeWDrawer;
 use kernel_lib::layers::window::Window;
-use kernel_lib::layers::Layers;
+use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
@@ -43,17 +43,31 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     let layers = LAYERS.layers_mut();
     let mut layers = layers.borrow_mut();
 
-    let layer = layers.new_layer(
-        LayerStatusBuilder::new(Size::new(
-            frame_buffer_config.horizontal_resolution,
-            frame_buffer_config.vertical_resolution,
-        ))
-        .build(),
-    );
+    add_background_layer(frame_buffer_config, &mut layers);
+    add_mouse_layer(frame_buffer_config, &mut layers);
 
-    let window_status = WindowStatusBuilder::new().build();
+    layers.draw_all_layers_start_at(0)?;
+
+    Ok(())
+}
+
+fn add_background_layer(frame_buffer_config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
+    let transform = frame_buffer_layer_transform(frame_buffer_config);
+
+    let layer = layers.new_layer(transform.clone());
+
+    let window = Window::new(ShapeWDrawer::new(DISPLAY_BACKGROUND_COLOR), transform);
+
+
+    layer.add_window("background", window);
+}
+
+
+fn add_mouse_layer(frame_buffer_config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
+    let layer = layers.new_layer(frame_buffer_layer_transform(frame_buffer_config));
+
+    let window_status = Transform2DBuilder::new().build();
     let window = Window::new(MouseCursorDrawer::default(), window_status);
 
     layer.add_window("mouse", window);
-    Ok(())
 }

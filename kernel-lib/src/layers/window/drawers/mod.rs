@@ -2,15 +2,15 @@ use core::any::Any;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::layers::window::status::WindowStatus;
+use common_lib::transform::Transform2D;
 
-pub mod background;
 pub mod mouse_cursor;
+pub mod shape;
 
 
 pub trait WindowDrawable: Any {
     /// 現在のウィンドウの状態を描画します。
-    fn draw(&mut self, status: &WindowStatus, writer: &mut dyn PixelWritable) -> KernelResult;
+    fn draw(&mut self, status: &Transform2D, writer: &mut dyn PixelWritable) -> KernelResult;
 
 
     /// 自身をAnyにアップキャストします。

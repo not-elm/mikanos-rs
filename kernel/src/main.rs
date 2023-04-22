@@ -18,7 +18,7 @@ use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
 use kernel_lib::error::KernelResult;
-use kernel_lib::gop::console::{fill_rect_using_global, init_console, CONSOLE_BACKGROUND_COLOR};
+use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::{println, serial_println};
 
@@ -69,8 +69,8 @@ pub extern "sysv64" fn kernel_main(
     serial_println!("Hello Serial Port!");
     println!("Hello Kernel!");
 
-    fill_background(CONSOLE_BACKGROUND_COLOR, frame_buffer_config).unwrap();
-    fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
+    // fill_background(DISPLAY_BACKGROUND_COLOR, frame_buffer_config).unwrap();
+    // fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
 
     let general_header = first_general_header();
     enable_msi(general_header.clone()).unwrap();

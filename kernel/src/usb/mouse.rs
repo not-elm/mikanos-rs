@@ -27,17 +27,9 @@ impl MouseSubscribable for MouseSubscriber {
     fn subscribe(
         &mut self,
         _prev_cursor: Vector2D<usize>,
-        _current_cursor: Vector2D<usize>,
+        current_cursor: Vector2D<usize>,
         _button: Option<MouseButton>,
     ) -> Result<(), ()> {
-        // if is_drawable_cursor_pos(self.frame_buffer_rect, prev_cursor) {
-        //     erase_cursor(prev_cursor).map_err(|_| ())?;
-        // }
-
-        // if is_drawable_cursor_pos(self.frame_buffer_rect, current_cursor) {
-        //
-        // }
-
         // let color = button
         //     .map(|b| match b {
         //         MouseButton::Button1 => PixelColor::yellow(),
@@ -52,12 +44,13 @@ impl MouseSubscribable for MouseSubscriber {
         let layer = layers.layer_mut_at(0);
 
 
-        let mouse_window = layer
-            .window_mut("mouse")
+        layer
+            .update_transform("mouse", |status| status.set_pos(current_cursor))
             .map_err(|_| ())?;
 
-
-        layer.draw_all().unwrap();
+        layers
+            .draw_all_layers_start_at(2)
+            .map_err(|_| ())?;
 
         Ok(())
     }

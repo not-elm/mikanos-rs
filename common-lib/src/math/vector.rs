@@ -1,3 +1,4 @@
+use crate::math::size::Size;
 use core::fmt::Debug;
 use core::ops::{Add, AddAssign, Sub};
 
@@ -18,6 +19,18 @@ where
         Vector2D {
             x: self.x() + rhs.x(),
             y: self.y() + rhs.y(),
+        }
+    }
+}
+
+
+impl Add<Size> for Vector2D<usize> {
+    type Output = Vector2D<usize>;
+
+    fn add(self, rhs: Size) -> Self::Output {
+        Vector2D {
+            x: self.x() + rhs.width(),
+            y: self.y() + rhs.height(),
         }
     }
 }
@@ -98,6 +111,7 @@ impl Default for Vector2D<usize> {
 
 #[cfg(test)]
 mod tests {
+    use crate::math::size::Size;
     use crate::math::vector::Vector2D;
 
     #[test]
@@ -122,5 +136,14 @@ mod tests {
         let v2 = Vector2D::new(20, 20);
 
         assert_eq!(v2 - v1, Vector2D::new(15, 15));
+    }
+
+
+    #[test]
+    fn it_add_size() {
+        let v1 = Vector2D::new(5, 5);
+        let v2 = v1 + Size::new(10, 10);
+
+        assert_eq!(v2, Vector2D::new(15, 15));
     }
 }

@@ -2,14 +2,24 @@ use alloc::rc::Rc;
 use alloc::vec::Vec;
 use core::cell::RefCell;
 
+use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::transform::builder::Transform2DBuilder;
+use common_lib::transform::Transform2D;
+
+use crate::error::KernelResult;
 use crate::gop::pixel::pixel_writable::PixelWritable;
 use crate::gop::pixel::rc_pixel_writer::RcPixelWriter;
 use crate::layers::layer::Layer;
-use crate::layers::layer_status::LayerStatus;
 
 pub mod layer;
-pub mod layer_status;
 pub mod window;
+
+
+pub fn frame_buffer_layer_transform(frame_buffer_config: FrameBufferConfig) -> Transform2D {
+    Transform2DBuilder::new()
+        .size(frame_buffer_config.frame_size())
+        .build()
+}
 
 
 pub struct Layers<'window> {
@@ -42,12 +52,25 @@ impl<'window> Layers<'window> {
     }
 
 
-    pub fn new_layer(&mut self, layer_status: LayerStatus) -> &mut Layer<RcPixelWriter<'window>> {
+    pub fn new_layer(&mut self, transform: Transform2D) -> &mut Layer<RcPixelWriter<'window>> {
         self.layers
-            .push(Layer::new(layer_status, self.writer.clone()));
+            .push(Layer::new(transform, self.writer.clone()));
 
         self.layers
             .last_mut()
             .unwrap()
+    }
+
+
+    pub fn draw_all_layers_start_at(&mut self, index: usize) -> KernelResult {
+        for layer in self
+            .layers
+            .iter_mut()
+            .skip(index)
+        {
+            layer.draw_all_window()?;
+        }
+
+        Ok(())
     }
 }

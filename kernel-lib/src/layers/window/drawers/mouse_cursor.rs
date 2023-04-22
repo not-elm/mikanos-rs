@@ -1,14 +1,12 @@
 use core::any::Any;
 
-use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
-use crate::gop::console::CONSOLE_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::layers::window::status::WindowStatus;
 use crate::layers::window::WindowDrawable;
+use common_lib::transform::Transform2D;
 
 pub const CURSOR_WIDTH: usize = 15;
 
@@ -43,21 +41,20 @@ const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
 ];
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MouseCursorDrawer {
     scale: Vector2D<usize>,
     color: PixelColor,
-    widow_size: Size,
+    border_color: PixelColor,
 }
 
 
 impl MouseCursorDrawer {
-    pub fn new(scale: Vector2D<usize>) -> Self {
-        let widow_size = Size::new(CURSOR_WIDTH * scale.x(), CURSOR_HEIGHT * scale.y());
+    pub fn new(scale: Vector2D<usize>, color: PixelColor, border_color: PixelColor) -> Self {
         Self {
             scale,
-            color: PixelColor::white(),
-            widow_size,
+            color,
+            border_color,
         }
     }
 
@@ -65,14 +62,14 @@ impl MouseCursorDrawer {
         self.color = color
     }
 
-
-    pub fn window_size(&self) -> Size {
-        self.widow_size
+    pub fn set_border_color(&mut self, border_color: PixelColor) {
+        self.border_color = border_color;
     }
+
 
     unsafe fn write_row(
         &mut self,
-        status: &WindowStatus,
+        status: &Transform2D,
         writer: &mut dyn PixelWritable,
     ) -> KernelResult {
         for y in 0..CURSOR_HEIGHT {
@@ -86,17 +83,15 @@ impl MouseCursorDrawer {
 
     unsafe fn write_line(
         &mut self,
-        status: &WindowStatus,
+        status: &Transform2D,
         y: usize,
         writer: &mut dyn PixelWritable,
     ) -> KernelResult {
         for x in 0..CURSOR_WIDTH {
             for _ in 0..self.scale.x() {
-                writer.write(
-                    x + status.pos().x(),
-                    y + status.pos().y(),
-                    &cursor_color_at(x, y),
-                )?;
+                if let Some(color) = cursor_color_at(x, y, self.color, self.border_color) {
+                    writer.write(x + status.pos().x(), y + status.pos().y(), &color)?;
+                }
             }
         }
 
@@ -106,7 +101,7 @@ impl MouseCursorDrawer {
 
 
 impl WindowDrawable for MouseCursorDrawer {
-    fn draw(&mut self, status: &WindowStatus, writer: &mut dyn PixelWritable) -> KernelResult {
+    fn draw(&mut self, status: &Transform2D, writer: &mut dyn PixelWritable) -> KernelResult {
         unsafe { self.write_row(status, writer) }
     }
 
@@ -119,19 +114,28 @@ impl WindowDrawable for MouseCursorDrawer {
 
 impl Default for MouseCursorDrawer {
     fn default() -> Self {
-        Self::new(Vector2D::new(1, 1))
+        Self::new(
+            Vector2D::new(1, 1),
+            PixelColor::white(),
+            PixelColor::black(),
+        )
     }
 }
 
 
-fn cursor_color_at(x: usize, y: usize) -> PixelColor {
+fn cursor_color_at(
+    x: usize,
+    y: usize,
+    cursor_color: PixelColor,
+    border_color: PixelColor,
+) -> Option<PixelColor> {
     let c = char::from(CURSOR_SHAPE[y][x]);
     if c == '@' {
-        CONSOLE_BACKGROUND_COLOR
+        Some(border_color)
     } else if c == '.' {
-        PixelColor::white()
+        Some(cursor_color)
     } else {
-        PixelColor::black()
+        None
     }
 }
 
@@ -139,47 +143,34 @@ fn cursor_color_at(x: usize, y: usize) -> PixelColor {
 #[cfg(test)]
 mod tests {
     use common_lib::math::size::Size;
-    use common_lib::math::vector::Vector2D;
 
     use crate::gop::pixel::mock_buffer_pixel_writer::MockBufferPixelWriter;
+    use crate::gop::pixel::pixel_color::PixelColor;
     use crate::layers::window::drawers::mouse_cursor::{
         cursor_color_at, MouseCursorDrawer, CURSOR_HEIGHT, CURSOR_WIDTH,
     };
-    use crate::layers::window::status::builder::WindowStatusBuilder;
     use crate::layers::window::WindowDrawable;
-
-    #[test]
-    fn it_no_scale() {
-        let window = MouseCursorDrawer::default();
-        assert_eq!(window.window_size(), Size::new(CURSOR_WIDTH, CURSOR_HEIGHT));
-    }
-
-
-    #[test]
-    fn it_scale2() {
-        let window = MouseCursorDrawer::new(Vector2D::new(2, 2));
-        assert_eq!(
-            window.window_size(),
-            Size::new(CURSOR_WIDTH * 2, CURSOR_HEIGHT * 2)
-        );
-    }
-
+    use common_lib::transform::builder::Transform2DBuilder;
 
     #[test]
     fn it_write_cursor_not_scale() {
-        let mut window = MouseCursorDrawer::new(Vector2D::new(1, 1));
+        let mut drawer = MouseCursorDrawer::default();
         let mut writer = MockBufferPixelWriter::new(100, 100);
-        assert!(window
+        assert!(drawer
             .draw(
-                &WindowStatusBuilder::new()
+                &Transform2DBuilder::new()
                     .size(Size::new(100, 100))
                     .build(),
-                &mut writer
+                &mut writer,
             )
             .is_ok());
         for y in 0..CURSOR_HEIGHT {
             for x in 0..CURSOR_WIDTH {
-                assert_eq!(writer.pixel_at(x, y), cursor_color_at(x, y));
+                assert_eq!(
+                    writer.pixel_at(x, y),
+                    cursor_color_at(x, y, PixelColor::white(), PixelColor::black())
+                        .unwrap_or(PixelColor::black())
+                );
             }
         }
     }

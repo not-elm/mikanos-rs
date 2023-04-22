@@ -1,0 +1,55 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Layers
+
+class Layer{
+
+}
+
+class Window
+
+class PixelColor{
+    + r: u8
+    + g: u8
+    + b: u8
+}
+
+class Vector2D<V>{
+    + x: V
+    + y: V
+}
+
+class Transform2D{
+    pos: Vector2D
+    size: Size
+}
+
+
+interface PixelWritable{
+    + write(x: usize, y: usize, color: PixelColor) -> KernelResult
+}
+
+
+interface WindowDrawable{
+    + draw(
+     pixel_writer: PixelWritable,
+     window_state: WindowState
+     )
+}
+
+
+Layers "0..n" o--> Layer
+
+Layer "0..n" o--> Window
+Layer --> PixelWritable
+Layer o-left-> Transform2D
+
+
+Window o-left-> Transform2D
+Window o--> WindowDrawable
+
+Transform2D --> PixelColor
+Transform2D --> Vector2D
+
+@enduml
