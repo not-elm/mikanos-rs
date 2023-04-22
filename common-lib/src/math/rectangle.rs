@@ -1,5 +1,5 @@
 use core::fmt::Debug;
-use core::ops::Sub;
+use core::ops::{Add, Sub};
 
 use crate::math::vector::Vector2D;
 
@@ -10,7 +10,7 @@ pub struct Rectangle<T: Copy> {
 }
 
 
-impl<T: Copy + PartialOrd> Rectangle<T> {
+impl<T: Copy> Rectangle<T> {
     pub fn new(origin: Vector2D<T>, end: Vector2D<T>) -> Rectangle<T> {
         Self { origin, end }
     }
@@ -24,7 +24,10 @@ impl<T: Copy + PartialOrd> Rectangle<T> {
     pub fn end(&self) -> Vector2D<T> {
         self.end
     }
+}
 
+
+impl<T: Copy + PartialOrd> Rectangle<T> {
     pub fn is_inner(&self, pos: Vector2D<T>) -> bool {
         self.origin.x() <= pos.x()
             && self.origin.y() <= pos.y()
@@ -42,6 +45,24 @@ impl<T: Copy + Sub<Output = T>> Rectangle<T> {
 
     pub fn height(&self) -> T {
         self.end.y() - self.origin.y()
+    }
+}
+
+
+impl<Num: Copy + Add<Output = Num>> Add<Vector2D<Num>> for Rectangle<Num> {
+    type Output = Rectangle<Num>;
+
+    fn add(self, rhs: Vector2D<Num>) -> Self::Output {
+        Rectangle::new(self.origin + rhs, self.end + rhs)
+    }
+}
+
+
+impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Rectangle<Num> {
+    type Output = Rectangle<Num>;
+
+    fn sub(self, rhs: Vector2D<Num>) -> Self::Output {
+        Rectangle::new(self.origin - rhs, self.end - rhs)
     }
 }
 
@@ -123,5 +144,33 @@ mod tests {
     fn it_correct_height_when_origin_10() {
         let rect = Rectangle::new(Vector2D::new(10, 10), Vector2D::new(30, 30));
         assert_eq!(rect.height(), 20);
+    }
+
+
+    #[test]
+    fn it_correct_height_when_() {
+        let rect = Rectangle::new(Vector2D::new(10, 10), Vector2D::new(30, 30));
+
+        assert_eq!(rect.height(), 20);
+    }
+
+
+    #[test]
+    fn it_correct_add_position() {
+        let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30, 30));
+        let moved_rect = rect + Vector2D::new(10, 10);
+
+        assert_eq!(moved_rect.origin, Vector2D::new(10, 10));
+        assert_eq!(moved_rect.end, Vector2D::new(40, 40));
+    }
+
+
+    #[test]
+    fn it_correct_add_() {
+        let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30, 30));
+        let moved_rect = rect + Vector2D::new(10, 10);
+
+        assert_eq!(moved_rect.origin, Vector2D::new(10, 10));
+        assert_eq!(moved_rect.end, Vector2D::new(40, 40));
     }
 }

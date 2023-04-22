@@ -1,5 +1,5 @@
 use core::fmt::Debug;
-use core::ops::{Add, AddAssign};
+use core::ops::{Add, AddAssign, Sub};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vector2D<T> {
@@ -7,9 +7,10 @@ pub struct Vector2D<T> {
     y: T,
 }
 
+
 impl<T> Add for Vector2D<T>
 where
-    T: Add + Copy + Clone + Debug + PartialOrd + PartialEq,
+    T: Add + Copy,
 {
     type Output = Vector2D<T::Output>;
 
@@ -20,6 +21,16 @@ where
         }
     }
 }
+
+
+impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Vector2D<Num> {
+    type Output = Vector2D<Num>;
+
+    fn sub(self, rhs: Vector2D<Num>) -> Self::Output {
+        Vector2D::new(self.x - rhs.x, self.y - rhs.y)
+    }
+}
+
 
 impl<T: Copy + PartialOrd> AddAssign for Vector2D<T>
 where
@@ -95,5 +106,14 @@ mod tests {
         let v1 = Vector2D::new(10, 13);
         let v2 = Vector2D::new(11, 13);
         assert_ne!(v1, v2);
+    }
+
+
+    #[test]
+    fn it_sub() {
+        let v1 = Vector2D::new(5, 5);
+        let v2 = Vector2D::new(20, 20);
+
+        assert_eq!(v2 - v1, Vector2D::new(15, 15));
     }
 }
