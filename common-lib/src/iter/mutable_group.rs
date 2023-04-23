@@ -1,5 +1,6 @@
 use alloc::vec;
 use alloc::vec::Vec;
+use crate::iter::group::Group;
 
 pub struct MutableGroup<Key, Value> {
     key: Key,
@@ -30,6 +31,12 @@ impl<Key, Value> MutableGroup<Key, Value> {
 
     pub fn push_value(&mut self, value: Value) {
         self.values.push(value);
+    }
+    
+    
+    
+    pub fn into_immutable_group(self) -> Group<Key, Value>{
+        Group::new(self.key, self.values)
     }
 }
 

@@ -1,5 +1,5 @@
 use alloc::vec::Vec;
-use itertools::Itertools;
+use common_lib::iter::Grouping;
 use common_lib::math::vector::Vector2D;
 use crate::gop::pixel::Pixel;
 use crate::gop::pixel::pixel_iter::PixelIter;
@@ -16,6 +16,10 @@ impl PixelFrame
 
         let pixels: Vec<Vec<Pixel>> = pixel_iter
             .into_iter()
+            .group_by(|pixel|{
+                pixel
+            })
+            .collect();
 
         Self { pixels }
     }

@@ -1,6 +1,7 @@
 use crate::iter::group_by::GroupBy;
 use crate::iter::key_query::KeyQuery;
 
+pub mod group;
 pub mod group_by;
 pub mod key_query;
 pub mod mutable_group;
