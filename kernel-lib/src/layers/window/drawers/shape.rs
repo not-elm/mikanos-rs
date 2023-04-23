@@ -1,10 +1,12 @@
 use core::any::Any;
 
+use common_lib::math::rectangle::Rectangle;
+use common_lib::transform::Transform2D;
+
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::layers::window::drawers::WindowDrawable;
-use common_lib::transform::Transform2D;
 
 #[derive(Debug, Clone)]
 pub struct ShapeWDrawer {
@@ -20,8 +22,13 @@ impl ShapeWDrawer {
 
 
 impl WindowDrawable for ShapeWDrawer {
-    fn draw(&mut self, transform: &Transform2D, writer: &mut dyn PixelWritable) -> KernelResult {
-        fill_rect(writer, transform, &self.color)
+    fn draw_in_area(
+        &mut self,
+        _window_transform: &Transform2D,
+        draw_rect: &Rectangle<usize>,
+        writer: &mut dyn PixelWritable,
+    ) -> KernelResult {
+        fill_rect(writer, draw_rect, &self.color)
     }
 
     fn any_mut(&mut self) -> &mut dyn Any {
@@ -39,14 +46,14 @@ impl Default for ShapeWDrawer {
 
 fn fill_rect(
     pixel_writer: &mut dyn PixelWritable,
-    transform: &Transform2D,
+    rect: &Rectangle<usize>,
     color: &PixelColor,
 ) -> KernelResult {
-    let origin = transform.pos();
-    let dest = transform.pos() + transform.size();
+    let origin = rect.origin();
+    let end = rect.end();
 
-    for y in origin.y()..=dest.y() {
-        for x in origin.x()..=dest.x() {
+    for y in origin.y()..=end.y() {
+        for x in origin.x()..=end.x() {
             unsafe { pixel_writer.write(x, y, color) }?;
         }
     }

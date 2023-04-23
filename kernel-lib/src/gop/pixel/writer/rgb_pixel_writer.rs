@@ -1,7 +1,7 @@
 use crate::error::KernelResult;
 use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use common_lib::frame_buffer::FrameBufferConfig;
 
 pub struct RgbPixelWriter {
@@ -30,10 +30,16 @@ impl Drop for RgbPixelWriter {
 impl PixelWritable for RgbPixelWriter {
     unsafe fn write(&mut self, x: usize, y: usize, color: &PixelColor) -> KernelResult {
         let pixel_pos = calc_pixel_pos(&self.frame_buffer_config, x, y)?;
-        let write_base_ptr = self.frame_buffer_ptr.add(pixel_pos);
+        let write_base_ptr = self
+            .frame_buffer_ptr
+            .add(pixel_pos);
         write_base_ptr.write(color.r());
-        write_base_ptr.add(1).write(color.g());
-        write_base_ptr.add(2).write(color.b());
+        write_base_ptr
+            .add(1)
+            .write(color.g());
+        write_base_ptr
+            .add(2)
+            .write(color.b());
         Ok(())
     }
 }

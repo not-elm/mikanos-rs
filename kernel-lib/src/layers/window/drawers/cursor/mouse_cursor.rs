@@ -1,12 +1,13 @@
 use core::any::Any;
 
+use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::layers::window::drawers::cursor::cursor_buffer::CursorBuffer;
 use crate::layers::window::WindowDrawable;
 
@@ -44,10 +45,16 @@ impl MouseCursorDrawer {
 
 
 impl WindowDrawable for MouseCursorDrawer {
-    fn draw(&mut self, transform: &Transform2D, writer: &mut dyn PixelWritable) -> KernelResult {
+    fn draw_in_area(
+        &mut self,
+        window_transform: &Transform2D,
+        draw_rect: &Rectangle<usize>,
+        writer: &mut dyn PixelWritable,
+    ) -> KernelResult {
         for pixel in self
             .cursor_buff
-            .cursor_pixels(transform, self.color, self.border_color)?
+            .cursor_pixels_checked(window_transform, self.color, self.border_color)?
+            .filter(|p| draw_rect.with_in_pos(&p.pos()))
         {
             if let Some(color) = pixel.color() {
                 unsafe { writer.write(pixel.pos().x(), pixel.pos().y(), &color)? };
@@ -79,8 +86,8 @@ mod tests {
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::builder::Transform2DBuilder;
 
-    use crate::gop::pixel::mock_buffer_pixel_writer::MockBufferPixelWriter;
     use crate::gop::pixel::pixel_color::PixelColor;
+    use crate::gop::pixel::writer::mock_buffer_pixel_writer::MockBufferPixelWriter;
     use crate::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
     use crate::layers::window::drawers::WindowDrawable;
 
@@ -107,7 +114,7 @@ mod tests {
 
         let pixels = drawer
             .cursor_buff
-            .cursor_pixels(&transform, cursor_color, border_color)
+            .cursor_pixels_checked(&transform, cursor_color, border_color)
             .unwrap();
 
         let points: Vec<Vector2D<usize>> = drawer
@@ -124,48 +131,8 @@ mod tests {
                 let expect = cursor_pixel
                     .color()
                     .unwrap_or(PixelColor::black());
-                if actual == PixelColor::black() && expect == PixelColor::white() {
-                    let x = point.y();
-                }
+
                 assert_eq!(actual, expect);
             });
     }
-    //
-    //
-    // #[test]
-    // fn it_write_cursor_scale2() {
-    //     let mut drawer = MouseCursorDrawer::new(
-    //         Vector2D::new(2, 2),
-    //         PixelColor::white(),
-    //         PixelColor::black(),
-    //     );
-    //     let mut writer = MockBufferPixelWriter::new(100, 100);
-    //     assert!(drawer
-    //         .draw(
-    //             &Transform2DBuilder::new()
-    //                 .size(Size::new(100, 100))
-    //                 .build(),
-    //             &mut writer,
-    //         )
-    //         .is_ok());
-    //
-    //     CURSOR_SHAPE
-    //         .iter()
-    //         .flat_map(|row| {
-    //             row.iter()
-    //                 .flat_map(|pixel| vec![pixel, pixel])
-    //         })
-    //         .flat_map(|row| vec![row, row])
-    //         .enumerate()
-    //         .for_each(|(i, p)| {
-    //             let x = i % (CURSOR_WIDTH * 2);
-    //             let y = i / (CURSOR_WIDTH * 2);
-    //             assert_eq!(
-    //                 writer.pixel_at(x, y),
-    //                 cursor_color_at(x, y, PixelColor::white(),
-    // PixelColor::black())
-    // .unwrap_or(PixelColor::black())             );
-    //         });
-    //     for y in 0..CURSOR_HEIGHT {}
-    // }
 }

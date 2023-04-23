@@ -7,7 +7,7 @@ use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::gop::pixel::{fill_rect, select_pixel_writer};
 
 type ImplCharWritable = impl CharWritable;

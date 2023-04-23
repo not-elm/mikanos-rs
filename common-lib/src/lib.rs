@@ -12,3 +12,4 @@ pub mod queue;
 pub mod repeat;
 pub mod transform;
 pub mod array;
+pub mod iter;

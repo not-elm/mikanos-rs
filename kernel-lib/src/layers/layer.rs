@@ -6,7 +6,7 @@ use common_lib::transform::Transform2D;
 
 use crate::error::LayerReason::NotExistsKey;
 use crate::error::{KernelError, KernelResult, LayerReason};
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::layers::window::drawers::WindowDrawable;
 use crate::layers::window::Window;
 
@@ -91,32 +91,44 @@ where
 {
     pub fn draw_all_window(&mut self) -> KernelResult {
         let windows = self.windows.values_mut();
-        draw_all(&mut self.pixel_writer, windows)
+        draw_all(
+            &mut self.pixel_writer,
+            &self.layer_transform.rect(),
+            windows,
+        )
     }
 
 
     /// このレイヤー内に存在する全てのウィンドウを描画します。
     ///
     /// * `draw_rect` - 描画する領域の制限
-    pub fn draw_all_window_with_limit(&mut self, draw_rect: Rectangle<usize>) -> KernelResult {
+    pub fn draw_all_window_in_area(&mut self, draw_rect: &Rectangle<usize>) -> KernelResult {
         let windows = self
             .windows
             .values_mut()
-            .filter(|window| draw_rect.with_in_rect(&window.transform_ref().rect()));
-        draw_all(&mut self.pixel_writer, windows)
+            .filter(|window| {
+                draw_rect.with_in_rect(&window.transform_ref().rect())
+                    || window
+                        .transform_ref()
+                        .rect()
+                        .with_in_rect(draw_rect)
+            });
+
+        draw_all(&mut self.pixel_writer, draw_rect, windows)
     }
 }
 
 
 fn draw_all<'window>(
     pixel_writer: &mut dyn PixelWritable,
+    draw_rect: &Rectangle<usize>,
     windows: impl Iterator<Item = &'window mut Window<Box<dyn WindowDrawable>>>,
 ) -> KernelResult {
     for window in windows {
-        let status = window.transform_ref().clone();
+        let transform = window.transform_ref().clone();
         window
             .drawer()
-            .draw(&status, pixel_writer)?;
+            .draw_in_area(&transform, draw_rect, pixel_writer)?;
     }
 
     Ok(())
@@ -143,7 +155,7 @@ mod tests {
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::builder::Transform2DBuilder;
 
-    use crate::gop::pixel::mock_buffer_pixel_writer::MockBufferPixelWriter;
+    use crate::gop::pixel::writer::mock_buffer_pixel_writer::MockBufferPixelWriter;
     use crate::layers::layer::Layer;
     use crate::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
     use crate::layers::window::Window;

@@ -1,8 +1,8 @@
 use crate::error::KernelResult;
-use crate::gop::pixel::bgr_pixel_writer::BgrPixelWriter;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::gop::pixel::rgb_pixel_writer::RgbPixelWriter;
+use crate::gop::pixel::writer::bgr_pixel_writer::BgrPixelWriter;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::rgb_pixel_writer::RgbPixelWriter;
 use common_lib::frame_buffer::FrameBufferConfig;
 
 #[derive(Clone, Debug)]

@@ -54,7 +54,7 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     add_background_layer(frame_buffer_config, &mut layers);
     add_mouse_layer(frame_buffer_config, &mut layers);
 
-    layers.draw_all_layers_start_at(BACKGROUND_LAYER_ID)?;
+    layers.draw_all_layers(BACKGROUND_LAYER_ID)?;
 
     Ok(())
 }

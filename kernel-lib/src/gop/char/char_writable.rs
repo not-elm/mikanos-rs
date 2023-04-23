@@ -2,7 +2,7 @@ use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 
 pub trait CharWritable {
     /// write char on the display using a frame buffer

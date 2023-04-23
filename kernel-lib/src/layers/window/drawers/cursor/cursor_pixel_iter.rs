@@ -1,32 +1,10 @@
 use alloc::vec::Vec;
 
-use crate::gop::font::convert_to_ascii;
 use common_lib::math::vector::Vector2D;
 
 use crate::gop::pixel::pixel_color::PixelColor;
-
-#[derive(Debug, Clone)]
-pub struct CursorPixel {
-    color: Option<PixelColor>,
-    pos: Vector2D<usize>,
-}
-
-
-impl CursorPixel {
-    pub const fn new(color: Option<PixelColor>, pos: Vector2D<usize>) -> Self {
-        Self { color, pos }
-    }
-
-    pub fn color(&self) -> Option<PixelColor> {
-        self.color
-    }
-
-
-    pub fn pos(&self) -> Vector2D<usize> {
-        self.pos
-    }
-}
-
+use crate::gop::pixel::pixel_iter::PixelIter;
+use crate::gop::pixel::Pixel;
 
 #[derive(Debug, Clone)]
 pub struct CursorPixelIter<'buff> {
@@ -37,6 +15,9 @@ pub struct CursorPixelIter<'buff> {
     x: usize,
     y: usize,
 }
+
+
+impl<'buff> PixelIter for CursorPixelIter<'buff> {}
 
 
 impl<'buff> CursorPixelIter<'buff> {
@@ -59,7 +40,7 @@ impl<'buff> CursorPixelIter<'buff> {
 
 
 impl<'buff> Iterator for CursorPixelIter<'buff> {
-    type Item = CursorPixel;
+    type Item = Pixel;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.buff.len() <= self.y {
@@ -77,12 +58,11 @@ impl<'buff> Iterator for CursorPixelIter<'buff> {
                 self.border_color,
             );
 
+            let pixel = Pixel::new(pixel_color, Vector2D::new(self.x, self.y) + self.origin_pos);
+
             self.x += 1;
 
-            Some(CursorPixel::new(
-                pixel_color,
-                Vector2D::new(self.x - 1, self.y) + self.origin_pos,
-            ))
+            Some(pixel)
         }
     }
 }

@@ -3,7 +3,7 @@ use core::cell::RefCell;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 
 pub struct RcPixelWriter<'window>(Rc<RefCell<dyn PixelWritable + 'window>>);
 

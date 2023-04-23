@@ -2,7 +2,7 @@ use common_lib::frame_buffer::FrameBufferConfig;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 
 
 pub(crate) struct MockPixelWriter {}

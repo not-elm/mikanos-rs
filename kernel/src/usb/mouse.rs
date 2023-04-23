@@ -3,7 +3,7 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::gop::pixel::pixel_writable::PixelWritable;
+use kernel_lib::gop::pixel::writer::pixel_writable::PixelWritable;
 use kernel_lib::layers::layer::Layer;
 use kernel_lib::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
@@ -40,14 +40,14 @@ impl MouseSubscribable for MouseSubscriber {
         let mut layers = layers.borrow_mut();
         let layer = layers.layer_mut_at(MOUSE_LAYER_ID);
 
-        update_color(button, layer).map_err(|_| ())?;
+        let window_rect = update_color(button, layer).map_err(|_| ())?;
 
         if layer
             .update_window_transform("mouse", |transform| transform.set_pos(current_cursor))
             .is_ok()
         {
             layers
-                .draw_all_layers_start_at(0)
+                .draw_all_layers_in_area(0, &window_rect)
                 .unwrap();
         }
 
@@ -59,7 +59,7 @@ impl MouseSubscribable for MouseSubscriber {
 fn update_color<Writer: PixelWritable>(
     button: Option<MouseButton>,
     layer: &mut Layer<Writer>,
-) -> KernelResult {
+) -> KernelResult<Rectangle<usize>> {
     let cursor_color = button
         .map(|b| match b {
             MouseButton::Button1 => PixelColor::yellow(),
@@ -69,11 +69,10 @@ fn update_color<Writer: PixelWritable>(
         })
         .unwrap_or(PixelColor::white());
 
-    let drawer = layer
-        .window_mut("mouse")
-        .and_then(|window| window.drawer_down_cast_mut::<MouseCursorDrawer>())?;
+    let window = layer.window_mut("mouse")?;
 
+    let drawer = window.drawer_down_cast_mut::<MouseCursorDrawer>()?;
     drawer.set_color(cursor_color);
 
-    Ok(())
+    Ok(window.transform_ref().rect())
 }

@@ -3,25 +3,45 @@ use core::cell::RefCell;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
+use writer::pixel_writable::PixelWritable;
+use writer::rgb_pixel_writer::RgbPixelWriter;
 
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
-use crate::gop::pixel::rgb_pixel_writer::RgbPixelWriter;
 
-pub mod bgr_pixel_writer;
-mod enum_pixel_writer;
-pub(crate) mod mock_pixel_writer;
 pub mod pixel_color;
-pub mod pixel_writable;
-pub mod rgb_pixel_writer;
 
-#[cfg(feature = "alloc")]
-pub mod mock_buffer_pixel_writer;
 
-#[cfg(feature = "alloc")]
-pub mod rc_pixel_writer;
+pub mod writer;
+
+
+pub mod pixel_frame;
+pub mod pixel_iter;
+
+
+#[derive(Debug, Clone)]
+pub struct Pixel {
+    color: Option<PixelColor>,
+    pos: Vector2D<usize>,
+}
+
+
+impl Pixel {
+    pub const fn new(color: Option<PixelColor>, pos: Vector2D<usize>) -> Self {
+        Self { color, pos }
+    }
+
+    pub fn color(&self) -> Option<PixelColor> {
+        self.color
+    }
+
+
+    pub fn pos(&self) -> Vector2D<usize> {
+        self.pos
+    }
+}
+
 
 pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn PixelWritable>> {
     match frame_buffer_config.pixel_format {
@@ -35,6 +55,11 @@ pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn
 }
 
 pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl PixelWritable {
+    #[cfg(not(test))]
+    use crate::gop::pixel::writer::enum_pixel_writer;
+    #[cfg(test)]
+    use crate::gop::pixel::writer::mock_pixel_writer;
+
     #[cfg(not(test))]
     match frame_buffer_config.pixel_format {
         common_lib::frame_buffer::PixelFormat::Rgb => {

@@ -3,7 +3,7 @@ use alloc::vec::Vec;
 
 use crate::error::{KernelError, KernelResult};
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 
 #[allow(dead_code)]
 pub(crate) struct MockBufferPixelWriter {
@@ -63,9 +63,9 @@ impl PixelWritable for MockBufferPixelWriter {
 
 #[cfg(test)]
 mod tests {
-    use crate::gop::pixel::mock_buffer_pixel_writer::MockBufferPixelWriter;
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::gop::pixel::pixel_writable::PixelWritable;
+    use crate::gop::pixel::writer::mock_buffer_pixel_writer::MockBufferPixelWriter;
+    use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 
     #[test]
     fn it_new() {

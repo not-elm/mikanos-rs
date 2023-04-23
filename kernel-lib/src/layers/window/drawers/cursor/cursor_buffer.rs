@@ -8,11 +8,12 @@ use common_lib::transform::Transform2D;
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::layers::window::drawers::cursor::cursor_color_iter::CursorPixelIter;
+use crate::gop::pixel::pixel_iter::PixelIter;
+use crate::layers::window::drawers::cursor::cursor_pixel_iter::CursorPixelIter;
 
-const CURSOR_WIDTH: usize = 15;
+pub(crate) const CURSOR_WIDTH: usize = 15;
 
-const CURSOR_HEIGHT: usize = 24;
+pub(crate) const CURSOR_HEIGHT: usize = 24;
 
 
 const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
@@ -49,7 +50,7 @@ pub struct CursorBuffer(Vec<Vec<u8>>);
 
 impl CursorBuffer {
     pub fn new(scale: Vector2D<usize>) -> CursorBuffer {
-        let cursors: Vec<Vec<u8>> = CURSOR_SHAPE
+        let scaled_cursor_shape: Vec<Vec<u8>> = CURSOR_SHAPE
             .map(|row| {
                 row.iter()
                     .flat_map(|p| repeat(*p).take(scale.x()))
@@ -59,7 +60,7 @@ impl CursorBuffer {
             .flat_map(|row| repeat(row).take(scale.y()))
             .collect();
 
-        CursorBuffer(cursors)
+        CursorBuffer(scaled_cursor_shape)
     }
 
 
@@ -88,23 +89,28 @@ impl CursorBuffer {
     }
 
 
-    pub fn cursor_pixels(
+    pub fn cursor_pixels_checked(
         &self,
         transform: &Transform2D,
         cursor_color: PixelColor,
         border_color: PixelColor,
-    ) -> KernelResult<CursorPixelIter> {
+    ) -> KernelResult<impl PixelIter + '_> {
         if self.is_not_drawable(transform.rect(), transform.pos()) {
             return Err(KernelError::FailedOperateLayer(
                 LayerReason::WindowSizeOver(transform.rect()),
             ));
         }
-        Ok(CursorPixelIter::new(
-            &self.0,
-            transform.pos(),
-            cursor_color,
-            border_color,
-        ))
+        Ok(self.cursor_pixels(transform.pos(), cursor_color, border_color))
+    }
+
+
+    pub fn cursor_pixels(
+        &self,
+        origin_pos: Vector2D<usize>,
+        cursor_color: PixelColor,
+        border_color: PixelColor,
+    ) -> impl PixelIter + '_ {
+        CursorPixelIter::new(&self.0, origin_pos, cursor_color, border_color)
     }
 
 
@@ -139,6 +145,7 @@ impl Default for CursorBuffer {
 mod tests {
     use alloc::vec::Vec;
 
+    use crate::gop::pixel::Pixel;
     use common_lib::array::array_eq;
     use common_lib::math::rectangle::Rectangle;
     use common_lib::math::size::Size;
@@ -149,7 +156,7 @@ mod tests {
     use crate::layers::window::drawers::cursor::cursor_buffer::{
         CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
     };
-    use crate::layers::window::drawers::cursor::cursor_color_iter::{cursor_color_at, CursorPixel};
+    use crate::layers::window::drawers::cursor::cursor_pixel_iter::cursor_color_at;
 
     #[test]
     fn it_no_scale() {
@@ -247,8 +254,8 @@ mod tests {
     fn it_collect_cursor_pixels() {
         let cursor_buff = CursorBuffer::new(Vector2D::new(1, 1));
 
-        let pixels: Vec<CursorPixel> = cursor_buff
-            .cursor_pixels(
+        let pixels: Vec<Pixel> = cursor_buff
+            .cursor_pixels_checked(
                 &Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
                 PixelColor::white(),
                 PixelColor::blue(),
@@ -266,7 +273,7 @@ mod tests {
                     cursor_color_at(
                         char::from(CURSOR_SHAPE[y][x]),
                         PixelColor::white(),
-                        PixelColor::blue()
+                        PixelColor::blue(),
                     )
                 );
                 assert_eq!(pixels[index].pos(), Vector2D::new(x, y))

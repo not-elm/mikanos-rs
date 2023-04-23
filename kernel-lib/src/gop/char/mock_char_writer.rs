@@ -3,7 +3,7 @@ use common_lib::math::vector::Vector2D;
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 
 /// For Test
 #[derive(Default)]
