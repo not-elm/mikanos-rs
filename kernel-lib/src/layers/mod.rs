@@ -8,7 +8,7 @@ use common_lib::transform::builder::Transform2DBuilder;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
 use crate::gop::pixel::writer::rc_pixel_writer::RcPixelWriter;
 use crate::layers::layer::Layer;
 
@@ -30,7 +30,7 @@ pub struct Layers<'window> {
 
 
 impl<'window> Layers<'window> {
-    pub fn new(writer: impl PixelWritable + 'window) -> Layers<'window> {
+    pub fn new(writer: impl PixelFlushable + 'window) -> Layers<'window> {
         Self {
             writer: RcPixelWriter::new(writer),
             layers: Vec::new(),
@@ -38,7 +38,7 @@ impl<'window> Layers<'window> {
     }
 
 
-    pub fn new_with_rc(writer: Rc<RefCell<dyn PixelWritable + 'window>>) -> Layers<'window> {
+    pub fn new_with_rc(writer: Rc<RefCell<dyn PixelFlushable + 'window>>) -> Layers<'window> {
         Self {
             writer: RcPixelWriter::from_rc(writer),
             layers: Vec::new(),

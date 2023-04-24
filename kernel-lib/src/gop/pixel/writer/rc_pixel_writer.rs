@@ -2,28 +2,29 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::gop::pixel::pixel_frame::PixelFrame;
+use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 
-pub struct RcPixelWriter<'window>(Rc<RefCell<dyn PixelWritable + 'window>>);
+pub struct RcPixelWriter<'window>(Rc<RefCell<dyn PixelFlushable + 'window>>);
 
 
 impl<'writer> RcPixelWriter<'writer> {
-    pub fn new(writer: impl PixelWritable + 'writer) -> RcPixelWriter<'writer> {
+    pub fn new(writer: impl PixelFlushable + 'writer) -> RcPixelWriter<'writer> {
         Self(Rc::new(RefCell::new(writer)))
     }
 
 
-    pub fn from_rc(writer: Rc<RefCell<dyn PixelWritable + 'writer>>) -> RcPixelWriter<'writer> {
+    pub fn from_rc(writer: Rc<RefCell<dyn PixelFlushable + 'writer>>) -> RcPixelWriter<'writer> {
         Self(writer)
     }
 }
 
 
-impl<'writer> PixelWritable for RcPixelWriter<'writer> {
-    unsafe fn write(&mut self, x: usize, y: usize, color: &PixelColor) -> KernelResult {
-        let mut writer = self.0.borrow_mut();
-        writer.write(x, y, color)
+impl<'writer> PixelFlushable for RcPixelWriter<'writer> {
+    unsafe fn flush(&mut self, pixel_frame: PixelFrame) -> KernelResult {
+        self.0
+            .borrow_mut()
+            .flush(pixel_frame)
     }
 }
 

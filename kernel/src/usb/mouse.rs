@@ -3,7 +3,7 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::gop::pixel::writer::pixel_writable::PixelWritable;
+use kernel_lib::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
 use kernel_lib::layers::layer::Layer;
 use kernel_lib::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
@@ -56,7 +56,7 @@ impl MouseSubscribable for MouseSubscriber {
 }
 
 
-fn update_color<Writer: PixelWritable>(
+fn update_color<Writer: PixelFlushable>(
     button: Option<MouseButton>,
     layer: &mut Layer<Writer>,
 ) -> KernelResult<Rectangle<usize>> {

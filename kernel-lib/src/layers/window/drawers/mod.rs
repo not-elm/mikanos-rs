@@ -1,10 +1,10 @@
-use common_lib::math::rectangle::Rectangle;
 use core::any::Any;
 
+use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 
 pub mod shape;
 
@@ -17,7 +17,7 @@ pub trait WindowDrawable: Any {
         &mut self,
         window_transform: &Transform2D,
         draw_rect: &Rectangle<usize>,
-        writer: &mut dyn PixelWritable,
+        writer: &mut dyn PixelFlushable,
     ) -> KernelResult;
 
 
@@ -25,7 +25,7 @@ pub trait WindowDrawable: Any {
     fn draw(
         &mut self,
         window_transform: &Transform2D,
-        writer: &mut dyn PixelWritable,
+        writer: &mut dyn PixelFlushable,
     ) -> KernelResult {
         self.draw_in_area(window_transform, &window_transform.rect(), writer)
     }

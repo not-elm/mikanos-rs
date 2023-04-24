@@ -5,7 +5,8 @@ use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::gop::pixel::pixel_frame::PixelFrame;
+use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
 use crate::layers::window::drawers::WindowDrawable;
 
 #[derive(Debug, Clone)]
@@ -26,9 +27,9 @@ impl WindowDrawable for ShapeWDrawer {
         &mut self,
         _window_transform: &Transform2D,
         draw_rect: &Rectangle<usize>,
-        writer: &mut dyn PixelWritable,
+        writer: &mut dyn PixelFlushable,
     ) -> KernelResult {
-        fill_rect(writer, draw_rect, &self.color)
+        unsafe { writer.flush(PixelFrame::rect(*draw_rect, self.color)) }
     }
 
     fn any_mut(&mut self) -> &mut dyn Any {

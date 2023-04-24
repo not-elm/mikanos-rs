@@ -10,6 +10,7 @@ use kernel_lib::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer
 use kernel_lib::layers::window::drawers::shape::ShapeWDrawer;
 use kernel_lib::layers::window::Window;
 use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
+use kernel_lib::serial_println;
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
@@ -55,7 +56,7 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     add_mouse_layer(frame_buffer_config, &mut layers);
 
     layers.draw_all_layers(BACKGROUND_LAYER_ID)?;
-
+    serial_println!("ADDADA");
     Ok(())
 }
 

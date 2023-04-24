@@ -37,6 +37,11 @@ where
             index: 0,
         }
     }
+
+
+    pub fn into_vec(self) -> Vec<Group<Key, Value>> {
+        self.groups
+    }
 }
 
 

@@ -8,6 +8,7 @@ use common_lib::transform::Transform2D;
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::pixel_iter::PixelIter;
 use crate::layers::window::drawers::cursor::cursor_pixel_iter::CursorPixelIter;
 
@@ -114,6 +115,16 @@ impl CursorBuffer {
     }
 
 
+    pub fn pixel_frame(
+        &self,
+        origin_pos: Vector2D<usize>,
+        cursor_color: PixelColor,
+        border_color: PixelColor,
+    ) -> PixelFrame {
+        PixelFrame::new(self.cursor_pixels(origin_pos, cursor_color, border_color))
+    }
+
+
     fn is_drawable(&self, window_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
         if !window_rect
             .size()
@@ -145,14 +156,14 @@ impl Default for CursorBuffer {
 mod tests {
     use alloc::vec::Vec;
 
-    use crate::gop::pixel::Pixel;
-    use common_lib::array::array_eq;
+    use common_lib::array::eq_array;
     use common_lib::math::rectangle::Rectangle;
     use common_lib::math::size::Size;
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::Transform2D;
 
     use crate::gop::pixel::pixel_color::PixelColor;
+    use crate::gop::pixel::Pixel;
     use crate::layers::window::drawers::cursor::cursor_buffer::{
         CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
     };
@@ -171,7 +182,7 @@ mod tests {
         CURSOR_SHAPE
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(array_eq(e, a)));
+            .for_each(|(e, a)| assert!(eq_array(e, a)));
     }
 
 
@@ -190,7 +201,7 @@ mod tests {
         CURSOR_SHAPE_X_SCALE2
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(array_eq(e, a)));
+            .for_each(|(e, a)| assert!(eq_array(e, a)));
     }
 
 
@@ -209,7 +220,7 @@ mod tests {
         CURSOR_SHAPE_Y_SCALE2
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(array_eq(e, a)));
+            .for_each(|(e, a)| assert!(eq_array(e, a)));
     }
 
 
@@ -227,7 +238,7 @@ mod tests {
         CURSOR_SHAPE_SCALE2
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(array_eq(e, a)));
+            .for_each(|(e, a)| assert!(eq_array(e, a)));
     }
 
 
@@ -245,7 +256,7 @@ mod tests {
         CURSOR_SHAPE_SCALE10
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(array_eq(e, a)));
+            .for_each(|(e, a)| assert!(eq_array(e, a)));
     }
 
 

@@ -9,6 +9,7 @@ use writer::rgb_pixel_writer::RgbPixelWriter;
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 
 pub mod pixel_color;
 
@@ -19,8 +20,9 @@ pub mod writer;
 pub mod pixel_frame;
 pub mod pixel_iter;
 
+pub mod row;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Pixel {
     color: Option<PixelColor>,
     pos: Vector2D<usize>,
@@ -43,7 +45,21 @@ impl Pixel {
 }
 
 
-pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn PixelWritable>> {
+impl Default for Pixel {
+    fn default() -> Self {
+        Self::new(Some(PixelColor::black()), Vector2D::zeros())
+    }
+}
+
+
+impl PartialEq for Pixel {
+    fn eq(&self, other: &Self) -> bool {
+        self.pos == other.pos && self.color() == other.color
+    }
+}
+
+
+pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn PixelFlushable>> {
     match frame_buffer_config.pixel_format {
         common_lib::frame_buffer::PixelFormat::Rgb => {
             Rc::new(RefCell::new(RgbPixelWriter::new(frame_buffer_config)))
@@ -87,6 +103,15 @@ pub fn fill_rect(
     }
     Ok(())
 }
+
+
+fn calc_pixel_pos_from_vec2d(
+    frame_buffer_config: &FrameBufferConfig,
+    pos: Vector2D<usize>,
+) -> KernelResult<usize> {
+    calc_pixel_pos(frame_buffer_config, pos.x(), pos.y())
+}
+
 
 fn calc_pixel_pos(
     frame_buffer_config: &FrameBufferConfig,

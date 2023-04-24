@@ -6,6 +6,6 @@ pub mod bitmap_memory_manager;
 pub mod memory_map;
 
 
-pub(crate) const FRAME_SIZE: usize = kib(4);
+pub const FRAME_SIZE: usize = kib(4);
 
-pub(crate) const MAX_MEMORY_SIZE: usize = gib(1);
+pub const MAX_MEMORY_SIZE: usize = gib(1);

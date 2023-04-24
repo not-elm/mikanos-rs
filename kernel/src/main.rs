@@ -52,11 +52,11 @@ pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
     memory_map: &MemoryMapIter<'static>,
 ) {
-    init_gdt();
+    // init_gdt();
 
     init_idt().unwrap();
 
-    init_paging_table();
+    // init_paging_table();
 
     init_alloc(memory_map.clone()).unwrap();
 

@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 use core::ops::{Add, Sub};
 
+use crate::math::pixel_with_in_rect_iter::PointsWithInRectIter;
 use crate::math::size::Size;
 use crate::math::vector::Vector2D;
 
@@ -44,6 +45,16 @@ impl Rectangle<usize> {
 
     pub fn size(&self) -> Size {
         Size::new(self.width(), self.height())
+    }
+
+
+    pub fn points(&self) -> PointsWithInRectIter {
+        PointsWithInRectIter::new(self.origin, Size::new(self.width(), self.height()))
+    }
+
+
+    pub fn points_unbound(&self) -> PointsWithInRectIter {
+        PointsWithInRectIter::new(self.origin, Size::new(self.width() - 1, self.height() - 1))
     }
 }
 
@@ -102,6 +113,8 @@ impl<T: PartialEq + Copy + PartialOrd> PartialEq for Rectangle<T> {
 
 #[cfg(test)]
 mod tests {
+    use alloc::vec::Vec;
+
     use crate::math::rectangle::Rectangle;
     use crate::math::size::Size;
     use crate::math::vector::Vector2D;
@@ -260,5 +273,27 @@ mod tests {
         let child = Rectangle::new(Vector2D::new(50, 50), Vector2D::new(60, 60));
 
         assert!(!parent.with_in_rect(&child));
+    }
+
+
+    #[test]
+    fn it_rect_points() {
+        let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30usize, 30));
+        let points: Vec<Vector2D<usize>> = rect.points().collect();
+
+        assert_eq!(points[0], rect.origin);
+        assert_eq!(*points.last().unwrap(), rect.end);
+    }
+
+
+    #[test]
+    fn it_rect_points_unbound() {
+        let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30usize, 30));
+        let points: Vec<Vector2D<usize>> = rect
+            .points_unbound()
+            .collect();
+
+        assert_eq!(points[0], rect.origin);
+        assert_eq!(*points.last().unwrap(), rect.end - 1);
     }
 }

@@ -1,6 +1,7 @@
-use crate::math::size::Size;
 use core::fmt::Debug;
-use core::ops::{Add, AddAssign, Sub};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+
+use crate::math::size::Size;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vector2D<T> {
@@ -19,6 +20,18 @@ where
         Vector2D {
             x: self.x() + rhs.x(),
             y: self.y() + rhs.y(),
+        }
+    }
+}
+
+
+impl<Num: Copy + Add<Output = Num>> Add<Num> for Vector2D<Num> {
+    type Output = Vector2D<Num::Output>;
+
+    fn add(self, rhs: Num) -> Self::Output {
+        Vector2D {
+            x: self.x() + rhs,
+            y: self.y() + rhs,
         }
     }
 }
@@ -45,6 +58,15 @@ impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Vector2D<Num> {
 }
 
 
+impl<Num: Copy + Sub<Output = Num>> Sub<Num> for Vector2D<Num> {
+    type Output = Vector2D<Num>;
+
+    fn sub(self, rhs: Num) -> Self::Output {
+        Vector2D::new(self.x - rhs, self.y - rhs)
+    }
+}
+
+
 impl<T: Copy + PartialOrd> AddAssign for Vector2D<T>
 where
     T: AddAssign + Copy + Clone + Debug,
@@ -54,6 +76,24 @@ where
         self.y += rhs.y;
     }
 }
+
+
+impl<Num: Copy + Mul<Output = Num>> Mul<Num> for Vector2D<Num> {
+    type Output = Vector2D<Num>;
+
+    fn mul(self, rhs: Num) -> Self::Output {
+        Self::new(self.x() * rhs, self.y() * rhs)
+    }
+}
+
+
+impl<Num: Copy + Mul<Output = Num>> MulAssign<Num> for Vector2D<Num> {
+    fn mul_assign(&mut self, rhs: Num) {
+        self.x = self.x * rhs;
+        self.y = self.y * rhs;
+    }
+}
+
 
 impl<T: Copy> Vector2D<T> {
     pub const fn new(x: T, y: T) -> Self {
@@ -150,5 +190,41 @@ mod tests {
         let v2 = v1 + Size::new(10, 10);
 
         assert_eq!(v2, Vector2D::new(15, 15));
+    }
+
+
+    #[test]
+    fn it_add_scalar() {
+        let v1 = Vector2D::new(5, 5);
+        let v2 = v1 + 3;
+
+        assert_eq!(v2, Vector2D::new(8, 8));
+    }
+
+
+    #[test]
+    fn it_sub_scalar() {
+        let v1 = Vector2D::new(5, 5);
+        let v2 = v1 - 3;
+
+        assert_eq!(v2, Vector2D::new(2, 2));
+    }
+
+
+    #[test]
+    fn it_mul_scalar() {
+        let v1 = Vector2D::new(5, 5);
+        let v2 = v1 * 3;
+
+        assert_eq!(v2, Vector2D::new(15, 15));
+    }
+
+
+    #[test]
+    fn it_mul_assign_scalar() {
+        let mut v1 = Vector2D::new(5, 5);
+        v1 *= 3;
+
+        assert_eq!(v1, Vector2D::new(15, 15));
     }
 }

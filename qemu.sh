@@ -11,7 +11,7 @@ if [ "$QEMU_STATE" = "debug" ]; then
     -serial stdio \
     -s \
     -S \
-    -m 1G \
+    -m 8G \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
 elif [ "$QEMU_STATE" = "test" ]; then
   qemu-system-x86_64 \
@@ -22,12 +22,12 @@ elif [ "$QEMU_STATE" = "test" ]; then
     -device usb-mouse \
     -serial stdio \
     -display none \
-    -m 1G \
+    -m 8G \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
 
 else
   qemu-system-x86_64 \
-    -m 1G \
+    -m 8G \
     -bios OVMF.fd \
     -drive if=ide,index=0,media=disk,format=raw,file='disk.img' \
     -device nec-usb-xhci,id=xhci \

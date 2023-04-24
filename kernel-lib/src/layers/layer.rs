@@ -6,7 +6,7 @@ use common_lib::transform::Transform2D;
 
 use crate::error::LayerReason::NotExistsKey;
 use crate::error::{KernelError, KernelResult, LayerReason};
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 use crate::layers::window::drawers::WindowDrawable;
 use crate::layers::window::Window;
 
@@ -87,7 +87,7 @@ impl<Writer> Layer<Writer> {
 
 impl<Writer> Layer<Writer>
 where
-    Writer: PixelWritable,
+    Writer: PixelFlushable,
 {
     pub fn draw_all_window(&mut self) -> KernelResult {
         let windows = self.windows.values_mut();
@@ -120,7 +120,7 @@ where
 
 
 fn draw_all<'window>(
-    pixel_writer: &mut dyn PixelWritable,
+    pixel_writer: &mut dyn PixelFlushable,
     draw_rect: &Rectangle<usize>,
     windows: impl Iterator<Item = &'window mut Window<Box<dyn WindowDrawable>>>,
 ) -> KernelResult {

@@ -1,13 +1,18 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
+use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
+
 use crate::error::{KernelError, KernelResult};
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::gop::pixel::pixel_frame::PixelFrame;
+use crate::gop::pixel::row::rgb_pixel_converter::RgbPixelConverter;
+use crate::gop::pixel::writer::pixel_writable::{flush_frame_buff, PixelFlushable, PixelWritable};
 
 #[allow(dead_code)]
 pub(crate) struct MockBufferPixelWriter {
     width: usize,
+    height: usize,
     buff: Vec<u8>,
 }
 
@@ -16,6 +21,7 @@ impl MockBufferPixelWriter {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
             width,
+            height,
             buff: vec![0; width * height],
         }
     }
@@ -60,6 +66,22 @@ impl PixelWritable for MockBufferPixelWriter {
     }
 }
 
+impl PixelFlushable for MockBufferPixelWriter {
+    unsafe fn flush(&mut self, pixel_frame: PixelFrame) -> KernelResult {
+        flush_frame_buff(
+            pixel_frame,
+            &FrameBufferConfig::new(
+                self.buff.as_ptr() as u64,
+                self.len(),
+                self.width,
+                self.width,
+                self.height,
+                PixelFormat::Rgb,
+            ),
+            RgbPixelConverter::default(),
+        )
+    }
+}
 
 #[cfg(test)]
 mod tests {

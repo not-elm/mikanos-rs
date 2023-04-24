@@ -8,8 +8,18 @@ pub struct Group<Key, Value> {
 
 
 impl<Key, Value> Group<Key, Value> {
-    pub const fn new(key: Key, values: Vec<Value>) -> Group<Key, Value> {
+    pub fn new(key: Key, values: Vec<Value>) -> Group<Key, Value> {
         Self { key, values }
+    }
+
+
+    pub fn values_ref(&self) -> &Vec<Value> {
+        &self.values
+    }
+
+
+    pub fn into_values(self) -> Vec<Value> {
+        self.values
     }
 }
 
