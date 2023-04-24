@@ -1,5 +1,4 @@
 use core::any::Any;
-use core::hash::Hasher;
 
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
@@ -8,7 +7,7 @@ use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
+use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 use crate::layers::window::drawers::cursor::cursor_buffer::CursorBuffer;
 use crate::layers::window::WindowDrawable;
 
