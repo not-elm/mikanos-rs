@@ -1,96 +1,126 @@
+use alloc::boxed::Box;
 use alloc::vec;
-use alloc::vec::Vec;
 
 use common_lib::math::rectangle::Rectangle;
 
-use crate::gop::pixel::Pixel;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::row::pixel_converter::PixelConvertable;
+use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::row::PixelRow;
+use crate::gop::pixel::Pixel;
+use crate::layers::window::drawers::rect_colors::RectColors;
 
-type Pixels = impl Iterator<Item=Pixel>;
-
-pub struct PixelFrame {
-    pixels: Pixels,
-    index: usize,
+pub struct PixelFrame<'buff> {
+    pixels: Box<dyn Iterator<Item = Pixel> + 'buff>,
+    transparent: Option<PixelColor>,
+    converter: EnumPixelConverter,
+    row_first: Option<Pixel>,
 }
 
 
-impl PixelFrame {
-    pub fn new(pixels: Pixels, converter: impl PixelConvertable) -> PixelFrame {
-        // let pixels: Vec<Vec<Pixel>> = pixel_iter
-        //     .into_iter()
-        //     .group_by(|pixel: Pixel| pixel.pos().y())
-        //     .map(|pixel| pixel.into_values())
-        //     .collect();
+impl<'buff> PixelFrame<'buff> {
+    pub fn new(
+        mut pixels: impl Iterator<Item = Pixel> + 'buff,
+        converter: EnumPixelConverter,
+        transparent: Option<PixelColor>,
+    ) -> PixelFrame<'buff> {
+        let row_first = pixels.next();
 
-        Self { pixels, index: 0 }
+        Self {
+            pixels: Box::new(pixels),
+            converter,
+            transparent,
+            row_first,
+        }
     }
 
 
-    pub fn rect(rect: Rectangle<usize>, color: PixelColor) -> Self {
+    pub fn rect(rect: Rectangle<usize>, colors: RectColors, converter: EnumPixelConverter) -> Self {
         let rect_iter = rect.points_unbound();
 
-        Self::new(rect_iter.map(move |p| Pixel::new(Some(color), p)))
+        Self::new(
+            rect_iter.map(move |p| Pixel::new(Some(colors.foreground()), p)),
+            converter,
+            colors.transparent(),
+        )
     }
 }
 
 
-impl Iterator for PixelFrame {
-    type Item = Vec<PixelRow<>>;
+impl<'buff> Iterator for PixelFrame<'buff> {
+    type Item = PixelRow<EnumPixelConverter>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let start = self.pixels.next()?;
-        let mut v = vec![start];
+        let row_first = self.row_first?;
+        let mut row = vec![row_first];
+
         loop {
             if let Some(pixel) = self.pixels.next() {
-                v.push(pixel);
+                if pixel.pos.y() == row_first.pos.y() {
+                    row.push(pixel);
+                } else {
+                    self.row_first = Some(pixel);
+                    break;
+                }
             } else {
+                self.row_first = None;
                 break;
             }
         }
 
-        Some(v)
+
+        let row = PixelRow::new(row, self.converter.clone(), self.transparent);
+
+        Some(row)
     }
 }
 
 
 #[cfg(test)]
 mod tests {
+    use alloc::vec::Vec;
+
+    use common_lib::frame_buffer::PixelFormat;
+    use common_lib::math::vector::Vector2D;
+
+    use crate::gop::pixel::pixel_color::PixelColor;
+    use crate::gop::pixel::pixel_frame::PixelFrame;
+    use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
+    use crate::gop::pixel::row::PixelRow;
     use crate::layers::window::drawers::cursor::cursor_buffer::{
-        CURSOR_HEIGHT, CURSOR_WIDTH, CursorBuffer,
+        CursorBuffer, CURSOR_HEIGHT, CURSOR_WIDTH,
     };
 
-// #[test]
-    // fn it_correct_width() {
-    //     let buff = CursorBuffer::default();
-    //     let pixels =
-    //         buff.cursor_pixels(Vector2D::zeros(), PixelColor::white(), PixelColor::yellow());
-    //     let pixel_frame = PixelFrame::new(pixels);
-    //
-    //     assert_eq!(pixel_frame.width(), CURSOR_WIDTH);
-    // }
-    //
-    //
-    // #[test]
-    // fn it_correct_height() {
-    //     let buff = CursorBuffer::default();
-    //     let pixels =
-    //         buff.cursor_pixels(Vector2D::zeros(), PixelColor::white(), PixelColor::yellow());
-    //     let pixel_frame = PixelFrame::new(pixels);
-    //
-    //     assert_eq!(pixel_frame.height(), CURSOR_HEIGHT);
-    // }
-    //
-    //
-    // #[test]
-    // fn it_from_rect() {
-    //     let frame = PixelFrame::rect(
-    //         Rectangle::from_size(Size::new(10, 10)),
-    //         PixelColor::yellow(),
-    //     );
-    //
-    //     assert_eq!(frame.width(), 10);
-    //     assert_eq!(frame.height(), 10);
-    // }
+    #[test]
+    fn it_correct_width() {
+        let buff = CursorBuffer::default();
+        let pixels =
+            buff.cursor_pixels(Vector2D::zeros(), PixelColor::white(), PixelColor::yellow());
+
+        let mut pixel_frame = PixelFrame::new(
+            pixels,
+            EnumPixelConverter::new(PixelFormat::Bgr),
+            Some(PixelColor::black()),
+        );
+        let row = pixel_frame.next();
+
+
+        assert!(row.is_some_and(|row| row.pixels_len() == CURSOR_WIDTH));
+    }
+
+
+    #[test]
+    fn it_correct_height() {
+        let buff = CursorBuffer::default();
+        let pixels =
+            buff.cursor_pixels(Vector2D::zeros(), PixelColor::white(), PixelColor::yellow());
+
+        let pixel_frame = PixelFrame::new(
+            pixels,
+            EnumPixelConverter::new(PixelFormat::Bgr),
+            Some(PixelColor::black()),
+        );
+        let rows: Vec<PixelRow<EnumPixelConverter>> = pixel_frame.collect();
+
+        assert_eq!(rows.len(), CURSOR_HEIGHT);
+    }
 }

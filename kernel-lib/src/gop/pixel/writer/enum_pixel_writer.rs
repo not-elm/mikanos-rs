@@ -1,9 +1,11 @@
+use common_lib::frame_buffer::FrameBufferConfig;
+
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::writer::bgr_pixel_writer::BgrPixelWriter;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
 use crate::gop::pixel::writer::rgb_pixel_writer::RgbPixelWriter;
-use common_lib::frame_buffer::FrameBufferConfig;
 
 #[derive(Clone, Debug)]
 #[cfg_attr(test, allow(dead_code))]
@@ -11,6 +13,7 @@ pub enum EnumPixelWriter {
     Rgb(FrameBufferConfig),
     Bgr(FrameBufferConfig),
 }
+
 impl PixelWritable for EnumPixelWriter {
     unsafe fn write(&mut self, x: usize, y: usize, color: &PixelColor) -> KernelResult {
         match self {
@@ -20,6 +23,18 @@ impl PixelWritable for EnumPixelWriter {
         }
     }
 }
+
+
+impl PixelFlushable for EnumPixelWriter {
+    unsafe fn flush(&mut self, pixel_frame: PixelFrame) -> KernelResult {
+        match self {
+            Self::Rgb(conf) => flush(RgbPixelWriter::new(*conf), pixel_frame),
+            Self::Bgr(conf) => flush(BgrPixelWriter::new(*conf), pixel_frame),
+        }
+    }
+}
+
+
 impl Drop for EnumPixelWriter {
     fn drop(&mut self) {
         match self {
@@ -36,6 +51,8 @@ impl Drop for EnumPixelWriter {
         }
     }
 }
+
+
 unsafe fn write_pixel(
     mut w: impl PixelWritable,
     x: usize,
@@ -43,6 +60,14 @@ unsafe fn write_pixel(
     color: &PixelColor,
 ) -> KernelResult {
     let result = w.write(x, y, color);
+    // Do not free memory of a frame buffer
+    core::mem::forget(w);
+    result
+}
+
+
+unsafe fn flush(mut w: impl PixelFlushable, pixel_frame: PixelFrame) -> KernelResult {
+    let result = w.flush(pixel_frame);
     // Do not free memory of a frame buffer
     core::mem::forget(w);
     result

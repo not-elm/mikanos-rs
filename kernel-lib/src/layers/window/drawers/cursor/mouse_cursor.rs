@@ -1,30 +1,32 @@
 use core::any::Any;
 
+use common_lib::frame_buffer::PixelFormat;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 use crate::layers::window::drawers::cursor::cursor_buffer::CursorBuffer;
+use crate::layers::window::drawers::cursor::cursor_colors::CursorColors;
 use crate::layers::window::WindowDrawable;
 
 #[derive(Debug, Clone)]
 pub struct MouseCursorDrawer {
     cursor_buff: CursorBuffer,
-    cursor_color: PixelColor,
-    border_color: PixelColor,
+    colors: CursorColors,
+    converter: EnumPixelConverter,
 }
 
 
 impl MouseCursorDrawer {
-    pub fn new(scale: Vector2D<usize>, color: PixelColor, border_color: PixelColor) -> Self {
+    pub fn new(scale: Vector2D<usize>, colors: CursorColors, pixel_format: PixelFormat) -> Self {
         Self {
             cursor_buff: CursorBuffer::new(scale),
-            cursor_color: color,
-            border_color,
+            colors,
+            converter: EnumPixelConverter::new(pixel_format),
         }
     }
 
@@ -33,13 +35,8 @@ impl MouseCursorDrawer {
     }
 
 
-    pub fn set_color(&mut self, color: PixelColor) {
-        self.cursor_color = color
-    }
-
-
-    pub fn set_border_color(&mut self, border_color: PixelColor) {
-        self.border_color = border_color;
+    pub fn set_color(&mut self, colors: CursorColors) {
+        self.colors = colors
     }
 }
 
@@ -51,11 +48,9 @@ impl WindowDrawable for MouseCursorDrawer {
         draw_rect: &Rectangle<usize>,
         writer: &mut dyn PixelFlushable,
     ) -> KernelResult {
-        return Ok(());
-
         let pixel_frame =
             self.cursor_buff
-                .pixel_frame(draw_rect.origin(), self.cursor_color, self.border_color);
+                .pixel_frame(draw_rect.origin(), self.colors, self.converter.clone());
 
 
         unsafe { writer.flush(pixel_frame) }
@@ -70,7 +65,7 @@ impl WindowDrawable for MouseCursorDrawer {
 
 impl Default for MouseCursorDrawer {
     fn default() -> Self {
-        Self::new(Vector2D::unit(), PixelColor::white(), PixelColor::black())
+        Self::new(Vector2D::unit(), CursorColors::default(), PixelFormat::Rgb)
     }
 }
 

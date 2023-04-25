@@ -2,7 +2,6 @@ use common_lib::frame_buffer::FrameBufferConfig;
 
 use crate::gop::pixel::calc_pixel_pos_from_vec2d;
 use crate::gop::pixel::pixel_frame::PixelFrame;
-use crate::gop::pixel::row::pixel_converter::PixelConvertable;
 use crate::{error::KernelResult, gop::pixel::pixel_color::PixelColor};
 
 #[warn(drop_bounds)]
@@ -27,12 +26,8 @@ pub trait PixelFlushable {
 pub(crate) unsafe fn flush_frame_buff(
     pixel_frame: PixelFrame,
     frame_buffer_config: &FrameBufferConfig,
-    converter: impl PixelConvertable + Clone,
 ) -> KernelResult {
-    for mut row in pixel_frame
-        .into_pixels(converter, None)
-        .into_iter()
-    {
+    for row in pixel_frame.into_iter() {
         let frame_buff = core::slice::from_raw_parts_mut(
             frame_buffer_config.frame_buffer_base_ptr(),
             frame_buffer_config.frame_buffer_size,

@@ -6,8 +6,10 @@ use common_lib::transform::builder::Transform2DBuilder;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::gop::pixel::rc_pixel_writer;
+use kernel_lib::layers::window::drawers::cursor::cursor_colors::CursorColors;
 use kernel_lib::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
-use kernel_lib::layers::window::drawers::shape::ShapeWDrawer;
+use kernel_lib::layers::window::drawers::rect_colors::RectColors;
+use kernel_lib::layers::window::drawers::shape::ShapeDrawer;
 use kernel_lib::layers::window::Window;
 use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 use kernel_lib::serial_println;
@@ -65,7 +67,13 @@ fn add_background_layer(frame_buffer_config: FrameBufferConfig, layers: &mut Ref
 
     let layer = layers.new_layer(transform.clone());
 
-    let window = Window::new(ShapeWDrawer::new(DISPLAY_BACKGROUND_COLOR), transform);
+    let window = Window::new(
+        ShapeDrawer::new(
+            RectColors::default().change_foreground(DISPLAY_BACKGROUND_COLOR),
+            frame_buffer_config.pixel_format,
+        ),
+        transform,
+    );
 
 
     layer.add_window("background", window);

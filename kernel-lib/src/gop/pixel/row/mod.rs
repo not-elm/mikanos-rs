@@ -8,6 +8,7 @@ use crate::gop::pixel::row::pixel_converter::PixelConvertable;
 use crate::gop::pixel::Pixel;
 
 pub mod bgr_pixel_converter;
+pub mod enum_pixel_converter;
 pub mod pixel_converter;
 pub mod rgb_pixel_converter;
 
@@ -49,7 +50,11 @@ impl<Convert: PixelConvertable> PixelRow<Convert> {
     }
 
 
-    pub fn pixels_buff(&mut self) -> &[u8] {
+    pub fn pixels_len(&self) -> usize {
+        self.row.len()
+    }
+
+    pub fn pixels_buff(&self) -> &[u8] {
         &self.pixels_buff
     }
 }
@@ -69,7 +74,6 @@ fn concat_all(
                 .unwrap_or(transparent_color),
         );
 
-
         pixels_buff.extend(buff);
     });
 
@@ -81,15 +85,19 @@ fn concat_all(
 #[cfg(test)]
 mod tests {
     use alloc::vec;
+    use alloc::vec::Vec;
 
     use common_lib::array::eq_array;
+    use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::vector::Vector2D;
 
     use crate::gop::pixel::pixel_color::PixelColor;
+    use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
     use crate::gop::pixel::row::rgb_pixel_converter::RgbPixelConverter;
     use crate::gop::pixel::row::PixelRow;
     use crate::gop::pixel::Pixel;
     use crate::layers::window::drawers::cursor::cursor_buffer::{CursorBuffer, CURSOR_WIDTH};
+    use crate::layers::window::drawers::cursor::cursor_colors::CursorColors;
 
     #[test]
     fn it_correct_length() {
@@ -110,14 +118,16 @@ mod tests {
     #[test]
     fn it_convert_to_row_pixels_buff() {
         let cursor_buff = CursorBuffer::default();
-        let pixel_frame =
-            cursor_buff.pixel_frame(Vector2D::zeros(), PixelColor::white(), PixelColor::yellow());
+        let pixel_frame = cursor_buff.pixel_frame(
+            Vector2D::zeros(),
+            CursorColors::default()
+                .change_border(PixelColor::yellow())
+                .change_transparent(PixelColor::black()),
+            EnumPixelConverter::new(PixelFormat::Rgb),
+        );
 
-        let mut rows = pixel_frame.into_pixels(RgbPixelConverter::new(), Some(PixelColor::black()));
-
-
+        let mut rows: Vec<PixelRow<EnumPixelConverter>> = pixel_frame.collect();
         let row = rows.get_mut(0).unwrap();
-
 
         let mut expect = [0; CURSOR_WIDTH * 4];
         expect[0] = 0xFF;

@@ -4,7 +4,6 @@ use crate::error::KernelResult;
 use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_frame::PixelFrame;
-use crate::gop::pixel::row::bgr_pixel_converter::BgrPixelConverter;
 use crate::gop::pixel::writer::pixel_writable::{flush_frame_buff, PixelFlushable, PixelWritable};
 
 pub struct BgrPixelWriter {
@@ -52,10 +51,6 @@ impl PixelWritable for BgrPixelWriter {
 
 impl PixelFlushable for BgrPixelWriter {
     unsafe fn flush(&mut self, pixel_frame: PixelFrame) -> KernelResult {
-        flush_frame_buff(
-            pixel_frame,
-            &self.frame_buffer_config,
-            BgrPixelConverter::default(),
-        )
+        flush_frame_buff(pixel_frame, &self.frame_buffer_config)
     }
 }

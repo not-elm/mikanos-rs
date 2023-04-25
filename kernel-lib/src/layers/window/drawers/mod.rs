@@ -9,6 +9,7 @@ use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 pub mod shape;
 
 pub mod cursor;
+pub mod rect_colors;
 
 
 pub trait WindowDrawable: Any {

@@ -6,7 +6,6 @@ use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 use crate::error::{KernelError, KernelResult};
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_frame::PixelFrame;
-use crate::gop::pixel::row::rgb_pixel_converter::RgbPixelConverter;
 use crate::gop::pixel::writer::pixel_writable::{flush_frame_buff, PixelFlushable, PixelWritable};
 
 #[allow(dead_code)]
@@ -78,7 +77,6 @@ impl PixelFlushable for MockBufferPixelWriter {
                 self.height,
                 PixelFormat::Rgb,
             ),
-            RgbPixelConverter::default(),
         )
     }
 }

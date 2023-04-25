@@ -5,6 +5,7 @@ use kernel_lib::error::KernelResult;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
 use kernel_lib::layers::layer::Layer;
+use kernel_lib::layers::window::drawers::cursor::cursor_colors::CursorColors;
 use kernel_lib::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
@@ -72,7 +73,7 @@ fn update_color<Writer: PixelFlushable>(
     let window = layer.window_mut("mouse")?;
 
     let drawer = window.drawer_down_cast_mut::<MouseCursorDrawer>()?;
-    drawer.set_color(cursor_color);
+    drawer.set_color(CursorColors::default().change_foreground(cursor_color));
 
     Ok(window.transform_ref().rect())
 }

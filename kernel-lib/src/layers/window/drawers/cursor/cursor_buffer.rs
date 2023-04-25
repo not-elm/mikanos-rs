@@ -10,6 +10,8 @@ use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::pixel_iter::PixelIter;
+use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
+use crate::layers::window::drawers::cursor::cursor_colors::CursorColors;
 use crate::layers::window::drawers::cursor::cursor_pixel_iter::CursorPixelIter;
 
 pub(crate) const CURSOR_WIDTH: usize = 15;
@@ -118,10 +120,11 @@ impl CursorBuffer {
     pub fn pixel_frame(
         &self,
         origin_pos: Vector2D<usize>,
-        cursor_color: PixelColor,
-        border_color: PixelColor,
+        colors: CursorColors,
+        converter: EnumPixelConverter,
     ) -> PixelFrame {
-        PixelFrame::new(self.cursor_pixels(origin_pos, cursor_color, border_color))
+        let iter = CursorPixelIter::new(&self.0, origin_pos, colors.foreground(), colors.border());
+        PixelFrame::new(iter, converter, colors.transparent())
     }
 
 

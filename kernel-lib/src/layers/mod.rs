@@ -8,7 +8,7 @@ use common_lib::transform::builder::Transform2DBuilder;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
+use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 use crate::gop::pixel::writer::rc_pixel_writer::RcPixelWriter;
 use crate::layers::layer::Layer;
 
