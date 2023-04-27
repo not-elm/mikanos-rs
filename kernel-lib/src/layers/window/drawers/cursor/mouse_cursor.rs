@@ -52,7 +52,6 @@ impl WindowDrawable for MouseCursorDrawer {
             self.cursor_buff
                 .pixel_frame(draw_rect.origin(), self.colors, self.converter.clone());
 
-
         unsafe { writer.flush(pixel_frame) }
     }
 

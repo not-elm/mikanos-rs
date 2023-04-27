@@ -1,6 +1,7 @@
 use uefi::proto::console::gop::GraphicsOutput;
 use uefi::table::boot::ScopedProtocol;
 use uefi::table::{Boot, SystemTable};
+use uefi_services::println;
 
 use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 

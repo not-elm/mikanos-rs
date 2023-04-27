@@ -24,7 +24,6 @@ elif [ "$QEMU_STATE" = "test" ]; then
     -display none \
     -m 8G \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
-
 else
   qemu-system-x86_64 \
     -m 8G \

@@ -14,9 +14,9 @@ use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::layers::window::drawers::cursor::cursor_colors::CursorColors;
 use crate::layers::window::drawers::cursor::cursor_pixel_iter::CursorPixelIter;
 
-pub(crate) const CURSOR_WIDTH: usize = 15;
+pub const CURSOR_WIDTH: usize = 15;
 
-pub(crate) const CURSOR_HEIGHT: usize = 24;
+pub const CURSOR_HEIGHT: usize = 24;
 
 
 const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
@@ -165,10 +165,10 @@ mod tests {
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::Transform2D;
 
-    use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::Pixel;
+    use crate::gop::pixel::pixel_color::PixelColor;
     use crate::layers::window::drawers::cursor::cursor_buffer::{
-        CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
+        CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH, CursorBuffer,
     };
     use crate::layers::window::drawers::cursor::cursor_pixel_iter::cursor_color_at;
 

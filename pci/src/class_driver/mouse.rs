@@ -12,6 +12,7 @@ pub mod mouse_subscribe_driver;
 
 const MOUSE_DATA_BUFF_SIZE: usize = 3;
 
+#[derive(Debug, Clone)]
 pub enum MouseButton {
     Button1,
     Button2,

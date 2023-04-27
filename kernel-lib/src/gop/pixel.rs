@@ -123,7 +123,7 @@ fn calc_pixel_pos(
         return Err(ExceededFrameBufferSize);
     }
 
-    Ok(4 * (frame_buffer_config.pixel_per_scanline * y + x))
+    Ok(4 * (frame_buffer_config.horizontal_resolution * y + x))
 }
 
 #[cfg(test)]

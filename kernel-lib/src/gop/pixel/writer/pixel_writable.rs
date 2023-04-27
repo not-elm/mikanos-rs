@@ -1,8 +1,8 @@
 use common_lib::frame_buffer::FrameBufferConfig;
 
+use crate::{error::KernelResult, gop::pixel::pixel_color::PixelColor, serial_println};
 use crate::gop::pixel::calc_pixel_pos_from_vec2d;
 use crate::gop::pixel::pixel_frame::PixelFrame;
-use crate::{error::KernelResult, gop::pixel::pixel_color::PixelColor};
 
 #[warn(drop_bounds)]
 pub trait PixelWritable {
@@ -33,6 +33,7 @@ pub(crate) unsafe fn flush_frame_buff(
             frame_buffer_config.frame_buffer_size,
         );
         let origin = calc_pixel_pos_from_vec2d(frame_buffer_config, row.origin_pos())?;
+
         let end = origin + row.pixels_len_per_row() - 1;
 
         let buff = row.pixels_buff();

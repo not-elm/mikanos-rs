@@ -27,11 +27,11 @@ impl Iterator for PointsWithInRectIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         let limit = self.size;
-        if limit.width() < self.y {
+        if limit.height() < self.y {
             return None;
         }
 
-        if limit.height() < self.x {
+        if limit.width() < self.x {
             self.y += 1;
             self.x = self.origin.x();
             self.next()

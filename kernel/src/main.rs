@@ -7,6 +7,7 @@
 #![reexport_test_harness_main = "test_main"]
 #![feature(alloc_error_handler)]
 #![feature(abi_x86_interrupt)]
+#![feature(result_option_inspect)]
 extern crate alloc;
 
 use core::alloc::Layout;
@@ -69,8 +70,6 @@ pub extern "sysv64" fn kernel_main(
     serial_println!("Hello Serial Port!");
     println!("Hello Kernel!");
 
-    // fill_background(DISPLAY_BACKGROUND_COLOR, frame_buffer_config).unwrap();
-    // fill_bottom_bar(PixelColor::new(0, 0, 0xFF), frame_buffer_config).unwrap();
 
     let general_header = first_general_header();
     enable_msi(general_header.clone()).unwrap();
@@ -88,26 +87,8 @@ pub extern "sysv64" fn kernel_main(
 }
 
 
-#[allow(dead_code)]
-fn fill_background(color: PixelColor, config: &FrameBufferConfig) -> KernelResult {
-    fill_rect_using_global(
-        Vector2D::new(0, 0),
-        Vector2D::new(config.horizontal_resolution, config.vertical_resolution),
-        color,
-    )
-}
 
-#[allow(dead_code)]
-fn fill_bottom_bar(color: PixelColor, config: &FrameBufferConfig) -> KernelResult {
-    let v = config.vertical_resolution;
-    let h = config.horizontal_resolution;
-    fill_rect_using_global(Vector2D::new(0, v - 50), Vector2D::new(h, v), color)?;
-    fill_rect_using_global(
-        Vector2D::new(0, v - 50),
-        Vector2D::new(50, v),
-        PixelColor::new(0x33, 0x33, 0xAA),
-    )
-}
+
 
 
 /// この関数はパニック時に呼ばれる

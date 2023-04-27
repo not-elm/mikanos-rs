@@ -6,13 +6,11 @@ use common_lib::transform::builder::Transform2DBuilder;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::gop::pixel::rc_pixel_writer;
-use kernel_lib::layers::window::drawers::cursor::cursor_colors::CursorColors;
+use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 use kernel_lib::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
 use kernel_lib::layers::window::drawers::rect_colors::RectColors;
 use kernel_lib::layers::window::drawers::shape::ShapeDrawer;
 use kernel_lib::layers::window::Window;
-use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
-use kernel_lib::serial_println;
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
@@ -58,7 +56,7 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     add_mouse_layer(frame_buffer_config, &mut layers);
 
     layers.draw_all_layers(BACKGROUND_LAYER_ID)?;
-    serial_println!("ADDADA");
+
     Ok(())
 }
 
