@@ -1,7 +1,6 @@
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::Transform2D;
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
@@ -13,22 +12,15 @@ use kernel_lib::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
 
-use crate::layers::{BACKGROUND_LAYER_ID, LAYERS, MOUSE_LAYER_ID};
+use crate::layers::{LAYERS, MOUSE_LAYER_ID};
 
 #[derive(Debug, Clone)]
-pub struct MouseSubscriber {
-    frame_buffer_rect: Rectangle<usize>,
-}
+pub struct MouseSubscriber {}
 
 
 impl MouseSubscriber {
-    pub fn new(frame_buffer_width: usize, frame_buffer_height: usize) -> Self {
-        Self {
-            frame_buffer_rect: Rectangle::from_size(Size::new(
-                frame_buffer_width,
-                frame_buffer_height,
-            )),
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -43,8 +35,9 @@ impl MouseSubscribable for MouseSubscriber {
         let layers = LAYERS.layers_mut();
         let mut layers = layers.borrow_mut();
 
-        let prev_cursor = Vector2D::new(prev_cursor.x());
-        
+        // let prev_cursor = Vector2D::new(prev_cursor.x().align_up(4).unwrap(), prev_cursor.y().align_up(4).unwrap());
+        // let current_cursor = Vector2D::new(current_cursor.x().align_up(4).unwrap(), current_cursor.y().align_up(4).unwrap());
+
         {
             let layer = layers.layer_mut_at(MOUSE_LAYER_ID);
 

@@ -13,8 +13,6 @@
     "ld": [
       "--entry",
       "kernel_entry_point",
-      "--image-base=0x100000",
-      "--static",
       "-z",
       "norelro",
       "-z",

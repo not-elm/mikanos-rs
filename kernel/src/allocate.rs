@@ -1,12 +1,11 @@
-use kernel_lib::allocator::allocate_map::MAX_FRAME_COUNT;
 use linked_list_allocator::LockedHeap;
 use uefi::table::boot::MemoryMapIter;
-
-use kernel_lib::allocator::bitmap_memory_allocator::BitmapFrameAllocator;
-use kernel_lib::allocator::memory_map::frame_iter::FrameIter;
 use kernel_lib::allocator::MAX_MEMORY_SIZE;
-use kernel_lib::error::AllocateReason::InitializeGlobalAllocator;
+
+use kernel_lib::allocator::memory_map::frame_iter::FrameIter;
 use kernel_lib::error::{KernelError, KernelResult};
+use kernel_lib::error::AllocateReason::InitializeGlobalAllocator;
+
 //
 // #[global_allocator]
 // static mut HEAP: BitmapFrameAllocator = BitmapFrameAllocator::uninit();
@@ -17,7 +16,7 @@ use kernel_lib::error::{KernelError, KernelResult};
 //             .ok_or(KernelError::FailedAllocate(InitializeGlobalAllocator))?;
 //
 //
-//         const FRAMES: usize = 512 * 32;
+//         const FRAMES: usize = MAX_FRAME_COUNT;
 //         HEAP.init_heap(FRAMES, memory_map_range)
 //     }
 // }

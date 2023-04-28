@@ -60,6 +60,6 @@ impl CursorColors {
 
 impl Default for CursorColors {
     fn default() -> Self {
-        Self::new(PixelColor::white(), PixelColor::black(), None)
+        Self::new(PixelColor::white(), PixelColor::white(), None)
     }
 }

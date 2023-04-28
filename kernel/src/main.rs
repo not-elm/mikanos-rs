@@ -18,20 +18,20 @@ use uefi::table::boot::MemoryMapIter;
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
+use kernel_lib::{println, serial_println};
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::console::{fill_rect_using_global, init_console};
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::{println, serial_println};
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
+use crate::usb::{enable_msi, first_general_header};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
-use crate::usb::{enable_msi, first_general_header};
 
-pub mod allocate;
+mod allocate;
 mod entry_point;
 mod gdt;
 mod interrupt;
@@ -53,11 +53,11 @@ pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
     memory_map: &MemoryMapIter<'static>,
 ) {
-    // init_gdt();
+    init_gdt();
 
     init_idt().unwrap();
 
-    // init_paging_table();
+    init_paging_table();
 
     init_alloc(memory_map.clone()).unwrap();
 
@@ -76,19 +76,12 @@ pub extern "sysv64" fn kernel_main(
 
     start_xhci_host_controller(
         general_header.mmio_base_addr(),
-        MouseSubscriber::new(
-            frame_buffer_config.horizontal_resolution,
-            frame_buffer_config.vertical_resolution,
-        ),
+        MouseSubscriber::new(),
     )
-    .unwrap();
+        .unwrap();
 
     common_lib::assembly::hlt_forever();
 }
-
-
-
-
 
 
 /// この関数はパニック時に呼ばれる

@@ -1,3 +1,5 @@
+use core::usize;
+
 pub mod vector;
 pub mod size;
 pub mod unit;
@@ -23,6 +25,23 @@ pub fn frame_count_from_bytes(bytes: usize, frame_size: usize) -> usize {
 
 pub trait Align<T> {
     fn align_up(&self, align: usize) -> Option<T>;
+}
+
+
+
+impl Align<usize> for usize {
+    fn align_up(&self, align: usize) -> Option<usize> {
+        if *self == 0 {
+            return Some(align);
+        }
+
+        let align_mask = align - 1;
+        if self & align_mask == 0 {
+            Some(*self)
+        } else {
+            (self | align_mask).checked_add(1)
+        }
+    }
 }
 
 impl Align<u64> for u64 {

@@ -10,7 +10,6 @@ use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 use crate::layers::window::drawers::rect_colors::RectColors;
 use crate::layers::window::drawers::WindowDrawable;
-use crate::serial_println;
 
 #[derive(Debug, Clone)]
 pub struct ShapeDrawer {
@@ -37,7 +36,6 @@ impl WindowDrawable for ShapeDrawer {
         writer: &mut dyn PixelFlushable,
     ) -> KernelResult {
         unsafe {
-            serial_println!("RECT {:?}", draw_rect);
             writer.flush(PixelFrame::rect(
                 *draw_rect,
                 self.colors,

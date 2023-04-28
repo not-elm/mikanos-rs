@@ -26,7 +26,7 @@ impl ClassDriverOperate for MouseSubscribeDriver {
             return Ok(());
         }
 
-        let prev_cursor = self.current_pos.clone();
+        let prev_cursor = self.current_pos;
         self.current_pos = current_cursor_pos(prev_cursor, &self.data_buff);
         self.subscriber
             .subscribe(
