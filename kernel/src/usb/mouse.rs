@@ -1,5 +1,4 @@
 use common_lib::math::rectangle::Rectangle;
-use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::error::KernelResult;
@@ -7,7 +6,6 @@ use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::gop::pixel::writer::pixel_writable::PixelFlushable;
 use kernel_lib::layers::layer::Layer;
-use kernel_lib::layers::window::drawers::cursor::cursor_buffer::{CURSOR_HEIGHT, CURSOR_WIDTH};
 use kernel_lib::layers::window::drawers::cursor::cursor_colors::CursorColors;
 use kernel_lib::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
 use kernel_lib::serial_println;
@@ -32,7 +30,7 @@ impl MouseSubscriber {
 impl MouseSubscribable for MouseSubscriber {
     fn subscribe(
         &mut self,
-        prev_cursor: Vector2D<usize>,
+        _prev_cursor: Vector2D<usize>,
         current_cursor: Vector2D<usize>,
         button: Option<MouseButton>,
     ) -> Result<(), ()> {
@@ -50,8 +48,6 @@ impl MouseSubscribable for MouseSubscriber {
             let layer = layers.layer_mut_at(MOUSE_LAYER_ID);
 
 
-            let rect =
-                Rectangle::from_pos_and_size(prev_cursor, Size::new(CURSOR_WIDTH, CURSOR_HEIGHT));
             let window = layer
                 .window_mut("mouse")
                 .unwrap();

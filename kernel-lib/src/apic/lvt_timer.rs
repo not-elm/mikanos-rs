@@ -2,7 +2,6 @@ use crate::apic::lvt_timer::lvt_timer_field::LvtTimerField;
 use crate::apic::lvt_timer::mask::Mask;
 use crate::apic::lvt_timer::timer_mode::TimerModeField;
 use crate::apic::LocalApicRegistersAddr;
-use crate::VolatileAccessible;
 
 pub mod lvt_timer_field;
 pub mod mask;

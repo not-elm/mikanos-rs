@@ -1,5 +1,3 @@
-use core::ops::Div;
-
 use macros::Address;
 
 use crate::apic::current_count::CurrentCount;

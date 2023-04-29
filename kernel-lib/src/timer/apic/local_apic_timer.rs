@@ -19,11 +19,6 @@ impl OneShotLocalApicTimer {
             local_apic_registers,
         }
     }
-
-
-    fn local_apic_registers(&self) -> &LocalApicRegisters {
-        &self.local_apic_registers
-    }
 }
 
 

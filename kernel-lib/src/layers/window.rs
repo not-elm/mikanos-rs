@@ -3,8 +3,8 @@ use alloc::boxed::Box;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::Transform2D;
 
-use crate::error::{KernelError, KernelResult};
 use crate::error::LayerReason::InvalidCastWindowDrawer;
+use crate::error::{KernelError, KernelResult};
 use crate::layers::window::drawers::WindowDrawable;
 
 pub mod drawers;
@@ -50,8 +50,8 @@ impl<Draw> Window<Draw> {
 
 impl Window<Box<dyn WindowDrawable>> {
     pub fn drawer_down_cast_mut<Draw>(&mut self) -> KernelResult<&mut Draw>
-        where
-            Draw: WindowDrawable,
+    where
+        Draw: WindowDrawable,
     {
         self.drawer
             .any_mut()
@@ -62,12 +62,12 @@ impl Window<Box<dyn WindowDrawable>> {
 
 
 impl<'draw, Draw> Window<Draw>
-    where
-        Draw: WindowDrawable + 'draw,
+where
+    Draw: WindowDrawable + 'draw,
 {
     pub fn drawer_down_cast_mut<D>(&'draw mut self) -> Option<&mut D>
-        where
-            D: WindowDrawable + 'draw,
+    where
+        D: WindowDrawable + 'draw,
     {
         self.drawer
             .any_mut()
