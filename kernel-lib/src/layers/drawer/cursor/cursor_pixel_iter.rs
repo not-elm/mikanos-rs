@@ -10,6 +10,7 @@ use crate::gop::pixel::Pixel;
 pub struct CursorPixelIter<'buff> {
     buff: &'buff Vec<Vec<u8>>,
     origin_pos: Vector2D<usize>,
+    end_pos: Option<Vector2D<usize>>,
     cursor_color: PixelColor,
     border_color: PixelColor,
     x: usize,
@@ -24,12 +25,14 @@ impl<'buff> CursorPixelIter<'buff> {
     pub const fn new(
         buff: &'buff Vec<Vec<u8>>,
         origin_pos: Vector2D<usize>,
+        end_pos: Option<Vector2D<usize>>,
         cursor_color: PixelColor,
         border_color: PixelColor,
     ) -> CursorPixelIter<'buff> {
         Self {
             buff,
             origin_pos,
+            end_pos,
             cursor_color,
             border_color,
             x: 0,
@@ -43,11 +46,19 @@ impl<'buff> Iterator for CursorPixelIter<'buff> {
     type Item = Pixel;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.buff.len() <= self.y {
+        if self.buff.len() <= self.y
+            || self
+                .end_pos
+                .is_some_and(|pos| pos.y() < self.y)
+        {
             return None;
         }
 
-        if self.buff[0].len() <= self.x {
+        if self.buff[0].len() <= self.x
+            || self
+                .end_pos
+                .is_some_and(|pos| pos.x() < self.x)
+        {
             self.y += 1;
             self.x = 0;
             self.next()

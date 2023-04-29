@@ -2,19 +2,20 @@ use alloc::boxed::Box;
 use alloc::rc::Rc;
 use alloc::vec::Vec;
 use core::cell::RefCell;
+use core::fmt::Write;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::builder::Transform2DBuilder;
 use common_lib::transform::Transform2D;
 
-use crate::error::KernelResult;
+use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 use crate::gop::pixel::writer::rc_pixel_writer::RcPixelWriter;
+use crate::layers::drawer::LayerDrawable;
 use crate::layers::layer::Layer;
-use crate::layers::window::drawers::WindowDrawable;
-use crate::layers::window::Window;
 
+pub mod drawer;
 pub mod layer;
 pub mod window;
 
@@ -28,7 +29,7 @@ pub fn frame_buffer_layer_transform(frame_buffer_config: FrameBufferConfig) -> T
 
 pub struct Layers<'window> {
     writer: RcPixelWriter<'window>,
-    layers: Vec<Layer<RcPixelWriter<'window>>>,
+    layers: Vec<Layer<'window, RcPixelWriter<'window>, Box<dyn LayerDrawable>>>,
 }
 
 
@@ -48,94 +49,91 @@ impl<'window> Layers<'window> {
         }
     }
 
-    pub fn find_child_window_transform(
-        &self,
-        index: usize,
-        key: &'static str,
-    ) -> KernelResult<Transform2D> {
-        self.find_child_window(index, key)
-            .map(|window| window.transform_ref().clone())
+
+    pub fn new_layer(
+        &mut self,
+        key: &'window str,
+        transform: Transform2D,
+        drawer: impl LayerDrawable,
+    ) {
+        self.layers.push(Layer::new(
+            key,
+            transform,
+            self.writer.clone(),
+            Box::new(drawer),
+        ));
     }
 
 
-    pub fn find_child_window(
-        &self,
-        index: usize,
-        key: &'static str,
-    ) -> KernelResult<&Window<Box<dyn WindowDrawable>>> {
-        self.layer_ref_at(index)
-            .window_ref(key)
+    pub fn update_layer(
+        &mut self,
+        key: &'window str,
+        fun: impl FnOnce(&mut Layer<'window, RcPixelWriter<'window>, Box<dyn LayerDrawable>>),
+    ) -> KernelResult {
+        let prev_rect = self
+            .layer_ref(key)?
+            .transform_ref()
+            .rect();
+
+        fun(self.layer_mut(key)?);
+
+        self.draw_all_layer_in_area(Some(key), &prev_rect)?;
+
+        self.draw_all_layer_in_area(
+            None,
+            &self
+                .layer_ref(key)?
+                .transform_ref()
+                .rect(),
+        )
     }
 
 
-    pub fn layer_mut_at(&mut self, index: usize) -> &mut Layer<RcPixelWriter<'window>> {
-        self.layers
-            .get_mut(index)
-            .unwrap()
-    }
-
-
-    pub fn layer_ref_at(&self, index: usize) -> &Layer<RcPixelWriter<'window>> {
-        self.layers
-            .get(index)
-            .unwrap()
-    }
-
-    pub fn new_layer(&mut self, transform: Transform2D) -> &mut Layer<RcPixelWriter<'window>> {
-        self.layers
-            .push(Layer::new(transform, self.writer.clone()));
-
-        self.layers
-            .last_mut()
-            .unwrap()
-    }
-
-
-    pub fn draw_all_layers(&mut self, start_index: usize) -> KernelResult {
-        for layer in self
-            .layers
-            .iter_mut()
-            .skip(start_index)
-        {
-            layer.draw_all_window()?;
+    pub fn draw_all_layer(&mut self) -> KernelResult {
+        for layer in self.layers.iter_mut() {
+            layer.draw()?;
         }
 
         Ok(())
     }
 
 
-    pub fn draw_all_layers_in_area(
+    pub fn draw_all_layer_in_area(
         &mut self,
-        start_index: usize,
-        draw_rect: &Rectangle<usize>,
+        key: Option<&str>,
+        area: &Rectangle<usize>,
     ) -> KernelResult {
         for layer in self
             .layers
             .iter_mut()
-            .skip(start_index)
+            .take_while(|layer| key.map_or(true, |key| key != layer.key()))
         {
-            layer.draw_all_window_in_area(draw_rect)?;
+            layer.draw_in_area(area)?;
         }
 
         Ok(())
     }
 
 
-    pub fn draw_all_layers_until(
-        &mut self,
-        start_index: usize,
-        draw_layers_count: usize,
-        draw_rect: &Rectangle<usize>,
-    ) -> KernelResult {
-        for layer in self
-            .layers
-            .iter_mut()
-            .skip(start_index)
-            .take(draw_layers_count)
-        {
-            layer.draw_all_window_in_area(draw_rect)?;
-        }
+    fn layer_ref(
+        &self,
+        key: &'window str,
+    ) -> Result<&Layer<'window, RcPixelWriter<'window>, Box<dyn LayerDrawable>>, KernelError> {
+        self.layers
+            .iter()
+            .find(|layer| layer.key() == key)
+            .ok_or(KernelError::FailedOperateLayer(LayerReason::NotExistsKey))
+    }
 
-        Ok(())
+
+    fn layer_mut(
+        &mut self,
+        key: &'window str,
+    ) -> Result<&mut Layer<'window, RcPixelWriter<'window>, Box<dyn LayerDrawable>>, KernelError>
+    {
+        self.layers
+            .iter_mut()
+            .find(|layer| layer.key() == key)
+            .ok_or(KernelError::FailedOperateLayer(LayerReason::NotExistsKey))
     }
 }

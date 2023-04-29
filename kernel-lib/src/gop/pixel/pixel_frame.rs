@@ -1,13 +1,14 @@
 use alloc::boxed::Box;
 use alloc::vec;
 
+use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use common_lib::math::rectangle::Rectangle;
 
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::row::PixelRow;
 use crate::gop::pixel::Pixel;
-use crate::layers::window::drawers::rect_colors::RectColors;
+use crate::layers::drawer::rect_colors::RectColors;
 
 pub struct PixelFrame<'buff> {
     pixels: Box<dyn Iterator<Item = Pixel> + 'buff>,
@@ -35,12 +36,12 @@ impl<'buff> PixelFrame<'buff> {
 
 
     pub fn rect(rect: Rectangle<usize>, colors: RectColors, converter: EnumPixelConverter) -> Self {
-        let rect_iter = rect.points_unbound();
+        let rect_iter = rect.points();
 
         Self::new(
             rect_iter.map(move |p| Pixel::new(Some(colors.foreground()), p)),
             converter,
-            colors.transparent(),
+            Some(DISPLAY_BACKGROUND_COLOR),
         )
     }
 }
@@ -86,15 +87,17 @@ mod tests {
     use crate::gop::pixel::pixel_frame::PixelFrame;
     use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
     use crate::gop::pixel::row::PixelRow;
-    use crate::layers::window::drawers::cursor::cursor_buffer::{
-        CursorBuffer, CURSOR_HEIGHT, CURSOR_WIDTH,
-    };
+    use crate::layers::drawer::cursor::cursor_buffer::{CursorBuffer, CURSOR_HEIGHT, CURSOR_WIDTH};
 
     #[test]
     fn it_correct_width() {
         let buff = CursorBuffer::default();
-        let pixels =
-            buff.cursor_pixels(Vector2D::zeros(), PixelColor::white(), PixelColor::yellow());
+        let pixels = buff.cursor_pixels(
+            Vector2D::zeros(),
+            None,
+            PixelColor::white(),
+            PixelColor::yellow(),
+        );
 
         let mut pixel_frame = PixelFrame::new(
             pixels,

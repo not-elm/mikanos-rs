@@ -3,9 +3,9 @@ use alloc::vec::Vec;
 use common_lib::math::vector::Vector2D;
 
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
-use crate::gop::pixel::Pixel;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::row::pixel_converter::PixelConvertable;
+use crate::gop::pixel::Pixel;
 
 pub mod bgr_pixel_converter;
 pub mod enum_pixel_converter;
@@ -96,13 +96,13 @@ mod tests {
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::vector::Vector2D;
 
-    use crate::gop::pixel::Pixel;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
-    use crate::gop::pixel::row::PixelRow;
     use crate::gop::pixel::row::rgb_pixel_converter::RgbPixelConverter;
-    use crate::layers::window::drawers::cursor::cursor_buffer::{CURSOR_WIDTH, CursorBuffer};
-    use crate::layers::window::drawers::cursor::cursor_colors::CursorColors;
+    use crate::gop::pixel::row::PixelRow;
+    use crate::gop::pixel::Pixel;
+    use crate::layers::drawer::cursor::cursor_buffer::{CursorBuffer, CURSOR_WIDTH};
+    use crate::layers::drawer::cursor::cursor_colors::CursorColors;
 
     #[test]
     fn it_correct_length() {
@@ -125,6 +125,7 @@ mod tests {
         let cursor_buff = CursorBuffer::default();
         let pixel_frame = cursor_buff.pixel_frame(
             Vector2D::zeros(),
+            None,
             CursorColors::default()
                 .change_border(PixelColor::yellow())
                 .change_transparent(PixelColor::black()),

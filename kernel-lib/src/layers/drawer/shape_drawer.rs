@@ -8,8 +8,8 @@ use crate::error::KernelResult;
 use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
-use crate::layers::window::drawers::rect_colors::RectColors;
-use crate::layers::window::drawers::WindowDrawable;
+use crate::layers::drawer::rect_colors::RectColors;
+use crate::layers::drawer::LayerDrawable;
 
 #[derive(Debug, Clone)]
 pub struct ShapeDrawer {
@@ -28,12 +28,12 @@ impl ShapeDrawer {
 }
 
 
-impl WindowDrawable for ShapeDrawer {
+impl LayerDrawable for ShapeDrawer {
     fn draw_in_area(
         &mut self,
         _window_transform: &Transform2D,
-        draw_rect: &Rectangle<usize>,
         writer: &mut dyn PixelFlushable,
+        draw_rect: &Rectangle<usize>,
     ) -> KernelResult {
         unsafe {
             writer.flush(PixelFrame::rect(

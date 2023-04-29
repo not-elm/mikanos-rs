@@ -9,19 +9,19 @@ use common_lib::transform::Transform2D;
 use crate::error::KernelResult;
 use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
-use crate::layers::window::drawers::cursor::cursor_buffer::CursorBuffer;
-use crate::layers::window::drawers::cursor::cursor_colors::CursorColors;
-use crate::layers::window::WindowDrawable;
+use crate::layers::drawer::cursor::cursor_buffer::CursorBuffer;
+use crate::layers::drawer::cursor::cursor_colors::CursorColors;
+use crate::layers::drawer::LayerDrawable;
 
 #[derive(Debug, Clone)]
-pub struct MouseCursorDrawer {
+pub struct CursorDrawer {
     cursor_buff: CursorBuffer,
     colors: CursorColors,
     converter: EnumPixelConverter,
 }
 
 
-impl MouseCursorDrawer {
+impl CursorDrawer {
     pub fn new(scale: Vector2D<usize>, colors: CursorColors, pixel_format: PixelFormat) -> Self {
         Self {
             cursor_buff: CursorBuffer::new(scale),
@@ -41,16 +41,19 @@ impl MouseCursorDrawer {
 }
 
 
-impl WindowDrawable for MouseCursorDrawer {
+impl LayerDrawable for CursorDrawer {
     fn draw_in_area(
         &mut self,
         _window_transform: &Transform2D,
-        draw_rect: &Rectangle<usize>,
         writer: &mut dyn PixelFlushable,
+        draw_rect: &Rectangle<usize>,
     ) -> KernelResult {
-        let pixel_frame =
-            self.cursor_buff
-                .pixel_frame(draw_rect.origin(), self.colors, self.converter.clone());
+        let pixel_frame = self.cursor_buff.pixel_frame(
+            draw_rect.origin(),
+            Some(draw_rect.end()),
+            self.colors,
+            self.converter.clone(),
+        );
 
         unsafe { writer.flush(pixel_frame) }
     }
@@ -62,7 +65,7 @@ impl WindowDrawable for MouseCursorDrawer {
 }
 
 
-impl Default for MouseCursorDrawer {
+impl Default for CursorDrawer {
     fn default() -> Self {
         Self::new(Vector2D::unit(), CursorColors::default(), PixelFormat::Rgb)
     }

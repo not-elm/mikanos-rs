@@ -5,10 +5,7 @@ use common_lib::transform::Transform2D;
 
 use crate::error::LayerReason::InvalidCastWindowDrawer;
 use crate::error::{KernelError, KernelResult};
-use crate::layers::window::drawers::WindowDrawable;
-
-pub mod drawers;
-
+use crate::layers::drawer::LayerDrawable;
 
 pub struct Window<Draw> {
     drawer: Draw,
@@ -48,10 +45,10 @@ impl<Draw> Window<Draw> {
 }
 
 
-impl Window<Box<dyn WindowDrawable>> {
+impl Window<Box<dyn LayerDrawable>> {
     pub fn drawer_down_cast_mut<Draw>(&mut self) -> KernelResult<&mut Draw>
     where
-        Draw: WindowDrawable,
+        Draw: LayerDrawable,
     {
         self.drawer
             .any_mut()
@@ -63,11 +60,11 @@ impl Window<Box<dyn WindowDrawable>> {
 
 impl<'draw, Draw> Window<Draw>
 where
-    Draw: WindowDrawable + 'draw,
+    Draw: LayerDrawable + 'draw,
 {
     pub fn drawer_down_cast_mut<D>(&'draw mut self) -> Option<&mut D>
     where
-        D: WindowDrawable + 'draw,
+        D: LayerDrawable + 'draw,
     {
         self.drawer
             .any_mut()
@@ -75,7 +72,7 @@ where
     }
 
 
-    pub fn into_dyn(self) -> Window<Box<dyn WindowDrawable>> {
+    pub fn into_dyn(self) -> Window<Box<dyn LayerDrawable>> {
         Window::new(Box::new(self.drawer), self.transform)
     }
 }
@@ -89,18 +86,18 @@ mod tests {
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::Transform2D;
 
-    use crate::layers::window::drawers::cursor::mouse_cursor::MouseCursorDrawer;
-    use crate::layers::window::drawers::WindowDrawable;
+    use crate::layers::drawer::cursor::cursor_drawer::CursorDrawer;
+    use crate::layers::drawer::LayerDrawable;
     use crate::layers::window::Window;
 
     #[test]
     fn it_down_cast_to_mouse_cursor_drawer() {
-        let mut window: Window<Box<dyn WindowDrawable>> = Window::new(
-            Box::<MouseCursorDrawer>::default(),
+        let mut window: Window<Box<dyn LayerDrawable>> = Window::new(
+            Box::<CursorDrawer>::default(),
             Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
         );
         assert!(window
-            .drawer_down_cast_mut::<MouseCursorDrawer>()
+            .drawer_down_cast_mut::<CursorDrawer>()
             .is_ok());
     }
 }

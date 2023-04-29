@@ -72,10 +72,6 @@ pub extern "sysv64" fn kernel_main(
     println!("Hello Kernel!");
 
 
-    let mut timer = OneShotLocalApicTimer::new();
-
-    timer.start(LocalApicTimerDivide::By1);
-
     let general_header = first_general_header();
     enable_msi(general_header.clone()).unwrap();
 

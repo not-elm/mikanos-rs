@@ -11,8 +11,8 @@ use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::pixel_iter::PixelIter;
 use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
-use crate::layers::window::drawers::cursor::cursor_colors::CursorColors;
-use crate::layers::window::drawers::cursor::cursor_pixel_iter::CursorPixelIter;
+use crate::layers::drawer::cursor::cursor_colors::CursorColors;
+use crate::layers::drawer::cursor::cursor_pixel_iter::CursorPixelIter;
 
 pub const CURSOR_WIDTH: usize = 15;
 
@@ -103,27 +103,40 @@ impl CursorBuffer {
                 LayerReason::WindowSizeOver(transform.rect()),
             ));
         }
-        Ok(self.cursor_pixels(transform.pos(), cursor_color, border_color))
+        Ok(self.cursor_pixels(
+            transform.pos(),
+            Some(transform.rect().end()),
+            cursor_color,
+            border_color,
+        ))
     }
 
 
     pub fn cursor_pixels(
         &self,
         origin_pos: Vector2D<usize>,
+        end_pos: Option<Vector2D<usize>>,
         cursor_color: PixelColor,
         border_color: PixelColor,
     ) -> impl PixelIter + '_ {
-        CursorPixelIter::new(&self.0, origin_pos, cursor_color, border_color)
+        CursorPixelIter::new(&self.0, origin_pos, end_pos, cursor_color, border_color)
     }
 
 
     pub fn pixel_frame(
         &self,
         origin_pos: Vector2D<usize>,
+        end_pos: Option<Vector2D<usize>>,
         colors: CursorColors,
         converter: EnumPixelConverter,
     ) -> PixelFrame {
-        let iter = CursorPixelIter::new(&self.0, origin_pos, colors.foreground(), colors.border());
+        let iter = CursorPixelIter::new(
+            &self.0,
+            origin_pos,
+            end_pos,
+            colors.foreground(),
+            colors.border(),
+        );
         PixelFrame::new(iter, converter, colors.transparent())
     }
 
@@ -165,12 +178,12 @@ mod tests {
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::Transform2D;
 
-    use crate::gop::pixel::Pixel;
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::layers::window::drawers::cursor::cursor_buffer::{
-        CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH, CursorBuffer,
+    use crate::gop::pixel::Pixel;
+    use crate::layers::drawer::cursor::cursor_buffer::{
+        CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
     };
-    use crate::layers::window::drawers::cursor::cursor_pixel_iter::cursor_color_at;
+    use crate::layers::drawer::cursor::cursor_pixel_iter::cursor_color_at;
 
     #[test]
     fn it_no_scale() {

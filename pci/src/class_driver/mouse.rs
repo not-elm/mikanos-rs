@@ -10,7 +10,9 @@ pub mod mouse_driver_factory;
 pub mod mouse_subscribable;
 pub mod mouse_subscribe_driver;
 
+
 const MOUSE_DATA_BUFF_SIZE: usize = 3;
+
 
 #[derive(Debug, Clone)]
 pub enum MouseButton {
@@ -20,9 +22,11 @@ pub enum MouseButton {
     DeviceSpecific(i8),
 }
 
+
 pub(crate) fn cursor_pos(buff: &[i8]) -> Vector2D<isize> {
     Vector2D::new(buff[1] as isize, buff[2] as isize)
 }
+
 
 pub(crate) fn current_cursor_pos(prev_pos: Vector2D<usize>, data_buff: &[i8]) -> Vector2D<usize> {
     let relative = cursor_pos(data_buff);
@@ -31,6 +35,7 @@ pub(crate) fn current_cursor_pos(prev_pos: Vector2D<usize>, data_buff: &[i8]) ->
         max(prev_pos.y() as isize + relative.y(), 0) as usize,
     )
 }
+
 
 /// データバッファから、押下されているボタンを取得します。
 ///

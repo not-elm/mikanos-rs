@@ -33,7 +33,7 @@ impl Rectangle<usize> {
     pub fn from_pos_and_size(pos: Vector2D<usize>, size: Size) -> Self {
         Self::new(
             pos,
-            Vector2D::new(pos.x() + size.width(), pos.y() + size.height()),
+            Vector2D::new(pos.x() + size.width() - 1, pos.y() + size.height() - 1),
         )
     }
 
@@ -91,6 +91,15 @@ impl<Num: Copy + Add<Output = Num>> Add<Vector2D<Num>> for Rectangle<Num> {
 
     fn add(self, rhs: Vector2D<Num>) -> Self::Output {
         Rectangle::new(self.origin + rhs, self.end + rhs)
+    }
+}
+
+
+impl Add<Size> for Rectangle<usize> {
+    type Output = Rectangle<usize>;
+
+    fn add(self, rhs: Size) -> Self::Output {
+        Rectangle::new(self.origin, self.end + rhs)
     }
 }
 
@@ -295,5 +304,18 @@ mod tests {
 
         assert_eq!(points[0], rect.origin);
         assert_eq!(*points.last().unwrap(), rect.end - 1);
+    }
+
+
+    #[test]
+    fn it_rect_add_size() {
+        let rect = Rectangle::new(Vector2D::unit(), Vector2D::new(30usize, 30));
+        let size = Size::new(30, 100);
+        let rect = rect + size;
+
+        assert_eq!(
+            rect,
+            Rectangle::new(Vector2D::unit(), Vector2D::new(60, 130))
+        );
     }
 }

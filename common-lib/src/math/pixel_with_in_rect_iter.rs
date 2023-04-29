@@ -27,11 +27,11 @@ impl Iterator for PointsWithInRectIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         let limit = self.size;
-        if limit.height() < self.y {
+        if limit.height() + self.origin.y() < self.y {
             return None;
         }
 
-        if limit.width() < self.x {
+        if limit.width() + self.origin.x() < self.x {
             self.y += 1;
             self.x = self.origin.x();
             self.next()
@@ -48,9 +48,9 @@ impl Iterator for PointsWithInRectIter {
 mod tests {
     use alloc::vec::Vec;
 
+    use crate::math::pixel_with_in_rect_iter::PointsWithInRectIter;
     use crate::math::size::Size;
     use crate::math::vector::Vector2D;
-    use crate::math::pixel_with_in_rect_iter::PointsWithInRectIter;
 
     #[test]
     fn it_collect_range() {
