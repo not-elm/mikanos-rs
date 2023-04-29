@@ -11,7 +11,12 @@ RUN apt-get update && apt-get install -y \
     dosfstools \
     ovmf \
     sudo
-
+.
+└── mnt
+    ├── EFI
+    │   └── BOOT
+    │       └── BOOTx64.EFI
+    └── kernel.elf
 
 ENV RUST_VERSION nightly
 # rustup,rustc,cargoをインストールできる

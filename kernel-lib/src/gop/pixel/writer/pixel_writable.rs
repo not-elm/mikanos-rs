@@ -1,8 +1,8 @@
 use common_lib::frame_buffer::FrameBufferConfig;
 
-use crate::{error::KernelResult, gop::pixel::pixel_color::PixelColor, serial_println};
 use crate::gop::pixel::calc_pixel_pos_from_vec2d;
 use crate::gop::pixel::pixel_frame::PixelFrame;
+use crate::{error::KernelResult, gop::pixel::pixel_color::PixelColor};
 
 #[warn(drop_bounds)]
 pub trait PixelWritable {

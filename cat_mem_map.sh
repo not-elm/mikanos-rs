@@ -4,3 +4,4 @@ cat ./mnt/memory_map
 cat ./mnt/memory_map > memory_map
 sudo umount mnt
 rm mnt -r -f
+

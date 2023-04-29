@@ -26,3 +26,4 @@ pub mod paging;
 pub mod register;
 pub mod segmentation;
 pub mod serial;
+pub mod timer;

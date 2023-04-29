@@ -17,19 +17,19 @@ use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::math::vector::Vector2D;
+use kernel_lib::apic::device_config::LocalApicTimerDivide;
+use kernel_lib::gop::console::init_console;
+use kernel_lib::timer::apic::local_apic_timer::OneShotLocalApicTimer;
+use kernel_lib::timer::apic::ApicTimer;
 use kernel_lib::{println, serial_println};
-use kernel_lib::error::KernelResult;
-use kernel_lib::gop::console::{fill_rect_using_global, init_console};
-use kernel_lib::gop::pixel::pixel_color::PixelColor;
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
-use crate::usb::{enable_msi, first_general_header};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
+use crate::usb::{enable_msi, first_general_header};
 
 mod allocate;
 mod entry_point;
@@ -65,20 +65,21 @@ pub extern "sysv64" fn kernel_main(
 
     init_layers(*frame_buffer_config).unwrap();
 
+
     #[cfg(test)]
     test_main();
     serial_println!("Hello Serial Port!");
     println!("Hello Kernel!");
 
 
+    let mut timer = OneShotLocalApicTimer::new();
+
+    timer.start(LocalApicTimerDivide::By1);
+
     let general_header = first_general_header();
     enable_msi(general_header.clone()).unwrap();
 
-    start_xhci_host_controller(
-        general_header.mmio_base_addr(),
-        MouseSubscriber::new(),
-    )
-        .unwrap();
+    start_xhci_host_controller(general_header.mmio_base_addr(), MouseSubscriber::new()).unwrap();
 
     common_lib::assembly::hlt_forever();
 }

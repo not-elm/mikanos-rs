@@ -15,8 +15,7 @@ if [ "$QEMU_STATE" = "debug" ]; then
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
 elif [ "$QEMU_STATE" = "test" ]; then
   qemu-system-x86_64 \
-    -drive if=pflash,format=raw,readonly,file=OVMF_CODE.fd \
-    -drive if=pflash,format=raw,file=OVMF_VARS.fd \
+    -bios OVMF.fd \
     -drive if=ide,index=0,media=disk,format=raw,file='disk.img' \
     -device nec-usb-xhci,id=xhci \
     -device usb-mouse \

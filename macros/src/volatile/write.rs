@@ -14,13 +14,13 @@ pub(crate) fn write_volatile(
         }
 
         fn write_volatile(&self, new_value: #volatile_type) {
-            let shift = new_value << #offset;
-            let mask = (!0 as #volatile_type) >> (#volatile_type::BITS as usize - #bits);
+            let shift = (new_value as usize) << #offset;
+            let mask = !(0 as usize)  >> (#volatile_type::BITS as usize - #bits);
             let mask = mask << #offset;
-            let mask = !(mask  as #volatile_type);
-            let all_bits = unsafe{core::ptr::read_volatile(self.0 as *const #volatile_type) & mask };
+            let mask = !(mask);
+            let all_bits = unsafe{core::ptr::read_volatile(self.0 as *const usize) & mask };
 
-            unsafe{core::ptr::write_volatile(self.0 as *mut #volatile_type, all_bits | shift);}
+            unsafe{core::ptr::write_volatile(self.0 as *mut usize, all_bits | shift);}
         }
     }
 }

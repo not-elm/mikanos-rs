@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use common_lib::queue::queueing::Queueing;
 
-use crate::interrupt::asm::{cli, sti_and_hlt};
+use crate::interrupt::asm::{cli, sti, sti_and_hlt};
 
 pub struct InterruptQueueWaiter<Queue, Value>
 where
@@ -33,13 +33,14 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut value = self.queue.dequeue();
-
+        cli();
         while value.is_none() {
             sti_and_hlt();
 
             value = self.queue.dequeue();
         }
-        cli();
+        sti();
+
         Some(value.unwrap())
     }
 }

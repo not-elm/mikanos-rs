@@ -4,12 +4,11 @@ use alloc::collections::BTreeMap;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::Transform2D;
 
-use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::error::LayerReason::NotExistsKey;
+use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 use crate::layers::window::drawers::WindowDrawable;
 use crate::layers::window::Window;
-use crate::serial_println;
 
 pub struct Layer<Writer> {
     layer_transform: Transform2D,
@@ -34,9 +33,13 @@ impl<Writer> Layer<Writer> {
     }
 
 
-    pub fn update_window_transform<F>(&mut self, key: &'static str, fun: F) -> KernelResult<Transform2D>
-        where
-            F: FnMut(&mut Transform2D),
+    pub fn update_window_transform<F>(
+        &mut self,
+        key: &'static str,
+        fun: F,
+    ) -> KernelResult<Transform2D>
+    where
+        F: FnMut(&mut Transform2D),
     {
         let window_transform = self.update(key, fun)?;
 
@@ -72,8 +75,8 @@ impl<Writer> Layer<Writer> {
 
 
     fn update<F>(&mut self, key: &'static str, mut fun: F) -> KernelResult<Transform2D>
-        where
-            F: FnMut(&mut Transform2D),
+    where
+        F: FnMut(&mut Transform2D),
     {
         let window = self.window_mut(key).unwrap();
 
@@ -87,8 +90,8 @@ impl<Writer> Layer<Writer> {
 
 
 impl<Writer> Layer<Writer>
-    where
-        Writer: PixelFlushable,
+where
+    Writer: PixelFlushable,
 {
     pub fn draw_all_window(&mut self) -> KernelResult {
         let windows = self.windows.values_mut();
@@ -110,9 +113,9 @@ impl<Writer> Layer<Writer>
             .filter(|window| {
                 draw_rect.with_in_rect(&window.transform_ref().rect())
                     || window
-                    .transform_ref()
-                    .rect()
-                    .with_in_rect(draw_rect)
+                        .transform_ref()
+                        .rect()
+                        .with_in_rect(draw_rect)
             });
 
         draw_all(&mut self.pixel_writer, draw_rect, windows)
@@ -123,7 +126,7 @@ impl<Writer> Layer<Writer>
 fn draw_all<'window>(
     pixel_writer: &mut dyn PixelFlushable,
     draw_rect: &Rectangle<usize>,
-    windows: impl Iterator<Item=&'window mut Window<Box<dyn WindowDrawable>>>,
+    windows: impl Iterator<Item = &'window mut Window<Box<dyn WindowDrawable>>>,
 ) -> KernelResult {
     for window in windows {
         let transform = window.transform_ref().clone();
