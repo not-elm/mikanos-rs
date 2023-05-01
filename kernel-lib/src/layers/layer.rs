@@ -1,6 +1,8 @@
 use alloc::string::String;
+use alloc::vec::Vec;
 use core::fmt::Debug;
 
+use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::Transform2D;
 
@@ -40,8 +42,8 @@ impl<Writer, Draw> Layer<Writer, Draw> {
 
 
     pub fn update_transform<F>(&mut self, fun: F)
-    where
-        F: FnOnce(&mut Transform2D),
+        where
+            F: FnOnce(&mut Transform2D),
     {
         let transform = &mut self.layer_transform;
         fun(transform);
@@ -50,22 +52,23 @@ impl<Writer, Draw> Layer<Writer, Draw> {
 
 
 impl<'write, Draw> Layer<EnumPixelWriter, Draw>
-where
-    Draw: LayerDrawable + 'write,
+    where
+        Draw: LayerDrawable + 'write,
 {
-    pub fn draw(&mut self, pixels: &mut [PixelColor]) -> KernelResult {
+    pub fn draw(&mut self, config: &FrameBufferConfig, pixels: &mut [PixelColor]) -> KernelResult {
         self.drawer
-            .draw(&self.layer_transform, pixels)
+            .draw(config, &self.layer_transform, pixels)
     }
 
 
     pub fn draw_in_area(
         &mut self,
+        config: &FrameBufferConfig,
         pixels: &mut [PixelColor],
         area: &Rectangle<usize>,
     ) -> KernelResult {
         self.drawer
-            .draw_in_area(&self.layer_transform, pixels, area)
+            .draw_in_area(config, &self.layer_transform, pixels, area)
     }
 
 

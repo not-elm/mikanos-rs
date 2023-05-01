@@ -12,11 +12,7 @@
   "pre-link-args": {
     "ld": [
       "--entry",
-      "kernel_entry_point",
-      "-z",
-      "norelro",
-      "-z",
-      "separate-code"
+      "kernel_entry_point"
     ]
   },
   "linker": "rust-lld",

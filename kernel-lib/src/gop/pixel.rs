@@ -106,7 +106,15 @@ pub fn fill_rect(
 }
 
 
-fn calc_pixel_pos_from_vec2d(
+pub(crate) fn calc_shadow_buffer_pixel_pos_from_vec2d(
+    frame_buffer_config: &FrameBufferConfig,
+    pos: Vector2D<usize>,
+) -> KernelResult<usize> {
+    Ok(calc_pixel_pos(frame_buffer_config, pos.x(), pos.y())? / 4)
+}
+
+
+pub(crate) fn calc_pixel_pos_from_vec2d(
     frame_buffer_config: &FrameBufferConfig,
     pos: Vector2D<usize>,
 ) -> KernelResult<usize> {
@@ -114,7 +122,7 @@ fn calc_pixel_pos_from_vec2d(
 }
 
 
-fn calc_pixel_pos(
+pub(crate) fn calc_pixel_pos(
     frame_buffer_config: &FrameBufferConfig,
     x: usize,
     y: usize,

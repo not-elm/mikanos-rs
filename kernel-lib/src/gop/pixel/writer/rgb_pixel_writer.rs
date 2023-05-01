@@ -23,9 +23,9 @@ impl RgbPixelWriter {
 
 impl Drop for RgbPixelWriter {
     fn drop(&mut self) {
-        unsafe {
-            core::ptr::drop_in_place(self.frame_buffer_ptr);
-        };
+        // unsafe {
+        //     core::ptr::drop_in_place(self.frame_buffer_ptr);
+        // };
     }
 }
 

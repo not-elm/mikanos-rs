@@ -27,11 +27,11 @@ impl Iterator for PointsWithInRectIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         let limit = self.size;
-        if limit.height() + self.origin.y() < self.y {
+        if limit.height() + self.origin.y() <= self.y {
             return None;
         }
 
-        if limit.width() + self.origin.x() < self.x {
+        if limit.width() + self.origin.x() <= self.x {
             self.y += 1;
             self.x = self.origin.x();
             self.next()
@@ -57,10 +57,10 @@ mod tests {
         let vec2d_buff: Vec<Vector2D<usize>> =
             PointsWithInRectIter::new(Vector2D::zeros(), Size::new(100, 100)).collect();
 
-
-        for y in 0..=100 {
-            for x in 0..=100 {
-                assert_eq!(vec2d_buff[x + (y * 101)], Vector2D::new(x, y));
+        assert_eq!(vec2d_buff.len(), 100 * 100);
+        for y in 0..100 {
+            for x in 0..100 {
+                assert_eq!(vec2d_buff[x + (y * 100)], Vector2D::new(x, y));
             }
         }
     }
@@ -71,7 +71,7 @@ mod tests {
         let vec2d_buff: Vec<Vector2D<usize>> =
             PointsWithInRectIter::new(Vector2D::unit(), Size::new(100, 100)).collect();
 
-
+        assert_eq!(vec2d_buff.len(), 100 * 100);
         for y in 1..=100 {
             for x in 1..=100 {
                 assert_eq!(vec2d_buff[(x - 1) + ((y - 1) * 100)], Vector2D::new(x, y));

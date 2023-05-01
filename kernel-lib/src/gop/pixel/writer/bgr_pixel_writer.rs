@@ -25,9 +25,9 @@ impl BgrPixelWriter {
 
 impl Drop for BgrPixelWriter {
     fn drop(&mut self) {
-        unsafe {
-            core::ptr::drop_in_place(self.frame_buffer_ptr);
-        };
+        // unsafe {
+        //     core::ptr::drop_in_place(self.frame_buffer_ptr);
+        // };
     }
 }
 

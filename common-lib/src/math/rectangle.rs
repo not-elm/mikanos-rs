@@ -71,10 +71,28 @@ impl<T: Copy + PartialOrd> Rectangle<T> {
     pub fn with_in_rect(&self, rect: &Rectangle<T>) -> bool {
         self.with_in_pos(&rect.origin) && self.with_in_pos(&rect.end)
     }
+
+
+    pub fn overlap(&self, r2: &Rectangle<T>) -> bool {
+        let x1 = self.origin().x();
+        let w1 = self.end().x();
+        let x2 = r2.origin().x();
+        let w2 = r2.end().x();
+        if !(x2 <= x1 && x1 <= w2 || x1 <= x2 && x2 <= w1) {
+            return false;
+        }
+
+        let y1 = self.origin().y();
+        let h1 = self.end().y();
+        let y2 = r2.origin().y();
+        let h2 = r2.end().y();
+
+        y2 <= y1 && y1 <= h2 || y1 <= y2 && y2 <= h1
+    }
 }
 
 
-impl<T: Copy + Sub<Output = T>> Rectangle<T> {
+impl<T: Copy + Sub<Output=T>> Rectangle<T> {
     pub fn width(&self) -> T {
         self.end.x() - self.origin.x()
     }
@@ -86,7 +104,7 @@ impl<T: Copy + Sub<Output = T>> Rectangle<T> {
 }
 
 
-impl<Num: Copy + Add<Output = Num>> Add<Vector2D<Num>> for Rectangle<Num> {
+impl<Num: Copy + Add<Output=Num>> Add<Vector2D<Num>> for Rectangle<Num> {
     type Output = Rectangle<Num>;
 
     fn add(self, rhs: Vector2D<Num>) -> Self::Output {
@@ -104,7 +122,7 @@ impl Add<Size> for Rectangle<usize> {
 }
 
 
-impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Rectangle<Num> {
+impl<Num: Copy + Sub<Output=Num>> Sub<Vector2D<Num>> for Rectangle<Num> {
     type Output = Rectangle<Num>;
 
     fn sub(self, rhs: Vector2D<Num>) -> Self::Output {
@@ -317,5 +335,35 @@ mod tests {
             rect,
             Rectangle::new(Vector2D::unit(), Vector2D::new(60, 130))
         );
+    }
+
+
+    #[test]
+    fn it_rect_overlap_if_inner_target() {
+        let r1 = Rectangle::new(Vector2D::zeros(), Vector2D::new(30usize, 30));
+        let r2 = Rectangle::new(Vector2D::unit(), Vector2D::new(30usize, 30));
+
+        assert!(r1.overlap(&r2));
+        assert!(r2.overlap(&r1));
+    }
+
+
+    #[test]
+    fn it_rect_overlap_if_cross_sides() {
+        let r1 = Rectangle::new(Vector2D::new(50, 50), Vector2D::new(100, 100));
+        let r2 = Rectangle::new(Vector2D::new(100, 100), Vector2D::new(100, 100));
+
+        assert!(r1.overlap(&r2));
+        assert!(r2.overlap(&r1));
+    }
+
+
+    #[test]
+    fn it_rect_not_overlap() {
+        let r1 = Rectangle::new(Vector2D::new(00, 0), Vector2D::new(99, 99));
+        let r2 = Rectangle::new(Vector2D::new(100, 100), Vector2D::new(100, 100));
+
+        assert!(!r1.overlap(&r2));
+        assert!(!r2.overlap(&r1));
     }
 }

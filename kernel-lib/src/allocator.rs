@@ -8,4 +8,4 @@ pub mod memory_map;
 
 pub const FRAME_SIZE: usize = kib(4);
 
-pub const MAX_MEMORY_SIZE: usize = gib(3);
+pub const MAX_MEMORY_SIZE: usize = gib(10);

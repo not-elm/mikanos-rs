@@ -25,7 +25,8 @@ impl ProgramHeaderTable {
     /// 最初のセグメントのが示すアドレスがロード先の先頭アドレス、
     /// 最後のセグメントの先頭アドレス + メモリサイズがロード先の最終アドレスに対応します。
     pub fn calc_load_address_range(self) -> (u64, u64) {
-        let v: Vec<ProgramHeader> = self.filter(|p| p.p_type == PType::PtLoad).collect();
+        let mut v: Vec<ProgramHeader> = self.filter(|p| p.p_type == PType::PtLoad).collect();
+        v.sort_by(|x1, x2|x1.p_vaddr.partial_cmp(&x2.p_vaddr).unwrap());
 
         let start_addr = v.first().unwrap().p_vaddr;
         let last_phdr = v.last().unwrap();

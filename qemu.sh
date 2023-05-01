@@ -33,8 +33,5 @@ else
     -serial stdio
 fi
 
-
-
-
 # QEMUモニタを使う
 #    -monitor stdio \

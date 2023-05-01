@@ -1,13 +1,14 @@
+use alloc::vec::Vec;
 use core::any::Any;
 
-use common_lib::frame_buffer::PixelFormat;
+use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
-use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
+use crate::gop::pixel::{calc_pixel_pos_from_vec2d, calc_shadow_buffer_pixel_pos_from_vec2d};
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
@@ -46,18 +47,19 @@ impl CursorDrawer {
 impl LayerDrawable for CursorDrawer {
     fn draw_in_area(
         &mut self,
-        _window_transform: &Transform2D,
+        config: &FrameBufferConfig,
+        layer_transform: &Transform2D,
         pixels: &mut [PixelColor],
-        draw_rect: &Rectangle<usize>,
+        draw_area: &Rectangle<usize>,
     ) -> KernelResult {
-        self.cursor_buff
-            .cursor_pixels(draw_rect.origin(), Some(draw_rect.end()), self.colors)
-            .enumerate()
-            .for_each(|(index, p)| {
-                pixels[index] = p
-                    .color()
-                    .unwrap_or(DISPLAY_BACKGROUND_COLOR);
-            });
+        for p in self
+            .cursor_buff
+            .cursor_pixels(draw_area.origin(), Some(draw_area.end()), self.colors)
+        {
+            let i = calc_shadow_buffer_pixel_pos_from_vec2d(config, p.pos() + layer_transform.pos())?;
+            p.color()
+                .inspect(|color| pixels[i] = *color);
+        }
 
         Ok(())
     }

@@ -1,5 +1,7 @@
+use alloc::vec::Vec;
 use core::any::Any;
 
+use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::Transform2D;
 
@@ -17,6 +19,7 @@ pub trait LayerDrawable: Any {
     /// 指定された領域内で現在のウィンドウの状態を描画します。
     fn draw_in_area(
         &mut self,
+        config: &FrameBufferConfig,
         transform: &Transform2D,
         pixels: &mut [PixelColor],
         draw_rect: &Rectangle<usize>,
@@ -24,8 +27,13 @@ pub trait LayerDrawable: Any {
 
 
     /// 現在のウィンドウの状態を描画します。
-    fn draw(&mut self, transform: &Transform2D, pixels: &mut [PixelColor]) -> KernelResult {
-        self.draw_in_area(transform, pixels, &transform.rect())
+    fn draw(
+        &mut self,
+        config: &FrameBufferConfig,
+        transform: &Transform2D,
+        pixels: &mut [PixelColor],
+    ) -> KernelResult {
+        self.draw_in_area(config, transform, pixels, &transform.rect())
     }
 
 

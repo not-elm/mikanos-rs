@@ -1,4 +1,5 @@
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[repr(C, packed)]
 pub struct PixelColor {
     r: u8,
     g: u8,

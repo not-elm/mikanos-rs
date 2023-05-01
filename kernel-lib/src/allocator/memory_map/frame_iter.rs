@@ -2,10 +2,10 @@ use uefi::table::boot::{MemoryDescriptor, MemoryMapIter, MemoryType};
 
 use common_lib::physical_address::PhysicalAddress;
 
+use crate::allocator::FRAME_SIZE;
 use crate::allocator::memory_map::frame::Frame;
 use crate::allocator::memory_map::frame_iterable::MemoryMapFrameIterable;
 use crate::allocator::memory_map::page_iter::PageIter;
-use crate::allocator::FRAME_SIZE;
 
 #[derive(Debug, Clone)]
 pub struct FrameIter<'memory> {
@@ -20,6 +20,9 @@ pub struct FrameIter<'memory> {
 impl<'memory> FrameIter<'memory> {
     pub fn new(mut memory_map: MemoryMapIter<'memory>) -> Option<FrameIter<'memory>> {
         let clone_memory_map = memory_map.clone();
+        // KERNEL自身の領域
+        next_available(&mut memory_map)?;
+        next_available(&mut memory_map)?;
         let first_descriptor = next_available(&mut memory_map)?;
         Some(FrameIter {
             frame_id: 0,
@@ -84,5 +87,8 @@ fn next_available(memory_map: &mut MemoryMapIter) -> Option<MemoryDescriptor> {
 }
 
 fn is_available(memory_descriptor: &MemoryDescriptor) -> bool {
-    matches!(memory_descriptor.ty, MemoryType::CONVENTIONAL)
+    matches!(
+        memory_descriptor.ty,
+        MemoryType::CONVENTIONAL
+    )
 }
