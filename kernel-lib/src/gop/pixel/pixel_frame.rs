@@ -1,9 +1,9 @@
 use alloc::boxed::Box;
 use alloc::vec;
 
-use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use common_lib::math::rectangle::Rectangle;
 
+use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::row::PixelRow;
@@ -114,8 +114,12 @@ mod tests {
     #[test]
     fn it_correct_height() {
         let buff = CursorBuffer::default();
-        let pixels =
-            buff.cursor_pixels(Vector2D::zeros(), PixelColor::white(), PixelColor::yellow());
+        let pixels = buff.cursor_pixels(
+            Vector2D::zeros(),
+            None,
+            PixelColor::white(),
+            PixelColor::yellow(),
+        );
 
         let pixel_frame = PixelFrame::new(
             pixels,

@@ -59,7 +59,7 @@ impl PartialEq for Pixel {
 }
 
 
-pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn PixelFlushable>> {
+pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn PixelWritable>> {
     match frame_buffer_config.pixel_format {
         common_lib::frame_buffer::PixelFormat::Rgb => {
             Rc::new(RefCell::new(RgbPixelWriter::new(frame_buffer_config)))
@@ -89,6 +89,7 @@ pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl Pixel
     #[cfg(test)]
     mock_pixel_writer::MockPixelWriter::new(frame_buffer_config)
 }
+
 
 pub fn fill_rect(
     pixel_writer: &mut impl PixelWritable,
@@ -125,6 +126,7 @@ fn calc_pixel_pos(
 
     Ok(4 * (frame_buffer_config.horizontal_resolution * y + x))
 }
+
 
 #[cfg(test)]
 mod tests {

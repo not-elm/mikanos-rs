@@ -19,6 +19,7 @@ impl Default for RgbPixelConverter {
     }
 }
 
+
 impl PixelConvertable for RgbPixelConverter {
     fn pixel_len(&self) -> usize {
         4

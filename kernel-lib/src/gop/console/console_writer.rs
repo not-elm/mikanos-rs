@@ -147,6 +147,8 @@ impl ConsoleWriter {
         }
         Ok(())
     }
+
+
     fn clear_line(&mut self, y: usize) -> KernelResult {
         let to = Vector2D::new(self.max_x() * 8, (y * 16) + 16);
         fill_rect(
@@ -160,6 +162,7 @@ impl ConsoleWriter {
     fn max_y(&self) -> usize {
         self.chars.len() - 1
     }
+
 
     fn max_x(&self) -> usize {
         self.chars[0].len() - 1

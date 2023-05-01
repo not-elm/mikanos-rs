@@ -4,10 +4,7 @@ use core::iter::repeat;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::Transform2D;
 
-use crate::error::{KernelError, KernelResult, LayerReason};
-use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::pixel_iter::PixelIter;
 use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
@@ -19,7 +16,7 @@ pub const CURSOR_WIDTH: usize = 15;
 pub const CURSOR_HEIGHT: usize = 24;
 
 
-const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
+pub(crate) const CURSOR_SHAPE: [&[u8; CURSOR_WIDTH]; CURSOR_HEIGHT] = [
     b"@              ",
     b"@@             ",
     b"@.@            ",
@@ -91,35 +88,40 @@ impl CursorBuffer {
         self.0[0].len()
     }
 
-
-    pub fn cursor_pixels_checked(
-        &self,
-        transform: &Transform2D,
-        cursor_color: PixelColor,
-        border_color: PixelColor,
-    ) -> KernelResult<impl PixelIter + '_> {
-        if self.is_not_drawable(transform.rect(), transform.pos()) {
-            return Err(KernelError::FailedOperateLayer(
-                LayerReason::WindowSizeOver(transform.rect()),
-            ));
-        }
-        Ok(self.cursor_pixels(
-            transform.pos(),
-            Some(transform.rect().end()),
-            cursor_color,
-            border_color,
-        ))
-    }
+    //
+    // pub fn cursor_pixels_checked(
+    //     &self,
+    //     transform: &Transform2D,
+    //     cursor_color: PixelColor,
+    //     border_color: PixelColor,
+    // ) -> KernelResult<impl PixelIter + '_> {
+    //     if self.is_not_drawable(transform.rect(), transform.pos()) {
+    //         return Err(KernelError::FailedOperateLayer(
+    //             LayerReason::WindowSizeOver(transform.rect()),
+    //         ));
+    //     }
+    //     Ok(self.cursor_pixels(
+    //         transform.pos(),
+    //         Some(transform.rect().end()),
+    //         cursor_color,
+    //         border_color,
+    //     ))
+    // }
 
 
     pub fn cursor_pixels(
         &self,
         origin_pos: Vector2D<usize>,
         end_pos: Option<Vector2D<usize>>,
-        cursor_color: PixelColor,
-        border_color: PixelColor,
+        colors: CursorColors,
     ) -> impl PixelIter + '_ {
-        CursorPixelIter::new(&self.0, origin_pos, end_pos, cursor_color, border_color)
+        CursorPixelIter::new(
+            &self.0,
+            origin_pos,
+            end_pos,
+            colors.foreground(),
+            colors.border(),
+        )
     }
 
 

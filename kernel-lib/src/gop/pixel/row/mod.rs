@@ -62,6 +62,11 @@ impl<Convert: PixelConvertable> PixelRow<Convert> {
     pub fn pixels_buff(&self) -> &[u8] {
         &self.pixels_buff
     }
+
+
+    pub fn pixels(&self) -> &Vec<Pixel> {
+        &self.row
+    }
 }
 
 

@@ -19,7 +19,7 @@ pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
 
 pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
 
-pub const DISPLAY_BACKGROUND_COLOR: PixelColor = PixelColor::black();
+pub const DISPLAY_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x33, 0x33, 0x33);
 
 
 impl GlobalConsole {
@@ -29,6 +29,7 @@ impl GlobalConsole {
             .build(frame_buffer_config);
         self.0 = Some(Mutex::new(console));
     }
+
 
     pub fn get_mut(&mut self) -> &mut ConsoleWriter {
         self.0

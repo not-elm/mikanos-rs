@@ -33,7 +33,7 @@ impl Rectangle<usize> {
     pub fn from_pos_and_size(pos: Vector2D<usize>, size: Size) -> Self {
         Self::new(
             pos,
-            Vector2D::new(pos.x() + size.width() - 1, pos.y() + size.height() - 1),
+            Vector2D::new(pos.x() + size.width(), pos.y() + size.height()),
         )
     }
 

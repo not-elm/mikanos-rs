@@ -37,10 +37,13 @@ impl MouseSubscribable for MouseSubscriber {
         layers
             .borrow_mut()
             .update_layer(MOUSE_LAYER_KEY, |layer| {
-                let color = cursor_color(button);
-                layer.update_transform(|transform| {
-                    transform.set_pos(current_cursor);
-                });
+                let color: PixelColor = cursor_color(button);
+                {
+                    layer.update_transform(|transform| {
+                        transform.set_pos(current_cursor);
+                    });
+                }
+
                 layer.update_drawer::<CursorDrawer>(|drawer| {
                     drawer.set_color(
                         CursorColors::default()

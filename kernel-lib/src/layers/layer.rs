@@ -1,29 +1,27 @@
-use alloc::boxed::Box;
+use alloc::string::String;
+use core::fmt::Debug;
 
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
+use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
+use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
 use crate::layers::drawer::LayerDrawable;
 
-pub struct Layer<'key, Writer, Draw> {
-    key: &'key str,
+pub struct Layer<Writer, Draw> {
+    key: String,
     layer_transform: Transform2D,
     pixel_writer: Writer,
-    drawer: Draw, // windows: BTreeMap<&'static str, Window<Box<dyn WindowDrawable>>>,
+    drawer: Draw,
 }
 
 
-impl<'key, Writer, Draw> Layer<'key, Writer, Draw> {
-    pub const fn new(
-        key: &'key str,
-        transform: Transform2D,
-        pixel_writer: Writer,
-        drawer: Draw,
-    ) -> Self {
+impl<Writer, Draw> Layer<Writer, Draw> {
+    pub fn new(key: &str, transform: Transform2D, pixel_writer: Writer, drawer: Draw) -> Self {
         Self {
-            key,
+            key: String::from(key),
             layer_transform: transform,
             pixel_writer,
             drawer,
@@ -31,8 +29,8 @@ impl<'key, Writer, Draw> Layer<'key, Writer, Draw> {
     }
 
 
-    pub const fn key(&self) -> &'key str {
-        self.key
+    pub fn key(&self) -> &str {
+        self.key.as_str()
     }
 
 
@@ -43,7 +41,7 @@ impl<'key, Writer, Draw> Layer<'key, Writer, Draw> {
 
     pub fn update_transform<F>(&mut self, fun: F)
     where
-        F: Fn(&mut Transform2D),
+        F: FnOnce(&mut Transform2D),
     {
         let transform = &mut self.layer_transform;
         fun(transform);
@@ -51,23 +49,27 @@ impl<'key, Writer, Draw> Layer<'key, Writer, Draw> {
 }
 
 
-impl<'key, Writer> Layer<'key, Writer, Box<dyn LayerDrawable>>
+impl<'write, Draw> Layer<EnumPixelWriter, Draw>
 where
-    Writer: PixelFlushable + Clone,
+    Draw: LayerDrawable + 'write,
 {
-    pub fn draw(&mut self) -> KernelResult {
+    pub fn draw(&mut self, pixels: &mut [PixelColor]) -> KernelResult {
         self.drawer
-            .draw(&self.layer_transform, &mut self.pixel_writer)
+            .draw(&self.layer_transform, pixels)
     }
 
 
-    pub fn draw_in_area(&mut self, area: &Rectangle<usize>) -> KernelResult {
+    pub fn draw_in_area(
+        &mut self,
+        pixels: &mut [PixelColor],
+        area: &Rectangle<usize>,
+    ) -> KernelResult {
         self.drawer
-            .draw_in_area(&self.layer_transform, &mut self.pixel_writer, area)
+            .draw_in_area(&self.layer_transform, pixels, area)
     }
 
 
-    pub fn update_drawer<Draw: LayerDrawable>(&mut self, fun: impl FnOnce(&mut Draw)) {
+    pub fn update_drawer<CastDraw: LayerDrawable>(&mut self, fun: impl Fn(&mut CastDraw)) {
         let drawer = self
             .drawer
             .any_mut()
@@ -82,7 +84,5 @@ where
 #[cfg(test)]
 mod tests {
     #[test]
-    fn it_success_update_window_position() {
-        todo!()
-    }
+    fn it_success_update_window_position() {}
 }

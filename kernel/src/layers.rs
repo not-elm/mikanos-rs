@@ -2,11 +2,12 @@ use alloc::rc::Rc;
 use core::cell::{OnceCell, RefCell, RefMut};
 
 use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::builder::Transform2DBuilder;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
-use kernel_lib::gop::pixel::rc_pixel_writer;
+use kernel_lib::layers::drawer::cursor::cursor_buffer::{CURSOR_HEIGHT, CURSOR_WIDTH};
 use kernel_lib::layers::drawer::cursor::cursor_colors::CursorColors;
 use kernel_lib::layers::drawer::cursor::cursor_drawer::CursorDrawer;
 use kernel_lib::layers::drawer::rect_colors::RectColors;
@@ -15,7 +16,7 @@ use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
-pub struct GlobalLayers<'layer>(OnceCell<Rc<RefCell<Layers<'layer>>>>);
+pub struct GlobalLayers(OnceCell<Rc<RefCell<Layers>>>);
 
 
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
@@ -24,13 +25,13 @@ pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
 pub const MOUSE_LAYER_KEY: &str = "MOUSE_CURSOR";
 
 
-impl<'layer> GlobalLayers<'layer> {
-    pub const fn new_uninit() -> GlobalLayers<'layer> {
+impl GlobalLayers {
+    pub const fn new_uninit() -> GlobalLayers {
         Self(OnceCell::new())
     }
 
     pub fn init(&self, frame_buffer_config: FrameBufferConfig) -> KernelResult {
-        let layers = Layers::new_with_rc(rc_pixel_writer(frame_buffer_config));
+        let layers = Layers::new(frame_buffer_config);
 
         self.0
             .set(Rc::new(RefCell::new(layers)))
@@ -38,13 +39,13 @@ impl<'layer> GlobalLayers<'layer> {
     }
 
 
-    pub fn layers_mut(&'static self) -> Rc<RefCell<Layers>> {
+    pub fn layers_mut(&self) -> Rc<RefCell<Layers>> {
         Rc::clone(self.0.get().unwrap())
     }
 }
 
 
-unsafe impl<'layer> Sync for GlobalLayers<'layer> {}
+unsafe impl Sync for GlobalLayers {}
 
 
 pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
@@ -59,6 +60,7 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     layers.draw_all_layer()
 }
 
+
 fn add_background_layer(frame_buffer_config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
     let transform = frame_buffer_layer_transform(frame_buffer_config);
     let shape_drawer = ShapeDrawer::new(
@@ -71,7 +73,9 @@ fn add_background_layer(frame_buffer_config: FrameBufferConfig, layers: &mut Ref
 
 
 fn add_mouse_layer(frame_buffer_config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
-    let transform = Transform2DBuilder::new().build();
+    let transform = Transform2DBuilder::new()
+        .size(Size::new(CURSOR_WIDTH, CURSOR_HEIGHT))
+        .build();
     let cursor_drawer = CursorDrawer::new(
         Vector2D::unit(),
         CursorColors::default(),

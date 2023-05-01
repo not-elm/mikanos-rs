@@ -1,4 +1,4 @@
-use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
@@ -13,6 +13,17 @@ pub enum EnumPixelWriter {
     Rgb(FrameBufferConfig),
     Bgr(FrameBufferConfig),
 }
+
+
+impl EnumPixelWriter {
+    pub fn new(frame_buffer_config: FrameBufferConfig) -> Self {
+        match frame_buffer_config.pixel_format {
+            PixelFormat::Rgb => Self::Rgb(frame_buffer_config),
+            PixelFormat::Bgr => Self::Bgr(frame_buffer_config),
+        }
+    }
+}
+
 
 impl PixelWritable for EnumPixelWriter {
     unsafe fn write(&mut self, x: usize, y: usize, color: &PixelColor) -> KernelResult {

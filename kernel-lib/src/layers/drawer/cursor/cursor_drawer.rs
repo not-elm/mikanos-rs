@@ -7,8 +7,10 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
+use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
+use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
-use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
+use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
 use crate::layers::drawer::cursor::cursor_buffer::CursorBuffer;
 use crate::layers::drawer::cursor::cursor_colors::CursorColors;
 use crate::layers::drawer::LayerDrawable;
@@ -45,17 +47,19 @@ impl LayerDrawable for CursorDrawer {
     fn draw_in_area(
         &mut self,
         _window_transform: &Transform2D,
-        writer: &mut dyn PixelFlushable,
+        pixels: &mut [PixelColor],
         draw_rect: &Rectangle<usize>,
     ) -> KernelResult {
-        let pixel_frame = self.cursor_buff.pixel_frame(
-            draw_rect.origin(),
-            Some(draw_rect.end()),
-            self.colors,
-            self.converter.clone(),
-        );
+        self.cursor_buff
+            .cursor_pixels(draw_rect.origin(), Some(draw_rect.end()), self.colors)
+            .enumerate()
+            .for_each(|(index, p)| {
+                pixels[index] = p
+                    .color()
+                    .unwrap_or(DISPLAY_BACKGROUND_COLOR);
+            });
 
-        unsafe { writer.flush(pixel_frame) }
+        Ok(())
     }
 
 
@@ -74,48 +78,63 @@ impl Default for CursorDrawer {
 
 #[cfg(test)]
 mod tests {
-    // #[test]
-    // fn it_write_cursor_not_scale() {
-    //     let cursor_color = PixelColor::blue();
-    //     let border_color = PixelColor::yellow();
-    //     let mut drawer = MouseCursorDrawer::new(Vector2D::unit(),
-    // cursor_color, border_color);     let mut writer =
-    // MockBufferPixelWriter::new(         drawer.cursor_size().width() * 4,
-    //         drawer.cursor_size().height() * 4,
-    //     );
-    //
-    //     let transform = Transform2DBuilder::new()
-    //         .size(Size::new(
-    //             drawer.cursor_size().width() * 4,
-    //             drawer.cursor_size().height() * 4,
-    //         ))
-    //         .build();
-    //
-    //     assert!(drawer
-    //         .draw(&transform, &mut writer)
-    //         .is_ok());
-    //
-    //     let pixels = drawer
-    //         .cursor_buff
-    //         .cursor_pixels_checked(&transform, cursor_color, border_color)
-    //         .unwrap();
-    //
-    //     let points: Vec<Vector2D<usize>> = drawer
-    //         .cursor_size()
-    //         .points()
-    //         .collect();
-    //
-    //     points
-    //         .into_iter()
-    //         .zip(pixels)
-    //         .for_each(|(point, cursor_pixel)| {
-    //             let actual = writer.pixel_at(point.x(), point.y());
-    //
-    //             let expect = cursor_pixel
-    //                 .color()
-    //                 .unwrap_or(PixelColor::black());
-    //
-    //             assert_eq!(actual, expect);
-    //         });
-    // }
+    use alloc::vec::Vec;
+
+    use common_lib::frame_buffer::PixelFormat;
+    use common_lib::math::size::Size;
+    use common_lib::math::vector::Vector2D;
+    use common_lib::transform::builder::Transform2DBuilder;
+
+    use crate::gop::pixel::pixel_color::PixelColor;
+    use crate::gop::pixel::writer::mock_buffer_pixel_writer::MockBufferPixelWriter;
+    use crate::layers::drawer::cursor::cursor_colors::CursorColors;
+    use crate::layers::drawer::cursor::cursor_drawer::CursorDrawer;
+    use crate::layers::drawer::LayerDrawable;
+
+    #[test]
+    fn it_write_cursor_not_scale() {
+        let cursor_color = PixelColor::blue();
+        let border_color = PixelColor::yellow();
+        let colors = CursorColors::new(cursor_color, border_color, Some(PixelColor::black()));
+
+        let mut drawer = CursorDrawer::new(Vector2D::unit(), colors, PixelFormat::Rgb);
+        let mut writer = MockBufferPixelWriter::new(
+            drawer.cursor_size().width() * 4,
+            drawer.cursor_size().height() * 4,
+        );
+
+        let transform = Transform2DBuilder::new()
+            .size(Size::new(
+                drawer.cursor_size().width() * 4,
+                drawer.cursor_size().height() * 4,
+            ))
+            .build();
+
+        assert!(drawer
+            .draw(&transform, &mut writer)
+            .is_ok());
+
+        let pixels = drawer
+            .cursor_buff
+            .cursor_pixels_checked(&transform, cursor_color, border_color)
+            .unwrap();
+
+        let points: Vec<Vector2D<usize>> = drawer
+            .cursor_size()
+            .points()
+            .collect();
+
+        points
+            .into_iter()
+            .zip(pixels)
+            .for_each(|(point, cursor_pixel)| {
+                let actual = writer.pixel_at(point.x(), point.y());
+
+                let expect = cursor_pixel
+                    .color()
+                    .unwrap_or(PixelColor::black());
+
+                assert_eq!(actual, expect);
+            });
+    }
 }

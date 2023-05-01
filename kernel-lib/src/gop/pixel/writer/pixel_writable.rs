@@ -27,16 +27,18 @@ pub(crate) unsafe fn flush_frame_buff(
     pixel_frame: PixelFrame,
     frame_buffer_config: &FrameBufferConfig,
 ) -> KernelResult {
-    for row in pixel_frame.into_iter() {
-        let frame_buff = core::slice::from_raw_parts_mut(
-            frame_buffer_config.frame_buffer_base_ptr(),
-            frame_buffer_config.frame_buffer_size,
-        );
-        let origin = calc_pixel_pos_from_vec2d(frame_buffer_config, row.origin_pos())?;
+    let frame_buff = core::slice::from_raw_parts_mut(
+        frame_buffer_config.frame_buffer_base_ptr(),
+        frame_buffer_config.frame_buffer_size,
+    );
 
+
+    for row in pixel_frame.into_iter() {
+        let origin = calc_pixel_pos_from_vec2d(frame_buffer_config, row.origin_pos())?;
         let end = origin + row.pixels_len_per_row() - 1;
 
         let buff = row.pixels_buff();
+
         frame_buff[origin..=end].copy_from_slice(buff)
     }
     Ok(())
