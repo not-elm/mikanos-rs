@@ -9,6 +9,7 @@ use writer::rgb_pixel_writer::RgbPixelWriter;
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
 use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 
 pub mod pixel_color;
@@ -71,20 +72,12 @@ pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn
 }
 
 pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl PixelWritable {
-    #[cfg(not(test))]
-    use crate::gop::pixel::writer::enum_pixel_writer;
     #[cfg(test)]
     use crate::gop::pixel::writer::mock_pixel_writer;
 
     #[cfg(not(test))]
-    match frame_buffer_config.pixel_format {
-        common_lib::frame_buffer::PixelFormat::Rgb => {
-            enum_pixel_writer::EnumPixelWriter::Rgb(frame_buffer_config)
-        }
-        common_lib::frame_buffer::PixelFormat::Bgr => {
-            enum_pixel_writer::EnumPixelWriter::Bgr(frame_buffer_config)
-        }
-    }
+    return EnumPixelWriter::new(frame_buffer_config);
+
 
     #[cfg(test)]
     mock_pixel_writer::MockPixelWriter::new(frame_buffer_config)

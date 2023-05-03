@@ -26,6 +26,19 @@ impl<'writer> PixelWritable for DynPixelWriter<'writer> {
             .borrow_mut()
             .write(x, y, color)
     }
+
+
+    unsafe fn write_shadow_buff(
+        &mut self,
+        buff: &mut [u8],
+        x: usize,
+        y: usize,
+        color: &PixelColor,
+    ) -> KernelResult {
+        self.0
+            .borrow_mut()
+            .write_shadow_buff(buff, x, y, color)
+    }
 }
 
 

@@ -19,6 +19,7 @@ const HEIGHT: usize = 26;
 /// コンソールの横幅(MikanOSに合わせています)
 const WIDTH: usize = 81;
 
+
 pub struct ConsoleWriter {
     char_writer: ImplCharWritable,
     pixel_writer: ImplPixelWritable,
@@ -112,6 +113,8 @@ impl ConsoleWriter {
     fn chart_at(&self, pos: Vector2D<usize>) -> char {
         self.chars[pos.y()][pos.x()]
     }
+
+
     fn up_shift_lines(&mut self) -> KernelResult {
         // self.clear_display()?;
         self.shift_chars();
@@ -123,6 +126,7 @@ impl ConsoleWriter {
         Ok(())
     }
 
+
     fn shift_chars(&mut self) {
         for y in 1..=self.max_y() {
             for x in 0..=self.max_x() {
@@ -133,6 +137,7 @@ impl ConsoleWriter {
         let end_line = self.chars.last_mut().unwrap();
         end_line.fill(char::default());
     }
+
 
     fn flush(&mut self) -> KernelResult {
         for y in 0..=self.max_y() {

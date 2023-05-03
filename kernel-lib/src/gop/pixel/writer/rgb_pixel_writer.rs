@@ -6,6 +6,7 @@ use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::writer::pixel_writable::{flush_frame_buff, PixelFlushable, PixelWritable};
 
+#[derive(Clone, Debug)]
 pub struct RgbPixelWriter {
     frame_buffer_ptr: *mut u8,
     frame_buffer_config: FrameBufferConfig,
@@ -18,6 +19,13 @@ impl RgbPixelWriter {
             frame_buffer_ptr,
             frame_buffer_config,
         }
+    }
+
+
+    fn write_buff(&self, buff: &mut [u8], color: &PixelColor) {
+        buff[0] = color.r();
+        buff[1] = color.g();
+        buff[2] = color.b();
     }
 }
 
@@ -32,16 +40,27 @@ impl Drop for RgbPixelWriter {
 impl PixelWritable for RgbPixelWriter {
     unsafe fn write(&mut self, x: usize, y: usize, color: &PixelColor) -> KernelResult {
         let pixel_pos = calc_pixel_pos(&self.frame_buffer_config, x, y)?;
-        let write_base_ptr = self
-            .frame_buffer_ptr
-            .add(pixel_pos);
-        write_base_ptr.write(color.r());
-        write_base_ptr
-            .add(1)
-            .write(color.g());
-        write_base_ptr
-            .add(2)
-            .write(color.b());
+        let buff = core::slice::from_raw_parts_mut(
+            self.frame_buffer_ptr
+                .add(pixel_pos),
+            4,
+        );
+
+        self.write_buff(buff, color);
+
+        Ok(())
+    }
+
+
+    unsafe fn write_shadow_buff(
+        &mut self,
+        buff: &mut [u8],
+        x: usize,
+        y: usize,
+        color: &PixelColor,
+    ) -> KernelResult {
+        let pixel_pos = calc_pixel_pos(&self.frame_buffer_config, x, y)?;
+        self.write_buff(&mut buff[pixel_pos..pixel_pos + 4], color);
         Ok(())
     }
 }

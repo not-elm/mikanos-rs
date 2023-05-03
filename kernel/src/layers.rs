@@ -7,12 +7,12 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::builder::Transform2DBuilder;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
-use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 use kernel_lib::layers::drawer::cursor::cursor_buffer::{CURSOR_HEIGHT, CURSOR_WIDTH};
 use kernel_lib::layers::drawer::cursor::cursor_colors::CursorColors;
 use kernel_lib::layers::drawer::cursor::cursor_drawer::CursorDrawer;
 use kernel_lib::layers::drawer::rect_colors::RectColors;
 use kernel_lib::layers::drawer::shape_drawer::ShapeDrawer;
+use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
@@ -56,7 +56,7 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
 
     add_background_layer(frame_buffer_config, &mut layers);
     add_mouse_layer(frame_buffer_config, &mut layers);
-    
+
     layers.draw_all_layer()
 }
 

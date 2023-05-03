@@ -63,6 +63,16 @@ impl PixelWritable for MockBufferPixelWriter {
 
         Ok(())
     }
+
+    unsafe fn write_shadow_buff(
+        &mut self,
+        buff: &mut [u8],
+        x: usize,
+        y: usize,
+        color: &PixelColor,
+    ) -> KernelResult {
+        todo!()
+    }
 }
 
 impl PixelFlushable for MockBufferPixelWriter {

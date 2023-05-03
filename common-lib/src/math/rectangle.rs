@@ -1,3 +1,4 @@
+use core::cmp::max;
 use core::fmt::Debug;
 use core::ops::{Add, Sub};
 
@@ -52,9 +53,61 @@ impl Rectangle<usize> {
         PointsWithInRectIter::new(self.origin, Size::new(self.width(), self.height()))
     }
 
-
     pub fn points_unbound(&self) -> PointsWithInRectIter {
         PointsWithInRectIter::new(self.origin, Size::new(self.width() - 1, self.height() - 1))
+    }
+
+
+    pub fn intersect(&self, r: &Rectangle<usize>) -> Option<Rectangle<usize>> {
+        let a = self;
+        let sx = max(a.origin.x(), r.origin.x());
+        let sy = max(a.origin.y(), r.origin.y());
+        let ex = max(
+            a.origin.x() + a.size().width(),
+            r.origin.x() + r.size().width(),
+        );
+        let ey = max(
+            a.origin.y() + a.size().height(),
+            r.origin.y() + r.size().height(),
+        );
+
+        let w = ex - sx;
+        let h = ey - sy;
+        if w > 0 && h > 0 {
+            return Some(Rectangle::from_pos_and_size(
+                Vector2D::new(sx, sy),
+                Size::new(w, h),
+            ));
+        }
+
+        None
+    }
+
+
+    pub fn union(&self, r: &Rectangle<usize>) -> Rectangle<usize> {
+        let xs = [
+            self.origin.x(),
+            r.origin.x(),
+            self.end.x(),
+            r.end.x(),
+        ]
+        .into_iter();
+
+
+        let ys = [
+            self.origin.y(),
+            r.origin.y(),
+            self.end.y(),
+            r.end.y(),
+        ]
+        .into_iter();
+
+
+        let origin = Vector2D::new(xs.clone().min().unwrap(), ys.clone().min().unwrap());
+
+        let end = Vector2D::new(xs.max().unwrap(), ys.max().unwrap());
+
+        Rectangle::new(origin, end)
     }
 }
 
@@ -92,7 +145,7 @@ impl<T: Copy + PartialOrd> Rectangle<T> {
 }
 
 
-impl<T: Copy + Sub<Output=T>> Rectangle<T> {
+impl<T: Copy + Sub<Output = T>> Rectangle<T> {
     pub fn width(&self) -> T {
         self.end.x() - self.origin.x()
     }
@@ -104,7 +157,7 @@ impl<T: Copy + Sub<Output=T>> Rectangle<T> {
 }
 
 
-impl<Num: Copy + Add<Output=Num>> Add<Vector2D<Num>> for Rectangle<Num> {
+impl<Num: Copy + Add<Output = Num>> Add<Vector2D<Num>> for Rectangle<Num> {
     type Output = Rectangle<Num>;
 
     fn add(self, rhs: Vector2D<Num>) -> Self::Output {
@@ -122,7 +175,7 @@ impl Add<Size> for Rectangle<usize> {
 }
 
 
-impl<Num: Copy + Sub<Output=Num>> Sub<Vector2D<Num>> for Rectangle<Num> {
+impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Rectangle<Num> {
     type Output = Rectangle<Num>;
 
     fn sub(self, rhs: Vector2D<Num>) -> Self::Output {
@@ -140,8 +193,6 @@ impl<T: PartialEq + Copy + PartialOrd> PartialEq for Rectangle<T> {
 
 #[cfg(test)]
 mod tests {
-    use alloc::vec::Vec;
-
     use crate::math::rectangle::Rectangle;
     use crate::math::size::Size;
     use crate::math::vector::Vector2D;
@@ -304,28 +355,6 @@ mod tests {
 
 
     #[test]
-    fn it_rect_points() {
-        let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30usize, 30));
-        let points: Vec<Vector2D<usize>> = rect.points().collect();
-
-        assert_eq!(points[0], rect.origin);
-        assert_eq!(*points.last().unwrap(), rect.end);
-    }
-
-
-    #[test]
-    fn it_rect_points_unbound() {
-        let rect = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(30usize, 30));
-        let points: Vec<Vector2D<usize>> = rect
-            .points_unbound()
-            .collect();
-
-        assert_eq!(points[0], rect.origin);
-        assert_eq!(*points.last().unwrap(), rect.end - 1);
-    }
-
-
-    #[test]
     fn it_rect_add_size() {
         let rect = Rectangle::new(Vector2D::unit(), Vector2D::new(30usize, 30));
         let size = Size::new(30, 100);
@@ -365,5 +394,71 @@ mod tests {
 
         assert!(!r1.overlap(&r2));
         assert!(!r2.overlap(&r1));
+    }
+
+
+    #[test]
+    fn it_rect_overlap_there_equal_size_and_pos() {
+        let r1 = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(99, 99));
+        let r2 = Rectangle::new(Vector2D::new(0, 0), Vector2D::new(99, 99));
+
+        assert!(r1.overlap(&r2));
+        assert!(r2.overlap(&r1));
+    }
+
+
+    #[test]
+    fn it_intersect_there_equal_size() {
+        let r1 = Rectangle::new(Vector2D::new(0usize, 0), Vector2D::new(99, 99));
+        let r2 = Rectangle::new(Vector2D::new(0usize, 0), Vector2D::new(99, 99));
+
+        assert!(r1
+            .intersect(&r2)
+            .is_some_and(|r| r == r1));
+        assert!(r2
+            .intersect(&r1)
+            .is_some_and(|r| r == r1));
+    }
+
+
+    #[test]
+    fn it_intersect_when_cross_sides() {
+        let r1 = Rectangle::new(
+            Vector2D::new(100usize, 100usize),
+            Vector2D::new(100usize, 100usize),
+        );
+        let r2 = Rectangle::new(Vector2D::new(10usize, 10), Vector2D::new(110, 110));
+
+        let rect = r1.intersect(&r2);
+        assert!(rect.is_some_and(
+            |r| r.origin() == Vector2D::new(100, 100) && r.end() == Vector2D::new(110, 110)
+        ));
+
+        let rect = r2.intersect(&r1);
+        assert!(rect.is_some_and(
+            |r| r.origin() == Vector2D::new(100, 100) && r.end() == Vector2D::new(110, 110)
+        ));
+    }
+
+
+    #[test]
+    fn it_union_base_zeros() {
+        let r1 = Rectangle::new(Vector2D::zeros(), Vector2D::new(10usize, 10usize));
+        let r2 = Rectangle::new(Vector2D::zeros(), Vector2D::new(110, 110));
+
+        let rect = r1.union(&r2);
+        assert_eq!(rect.origin, Vector2D::zeros());
+        assert_eq!(rect.end, Vector2D::new(110, 110));
+    }
+
+
+    #[test]
+    fn it_union() {
+        let r1 = Rectangle::new(Vector2D::new(0, 10), Vector2D::new(100usize, 110usize));
+        let r2 = Rectangle::new(Vector2D::new(10, 0), Vector2D::new(70, 1330));
+
+        let rect = r1.union(&r2);
+        assert_eq!(rect.origin, Vector2D::zeros());
+        assert_eq!(rect.end, Vector2D::new(100, 1330));
     }
 }

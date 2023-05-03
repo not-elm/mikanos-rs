@@ -4,7 +4,6 @@ use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 
-
 pub(crate) struct MockPixelWriter {}
 
 impl MockPixelWriter {
@@ -20,6 +19,16 @@ impl Drop for MockPixelWriter {
 
 impl PixelWritable for MockPixelWriter {
     unsafe fn write(&mut self, _x: usize, _y: usize, _color: &PixelColor) -> KernelResult {
+        Ok(())
+    }
+
+    unsafe fn write_shadow_buff(
+        &mut self,
+        _buff: &mut [u8],
+        _x: usize,
+        _y: usize,
+        _color: &PixelColor,
+    ) -> KernelResult {
         Ok(())
     }
 }

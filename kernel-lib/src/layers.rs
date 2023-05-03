@@ -5,16 +5,12 @@ use core::any::Any;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
-use common_lib::math::vector::Vector2D;
 use common_lib::transform::builder::Transform2DBuilder;
 use common_lib::transform::Transform2D;
 
-use crate::{println, serial_println};
 use crate::error::{KernelError, KernelResult, LayerReason};
-use crate::gop::pixel::{calc_pixel_pos, calc_shadow_buffer_pixel_pos_from_vec2d};
-use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::layers::drawer::LayerDrawable;
 use crate::layers::layer::Layer;
 
@@ -43,13 +39,12 @@ impl DynLayerDrawer {
 impl LayerDrawable for DynLayerDrawer {
     fn draw_in_area(
         &mut self,
-        config: &FrameBufferConfig,
-        transform: &Transform2D,
-        pixels: &mut [PixelColor],
-        draw_rect: &Rectangle<usize>,
+        pixels: &mut [u8],
+        pixel_writer: &mut EnumPixelWriter,
+        draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         self.0
-            .draw_in_area(config, transform, pixels, draw_rect)
+            .draw_in_area(pixels, pixel_writer, draw_area)
     }
 
 
@@ -62,20 +57,19 @@ impl LayerDrawable for DynLayerDrawer {
 pub struct Layers {
     frame_buffer_config: FrameBufferConfig,
     writer: EnumPixelWriter,
-    pixels: Vec<PixelColor>,
+    shadow_buffer: Vec<u8>,
     layers: Vec<Layer<EnumPixelWriter, DynLayerDrawer>>,
 }
 
 
 impl Layers {
     pub fn new(frame_buffer_config: FrameBufferConfig) -> Layers {
-        let pixels = vec![PixelColor::black(); frame_buffer_config.horizontal_resolution * frame_buffer_config.vertical_resolution];
+        let pixels = vec![0; frame_buffer_config.frame_buff_length()];
 
-        assert_eq!(pixels.len(), frame_buffer_config.horizontal_resolution * frame_buffer_config.vertical_resolution);
 
         Self {
             writer: EnumPixelWriter::new(frame_buffer_config),
-            pixels,
+            shadow_buffer: pixels,
             layers: Vec::new(),
             frame_buffer_config,
         }
@@ -105,54 +99,75 @@ impl Layers {
         fun(self.layer_mut(key)?);
 
 
-        // self.draw_all_layer_in_area(&prev_area)?;
+        self.write_shadow_buffer_in_area(&prev_area, None, Some(key))?;
 
         let draw_area = &self
             .layer_ref(key)?
             .transform_ref()
             .rect();
-        self.draw_all_layer_in_area(draw_area)
-        // self.draw_all_layer_in_area(MOUSE_LAYER_KEY, None, draw_area)
+        self.write_shadow_buffer_in_area(draw_area, Some(key), None)?;
+        self.flush(&prev_area.union(draw_area))
     }
 
 
     pub fn draw_all_layer(&mut self) -> KernelResult {
         for layer in self.layers.iter_mut() {
-            layer.draw(&self.frame_buffer_config, self.pixels.as_mut_slice())?;
+            layer.draw(
+                self.shadow_buffer
+                    .as_mut_slice(),
+            )?;
         }
 
 
-        self.draw(&Rectangle::from_size(
+        self.flush(&Rectangle::from_size(
             self.frame_buffer_config
                 .frame_size(),
         ))
     }
 
 
-    pub fn draw_all_layer_in_area(&mut self, area: &Rectangle<usize>) -> KernelResult {
+    fn write_shadow_buffer_in_area(
+        &mut self,
+        area: &Rectangle<usize>,
+        start_key: Option<&str>,
+        end_key: Option<&str>,
+    ) -> KernelResult {
         for layer in self
             .layers
             .iter_mut()
-            .filter(|layer| area.overlap(&layer.transform_ref().rect()))
+            .skip_while(|layer| start_key.map_or(false, |key| key != layer.key()))
         {
-            layer.draw_in_area(&self.frame_buffer_config, self.pixels.as_mut_slice(), area)?;
+            if end_key.is_some_and(|end_key| end_key == layer.key()) {
+                return Ok(());
+            }
+
+
+            layer.write_buff(
+                self.shadow_buffer
+                    .as_mut_slice(),
+                area,
+            )?;
         }
 
-        self.draw(area)?;
 
         Ok(())
     }
 
 
-    fn draw(&mut self, area: &Rectangle<usize>) -> KernelResult {
+    fn flush(&mut self, area: &Rectangle<usize>) -> KernelResult {
+        let frame_buffer = unsafe {
+            core::slice::from_raw_parts_mut(
+                self.frame_buffer_config
+                    .frame_buffer_base_ptr(),
+                self.frame_buffer_config
+                    .frame_buff_length(),
+            )
+        };
         for y in area.origin().y()..area.end().y() {
-            for x in area.origin().x()..area.end().x() {
-                let i = calc_shadow_buffer_pixel_pos_from_vec2d(&self.frame_buffer_config, Vector2D::new(x, y))?;
-                unsafe {
-                    self.writer
-                        .write(x, y, &self.pixels[i])?;
-                }
-            }
+            let origin = calc_pixel_pos(&self.frame_buffer_config, area.origin().x(), y)?;
+            let end = calc_pixel_pos(&self.frame_buffer_config, area.end().x(), y)?;
+
+            frame_buffer[origin..end].copy_from_slice(&self.shadow_buffer[origin..end]);
         }
 
 
