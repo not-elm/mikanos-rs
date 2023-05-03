@@ -55,7 +55,7 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     let mut layers = layers.borrow_mut();
 
     add_background_layer(frame_buffer_config, &mut layers);
-    add_mouse_layer(frame_buffer_config, &mut layers);
+    add_mouse_layer(&mut layers);
 
     layers.draw_all_layer()
 }
@@ -63,24 +63,18 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
 
 fn add_background_layer(frame_buffer_config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
     let transform = frame_buffer_layer_transform(frame_buffer_config);
-    let shape_drawer = ShapeDrawer::new(
-        RectColors::default().change_foreground(DISPLAY_BACKGROUND_COLOR),
-        frame_buffer_config.pixel_format,
-    );
+    let shape_drawer =
+        ShapeDrawer::new(RectColors::default().change_foreground(DISPLAY_BACKGROUND_COLOR));
 
     layers.new_layer(BACKGROUND_LAYER_KEY, transform, shape_drawer);
 }
 
 
-fn add_mouse_layer(frame_buffer_config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
+fn add_mouse_layer(layers: &mut RefMut<Layers>) {
     let transform = Transform2DBuilder::new()
         .size(Size::new(CURSOR_WIDTH, CURSOR_HEIGHT))
         .build();
-    let cursor_drawer = CursorDrawer::new(
-        Vector2D::unit(),
-        CursorColors::default(),
-        frame_buffer_config.pixel_format,
-    );
+    let cursor_drawer = CursorDrawer::new(Vector2D::unit(), CursorColors::default());
 
 
     layers.new_layer(MOUSE_LAYER_KEY, transform, cursor_drawer);

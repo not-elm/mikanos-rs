@@ -1,7 +1,5 @@
-use uefi_services::println;
-
 use crate::elf::ehdr::elf_header_ptr::ElfHeaderPtr;
-use crate::elf::phdr::program_header::{ProgramHeader, PType};
+use crate::elf::phdr::program_header::{PType, ProgramHeader};
 use crate::elf::phdr::program_header_table::ProgramHeaderTable;
 use crate::error::LibResult;
 use crate::kernel::entry_point::EntryPoint;
@@ -28,8 +26,9 @@ impl KernelLoadable for ElfLoader {
         allocator: &mut impl Allocatable,
     ) -> LibResult<EntryPoint> {
         let ehdr = ElfHeaderPtr::from_file_buff(kernel_buff);
-        let (load_segment_start_addr, load_segment_last_addr) =
-            ehdr.phdr_table().calc_load_address_range();
+        let (load_segment_start_addr, load_segment_last_addr) = ehdr
+            .phdr_table()
+            .calc_load_address_range();
 
         allocate_pages(allocator, load_segment_start_addr, load_segment_last_addr)?;
         let phdr_table = ehdr.phdr_table();
@@ -74,7 +73,8 @@ fn copy_mem(ehdr: &ElfHeaderPtr, phdr: &ProgramHeader, system_table: &mut impl A
     );
 }
 
-/// セグメントのメモリ上のサイズがファイルサイズを超えている場合、超えた分だけ0を設定する必要があります。
+/// セグメントのメモリ上のサイズがファイルサイズを超えている場合、
+/// 超えた分だけ0を設定する必要があります。
 fn set_zeros_if_over_file_size(phdr: &ProgramHeader, system_table: &mut impl Allocatable) {
     let remain_bytes = phdr.p_memsz - phdr.p_filesz;
     let buff = (phdr.p_vaddr + phdr.p_filesz) as *mut u8;

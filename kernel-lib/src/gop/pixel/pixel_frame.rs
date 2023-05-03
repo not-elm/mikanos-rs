@@ -4,9 +4,9 @@ use alloc::vec;
 use common_lib::math::rectangle::Rectangle;
 
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
+use crate::gop::pixel::mapper::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
-use crate::gop::pixel::row::PixelRow;
+use crate::gop::pixel::pixel_row::PixelRow;
 use crate::gop::pixel::Pixel;
 use crate::layers::drawer::rect_colors::RectColors;
 
@@ -83,9 +83,10 @@ mod tests {
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::vector::Vector2D;
 
+    use crate::gop::pixel::mapper::enum_pixel_converter::EnumPixelConverter;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::pixel_frame::PixelFrame;
-    use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
+    use crate::gop::pixel::pixel_row::PixelRow;
     use crate::gop::pixel::row::PixelRow;
     use crate::layers::drawer::cursor::cursor_buffer::{CursorBuffer, CURSOR_HEIGHT, CURSOR_WIDTH};
 

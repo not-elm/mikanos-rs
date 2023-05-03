@@ -45,7 +45,6 @@ impl ConsoleWriter {
             pixel_writer: select_pixel_writer(frame_buffer_config),
             y: 0,
             x: 0,
-
             color,
             chars: [[char::default(); WIDTH]; HEIGHT],
         }
@@ -68,6 +67,8 @@ impl ConsoleWriter {
                 .write(pos.x(), pos.y(), &color)
         }
     }
+
+
     pub fn write_str(&mut self, s: &str) -> KernelResult {
         for c in s.chars() {
             self.next_write_char(c)?;
@@ -75,6 +76,7 @@ impl ConsoleWriter {
 
         Ok(())
     }
+
 
     fn next_write_char(&mut self, c: char) -> KernelResult {
         if c == '\n' || c == char::default() {
@@ -90,6 +92,7 @@ impl ConsoleWriter {
         Ok(())
     }
 
+
     fn write_char(&mut self, c: char, pos: Vector2D<usize>) -> KernelResult {
         let write_pos = Vector2D::new(pos.x() * 8, pos.y() * 16);
         self.char_writer
@@ -98,6 +101,7 @@ impl ConsoleWriter {
         self.chars[pos.y()][pos.x()] = c;
         Ok(())
     }
+
 
     fn new_line(&mut self) -> KernelResult {
         if self.y < self.max_y() {

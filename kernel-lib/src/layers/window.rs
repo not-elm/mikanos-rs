@@ -1,12 +1,3 @@
-use alloc::boxed::Box;
-
-use common_lib::math::vector::Vector2D;
-use common_lib::transform::Transform2D;
-
-use crate::error::LayerReason::InvalidCastWindowDrawer;
-use crate::error::{KernelError, KernelResult};
-use crate::layers::drawer::LayerDrawable;
-
 // pub struct Window<Draw> {
 //     drawer: Draw,
 //     transform: Transform2D,

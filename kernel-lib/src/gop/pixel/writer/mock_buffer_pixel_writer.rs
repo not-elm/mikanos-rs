@@ -66,10 +66,10 @@ impl PixelWritable for MockBufferPixelWriter {
 
     unsafe fn write_shadow_buff(
         &mut self,
-        buff: &mut [u8],
-        x: usize,
-        y: usize,
-        color: &PixelColor,
+        _buff: &mut [u8],
+        _x: usize,
+        _y: usize,
+        _color: &PixelColor,
     ) -> KernelResult {
         todo!()
     }

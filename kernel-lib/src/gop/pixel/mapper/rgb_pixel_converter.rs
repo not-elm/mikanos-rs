@@ -1,5 +1,5 @@
+use crate::gop::pixel::mapper::PixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::row::pixel_converter::PixelConvertable;
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
@@ -20,7 +20,7 @@ impl Default for RgbPixelConverter {
 }
 
 
-impl PixelConvertable for RgbPixelConverter {
+impl PixelMapper for RgbPixelConverter {
     fn pixel_len(&self) -> usize {
         4
     }
@@ -42,9 +42,9 @@ impl PixelConvertable for RgbPixelConverter {
 mod tests {
     use common_lib::array::eq_array;
 
+    use crate::gop::pixel::mapper::rgb_pixel_converter::RgbPixelConverter;
+    use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::gop::pixel::row::pixel_converter::PixelConvertable;
-    use crate::gop::pixel::row::rgb_pixel_converter::RgbPixelConverter;
 
     #[test]
     fn it_correct_buff() {

@@ -10,18 +10,13 @@ use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
-use crate::gop::pixel::writer::pixel_writable::PixelFlushable;
 
+pub mod mapper;
 pub mod pixel_color;
-
-
-pub mod writer;
-
-
 pub mod pixel_frame;
 pub mod pixel_iter;
-
-pub mod row;
+pub mod pixel_row;
+pub mod writer;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Pixel {
@@ -96,14 +91,6 @@ pub fn fill_rect(
         }
     }
     Ok(())
-}
-
-
-pub(crate) fn calc_shadow_buffer_pixel_pos_from_vec2d(
-    frame_buffer_config: &FrameBufferConfig,
-    pos: Vector2D<usize>,
-) -> KernelResult<usize> {
-    Ok(calc_pixel_pos(frame_buffer_config, pos.x(), pos.y())? / 4)
 }
 
 

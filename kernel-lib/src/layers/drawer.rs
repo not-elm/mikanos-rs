@@ -4,13 +4,11 @@ use common_lib::math::rectangle::Rectangle;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
-use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
-
-pub mod shape_drawer;
 
 pub mod console_drawer;
 pub mod cursor;
 pub mod rect_colors;
+pub mod shape_drawer;
 
 
 pub trait LayerDrawable: Any {

@@ -5,9 +5,9 @@ use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
+use crate::gop::pixel::mapper::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::pixel_iter::PixelIter;
-use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::layers::drawer::cursor::cursor_colors::CursorColors;
 use crate::layers::drawer::cursor::cursor_pixel_iter::CursorPixelIter;
 
@@ -140,25 +140,6 @@ impl CursorBuffer {
             colors.border(),
         );
         PixelFrame::new(iter, converter, colors.transparent())
-    }
-
-
-    fn is_drawable(&self, window_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
-        if !window_rect
-            .size()
-            .into_rect()
-            .with_in_rect(&self.rect())
-        {
-            return false;
-        }
-
-        let cursor_pos = cursor_pos + self.size().as_vec2d();
-        window_rect.with_in_pos(&cursor_pos)
-    }
-
-
-    fn is_not_drawable(&self, layer_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
-        !self.is_drawable(layer_rect, cursor_pos)
     }
 }
 

@@ -1,9 +1,9 @@
-use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::row::bgr_pixel_converter::BgrPixelConverter;
-use crate::gop::pixel::row::pixel_converter::PixelConvertable;
-use crate::gop::pixel::row::rgb_pixel_converter::RgbPixelConverter;
 use common_lib::frame_buffer::PixelFormat;
 
+use crate::gop::pixel::mapper::bgr_pixel_converter::BgrPixelConverter;
+use crate::gop::pixel::mapper::rgb_pixel_converter::RgbPixelConverter;
+use crate::gop::pixel::mapper::PixelMapper;
+use crate::gop::pixel::pixel_color::PixelColor;
 
 #[derive(Debug, Clone)]
 pub enum EnumPixelConverter {
@@ -22,7 +22,7 @@ impl EnumPixelConverter {
 }
 
 
-impl PixelConvertable for EnumPixelConverter {
+impl PixelMapper for EnumPixelConverter {
     fn pixel_len(&self) -> usize {
         match self {
             Self::Rgb(rbg) => rbg.pixel_len(),

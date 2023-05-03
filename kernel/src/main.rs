@@ -17,10 +17,7 @@ use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::gop::console::init_console;
-use kernel_lib::timer::apic::local_apic_timer::OneShotLocalApicTimer;
-use kernel_lib::timer::apic::ApicTimer;
 use kernel_lib::{println, serial_println};
 
 use crate::gdt::init_gdt;

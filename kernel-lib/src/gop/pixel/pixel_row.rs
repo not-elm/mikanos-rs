@@ -3,14 +3,9 @@ use alloc::vec::Vec;
 use common_lib::math::vector::Vector2D;
 
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
+use crate::gop::pixel::mapper::PixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::row::pixel_converter::PixelConvertable;
 use crate::gop::pixel::Pixel;
-
-pub mod bgr_pixel_converter;
-pub mod enum_pixel_converter;
-pub mod pixel_converter;
-pub mod rgb_pixel_converter;
 
 /// フレームバッファの一行分のピクセルを表します。
 #[derive(Debug, Clone)]
@@ -21,7 +16,7 @@ pub struct PixelRow<Convert> {
 }
 
 
-impl<Convert: PixelConvertable> PixelRow<Convert> {
+impl<Convert: PixelMapper> PixelRow<Convert> {
     pub fn new(
         row: Vec<Pixel>,
         mut converter: Convert,
@@ -72,7 +67,7 @@ impl<Convert: PixelConvertable> PixelRow<Convert> {
 
 fn concat_all(
     row: &Vec<Pixel>,
-    converter: &mut impl PixelConvertable,
+    converter: &mut impl PixelMapper,
     transparent_color: PixelColor,
 ) -> Vec<u8> {
     let mut pixels_buff: Vec<u8> = Vec::with_capacity(row.len() * converter.pixel_len());
@@ -101,10 +96,10 @@ mod tests {
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::vector::Vector2D;
 
+    use crate::gop::pixel::mapper::enum_pixel_converter::EnumPixelConverter;
+    use crate::gop::pixel::mapper::rgb_pixel_converter::RgbPixelConverter;
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
-    use crate::gop::pixel::row::rgb_pixel_converter::RgbPixelConverter;
-    use crate::gop::pixel::row::PixelRow;
+    use crate::gop::pixel::pixel_row::PixelRow;
     use crate::gop::pixel::Pixel;
     use crate::layers::drawer::cursor::cursor_buffer::{CursorBuffer, CURSOR_WIDTH};
     use crate::layers::drawer::cursor::cursor_colors::CursorColors;

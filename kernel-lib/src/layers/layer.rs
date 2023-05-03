@@ -1,13 +1,10 @@
 use alloc::string::String;
-use core::fmt::Debug;
 
-use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
-use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
 use crate::layers::drawer::LayerDrawable;
 
 pub struct Layer<Writer, Draw> {

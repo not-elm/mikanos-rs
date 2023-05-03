@@ -1,14 +1,12 @@
 use core::any::Any;
 
-use common_lib::frame_buffer::PixelFormat;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::row::enum_pixel_converter::EnumPixelConverter;
 use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
-use crate::gop::pixel::writer::pixel_writable::{PixelFlushable, PixelWritable};
+use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::layers::drawer::cursor::cursor_buffer::CursorBuffer;
 use crate::layers::drawer::cursor::cursor_colors::CursorColors;
 use crate::layers::drawer::LayerDrawable;
@@ -17,16 +15,14 @@ use crate::layers::drawer::LayerDrawable;
 pub struct CursorDrawer {
     cursor_buff: CursorBuffer,
     colors: CursorColors,
-    converter: EnumPixelConverter,
 }
 
 
 impl CursorDrawer {
-    pub fn new(scale: Vector2D<usize>, colors: CursorColors, pixel_format: PixelFormat) -> Self {
+    pub fn new(scale: Vector2D<usize>, colors: CursorColors) -> Self {
         Self {
             cursor_buff: CursorBuffer::new(scale),
             colors,
-            converter: EnumPixelConverter::new(pixel_format),
         }
     }
 
@@ -77,7 +73,7 @@ impl LayerDrawable for CursorDrawer {
 
 impl Default for CursorDrawer {
     fn default() -> Self {
-        Self::new(Vector2D::unit(), CursorColors::default(), PixelFormat::Rgb)
+        Self::new(Vector2D::unit(), CursorColors::default())
     }
 }
 
@@ -86,7 +82,6 @@ impl Default for CursorDrawer {
 mod tests {
     use alloc::vec::Vec;
 
-    use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::size::Size;
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::builder::Transform2DBuilder;
@@ -102,7 +97,7 @@ mod tests {
         let border_color = PixelColor::yellow();
         let colors = CursorColors::new(cursor_color, border_color, Some(PixelColor::black()));
 
-        let mut drawer = CursorDrawer::new(Vector2D::unit(), colors, PixelFormat::Rgb);
+        let mut drawer = CursorDrawer::new(Vector2D::unit(), colors);
         let mut writer = MockBufferPixelWriter::new(
             drawer.cursor_size().width() * 4,
             drawer.cursor_size().height() * 4,

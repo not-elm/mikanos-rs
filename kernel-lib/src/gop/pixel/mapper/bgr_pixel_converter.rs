@@ -1,5 +1,5 @@
+use crate::gop::pixel::mapper::PixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::row::pixel_converter::PixelConvertable;
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
@@ -19,7 +19,7 @@ impl Default for BgrPixelConverter {
     }
 }
 
-impl PixelConvertable for BgrPixelConverter {
+impl PixelMapper for BgrPixelConverter {
     fn pixel_len(&self) -> usize {
         4
     }
@@ -41,9 +41,9 @@ impl PixelConvertable for BgrPixelConverter {
 mod tests {
     use common_lib::array::eq_array;
 
+    use crate::gop::pixel::mapper::bgr_pixel_converter::BgrPixelConverter;
+    use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::gop::pixel::row::bgr_pixel_converter::BgrPixelConverter;
-    use crate::gop::pixel::row::pixel_converter::PixelConvertable;
 
     #[test]
     fn it_correct_bgr_buff() {
