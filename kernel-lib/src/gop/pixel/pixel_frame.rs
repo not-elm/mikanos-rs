@@ -4,7 +4,7 @@ use alloc::vec;
 use common_lib::math::rectangle::Rectangle;
 
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
-use crate::gop::pixel::mapper::enum_pixel_converter::EnumPixelConverter;
+use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_row::PixelRow;
 use crate::gop::pixel::Pixel;
@@ -13,7 +13,7 @@ use crate::layers::drawer::rect_colors::RectColors;
 pub struct PixelFrame<'buff> {
     pixels: Box<dyn Iterator<Item = Pixel> + 'buff>,
     transparent: Option<PixelColor>,
-    converter: EnumPixelConverter,
+    converter: EnumPixelMapper,
     row_first: Option<Pixel>,
 }
 
@@ -21,7 +21,7 @@ pub struct PixelFrame<'buff> {
 impl<'buff> PixelFrame<'buff> {
     pub fn new(
         mut pixels: impl Iterator<Item = Pixel> + 'buff,
-        converter: EnumPixelConverter,
+        converter: EnumPixelMapper,
         transparent: Option<PixelColor>,
     ) -> PixelFrame<'buff> {
         let row_first = pixels.next();
@@ -35,7 +35,7 @@ impl<'buff> PixelFrame<'buff> {
     }
 
 
-    pub fn rect(rect: Rectangle<usize>, colors: RectColors, converter: EnumPixelConverter) -> Self {
+    pub fn rect(rect: Rectangle<usize>, colors: RectColors, converter: EnumPixelMapper) -> Self {
         let rect_iter = rect.points();
 
         Self::new(
@@ -48,7 +48,7 @@ impl<'buff> PixelFrame<'buff> {
 
 
 impl<'buff> Iterator for PixelFrame<'buff> {
-    type Item = PixelRow<EnumPixelConverter>;
+    type Item = PixelRow<EnumPixelMapper>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let row_first = self.row_first?;
@@ -83,7 +83,7 @@ mod tests {
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::vector::Vector2D;
 
-    use crate::gop::pixel::mapper::enum_pixel_converter::EnumPixelConverter;
+    use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::pixel_frame::PixelFrame;
     use crate::gop::pixel::pixel_row::PixelRow;
@@ -102,7 +102,7 @@ mod tests {
 
         let mut pixel_frame = PixelFrame::new(
             pixels,
-            EnumPixelConverter::new(PixelFormat::Bgr),
+            EnumPixelMapper::new(PixelFormat::Bgr),
             Some(PixelColor::black()),
         );
         let row = pixel_frame.next();
@@ -124,10 +124,10 @@ mod tests {
 
         let pixel_frame = PixelFrame::new(
             pixels,
-            EnumPixelConverter::new(PixelFormat::Bgr),
+            EnumPixelMapper::new(PixelFormat::Bgr),
             Some(PixelColor::black()),
         );
-        let rows: Vec<PixelRow<EnumPixelConverter>> = pixel_frame.collect();
+        let rows: Vec<PixelRow<EnumPixelMapper>> = pixel_frame.collect();
 
         assert_eq!(rows.len(), CURSOR_HEIGHT);
     }

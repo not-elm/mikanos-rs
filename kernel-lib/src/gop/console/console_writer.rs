@@ -1,17 +1,10 @@
-use core::fmt::Error;
-
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
-use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
-use crate::gop::pixel::{fill_rect, select_pixel_writer};
-
-type ImplCharWritable = impl CharWritable;
-pub type ImplPixelWritable = impl PixelWritable;
+use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
 
 /// コンソールの縦幅(MikanOSに合わせています。)
 const HEIGHT: usize = 26;
@@ -20,29 +13,37 @@ const HEIGHT: usize = 26;
 const WIDTH: usize = 81;
 
 
-pub struct ConsoleWriter {
-    char_writer: ImplCharWritable,
-    pixel_writer: ImplPixelWritable,
+pub struct ConsoleWriter<Char> {
+    char_writer: Char,
+    pixel_writer: FrameBufferPixelWriter,
     y: usize,
     x: usize,
     color: PixelColor,
     chars: [[char; WIDTH]; HEIGHT],
 }
 
-impl core::fmt::Write for ConsoleWriter {
-    fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        match self.write_str(s) {
-            Ok(()) => Ok(()),
-            Err(_) => Err(Error::default()),
-        }
-    }
-}
+//
+// impl core::fmt::Write for ConsoleWriter {
+//     fn write_str(&mut self, s: &str) -> core::fmt::Result {
+//         match self.write_str(s) {
+//             Ok(()) => Ok(()),
+//             Err(_) => Err(Error::default()),
+//         }
+//     }
+// }
 
-impl ConsoleWriter {
-    pub(crate) fn new(frame_buffer_config: FrameBufferConfig, color: PixelColor) -> Self {
+impl<Char> ConsoleWriter<Char>
+where
+    Char: CharWritable,
+{
+    pub(crate) fn new(
+        frame_buffer_config: FrameBufferConfig,
+        char_writer: Char,
+        color: PixelColor,
+    ) -> Self {
         Self {
-            char_writer: crate::gop::char::new_char_writer(),
-            pixel_writer: select_pixel_writer(frame_buffer_config),
+            char_writer,
+            pixel_writer: FrameBufferPixelWriter::new(frame_buffer_config),
             y: 0,
             x: 0,
             color,
@@ -50,65 +51,61 @@ impl ConsoleWriter {
         }
     }
 
-    pub fn pixel_writer(&mut self) -> &mut ImplPixelWritable {
-        &mut self.pixel_writer
-    }
-
     pub fn y(&self) -> usize {
         self.y
     }
 
+
     pub fn x(&self) -> usize {
         self.x
     }
-    pub fn write_pixel(&mut self, pos: Vector2D<usize>, color: PixelColor) -> KernelResult {
-        unsafe {
-            self.pixel_writer
-                .write(pos.x(), pos.y(), &color)
-        }
-    }
 
 
-    pub fn write_str(&mut self, s: &str) -> KernelResult {
+    pub fn write_str(&mut self, frame_buff: &mut [u8], s: &str) -> KernelResult {
         for c in s.chars() {
-            self.next_write_char(c)?;
+            self.next_write_char(frame_buff, c)?;
         }
 
         Ok(())
     }
 
 
-    fn next_write_char(&mut self, c: char) -> KernelResult {
+    fn next_write_char(&mut self, frame_buff: &mut [u8], c: char) -> KernelResult {
         if c == '\n' || c == char::default() {
-            return self.new_line();
+            return self.new_line(frame_buff);
         }
 
         if self.x >= self.max_x() {
-            self.new_line()?;
+            self.new_line(frame_buff)?;
         }
 
-        self.write_char(c, Vector2D::new(self.x, self.y))?;
+        self.write_char(frame_buff, c, Vector2D::new(self.x, self.y))?;
         self.x += 1;
         Ok(())
     }
 
 
-    fn write_char(&mut self, c: char, pos: Vector2D<usize>) -> KernelResult {
+    fn write_char(&mut self, frame_buff: &mut [u8], c: char, pos: Vector2D<usize>) -> KernelResult {
         let write_pos = Vector2D::new(pos.x() * 8, pos.y() * 16);
-        self.char_writer
-            .write(c, write_pos, &(self.color), &mut self.pixel_writer)?;
+        self.char_writer.write(
+            frame_buff,
+            c,
+            write_pos,
+            &(self.color),
+            &mut self.pixel_writer,
+        )?;
 
         self.chars[pos.y()][pos.x()] = c;
         Ok(())
     }
 
 
-    fn new_line(&mut self) -> KernelResult {
+    fn new_line(&mut self, frame_buff: &mut [u8]) -> KernelResult {
         if self.y < self.max_y() {
             self.y += 1;
             self.x = 0;
         } else {
-            self.up_shift_lines()?;
+            self.up_shift_lines(frame_buff)?;
         }
 
         Ok(())
@@ -119,10 +116,10 @@ impl ConsoleWriter {
     }
 
 
-    fn up_shift_lines(&mut self) -> KernelResult {
+    fn up_shift_lines(&mut self, frame_buff: &mut [u8]) -> KernelResult {
         // self.clear_display()?;
         self.shift_chars();
-        self.flush()?;
+        self.flush(frame_buff)?;
 
         self.y = self.chars.len() - 1;
         self.x = 0;
@@ -143,7 +140,7 @@ impl ConsoleWriter {
     }
 
 
-    fn flush(&mut self) -> KernelResult {
+    fn flush(&mut self, frame_buff: &mut [u8]) -> KernelResult {
         for y in 0..=self.max_y() {
             self.clear_line(y)?;
             for x in 0..=self.max_x() {
@@ -151,7 +148,7 @@ impl ConsoleWriter {
                 if c == char::default() || c == '\n' {
                     break;
                 }
-                self.write_char(c, Vector2D::new(x, y))?;
+                self.write_char(frame_buff, c, Vector2D::new(x, y))?;
             }
         }
         Ok(())
@@ -160,12 +157,13 @@ impl ConsoleWriter {
 
     fn clear_line(&mut self, y: usize) -> KernelResult {
         let to = Vector2D::new(self.max_x() * 8, (y * 16) + 16);
-        fill_rect(
-            &mut self.pixel_writer,
-            Vector2D::new(0, y * 16),
-            to,
-            DISPLAY_BACKGROUND_COLOR,
-        )
+        // fill_rect(
+        //     &mut self.pixel_writer,
+        //     Vector2D::new(0, y * 16),
+        //     to,
+        //     DISPLAY_BACKGROUND_COLOR,
+        // )
+        Ok(())
     }
 
     fn max_y(&self) -> usize {
@@ -181,6 +179,7 @@ impl ConsoleWriter {
 #[cfg(test)]
 mod tests {
     use alloc::format;
+    use core::fmt::Write;
 
     use common_lib::frame_buffer::FrameBufferConfig;
     use common_lib::math::vector::Vector2D;

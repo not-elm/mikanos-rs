@@ -4,7 +4,7 @@ use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::Transform2D;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
+use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
 use crate::layers::drawer::LayerDrawable;
 
 pub struct Layer<Writer, Draw> {
@@ -46,7 +46,7 @@ impl<Writer, Draw> Layer<Writer, Draw> {
 }
 
 
-impl<'write, Draw> Layer<EnumPixelWriter, Draw>
+impl<'write, Draw> Layer<FrameBufferPixelWriter, Draw>
 where
     Draw: LayerDrawable + 'write,
 {

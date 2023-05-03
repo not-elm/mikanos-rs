@@ -5,7 +5,7 @@ use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
-use crate::gop::pixel::mapper::enum_pixel_converter::EnumPixelConverter;
+use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::pixel_iter::PixelIter;
 use crate::layers::drawer::cursor::cursor_colors::CursorColors;
@@ -130,7 +130,7 @@ impl CursorBuffer {
         origin_pos: Vector2D<usize>,
         end_pos: Option<Vector2D<usize>>,
         colors: CursorColors,
-        converter: EnumPixelConverter,
+        converter: EnumPixelMapper,
     ) -> PixelFrame {
         let iter = CursorPixelIter::new(
             &self.0,

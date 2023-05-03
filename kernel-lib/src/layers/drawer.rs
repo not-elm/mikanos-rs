@@ -3,7 +3,7 @@ use core::any::Any;
 use common_lib::math::rectangle::Rectangle;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
+use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
 
 pub mod console_drawer;
 pub mod cursor;
@@ -16,7 +16,7 @@ pub trait LayerDrawable: Any {
     fn draw_in_area(
         &mut self,
         pixels: &mut [u8],
-        pixel_writer: &mut EnumPixelWriter,
+        pixel_writer: &mut FrameBufferPixelWriter,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult;
 

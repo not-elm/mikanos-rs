@@ -96,8 +96,8 @@ mod tests {
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::vector::Vector2D;
 
-    use crate::gop::pixel::mapper::enum_pixel_converter::EnumPixelConverter;
-    use crate::gop::pixel::mapper::rgb_pixel_converter::RgbPixelConverter;
+    use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
+    use crate::gop::pixel::mapper::rgb_pixel_mapper::RgbPixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::pixel_row::PixelRow;
     use crate::gop::pixel::Pixel;
@@ -111,7 +111,7 @@ mod tests {
                 Pixel::default(),
                 Pixel::default(),
             ],
-            RgbPixelConverter::default(),
+            RgbPixelMapper::default(),
             None,
         );
 
@@ -129,10 +129,10 @@ mod tests {
             CursorColors::default()
                 .change_border(PixelColor::yellow())
                 .change_transparent(PixelColor::black()),
-            EnumPixelConverter::new(PixelFormat::Rgb),
+            EnumPixelMapper::new(PixelFormat::Rgb),
         );
 
-        let mut rows: Vec<PixelRow<EnumPixelConverter>> = pixel_frame.collect();
+        let mut rows: Vec<PixelRow<EnumPixelMapper>> = pixel_frame.collect();
         let row = rows.get_mut(0).unwrap();
 
         let mut expect = [0; CURSOR_WIDTH * 4];

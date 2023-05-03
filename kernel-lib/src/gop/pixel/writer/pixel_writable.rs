@@ -1,4 +1,5 @@
 use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::math::vector::Vector2D;
 
 use crate::gop::pixel::calc_pixel_pos_from_vec2d;
 use crate::gop::pixel::pixel_frame::PixelFrame;
@@ -9,14 +10,10 @@ pub trait PixelWritable {
     /// # Safety
     /// Should be pass the correct frame buffer address and
     /// the pixel position must be with in the frame buffer area
-    unsafe fn write(&mut self, x: usize, y: usize, color: &PixelColor) -> KernelResult;
-
-
-    unsafe fn write_shadow_buff(
+    unsafe fn write(
         &mut self,
         buff: &mut [u8],
-        x: usize,
-        y: usize,
+        pos: &Vector2D<usize>,
         color: &PixelColor,
     ) -> KernelResult;
 }
@@ -43,7 +40,7 @@ pub(crate) unsafe fn flush_frame_buff(
 
 
     for row in pixel_frame.into_iter() {
-        let origin = calc_pixel_pos_from_vec2d(frame_buffer_config, row.origin_pos())?;
+        let origin = calc_pixel_pos_from_vec2d(frame_buffer_config, &row.origin_pos())?;
         let end = origin + row.pixels_len_per_row() - 1;
 
         let buff = row.pixels_buff();

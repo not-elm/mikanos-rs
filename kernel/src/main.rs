@@ -17,7 +17,6 @@ use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::gop::console::init_console;
 use kernel_lib::{println, serial_println};
 
 use crate::gdt::init_gdt;
@@ -57,8 +56,6 @@ pub extern "sysv64" fn kernel_main(
     init_paging_table();
 
     init_alloc(memory_map.clone()).unwrap();
-
-    init_console(*frame_buffer_config);
 
     init_layers(*frame_buffer_config).unwrap();
 

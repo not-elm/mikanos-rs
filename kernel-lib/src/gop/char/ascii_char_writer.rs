@@ -1,11 +1,10 @@
-use common_lib::math::vector::Vector2D;
-
 use crate::error::KernelError::NotSupportCharacter;
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::font::get_font_from;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use common_lib::math::vector::Vector2D;
 
 #[derive(Default)]
 pub struct AscIICharWriter {}
@@ -19,6 +18,7 @@ impl AscIICharWriter {
 impl CharWritable for AscIICharWriter {
     fn write(
         &mut self,
+        dist_buff: &mut [u8],
         c: char,
         pos: Vector2D<usize>,
         color: &PixelColor,
@@ -30,9 +30,10 @@ impl CharWritable for AscIICharWriter {
             for dx in 0..8 {
                 let is_need_write_bit = ((line << dx) & 0x80u8) != 0;
                 if is_need_write_bit {
+                    let pos = pos + Vector2D::new(dx, dy);
                     unsafe {
                         pixel_writer
-                            .write(pos.x() + dx, pos.y() + dy, color)
+                            .write(dist_buff, &pos, color)
                             .unwrap()
                     };
                 }

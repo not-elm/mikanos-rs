@@ -1,6 +1,9 @@
-use crate::gop::console::console_writer::ConsoleWriter;
-use crate::gop::pixel::pixel_color::PixelColor;
 use common_lib::frame_buffer::FrameBufferConfig;
+
+use crate::gop::char::ascii_char_writer::AscIICharWriter;
+use crate::gop::console::console_writer::ConsoleWriter;
+use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
+use crate::gop::pixel::pixel_color::PixelColor;
 
 pub struct ConsoleBuilder {
     color: Option<PixelColor>,
@@ -16,10 +19,12 @@ impl ConsoleBuilder {
         self
     }
 
-    pub fn build(self, frame_buffer_config: FrameBufferConfig) -> ConsoleWriter {
+    pub fn build(self, frame_buffer_config: FrameBufferConfig) -> ConsoleWriter<AscIICharWriter> {
         ConsoleWriter::new(
             frame_buffer_config,
-            self.color.unwrap_or(PixelColor::new(0xFF, 0xFF, 0xFF)),
+            AscIICharWriter::default(),
+            self.color
+                .unwrap_or(PixelColor::new(0xFF, 0xFF, 0xFF)),
         )
     }
 }

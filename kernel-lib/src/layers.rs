@@ -10,7 +10,7 @@ use common_lib::transform::Transform2D;
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::pixel::calc_pixel_pos;
-use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
+use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
 use crate::layers::drawer::LayerDrawable;
 use crate::layers::layer::Layer;
 
@@ -40,7 +40,7 @@ impl LayerDrawable for DynLayerDrawer {
     fn draw_in_area(
         &mut self,
         pixels: &mut [u8],
-        pixel_writer: &mut EnumPixelWriter,
+        pixel_writer: &mut FrameBufferPixelWriter,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         self.0
@@ -56,9 +56,9 @@ impl LayerDrawable for DynLayerDrawer {
 
 pub struct Layers {
     frame_buffer_config: FrameBufferConfig,
-    writer: EnumPixelWriter,
+    writer: FrameBufferPixelWriter,
     shadow_buffer: Vec<u8>,
-    layers: Vec<Layer<EnumPixelWriter, DynLayerDrawer>>,
+    layers: Vec<Layer<FrameBufferPixelWriter, DynLayerDrawer>>,
 }
 
 
@@ -68,7 +68,7 @@ impl Layers {
 
 
         Self {
-            writer: EnumPixelWriter::new(frame_buffer_config),
+            writer: FrameBufferPixelWriter::new(frame_buffer_config),
             shadow_buffer: pixels,
             layers: Vec::new(),
             frame_buffer_config,
@@ -89,7 +89,7 @@ impl Layers {
     pub fn update_layer(
         &mut self,
         key: &str,
-        fun: impl FnOnce(&mut Layer<EnumPixelWriter, DynLayerDrawer>),
+        fun: impl FnOnce(&mut Layer<FrameBufferPixelWriter, DynLayerDrawer>),
     ) -> KernelResult {
         let prev_area = self
             .layer_ref(key)?
@@ -97,7 +97,6 @@ impl Layers {
             .rect();
 
         fun(self.layer_mut(key)?);
-
 
         self.write_shadow_buffer_in_area(&prev_area, None, Some(key))?;
 
@@ -175,7 +174,7 @@ impl Layers {
     }
 
 
-    fn layer_ref(&self, key: &str) -> KernelResult<&Layer<EnumPixelWriter, DynLayerDrawer>> {
+    fn layer_ref(&self, key: &str) -> KernelResult<&Layer<FrameBufferPixelWriter, DynLayerDrawer>> {
         self.layers
             .iter()
             .find(|layer| layer.key() == key)
@@ -186,7 +185,7 @@ impl Layers {
     fn layer_mut(
         &mut self,
         key: &str,
-    ) -> KernelResult<&mut Layer<EnumPixelWriter, DynLayerDrawer>> {
+    ) -> KernelResult<&mut Layer<FrameBufferPixelWriter, DynLayerDrawer>> {
         self.layers
             .iter_mut()
             .find(|layer| layer.key() == key)

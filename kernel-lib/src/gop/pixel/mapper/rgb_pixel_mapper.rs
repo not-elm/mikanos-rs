@@ -3,24 +3,24 @@ use crate::gop::pixel::pixel_color::PixelColor;
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
-pub struct RgbPixelConverter([u8; 4]);
+pub struct RgbPixelMapper([u8; 4]);
 
 
-impl RgbPixelConverter {
+impl RgbPixelMapper {
     pub const fn new() -> Self {
         Self([0, 0, 0, 0])
     }
 }
 
 
-impl Default for RgbPixelConverter {
+impl Default for RgbPixelMapper {
     fn default() -> Self {
         Self::new()
     }
 }
 
 
-impl PixelMapper for RgbPixelConverter {
+impl PixelMapper for RgbPixelMapper {
     fn pixel_len(&self) -> usize {
         4
     }
@@ -42,13 +42,13 @@ impl PixelMapper for RgbPixelConverter {
 mod tests {
     use common_lib::array::eq_array;
 
-    use crate::gop::pixel::mapper::rgb_pixel_converter::RgbPixelConverter;
+    use crate::gop::pixel::mapper::rgb_pixel_mapper::RgbPixelMapper;
     use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
 
     #[test]
     fn it_correct_buff() {
-        let mut con = RgbPixelConverter::new();
+        let mut con = RgbPixelMapper::new();
         let buff = con.convert_to_buff(&PixelColor::blue());
         assert!(eq_array(buff, &[0, 0, 0xFF, 0]));
     }

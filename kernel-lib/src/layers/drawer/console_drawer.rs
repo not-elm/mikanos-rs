@@ -1,24 +1,29 @@
-use crate::error::KernelResult;
-use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::math::rectangle::Rectangle;
 use core::any::Any;
 
+use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::math::rectangle::Rectangle;
+
+use crate::error::KernelResult;
+use crate::gop::char::ascii_char_writer::AscIICharWriter;
+use crate::gop::console::console_builder::ConsoleBuilder;
 use crate::gop::console::console_writer::ConsoleWriter;
-use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
+use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
 use crate::layers::drawer::console_drawer::console_colors::ConsoleColors;
 use crate::layers::drawer::LayerDrawable;
 
 pub mod console_colors;
 
 pub struct ConsoleDrawer {
-    console: ConsoleWriter,
+    console: ConsoleWriter<AscIICharWriter>,
 }
 
 
 impl ConsoleDrawer {
     pub fn new(frame_buffer_config: FrameBufferConfig, colors: ConsoleColors) -> Self {
         Self {
-            console: ConsoleWriter::new(frame_buffer_config, *colors.foreground()),
+            console: ConsoleBuilder::new()
+                .color(*colors.foreground())
+                .build(frame_buffer_config),
         }
     }
 }
@@ -27,10 +32,11 @@ impl ConsoleDrawer {
 impl LayerDrawable for ConsoleDrawer {
     fn draw_in_area(
         &mut self,
-        pixels: &mut [u8],
-        pixel_writer: &mut EnumPixelWriter,
+        dist_buff: &mut [u8],
+        pixel_writer: &mut FrameBufferPixelWriter,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
+        // self.console.write_str()
         todo!()
     }
 

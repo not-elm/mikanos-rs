@@ -1,78 +1,68 @@
-use core::fmt::Write;
-
-use spin::Mutex;
-
-use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::math::vector::Vector2D;
-
-use crate::error::KernelResult;
-use crate::gop::console::console_builder::ConsoleBuilder;
-use crate::gop::console::console_writer::ConsoleWriter;
-use crate::gop::pixel::fill_rect;
 use crate::gop::pixel::pixel_color::PixelColor;
 
 pub mod console_builder;
 pub mod console_writer;
 
-
-pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
-
-pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
-
+//
+// pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
+//
+// pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
+//
 pub const DISPLAY_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x55, 0x55, 0x55);
 
-
-impl GlobalConsole {
-    pub fn init(&mut self, frame_buffer_config: FrameBufferConfig) {
-        let console = ConsoleBuilder::new()
-            .color(PixelColor::new(0xFF, 0xFF, 0x00))
-            .build(frame_buffer_config);
-        self.0 = Some(Mutex::new(console));
-    }
-
-
-    pub fn get_mut(&mut self) -> &mut ConsoleWriter {
-        self.0
-            .as_mut()
-            .unwrap()
-            .get_mut()
-    }
-}
-
-
-pub fn init_console(frame_buffer_config: FrameBufferConfig) {
-    unsafe { CONSOLE.init(frame_buffer_config) };
-}
-
-
-pub fn fill_rect_using_global(
-    origin: Vector2D<usize>,
-    to: Vector2D<usize>,
-    color: PixelColor,
-) -> KernelResult {
-    fill_rect(
-        unsafe {
-            CONSOLE
-                .get_mut()
-                .pixel_writer()
-        },
-        origin,
-        to,
-        color,
-    )
-}
-
-
-pub fn get_mut_console() -> &'static mut ConsoleWriter {
-    unsafe { CONSOLE.get_mut() }
-}
+//
+// impl GlobalConsole {
+//     pub fn init(&mut self, frame_buffer_config: FrameBufferConfig) {
+//         let console = ConsoleBuilder::new()
+//             .color(PixelColor::new(0xFF, 0xFF, 0x00))
+//             .build(frame_buffer_config);
+//         self.0 = Some(Mutex::new(console));
+//     }
+//
+//
+//     pub fn get_mut(&mut self) -> &mut ConsoleWriter {
+//         self.0
+//             .as_mut()
+//             .unwrap()
+//             .get_mut()
+//     }
+// }
+//
+//
+// pub fn init_console(frame_buffer_config: FrameBufferConfig) {
+//     unsafe { CONSOLE.init(frame_buffer_config) };
+// }
+//
+//
+// pub fn fill_rect_using_global(
+//     origin: Vector2D<usize>,
+//     to: Vector2D<usize>,
+//     color: PixelColor,
+// ) -> KernelResult {
+//     fill_rect(
+//         unsafe {
+//             CONSOLE
+//                 .get_mut()
+//                 .pixel_writer()
+//         },
+//         origin,
+//         to,
+//         color,
+//     )
+// }
+//
+//
+// pub fn get_mut_console() -> &'static mut ConsoleWriter {
+//     unsafe { CONSOLE.get_mut() }
+// }
 
 
 #[doc(hidden)]
 pub fn _print(s: core::fmt::Arguments) {
-    get_mut_console()
-        .write_fmt(s)
-        .unwrap();
+    // get_mut_console()
+    //     .write_fmt(s)
+    //     .unwrap();
+    todo!()
 }
 
 

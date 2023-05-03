@@ -1,15 +1,12 @@
-use alloc::rc::Rc;
-use core::cell::RefCell;
+use core::hash::Hasher;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
 use writer::pixel_writable::PixelWritable;
-use writer::rgb_pixel_writer::RgbPixelWriter;
 
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
 
 pub mod mapper;
 pub mod pixel_color;
@@ -17,6 +14,7 @@ pub mod pixel_frame;
 pub mod pixel_iter;
 pub mod pixel_row;
 pub mod writer;
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Pixel {
@@ -55,48 +53,9 @@ impl PartialEq for Pixel {
 }
 
 
-pub fn rc_pixel_writer(frame_buffer_config: FrameBufferConfig) -> Rc<RefCell<dyn PixelWritable>> {
-    match frame_buffer_config.pixel_format {
-        common_lib::frame_buffer::PixelFormat::Rgb => {
-            Rc::new(RefCell::new(RgbPixelWriter::new(frame_buffer_config)))
-        }
-        common_lib::frame_buffer::PixelFormat::Bgr => {
-            Rc::new(RefCell::new(RgbPixelWriter::new(frame_buffer_config)))
-        }
-    }
-}
-
-pub fn select_pixel_writer(frame_buffer_config: FrameBufferConfig) -> impl PixelWritable {
-    #[cfg(test)]
-    use crate::gop::pixel::writer::mock_pixel_writer;
-
-    #[cfg(not(test))]
-    return EnumPixelWriter::new(frame_buffer_config);
-
-
-    #[cfg(test)]
-    mock_pixel_writer::MockPixelWriter::new(frame_buffer_config)
-}
-
-
-pub fn fill_rect(
-    pixel_writer: &mut impl PixelWritable,
-    origin: Vector2D<usize>,
-    to: Vector2D<usize>,
-    color: PixelColor,
-) -> KernelResult {
-    for y in origin.y()..=to.y() {
-        for x in origin.x()..=to.x() {
-            unsafe { pixel_writer.write(x, y, &color) }?;
-        }
-    }
-    Ok(())
-}
-
-
 pub(crate) fn calc_pixel_pos_from_vec2d(
     frame_buffer_config: &FrameBufferConfig,
-    pos: Vector2D<usize>,
+    pos: &Vector2D<usize>,
 ) -> KernelResult<usize> {
     calc_pixel_pos(frame_buffer_config, pos.x(), pos.y())
 }

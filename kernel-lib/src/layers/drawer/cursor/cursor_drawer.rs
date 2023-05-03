@@ -5,7 +5,7 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
-use crate::gop::pixel::writer::enum_pixel_writer::EnumPixelWriter;
+use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::layers::drawer::cursor::cursor_buffer::CursorBuffer;
 use crate::layers::drawer::cursor::cursor_colors::CursorColors;
@@ -41,7 +41,7 @@ impl LayerDrawable for CursorDrawer {
     fn draw_in_area(
         &mut self,
         pixels: &mut [u8],
-        pixel_writer: &mut EnumPixelWriter,
+        pixel_writer: &mut FrameBufferPixelWriter,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         for pixel in self
@@ -51,12 +51,7 @@ impl LayerDrawable for CursorDrawer {
         {
             if let Some(color) = pixel.color() {
                 unsafe {
-                    pixel_writer.write_shadow_buff(
-                        pixels,
-                        pixel.pos().x(),
-                        pixel.pos().y(),
-                        &color,
-                    )?;
+                    pixel_writer.write(pixels, &pixel.pos(), &color)?;
                 }
             }
         }
@@ -87,7 +82,6 @@ mod tests {
     use common_lib::transform::builder::Transform2DBuilder;
 
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::gop::pixel::writer::mock_buffer_pixel_writer::MockBufferPixelWriter;
     use crate::layers::drawer::cursor::cursor_colors::CursorColors;
     use crate::layers::drawer::cursor::cursor_drawer::CursorDrawer;
 
