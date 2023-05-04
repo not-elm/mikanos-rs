@@ -2,7 +2,6 @@ use common_lib::frame_buffer::FrameBufferConfig;
 
 use crate::gop::char::ascii_char_writer::AscIICharWriter;
 use crate::gop::console::console_writer::ConsoleWriter;
-use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
 
 pub struct ConsoleBuilder {

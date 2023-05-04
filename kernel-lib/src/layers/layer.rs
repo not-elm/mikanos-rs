@@ -1,82 +1,76 @@
-use alloc::string::String;
+use alloc::boxed::Box;
 
 use common_lib::math::rectangle::Rectangle;
-use common_lib::transform::Transform2D;
+use common_lib::math::vector::Vector2D;
+use common_lib::transform::transform2d::Transformable2D;
 
-use crate::error::KernelResult;
-use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
-use crate::layers::drawer::LayerDrawable;
+use crate::error::{KernelError, KernelResult, LayerReason};
+use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
+use crate::layers::console::ConsoleLayer;
+use crate::layers::cursor::CursorLayer;
+use crate::layers::layer_key::LayerKey;
+use crate::layers::layer_updatable::LayerUpdatable;
+use crate::layers::shape::ShapeLayer;
 
-pub struct Layer<Writer, Draw> {
-    key: String,
-    layer_transform: Transform2D,
-    pixel_writer: Writer,
-    drawer: Draw,
+pub enum Layer {
+    Cursor(CursorLayer),
+    Console(Box<ConsoleLayer>),
+    Shape(ShapeLayer),
 }
 
 
-impl<Writer, Draw> Layer<Writer, Draw> {
-    pub fn new(key: &str, transform: Transform2D, pixel_writer: Writer, drawer: Draw) -> Self {
-        Self {
-            key: String::from(key),
-            layer_transform: transform,
-            pixel_writer,
-            drawer,
+impl Layer {
+    pub fn move_to(&mut self, pos: Vector2D<usize>) {
+        match self {
+            Self::Cursor(cursor) => cursor.move_to(pos),
+            Self::Shape(shape) => shape.move_to(pos),
+            _ => {}
         }
     }
 
 
-    pub fn key(&self) -> &str {
-        self.key.as_str()
-    }
-
-
-    pub const fn transform_ref(&self) -> &Transform2D {
-        &self.layer_transform
-    }
-
-
-    pub fn update_transform<F>(&mut self, fun: F)
-    where
-        F: FnOnce(&mut Transform2D),
-    {
-        let transform = &mut self.layer_transform;
-        fun(transform);
-    }
-}
-
-
-impl<'write, Draw> Layer<FrameBufferPixelWriter, Draw>
-where
-    Draw: LayerDrawable + 'write,
-{
-    pub fn draw(&mut self, shadow_buff: &mut [u8]) -> KernelResult {
-        self.drawer.draw_in_area(
-            shadow_buff,
-            &mut self.pixel_writer,
-            &self.layer_transform.rect(),
-        )
-    }
-
-
-    pub fn write_buff(&mut self, shadow_buff: &mut [u8], area: &Rectangle<usize>) -> KernelResult {
-        if let Some(draw_area) = area.intersect(&self.layer_transform.rect()) {
-            self.drawer
-                .draw_in_area(shadow_buff, &mut self.pixel_writer, &draw_area)
-        } else {
-            Ok(())
+    pub fn rect(&self) -> Rectangle<usize> {
+        match self {
+            Self::Console(console) => console.rect(),
+            Self::Cursor(cursor) => cursor.rect(),
+            Self::Shape(shape) => shape.rect(),
         }
     }
 
 
-    pub fn update_drawer<CastDraw: LayerDrawable>(&mut self, fun: impl Fn(&mut CastDraw)) {
-        let drawer = self
-            .drawer
-            .any_mut()
-            .downcast_mut()
-            .unwrap();
+    pub fn require_cursor(&mut self) -> KernelResult<&mut CursorLayer> {
+        match self {
+            Self::Cursor(cursor) => Ok(cursor),
+            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+        }
+    }
 
-        fun(drawer);
+
+    pub fn require_console(&mut self) -> KernelResult<&mut ConsoleLayer> {
+        match self {
+            Self::Console(console) => Ok(console),
+            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+        }
+    }
+
+
+    pub fn into_layer_key(self, key: &str) -> LayerKey {
+        LayerKey::new(key, self)
+    }
+}
+
+
+impl LayerUpdatable for Layer {
+    fn update_shadow_buffer(
+        &mut self,
+        shadow_buffer: &mut ShadowFrameBuffer,
+        draw_area: &Rectangle<usize>,
+    ) -> KernelResult {
+        match self {
+            Self::Cursor(cursor) => cursor.update_shadow_buffer(shadow_buffer, draw_area),
+            Self::Console(console) => console.update_shadow_buffer(shadow_buffer, draw_area),
+            Self::Shape(shape) => shape.update_shadow_buffer(shadow_buffer, draw_area),
+        }
     }
 }
 

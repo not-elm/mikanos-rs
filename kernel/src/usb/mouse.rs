@@ -1,8 +1,8 @@
 use common_lib::math::vector::Vector2D;
+use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::layers::drawer::cursor::cursor_colors::CursorColors;
-use kernel_lib::layers::drawer::cursor::cursor_drawer::CursorDrawer;
+use kernel_lib::layers::cursor::cursor_colors::CursorColors;
 use kernel_lib::serial_println;
 use kernel_lib::timer::apic::local_apic_timer::OneShotLocalApicTimer;
 use kernel_lib::timer::apic::ApicTimer;
@@ -10,6 +10,7 @@ use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
 
 use crate::layers::{LAYERS, MOUSE_LAYER_KEY};
+use crate::println;
 
 #[derive(Debug, Clone)]
 pub struct MouseSubscriber {}
@@ -38,19 +39,10 @@ impl MouseSubscribable for MouseSubscriber {
             .borrow_mut()
             .update_layer(MOUSE_LAYER_KEY, |layer| {
                 let color: PixelColor = cursor_color(button);
-                {
-                    layer.update_transform(|transform| {
-                        transform.set_pos(current_cursor);
-                    });
+                if let Ok(cursor) = layer.require_cursor() {
+                    cursor.move_to(current_cursor);
+                    cursor.set_color(CursorColors::default().change_foreground(color))
                 }
-
-                layer.update_drawer::<CursorDrawer>(|drawer| {
-                    drawer.set_color(
-                        CursorColors::default()
-                            .change_foreground(color)
-                            .change_border(color),
-                    );
-                });
             })
             .map_err(|_| ())?;
 

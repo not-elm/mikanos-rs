@@ -22,7 +22,7 @@ pub enum KernelError {
 pub enum LayerReason {
     FailedInitialize,
     NotExistsKey,
-    InvalidCastWindowDrawer,
+    IllegalLayer,
     WindowSizeOver(Rectangle<usize>),
 }
 

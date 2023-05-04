@@ -1,10 +1,12 @@
+use x86_64::structures::idt::{InterruptStackFrame, PageFaultErrorCode};
+
 use kernel_lib::error::KernelResult;
 use kernel_lib::interrupt::gate_type::GateType;
 use kernel_lib::interrupt::interrupt_descriptor_attribute::InterruptDescriptorAttribute;
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 use kernel_lib::interrupt::IDT;
-use kernel_lib::println;
-use x86_64::structures::idt::{InterruptStackFrame, PageFaultErrorCode};
+
+use crate::println;
 
 use self::mouse::interrupt_mouse_handler;
 

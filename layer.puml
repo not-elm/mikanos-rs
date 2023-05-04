@@ -3,61 +3,50 @@
 
 class Layers
 
-class Layer{
 
-}
 
-class Window
 
-class PixelColor{
-    + r: u8
-    + g: u8
-    + b: u8
-}
+interface ILayer
 
-class Vector2D<V>{
-    + x: V
-    + y: V
-}
-
-class Transform2D{
-    pos: Vector2D
-    size: Size
+interface Transformable{
+    + move(pos: Vector2D)
+    + resize(size: Size)
 }
 
 
-class PixelFrame<Pixels, Convert>{
-
-
+interface PixelWritable<Pixels, Convert>{
+    + write(
+        frame_buff: &mut [u8],
+        pos: &Vector2D<usize>,
+        pixel_color: &PixelColor
+    ) -> KernelResult
 }
 
-interface PixelFlushable<Pixels, Convert>{
-    + flush(pixel_frame: PixelFrame) -> KernelResult
-}
 
-
-interface WindowDrawable<Pixels,Convert>{
+interface LayerDrawable<Pixels,Convert>{
     + draw(
-     pixel_writer: PixelFlushable,
+     pixel_writer: PixelWritable,
      window_state: WindowState
      )
 }
 
 
-Layers "0..n" o--> Layer
 
-Layer "0..n" o--> Window
-Layer --> PixelWritable
-Layer o-left-> Transform2D
+Layers "0..n" o--> ILayer
 
 
-Window o-left-> Transform2D
-Window o--> WindowDrawable
 
-Transform2D --> PixelColor
-Transform2D --> Vector2D
+LayerDrawable --> PixelWritable
 
-WindowDrawable --> PixelFlushable
-PixelFlushable --> PixelFrame
+
+
+ILayer ..|> Transformable
+ILayer ..|> LayerDrawable
+
+
+class PlainLayer{}
+class CursorLayer{}
+class WindowLayer{}
+
 
 @enduml

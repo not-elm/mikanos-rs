@@ -1,9 +1,9 @@
+use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::math::vector::Vector2D;
+
 use crate::error::KernelResult;
 use crate::gop::pixel::calc_pixel_pos_from_vec2d;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
-use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::math::vector::Vector2D;
 
 pub mod bgr_pixel_mapper;
 pub mod enum_pixel_mapper;

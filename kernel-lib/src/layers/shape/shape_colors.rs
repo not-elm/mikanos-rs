@@ -1,13 +1,13 @@
 use crate::gop::pixel::pixel_color::PixelColor;
 
 #[derive(Debug, Copy, Clone)]
-pub struct RectColors {
+pub struct ShapeColors {
     foreground: PixelColor,
     transparent: Option<PixelColor>,
 }
 
 
-impl RectColors {
+impl ShapeColors {
     pub const fn new(foreground: PixelColor, transparent: Option<PixelColor>) -> Self {
         Self {
             foreground,
@@ -41,7 +41,7 @@ impl RectColors {
 }
 
 
-impl Default for RectColors {
+impl Default for ShapeColors {
     fn default() -> Self {
         Self::new(PixelColor::white(), None)
     }

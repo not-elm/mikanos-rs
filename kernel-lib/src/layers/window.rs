@@ -1,12 +1,12 @@
 // pub struct Window<Draw> {
-//     drawer: Draw,
+//     layer_updatable: Draw,
 //     transform: Transform2D,
 // }
 //
 //
 // impl<Draw> Window<Draw> {
-//     pub const fn new(drawer: Draw, transform: Transform2D) -> Window<Draw> {
-//         Self { drawer, transform }
+//     pub const fn new(layer_updatable: Draw, transform: Transform2D) -> Window<Draw> {
+//         Self { layer_updatable, transform }
 //     }
 //
 //
@@ -15,8 +15,8 @@
 //     }
 //
 //
-//     pub fn drawer(&mut self) -> &mut Draw {
-//         &mut self.drawer
+//     pub fn layer_updatable(&mut self) -> &mut Draw {
+//         &mut self.layer_updatable
 //     }
 //
 //
@@ -41,7 +41,7 @@
 //     where
 //         Draw: LayerDrawable,
 //     {
-//         self.drawer
+//         self.layer_updatable
 //             .any_mut()
 //             .downcast_mut()
 //             .ok_or(KernelError::FailedOperateLayer(InvalidCastWindowDrawer))
@@ -57,14 +57,14 @@
 //     where
 //         D: LayerDrawable + 'draw,
 //     {
-//         self.drawer
+//         self.layer_updatable
 //             .any_mut()
 //             .downcast_mut()
 //     }
 //
 //
 //     pub fn into_dyn(self) -> Window<Box<dyn LayerDrawable>> {
-//         Window::new(Box::new(self.drawer), self.transform)
+//         Window::new(Box::new(self.layer_updatable), self.transform)
 //     }
 // }
 //
@@ -77,8 +77,8 @@
 //     use common_lib::math::vector::Vector2D;
 //     use common_lib::transform::Transform2D;
 //
-//     use crate::layers::drawer::cursor::cursor_drawer::CursorDrawer;
-//     use crate::layers::drawer::LayerDrawable;
+//     use crate::layers::layer_updatable::cursor::cursor_drawer::CursorDrawer;
+//     use crate::layers::layer_updatable::LayerDrawable;
 //     use crate::layers::window::Window;
 //
 //     #[test]

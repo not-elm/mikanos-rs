@@ -101,8 +101,8 @@ mod tests {
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::pixel_row::PixelRow;
     use crate::gop::pixel::Pixel;
-    use crate::layers::drawer::cursor::cursor_buffer::{CursorBuffer, CURSOR_WIDTH};
-    use crate::layers::drawer::cursor::cursor_colors::CursorColors;
+    use crate::layers::cursor::cursor_buffer::{CursorBuffer, CURSOR_WIDTH};
+    use crate::layers::cursor::cursor_colors::CursorColors;
 
     #[test]
     fn it_correct_length() {

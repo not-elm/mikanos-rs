@@ -1,8 +1,5 @@
-use core::hash::Hasher;
-
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
-use writer::pixel_writable::PixelWritable;
 
 use crate::error::KernelError::ExceededFrameBufferSize;
 use crate::error::KernelResult;

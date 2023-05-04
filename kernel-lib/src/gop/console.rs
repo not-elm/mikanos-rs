@@ -1,68 +1,95 @@
+use core::cell::OnceCell;
+use core::fmt::{Error, Write};
+
+use spin::Mutex;
+
+use common_lib::frame_buffer::FrameBufferConfig;
+
+use crate::error::KernelResult;
+use crate::gop::char::ascii_char_writer::AscIICharWriter;
+use crate::gop::console::console_writer::ConsoleWriter;
 use crate::gop::pixel::pixel_color::PixelColor;
 
 pub mod console_builder;
 pub mod console_writer;
 
-//
-// pub struct GlobalConsole(Option<Mutex<ConsoleWriter>>);
-//
-// pub static mut CONSOLE: GlobalConsole = GlobalConsole(None);
-//
-pub const DISPLAY_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x55, 0x55, 0x55);
 
-//
-// impl GlobalConsole {
-//     pub fn init(&mut self, frame_buffer_config: FrameBufferConfig) {
-//         let console = ConsoleBuilder::new()
-//             .color(PixelColor::new(0xFF, 0xFF, 0x00))
-//             .build(frame_buffer_config);
-//         self.0 = Some(Mutex::new(console));
-//     }
-//
-//
-//     pub fn get_mut(&mut self) -> &mut ConsoleWriter {
-//         self.0
-//             .as_mut()
-//             .unwrap()
-//             .get_mut()
-//     }
-// }
-//
-//
-// pub fn init_console(frame_buffer_config: FrameBufferConfig) {
-//     unsafe { CONSOLE.init(frame_buffer_config) };
-// }
-//
-//
-// pub fn fill_rect_using_global(
-//     origin: Vector2D<usize>,
-//     to: Vector2D<usize>,
-//     color: PixelColor,
-// ) -> KernelResult {
-//     fill_rect(
-//         unsafe {
-//             CONSOLE
-//                 .get_mut()
-//                 .pixel_writer()
-//         },
-//         origin,
-//         to,
-//         color,
-//     )
-// }
-//
-//
-// pub fn get_mut_console() -> &'static mut ConsoleWriter {
-//     unsafe { CONSOLE.get_mut() }
-// }
+struct GlobalConsole {
+    config: FrameBufferConfig,
+    writer: ConsoleWriter<AscIICharWriter>,
+}
+
+pub struct GlobalMutexConsole(OnceCell<Mutex<GlobalConsole>>);
+
+impl GlobalMutexConsole {
+    pub const fn uninit() -> Self {
+        Self(OnceCell::new())
+    }
+
+    pub fn init(&self, config: FrameBufferConfig) {
+        let console = GlobalConsole {
+            config,
+            writer: ConsoleWriter::new(config, AscIICharWriter::default(), PixelColor::yellow()),
+        };
+        self.0
+            .set(Mutex::new(console));
+    }
+
+
+    pub fn print(&mut self, s: &str) -> KernelResult {
+        let mut console = unsafe {
+            self.0
+                .get_mut()
+                .unwrap()
+                .lock()
+        };
+
+        let frame_buff = unsafe {
+            core::slice::from_raw_parts_mut(
+                console
+                    .config
+                    .frame_buffer_base_ptr(),
+                console
+                    .config
+                    .frame_buffer_size,
+            )
+        };
+        console
+            .writer
+            .write_str(frame_buff, s)
+    }
+}
+
+
+unsafe impl Sync for GlobalMutexConsole {}
+
+pub static mut CONSOLE: GlobalMutexConsole = GlobalMutexConsole::uninit();
+
+pub const DISPLAY_BACKGROUND_COLOR: PixelColor = PixelColor::new(0x33, 0x33, 0x33);
+
+
+pub fn init_console(frame_buffer_config: FrameBufferConfig) {
+    unsafe { CONSOLE.init(frame_buffer_config) };
+}
+
+
+impl core::fmt::Write for GlobalMutexConsole {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        match self.print(s) {
+            Ok(()) => Ok(()),
+            Err(_) => Err(Error::default()),
+        }
+    }
+}
 
 
 #[doc(hidden)]
-pub fn _print(s: core::fmt::Arguments) {
-    // get_mut_console()
-    //     .write_fmt(s)
-    //     .unwrap();
-    todo!()
+pub fn _print(args: core::fmt::Arguments) {
+    unsafe {
+        CONSOLE
+            .write_fmt(args)
+            .unwrap();
+    }
 }
 
 

@@ -7,7 +7,7 @@ use crate::gop::pixel::mapper::PixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct FrameBufferPixelWriter {
     config: FrameBufferConfig,
     mapper: EnumPixelMapper,

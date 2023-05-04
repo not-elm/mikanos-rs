@@ -8,8 +8,8 @@ use common_lib::math::vector::Vector2D;
 use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::pixel_frame::PixelFrame;
 use crate::gop::pixel::pixel_iter::PixelIter;
-use crate::layers::drawer::cursor::cursor_colors::CursorColors;
-use crate::layers::drawer::cursor::cursor_pixel_iter::CursorPixelIter;
+use crate::layers::cursor::cursor_colors::CursorColors;
+use crate::layers::cursor::cursor_pixel_iter::CursorPixelIter;
 
 pub const CURSOR_WIDTH: usize = 15;
 
@@ -141,6 +141,26 @@ impl CursorBuffer {
         );
         PixelFrame::new(iter, converter, colors.transparent())
     }
+
+
+    #[cfg(test)]
+    fn is_drawable(&self, window_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
+        if !window_rect
+            .size()
+            .into_rect()
+            .with_in_rect(&self.rect())
+        {
+            return false;
+        }
+
+        let cursor_pos = cursor_pos + self.size().as_vec2d();
+        window_rect.with_in_pos(&cursor_pos)
+    }
+
+    #[cfg(test)]
+    fn is_not_drawable(&self, layer_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
+        !self.is_drawable(layer_rect, cursor_pos)
+    }
 }
 
 
@@ -157,16 +177,11 @@ mod tests {
 
     use common_lib::array::eq_array;
     use common_lib::math::rectangle::Rectangle;
-    use common_lib::math::size::Size;
     use common_lib::math::vector::Vector2D;
-    use common_lib::transform::Transform2D;
 
-    use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::gop::pixel::Pixel;
-    use crate::layers::drawer::cursor::cursor_buffer::{
+    use crate::layers::cursor::cursor_buffer::{
         CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
     };
-    use crate::layers::drawer::cursor::cursor_pixel_iter::cursor_color_at;
 
     #[test]
     fn it_no_scale() {
@@ -256,39 +271,6 @@ mod tests {
             .into_iter()
             .zip(buff)
             .for_each(|(e, a)| assert!(eq_array(e, a)));
-    }
-
-
-    #[test]
-    #[allow(clippy::needless_range_loop)]
-    fn it_collect_cursor_pixels() {
-        let cursor_buff = CursorBuffer::new(Vector2D::new(1, 1));
-
-        let pixels: Vec<Pixel> = cursor_buff
-            .cursor_pixels_checked(
-                &Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
-                PixelColor::white(),
-                PixelColor::blue(),
-            )
-            .unwrap()
-            .collect();
-
-        assert_eq!(pixels.len(), CURSOR_WIDTH * CURSOR_HEIGHT);
-
-        for y in 0..CURSOR_HEIGHT {
-            for x in 0..CURSOR_WIDTH {
-                let index = x + (y * CURSOR_WIDTH);
-                assert_eq!(
-                    pixels[index].color(),
-                    cursor_color_at(
-                        char::from(CURSOR_SHAPE[y][x]),
-                        PixelColor::white(),
-                        PixelColor::blue(),
-                    )
-                );
-                assert_eq!(pixels[index].pos(), Vector2D::new(x, y))
-            }
-        }
     }
 
 
