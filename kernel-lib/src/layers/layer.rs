@@ -1,8 +1,9 @@
 use alloc::boxed::Box;
 
 use common_lib::math::rectangle::Rectangle;
+use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::transform2d::Transformable2D;
+use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
@@ -20,24 +21,6 @@ pub enum Layer {
 
 
 impl Layer {
-    pub fn move_to(&mut self, pos: Vector2D<usize>) {
-        match self {
-            Self::Cursor(cursor) => cursor.move_to(pos),
-            Self::Shape(shape) => shape.move_to(pos),
-            _ => {}
-        }
-    }
-
-
-    pub fn rect(&self) -> Rectangle<usize> {
-        match self {
-            Self::Console(console) => console.rect(),
-            Self::Cursor(cursor) => cursor.rect(),
-            Self::Shape(shape) => shape.rect(),
-        }
-    }
-
-
     pub fn require_cursor(&mut self) -> KernelResult<&mut CursorLayer> {
         match self {
             Self::Cursor(cursor) => Ok(cursor),
@@ -56,6 +39,44 @@ impl Layer {
 
     pub fn into_layer_key(self, key: &str) -> LayerKey {
         LayerKey::new(key, self)
+    }
+}
+
+
+impl Transformable2D for Layer {
+    fn move_to(&mut self, pos: Vector2D<usize>) {
+        match self {
+            Self::Cursor(cursor) => cursor.move_to(pos),
+            Self::Shape(shape) => shape.move_to(pos),
+            _ => {}
+        }
+    }
+
+
+    fn resize(&mut self, size: Size) {
+        match self {
+            Self::Console(console) => console.resize(size),
+            Self::Cursor(cursor) => cursor.resize(size),
+            Self::Shape(shape) => shape.resize(size),
+        }
+    }
+
+
+    fn rect(&self) -> Rectangle<usize> {
+        match self {
+            Self::Console(console) => console.rect(),
+            Self::Cursor(cursor) => cursor.rect(),
+            Self::Shape(shape) => shape.rect(),
+        }
+    }
+
+
+    fn transform_ref(&self) -> &Transform2D {
+        match self {
+            Self::Console(console) => console.transform_ref(),
+            Self::Shape(shape) => shape.transform_ref(),
+            Self::Cursor(cursor) => cursor.transform_ref(),
+        }
     }
 }
 

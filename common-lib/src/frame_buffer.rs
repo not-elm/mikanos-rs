@@ -1,3 +1,4 @@
+use crate::math::rectangle::Rectangle;
 use crate::math::size::Size;
 
 #[repr(C)]
@@ -40,6 +41,11 @@ impl FrameBufferConfig {
 
     pub fn frame_size(&self) -> Size {
         Size::new(self.horizontal_resolution, self.vertical_resolution)
+    }
+
+
+    pub fn frame_rect(&self) -> Rectangle<usize> {
+        Rectangle::from_size(self.frame_size())
     }
 
 

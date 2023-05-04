@@ -4,7 +4,7 @@ use core::any::Any;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::builder::Transform2DBuilder;
-use common_lib::transform::transform2d::Transform2D;
+use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::pixel::calc_pixel_pos;
@@ -54,16 +54,22 @@ impl Layers {
 
 
     pub fn update_layer(&mut self, key: &str, fun: impl FnOnce(&mut Layer)) -> KernelResult {
-        let prev_area = self.layer_ref(key)?.rect();
+        let prev = self
+            .layer_ref(key)?
+            .transform_ref()
+            .clone();
+        let frame_rect = self.frame_rect();
+        let layer = self.layer_mut(key)?;
+        fun(layer);
 
-        fun(self.layer_mut(key)?);
+        if !frame_rect.with_in_rect(&layer.rect()) {
+            let layer = self.layer_mut(key)?;
+            layer.feed_transform(&prev);
+            return Ok(());
+        }
 
-        self.update_shadow_buffer_in_area(&prev_area, None, Some(key))?;
 
-        let draw_area = &self.layer_ref(key)?.rect();
-
-        self.update_shadow_buffer_in_area(draw_area, Some(key), None)?;
-        self.flush(&prev_area.union(draw_area))
+        self.draw_from_at(key, &prev.rect())
     }
 
 
@@ -77,6 +83,16 @@ impl Layers {
             self.frame_buffer_config
                 .frame_size(),
         ))
+    }
+
+
+    fn draw_from_at(&mut self, key: &str, prev_area: &Rectangle<usize>) -> KernelResult {
+        self.update_shadow_buffer_in_area(&prev_area, None, Some(key))?;
+
+        let draw_area = &self.layer_ref(key)?.rect();
+
+        self.update_shadow_buffer_in_area(draw_area, Some(key), None)?;
+        self.flush(&prev_area.union(draw_area))
     }
 
 
@@ -123,6 +139,11 @@ impl Layers {
         )
     }
 
+
+    fn frame_rect(&self) -> Rectangle<usize> {
+        self.frame_buffer_config
+            .frame_rect()
+    }
 
     fn layer_ref(&self, key: &str) -> KernelResult<&Layer> {
         Ok(self

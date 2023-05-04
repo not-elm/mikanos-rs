@@ -5,10 +5,20 @@ use crate::math::vector::Vector2D;
 pub trait Transformable2D {
     fn move_to(&mut self, pos: Vector2D<usize>);
 
+
     fn resize(&mut self, size: Size);
 
 
     fn rect(&self) -> Rectangle<usize>;
+
+
+    fn transform_ref(&self) -> &Transform2D;
+
+
+    fn feed_transform(&mut self, transform: &Transform2D) {
+        self.move_to(transform.pos());
+        self.resize(transform.size());
+    }
 }
 
 
@@ -70,6 +80,11 @@ impl Transformable2D for Transform2D {
     fn rect(&self) -> Rectangle<usize> {
         self.rect()
     }
+
+
+    fn transform_ref(&self) -> &Transform2D {
+        self
+    }
 }
 
 
@@ -89,6 +104,11 @@ macro_rules! impl_transformable2D {
 
             fn rect(&self) -> common_lib::math::rectangle::Rectangle<usize> {
                 self.transform.rect()
+            }
+
+
+            fn transform_ref(&self) -> &common_lib::transform::transform2d::Transform2D {
+                &self.transform
             }
         }
     };
