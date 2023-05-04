@@ -21,6 +21,11 @@ impl ShapeColors {
     }
 
 
+    pub fn foreground_ref(&self) -> &PixelColor {
+        &self.foreground
+    }
+
+
     pub fn transparent(&self) -> Option<PixelColor> {
         self.transparent
     }

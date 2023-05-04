@@ -43,22 +43,17 @@ impl ApicTimer for OneShotLocalApicTimer {
 
         self.local_apic_registers
             .initial_count()
-            .write_volatile(u32::MAX);
+            .write_volatile(0xffffffff);
     }
 
 
     fn elapsed(&self) -> u32 {
-        let init = self
-            .local_apic_registers
-            .initial_count()
-            .read_volatile();
-
         let current = self
             .local_apic_registers
             .current_count()
             .read_volatile();
 
-        init - current
+        0xffffffff - current
     }
 
 

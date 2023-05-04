@@ -1,6 +1,3 @@
-cargo-features = ["per-package-target"]
-
-
 [package]
 name = "common-lib"
 version = "0.1.0"

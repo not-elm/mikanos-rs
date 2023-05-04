@@ -53,6 +53,7 @@ impl Rectangle<usize> {
         PointsWithInRectIter::new(self.origin, Size::new(self.width(), self.height()))
     }
 
+
     pub fn points_unbound(&self) -> PointsWithInRectIter {
         PointsWithInRectIter::new(self.origin, Size::new(self.width() - 1, self.height() - 1))
     }

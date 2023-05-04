@@ -41,6 +41,7 @@ impl MouseSubscribable for MouseSubscriber {
                 let color: PixelColor = cursor_color(button);
                 if let Ok(cursor) = layer.require_cursor() {
                     cursor.move_to(current_cursor);
+
                     cursor.set_color(CursorColors::default().change_foreground(color))
                 }
             })

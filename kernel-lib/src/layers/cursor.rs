@@ -8,8 +8,8 @@ use crate::error::KernelResult;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::cursor::cursor_colors::CursorColors;
 use crate::layers::cursor::cursor_drawer::CursorDrawer;
-use crate::layers::layer_updatable::LayerUpdatable;
 use crate::layers::layer::Layer;
+use crate::layers::layer_updatable::LayerUpdatable;
 
 pub mod cursor_buffer;
 pub mod cursor_colors;

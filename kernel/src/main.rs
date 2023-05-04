@@ -82,6 +82,7 @@ pub extern "sysv64" fn kernel_main(
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
     serial_println!("{:?}", info);
+
     common_lib::assembly::hlt_forever();
 }
 

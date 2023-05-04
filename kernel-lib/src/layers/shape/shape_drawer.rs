@@ -3,10 +3,9 @@ use common_lib::math::rectangle::Rectangle;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
-use crate::layers::shape::shape_colors::ShapeColors;
 use crate::layers::layer_updatable::LayerUpdatable;
+use crate::layers::shape::shape_colors::ShapeColors;
 
 #[derive(Debug, Clone)]
 pub struct ShapeDrawer {
@@ -31,13 +30,7 @@ impl LayerUpdatable for ShapeDrawer {
         shadow_frame: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
-        for pos in draw_area.points() {
-            unsafe {
-                self.pixel_writer
-                    .write(shadow_frame.raw_mut(), &pos, &self.colors.foreground())?;
-            }
-        }
-
-        Ok(())
+        self.pixel_writer
+            .fill_rect(shadow_frame, draw_area, self.colors.foreground_ref())
     }
 }
