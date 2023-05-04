@@ -1,5 +1,3 @@
-use core::any::Any;
-
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
@@ -80,8 +78,8 @@ mod tests {
     //     let colors = CursorColors::new(cursor_color, border_color,
     // Some(PixelColor::black()));
     //
-    //     let mut layer_updatable = CursorDrawer::new(Vector2D::unit(), colors);
-    //     let mut writer = FrameBufferPixelWriter::new(
+    //     let mut layer_updatable = CursorDrawer::new(Vector2D::unit(),
+    // colors);     let mut writer = FrameBufferPixelWriter::new(
     //         layer_updatable.cursor_size().width() * 4,
     //         layer_updatable.cursor_size().height() * 4,
     //     );

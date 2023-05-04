@@ -1,4 +1,3 @@
-use alloc::vec;
 use alloc::vec::Vec;
 
 use common_lib::frame_buffer::FrameBufferConfig;

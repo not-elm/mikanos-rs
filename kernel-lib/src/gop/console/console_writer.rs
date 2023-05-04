@@ -147,14 +147,7 @@ where
     }
 
 
-    fn clear_line(&mut self, y: usize) -> KernelResult {
-        let to = Vector2D::new(self.max_x() * 8, (y * 16) + 16);
-        // fill_rect(
-        //     &mut self.pixel_writer,
-        //     Vector2D::new(0, y * 16),
-        //     to,
-        //     DISPLAY_BACKGROUND_COLOR,
-        // )
+    fn clear_line(&mut self, _y: usize) -> KernelResult {
         Ok(())
     }
 

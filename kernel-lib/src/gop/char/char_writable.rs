@@ -1,3 +1,4 @@
+use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
@@ -14,4 +15,7 @@ pub trait CharWritable {
         color: &PixelColor,
         pixel_writer: &mut impl PixelWritable,
     ) -> KernelResult;
+
+
+    fn font_unit(&self) -> Size;
 }

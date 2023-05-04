@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-use core::any::Any;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
@@ -8,13 +7,12 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::pixel::calc_pixel_pos;
-use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
+use crate::serial_println;
 
 pub mod console;
-pub mod console_colors;
 pub mod cursor;
 pub mod layer;
 pub mod layer_key;
@@ -62,13 +60,13 @@ impl Layers {
         let layer = self.layer_mut(key)?;
         fun(layer);
 
+
         if !frame_rect.with_in_rect(&layer.rect()) {
-            let layer = self.layer_mut(key)?;
             layer.feed_transform(&prev);
             return Ok(());
         }
 
-
+        serial_println!("Update Layer Rect = {:?} Key = {}", layer.rect(), key);
         self.draw_from_at(key, &prev.rect())
     }
 
@@ -144,6 +142,7 @@ impl Layers {
         self.frame_buffer_config
             .frame_rect()
     }
+
 
     fn layer_ref(&self, key: &str) -> KernelResult<&Layer> {
         Ok(self

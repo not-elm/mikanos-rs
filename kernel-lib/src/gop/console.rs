@@ -1,5 +1,5 @@
 use core::cell::OnceCell;
-use core::fmt::{Error, Write};
+use core::fmt::Error;
 
 use spin::Mutex;
 
@@ -83,31 +83,31 @@ impl core::fmt::Write for GlobalMutexConsole {
 }
 
 
-#[doc(hidden)]
-pub fn _print(args: core::fmt::Arguments) {
-    unsafe {
-        CONSOLE
-            .write_fmt(args)
-            .unwrap();
-    }
-}
-
-
-#[macro_export]
-macro_rules! print {
-    ($($args:tt)*) => ($crate::gop::console::_print(format_args!($($args)*)));
-}
-
-
-#[macro_export]
-macro_rules! println {
-        () => {
-            $crate::print!("\n");
-        };
-        ($fmt: expr) => {
-           $crate::print!(concat!($fmt, "\n"));
-       };
-       ($fmt: expr, $($args:tt)*) => {
-           $crate::print!(concat!($fmt,"\n"), $($args)*);
-       };
-}
+// #[doc(hidden)]
+// pub fn _print(args: core::fmt::Arguments) {
+//     unsafe {
+//         CONSOLE
+//             .write_fmt(args)
+//             .unwrap();
+//     }
+// }
+//
+//
+// #[macro_export]
+// macro_rules! print {
+//     ($($args:tt)*) =>
+// ($crate::gop::console::_print(format_args!($($args)*))); }
+//
+//
+// #[macro_export]
+// macro_rules! println {
+//         () => {
+//             $crate::print!("\n");
+//         };
+//         ($fmt: expr) => {
+//            $crate::print!(concat!($fmt, "\n"));
+//        };
+//        ($fmt: expr, $($args:tt)*) => {
+//            $crate::print!(concat!($fmt,"\n"), $($args)*);
+//        };
+// }

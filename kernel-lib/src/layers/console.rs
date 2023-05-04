@@ -1,64 +1,71 @@
 use alloc::boxed::Box;
+use core::cmp::min;
+use core::fmt::Error;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::impl_transformable2D;
 use common_lib::math::rectangle::Rectangle;
+use common_lib::math::size::Size;
+use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
+use console_colors::ConsoleColors;
 
 use crate::error::KernelResult;
 use crate::gop::char::ascii_char_writer::AscIICharWriter;
-use crate::gop::console::console_builder::ConsoleBuilder;
-use crate::gop::console::console_writer::ConsoleWriter;
+use crate::gop::char::char_writable::CharWritable;
+use crate::gop::pixel::calc_pixel_pos_from_vec2d;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
-use crate::layers::console_colors::ConsoleColors;
+use crate::layers::console::console_frame::ConsoleFrame;
+use crate::layers::frame_buffer_layer_transform;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
-use crate::layers::{copy_frame_buff_in_area, frame_buffer_layer_transform};
+use crate::serial_println;
+
+pub mod console_colors;
+mod console_frame;
+mod console_row;
 
 pub struct ConsoleLayer {
-    console_writer: ConsoleWriter<AscIICharWriter>,
     transform: Transform2D,
-    shadow_buff: ShadowFrameBuffer,
+    frame: ConsoleFrame<AscIICharWriter>,
+    font_unit: Size,
+    config: FrameBufferConfig,
 }
 
 
 impl ConsoleLayer {
     pub fn new(config: FrameBufferConfig, colors: ConsoleColors) -> Self {
         let transform = frame_buffer_layer_transform(config);
-
-        let shadow_buff = ShadowFrameBuffer::new(config);
+        let ascii = AscIICharWriter::new();
+        let font_unit = ascii.font_unit();
+        let font_frame_size = calc_text_frame_size(transform.size(), font_unit);
+        let frame = ConsoleFrame::new(colors, ascii, font_frame_size, config.pixel_format);
 
         Self {
-            console_writer: ConsoleBuilder::new()
-                .color(*colors.foreground())
-                .build(config),
             transform,
-            shadow_buff,
+            frame,
+            font_unit,
+            config,
         }
     }
 
 
+    pub fn resize(&mut self, layer_size: Size) {
+        self.frame
+            .resize_text_frame(calc_text_frame_size(layer_size, self.font_unit))
+    }
+
     pub fn into_enum(self) -> Layer {
         Layer::Console(Box::new(self))
     }
+}
 
 
-    pub fn write_str(&mut self, str: &str) -> KernelResult {
-        self.console_writer
-            .write_str(self.shadow_buff.raw_mut(), str)?;
-        let frame_buff = unsafe {
-            core::slice::from_raw_parts_mut(
-                self.shadow_buff
-                    .config_ref()
-                    .frame_buffer_base_ptr(),
-                self.shadow_buff
-                    .config_ref()
-                    .frame_buffer_size,
-            )
-        };
-
-        self.console_writer
-            .write_str(frame_buff, str)
+impl core::fmt::Write for ConsoleLayer {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        self.frame
+            .write_string(s)
+            .map_err(|_| Error::default())
     }
 }
 
@@ -69,15 +76,45 @@ impl LayerUpdatable for ConsoleLayer {
         shadow_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
-        return Ok(());
-        copy_frame_buff_in_area(
-            self.shadow_buff.raw_ref(),
-            shadow_buff.raw_mut(),
-            self.shadow_buff.config_ref(),
-            draw_area,
-        )
+        for (y, line) in self
+            .frame
+            .frame_buff_lines()
+            .into_iter()
+            .flatten()
+            .enumerate()
+        {
+            let origin =
+                calc_pixel_pos_from_vec2d(&self.config, &Vector2D::new(draw_area.origin().x(), y))?;
+
+            let end = origin + line.len();
+
+            shadow_buff.raw_mut()[origin..end].copy_from_slice(line);
+        }
+        Ok(())
     }
 }
 
 
 impl_transformable2D!(ConsoleLayer);
+
+
+fn calc_text_frame_size(layer_size: Size, font_unit_size: Size) -> Size {
+    layer_size / font_unit_size
+}
+
+
+#[cfg(test)]
+mod tests {
+    use common_lib::math::size::Size;
+
+    use crate::layers::console::calc_text_frame_size;
+
+    #[test]
+    fn it_font_frame_size() {
+        let font_frame_size = calc_text_frame_size(Size::new(80, 160), Size::new(8, 16));
+        assert_eq!(font_frame_size, Size::new(10, 10));
+
+        let font_frame_size = calc_text_frame_size(Size::new(83, 163), Size::new(8, 16));
+        assert_eq!(font_frame_size, Size::new(10, 10));
+    }
+}

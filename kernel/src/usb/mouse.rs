@@ -1,9 +1,9 @@
+use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::layers::cursor::cursor_colors::CursorColors;
-use kernel_lib::serial_println;
 use kernel_lib::timer::apic::local_apic_timer::OneShotLocalApicTimer;
 use kernel_lib::timer::apic::ApicTimer;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
@@ -47,7 +47,8 @@ impl MouseSubscribable for MouseSubscriber {
             })
             .map_err(|_| ())?;
 
-        serial_println!("Done Xhc All Events Time = {}", timer.elapsed());
+
+        println!("Done Xhc All Events Time = {}", timer.elapsed());
         timer.stop();
 
         Ok(())

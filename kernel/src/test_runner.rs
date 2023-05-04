@@ -1,5 +1,4 @@
 use common_lib::math::vector::Vector2D;
-use kernel_lib::gop::console::fill_rect_using_global;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
@@ -17,8 +16,8 @@ pub trait Testable {
 }
 
 impl<T> Testable for T
-    where
-        T: Fn(),
+where
+    T: Fn(),
 {
     fn run(&self) {
         serial_println!("test name={}", core::any::type_name::<T>());
@@ -30,12 +29,6 @@ impl<T> Testable for T
 
 #[cfg(test)]
 pub fn my_runner(tests: &[&dyn Testable]) {
-    fill_rect_using_global(
-        Vector2D::new(0, 0),
-        Vector2D::new(500, 500),
-        PixelColor::new(0x00, 0x00, 0x00),
-    )
-        .unwrap();
     serial_println!("start test! num={}", tests.len());
     for t in tests {
         t.run();
