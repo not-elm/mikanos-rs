@@ -8,8 +8,8 @@ use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
-use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::buff_pixel_writer::BuffPixelWriter;
+use crate::layers::console::console_colors::ConsoleColors;
 
 pub struct ConsoleRow {
     text_buffs: Vec<u8>,
@@ -49,7 +49,7 @@ impl ConsoleRow {
     pub fn write_char(
         &mut self,
         c: char,
-        color: &PixelColor,
+        colors: &ConsoleColors,
         char_writer: &mut impl CharWritable,
     ) -> KernelResult<bool> {
         if self.max_text_len <= self.current_text_len || c == '\n' {
@@ -61,7 +61,7 @@ impl ConsoleRow {
             self.text_buffs.as_mut_slice(),
             c,
             pos,
-            color,
+            colors,
             &mut self.buff_pixel_writer,
         )?;
 
@@ -154,6 +154,7 @@ mod tests {
     use crate::gop::char::ascii_char_writer::AscIICharWriter;
     use crate::gop::char::char_writable::CharWritable;
     use crate::gop::pixel::pixel_color::PixelColor;
+    use crate::layers::console::console_colors::ConsoleColors;
     use crate::layers::console::console_row::ConsoleRow;
 
     #[test]
@@ -165,8 +166,12 @@ mod tests {
             .frame_buff_lines()
             .is_none());
 
-        row.write_char('h', &PixelColor::white(), &mut writer)
-            .unwrap();
+        row.write_char(
+            'h',
+            &ConsoleColors::default().change_foreground(PixelColor::white()),
+            &mut writer,
+        )
+        .unwrap();
 
         assert_eq!(row.buff_width(), writer.font_unit().width() * 4);
         assert!(row
@@ -184,13 +189,18 @@ mod tests {
         assert_eq!(row.current_text_len, 0);
         assert_eq!(row.max_text_len, 2);
         assert!(!row
-            .write_char('h', &PixelColor::white(), &mut writer)
+            .write_char(
+                'h',
+                &ConsoleColors::default().change_foreground(PixelColor::white()),
+                &mut writer,
+            )
             .unwrap());
         assert!(!row
-            .write_char('h', &PixelColor::white(), &mut writer)
-            .unwrap());
-        assert!(row
-            .write_char('h', &PixelColor::white(), &mut writer)
+            .write_char(
+                'h',
+                &ConsoleColors::default().change_foreground(PixelColor::white()),
+                &mut writer,
+            )
             .unwrap());
     }
 
@@ -199,18 +209,34 @@ mod tests {
     fn it_small_size() {
         let mut writer = AscIICharWriter::new();
         let mut row = ConsoleRow::new(writer.font_unit(), 5, PixelFormat::Rgb);
-        row.write_char('h', &PixelColor::white(), &mut writer)
-            .unwrap();
-        row.write_char('h', &PixelColor::white(), &mut writer)
-            .unwrap();
-        row.write_char('h', &PixelColor::white(), &mut writer)
-            .unwrap();
+        row.write_char(
+            'h',
+            &ConsoleColors::default().change_foreground(PixelColor::white()),
+            &mut writer,
+        )
+        .unwrap();
+        row.write_char(
+            'h',
+            &ConsoleColors::default().change_foreground(PixelColor::white()),
+            &mut writer,
+        )
+        .unwrap();
+        row.write_char(
+            'h',
+            &ConsoleColors::default().change_foreground(PixelColor::white()),
+            &mut writer,
+        )
+        .unwrap();
 
         row.resize_text_len(2);
         assert_eq!(row.current_text_len, 2);
         assert_eq!(row.max_text_len, 2);
         assert!(row
-            .write_char('h', &PixelColor::white(), &mut writer)
+            .write_char(
+                'h',
+                &ConsoleColors::default().change_foreground(PixelColor::white()),
+                &mut writer,
+            )
             .unwrap())
     }
 }

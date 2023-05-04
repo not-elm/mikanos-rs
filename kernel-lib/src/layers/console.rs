@@ -1,5 +1,4 @@
 use alloc::boxed::Box;
-use core::cmp::min;
 use core::fmt::Error;
 
 use common_lib::frame_buffer::FrameBufferConfig;
@@ -19,7 +18,6 @@ use crate::layers::console::console_frame::ConsoleFrame;
 use crate::layers::frame_buffer_layer_transform;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
-use crate::serial_println;
 
 pub mod console_colors;
 mod console_frame;

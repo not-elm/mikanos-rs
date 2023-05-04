@@ -19,9 +19,6 @@ pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 pub struct GlobalLayers(OnceCell<Rc<RefCell<Layers>>>);
 
 
-struct KernelLayers(Layers);
-
-
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
 
 

@@ -17,7 +17,6 @@ use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::gop::console::init_console;
 use kernel_lib::serial_println;
 
 use crate::gdt::init_gdt;

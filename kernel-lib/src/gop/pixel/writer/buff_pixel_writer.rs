@@ -35,7 +35,7 @@ impl PixelWritable for BuffPixelWriter {
         let origin = self.mapper.pixel_len() * pos.x() + (pos.y() * self.buff_size.width());
         let end = self.mapper.pixel_len() + origin;
 
-        if buff.len() <= end {
+        if buff.len() < end {
             return Err(KernelError::ExceededFrameBufferSize);
         }
 

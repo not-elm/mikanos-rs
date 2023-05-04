@@ -98,7 +98,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
         self.rows
             .last_mut()
             .unwrap()
-            .write_char(c, self.colors.foreground(), &mut self.char_writer)
+            .write_char(c, &self.colors, &mut self.char_writer)
     }
 
 

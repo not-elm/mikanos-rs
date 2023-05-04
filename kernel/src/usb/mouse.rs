@@ -1,4 +1,3 @@
-use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::apic::device_config::LocalApicTimerDivide;

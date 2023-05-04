@@ -5,8 +5,8 @@ use crate::error::KernelError::NotSupportCharacter;
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::font::get_font_from;
-use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
+use crate::layers::console::console_colors::ConsoleColors;
 
 #[derive(Default)]
 pub struct AscIICharWriter {}
@@ -23,7 +23,7 @@ impl CharWritable for AscIICharWriter {
         dist_buff: &mut [u8],
         c: char,
         pos: Vector2D<usize>,
-        color: &PixelColor,
+        colors: &ConsoleColors,
         pixel_writer: &mut impl PixelWritable,
     ) -> KernelResult {
         let ascii_char = get_font_from(c).ok_or(NotSupportCharacter)?;
@@ -31,14 +31,17 @@ impl CharWritable for AscIICharWriter {
         for (dy, line) in ascii_char.iter().enumerate() {
             for dx in 0..8 {
                 let is_need_write_bit = ((line << dx) & 0x80u8) != 0;
-                if is_need_write_bit {
-                    let pos = pos + Vector2D::new(dx, dy);
-                    unsafe {
-                        pixel_writer
-                            .write(dist_buff, &pos, color)
-                            .unwrap()
-                    };
-                }
+                let pos = pos + Vector2D::new(dx, dy);
+                let color = if is_need_write_bit {
+                    colors.foreground()
+                } else {
+                    colors.background()
+                };
+                unsafe {
+                    pixel_writer
+                        .write(dist_buff, &pos, color)
+                        .unwrap()
+                };
             }
         }
 
