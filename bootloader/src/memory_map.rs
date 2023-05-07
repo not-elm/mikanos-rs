@@ -18,13 +18,13 @@ pub(crate) fn save_memory_map(
     // 余裕を持たせるために16KiB
     const MEMORY_MAP_BUFF_SIZE: usize = kib!(16);
     let mut buff = [0u8; MEMORY_MAP_BUFF_SIZE];
-    let (_, iter) = system_table
+    let iter = system_table
         .boot_services()
         .memory_map(&mut buff)
         .unwrap();
 
     unsafe {
-        for (i, memory_descriptor) in iter.enumerate() {
+        for (i, memory_descriptor) in iter.entries().enumerate() {
             write_memory_descriptor_info(i, &mut file, memory_descriptor)?;
         }
     }

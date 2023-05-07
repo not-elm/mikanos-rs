@@ -44,7 +44,7 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     )
     .unwrap();
 
-    kernel::process::execute_kernel(entry_point, handle.clone(), system_table).unwrap();
+    kernel::process::execute_kernel(entry_point, system_table).unwrap();
 
     common_lib::assembly::hlt_forever();
 

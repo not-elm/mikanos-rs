@@ -6,17 +6,20 @@ edition = "2021"
 
 
 [dependencies]
+uefi = { workspace = true }
+x86_64 = { workspace = true }
+xhci = { workspace = true }
+
 common-lib = { path = "../common-lib", features = ["alloc"] }
 kernel-lib = { path = "../kernel-lib" }
 pci = { path = "../pci" }
 spin = "0.9.4"
 macros = { path = "../macros", features = ["extra-traits"] }
-x86_64 = { workspace = true }
 lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
-uefi = { version = "0.19.0" }
-xhci = { workspace = true }
 linked_list_allocator = "0.10.4"
 pic8259 = "0.10.1"
 volatile = "0.4.4"
+
+
 [build-dependencies]
 cc = "1.0.79"

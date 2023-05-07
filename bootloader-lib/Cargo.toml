@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+uefi = { workspace = true }
+uefi-services = { workspace = true }
+
 common-lib = { path = "../common-lib" }
-uefi-services = "0.16.0"
-uefi = { version = "0.19.0" }
+

@@ -4,7 +4,6 @@ use alloc::vec::Vec;
 use uefi::prelude::{Boot, SystemTable};
 use uefi::proto::media::file::{Directory, File, FileInfo, FileMode, RegularFile};
 use uefi::table::boot::MemoryDescriptor;
-use uefi::Handle;
 
 use bootloader_lib::error::LibResult;
 use bootloader_lib::kernel::entry_point::EntryPoint;
@@ -34,24 +33,15 @@ pub fn load_kernel(
     result
 }
 
-pub fn execute_kernel(
-    entry_point: EntryPoint,
-    handle: Handle,
-    system_table: SystemTable<Boot>,
-) -> Result<(), ()> {
-    let mut memory_map_vec = new_memory_map_vec(&system_table);
+pub fn execute_kernel(entry_point: EntryPoint, system_table: SystemTable<Boot>) -> Result<(), ()> {
+    let memory_map_vec = new_memory_map_vec(&system_table);
 
     let frame_buffer_config = obtain_frame_buffer_config(&mut open_gop(&system_table).unwrap());
 
-    if let Ok((_, memory_map)) =
-        system_table.exit_boot_services(handle, memory_map_vec.as_mut_slice())
-    {
-        entry_point.execute(&frame_buffer_config, &memory_map);
-        core::mem::forget(memory_map_vec);
-        Ok(())
-    } else {
-        Err(())
-    }
+    let (_, memory_map) = system_table.exit_boot_services();
+    entry_point.execute(&frame_buffer_config, &memory_map.entries());
+    core::mem::forget(memory_map_vec);
+    Ok(())
 }
 
 fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
@@ -68,12 +58,17 @@ fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
 
 fn read_kernel_buff(kernel_file: &mut RegularFile, kernel_file_size: usize) -> Vec<u8> {
     let mut v = vec![0; kernel_file_size];
-    kernel_file.read(v.as_mut_slice()).unwrap();
+    kernel_file
+        .read(v.as_mut_slice())
+        .unwrap();
     v
 }
 
 fn new_memory_map_vec(system_table: &SystemTable<Boot>) -> Vec<u8> {
-    let memory_map_size = system_table.boot_services().memory_map_size().map_size;
+    let memory_map_size = system_table
+        .boot_services()
+        .memory_map_size()
+        .map_size;
     let descriptor_size = core::mem::size_of::<MemoryDescriptor>();
     vec![0u8; memory_map_size + descriptor_size * 12]
 }

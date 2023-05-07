@@ -17,5 +17,5 @@ lazy_static = "1.4.0"
 xhci = "0.9.1"
 modular-bitfield = "0.11.2"
 dyn-clone = "1.0.10"
-num_enum = "0.5.11"
-itertools = { version = "0.10.5" }
+uefi = { version = "0.20.0", features = ["alloc"] }
+uefi-services = "0.17.0"
