@@ -10,7 +10,6 @@ use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
-use crate::serial_println;
 
 pub mod console;
 pub mod cursor;
@@ -66,7 +65,7 @@ impl Layers {
             return Ok(());
         }
 
-        serial_println!("Update Layer Rect = {:?} Key = {}", layer.rect(), key);
+
         self.draw_from_at(key, &prev.rect())
     }
 

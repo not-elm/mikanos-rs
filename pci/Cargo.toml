@@ -5,8 +5,6 @@ edition = "2021"
 
 
 [dependencies]
-
-bitfield-struct = { workspace = true }
 enum-try-from = "0.0.1"
 kernel-lib = { path = "../kernel-lib" }
 macros = { path = "../macros", features = ["extra-traits"] }

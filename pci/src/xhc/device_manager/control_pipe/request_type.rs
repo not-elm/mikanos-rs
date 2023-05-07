@@ -1,16 +1,17 @@
-use bitfield_struct::bitfield;
+use modular_bitfield::bitfield;
+use modular_bitfield::prelude::{B2, B5};
 
-#[bitfield(u8)]
+#[bitfield]
+#[repr(u8)]
+#[derive(Debug, Clone)]
 pub struct RequestType {
-    #[bits(5)]
-    pub recipient: u8,
-    #[bits(2)]
-    pub ty: u8,
+    pub recipient: B5,
+    pub ty: B2,
     pub direction: bool,
 }
 
 impl RequestType {
     pub fn raw(&self) -> u8 {
-        self.0
+        self.clone().into_bytes()[0]
     }
 }

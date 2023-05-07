@@ -1,6 +1,7 @@
-use bitfield_struct::bitfield;
+use modular_bitfield::bitfield;
+use modular_bitfield::prelude::{B2, B3, B4};
 
-#[repr(packed)]
+#[bitfield]
 #[derive(Debug, Clone)]
 pub struct EndpointDescriptor {
     pub length: u8,
@@ -11,25 +12,28 @@ pub struct EndpointDescriptor {
     pub interval: u8,
 }
 
-#[bitfield(u8)]
+
+#[bitfield]
+#[derive(Debug, BitfieldSpecifier)]
 pub struct EndpointAddress {
-    #[bits(4)]
-    pub number: u8,
-    #[bits(3)]
-    _reserve: u8,
+    pub number: B4,
+    #[skip]
+    reserve: B3,
     pub dir_in: bool,
 }
 
-#[bitfield(u8)]
+
+#[bitfield]
+#[derive(Debug, BitfieldSpecifier)]
 pub struct Attributes {
-    #[bits(2)]
-    pub transfer_type: u8,
-    #[bits(2)]
-    pub sync_type: u8,
-    #[bits(2)]
-    pub usage_type: u8,
-    #[bits(2)]
-    _reserve: u8,
+    pub transfer_type: B2,
+
+    pub sync_type: B2,
+
+    pub usage_type: B2,
+
+    #[skip]
+    reserve: B2,
 }
 
 pub const ENDPOINT_DESCRIPTOR_TYPE: u8 = 5;

@@ -17,19 +17,19 @@ impl EndpointConfig {
         Self {
             ep_id: EndpointId::from_endpoint_num(
                 endpoint
-                    .endpoint_address
+                    .endpoint_address()
                     .number() as usize,
                 endpoint
-                    .endpoint_address
+                    .endpoint_address()
                     .dir_in(),
             ),
             ep_type: to_endpoint_type(
                 endpoint
-                    .attributes
+                    .attributes()
                     .transfer_type(),
             ),
-            max_packet_size: endpoint.max_packet_size,
-            interval: endpoint.interval,
+            max_packet_size: endpoint.max_packet_size(),
+            interval: endpoint.interval(),
         }
     }
     pub fn endpoint_id(&self) -> EndpointId {
