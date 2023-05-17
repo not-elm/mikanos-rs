@@ -1,8 +1,8 @@
-use alloc::boxed::Box;
 use core::fmt::Error;
 
+use auto_delegate::Delegate;
+
 use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::impl_transformable2D;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
@@ -23,7 +23,9 @@ pub mod console_colors;
 mod console_frame;
 mod console_row;
 
+#[derive(Delegate)]
 pub struct ConsoleLayer {
+    #[to(Transformable2D)]
     transform: Transform2D,
     frame: ConsoleFrame<AscIICharWriter>,
     font_unit: Size,
@@ -54,7 +56,7 @@ impl ConsoleLayer {
     }
 
     pub fn into_enum(self) -> Layer {
-        Layer::Console(Box::new(self))
+        Layer::Console(self)
     }
 }
 
@@ -91,9 +93,6 @@ impl LayerUpdatable for ConsoleLayer {
         Ok(())
     }
 }
-
-
-impl_transformable2D!(ConsoleLayer);
 
 
 fn calc_text_frame_size(layer_size: Size, font_unit_size: Size) -> Size {

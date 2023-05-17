@@ -1,4 +1,5 @@
-use common_lib::impl_transformable2D;
+use auto_delegate::Delegate;
+
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::transform2d::Transform2D;
 
@@ -12,9 +13,11 @@ pub mod shape_colors;
 pub mod shape_drawer;
 
 
-#[derive(Debug)]
+#[derive(Debug, Delegate)]
 pub struct ShapeLayer {
     drawer: ShapeDrawer,
+
+    #[to(Transformable2D)]
     transform: Transform2D,
 }
 
@@ -41,6 +44,3 @@ impl LayerUpdatable for ShapeLayer {
             .update_shadow_buffer(shadow_frame_buff, draw_area)
     }
 }
-
-
-impl_transformable2D!(ShapeLayer);

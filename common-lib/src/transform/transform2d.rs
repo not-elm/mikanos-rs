@@ -1,7 +1,10 @@
+use auto_delegate::delegate;
+
 use crate::math::rectangle::Rectangle;
 use crate::math::size::Size;
 use crate::math::vector::Vector2D;
 
+#[delegate]
 pub trait Transformable2D {
     fn move_to(&mut self, pos: Vector2D<usize>);
 
@@ -85,31 +88,4 @@ impl Transformable2D for Transform2D {
     fn transform_ref(&self) -> &Transform2D {
         self
     }
-}
-
-
-#[macro_export]
-macro_rules! impl_transformable2D {
-    ($struct_name: ident) => {
-        impl common_lib::transform::transform2d::Transformable2D for $struct_name {
-            fn move_to(&mut self, pos: common_lib::math::vector::Vector2D<usize>) {
-                self.transform.set_pos(pos);
-            }
-
-
-            fn resize(&mut self, size: common_lib::math::size::Size) {
-                self.transform.resize(size);
-            }
-
-
-            fn rect(&self) -> common_lib::math::rectangle::Rectangle<usize> {
-                self.transform.rect()
-            }
-
-
-            fn transform_ref(&self) -> &common_lib::transform::transform2d::Transform2D {
-                &self.transform
-            }
-        }
-    };
 }
