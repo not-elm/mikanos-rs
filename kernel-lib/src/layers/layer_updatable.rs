@@ -1,9 +1,11 @@
+use auto_delegate::delegate;
+
 use common_lib::math::rectangle::Rectangle;
 
 use crate::error::KernelResult;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 
-
+#[delegate]
 pub trait LayerUpdatable {
     /// 指定された領域内で現在のウィンドウの状態を描画します。
     fn update_shadow_buffer(

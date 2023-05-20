@@ -65,7 +65,7 @@ impl core::fmt::Write for ConsoleLayer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.frame
             .write_string(s)
-            .map_err(|_| Error::default())
+            .map_err(|_| Error)
     }
 }
 
@@ -74,7 +74,7 @@ impl LayerUpdatable for ConsoleLayer {
     fn update_shadow_buffer(
         &mut self,
         shadow_buff: &mut ShadowFrameBuffer,
-        draw_area: &Rectangle<usize>,
+        _draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         for (y, line) in self
             .frame
@@ -83,8 +83,7 @@ impl LayerUpdatable for ConsoleLayer {
             .flatten()
             .enumerate()
         {
-            let origin =
-                calc_pixel_pos_from_vec2d(&self.config, &Vector2D::new(draw_area.origin().x(), y))?;
+            let origin = calc_pixel_pos_from_vec2d(&self.config, &Vector2D::new(0, y))?;
 
             let end = origin + line.len();
 

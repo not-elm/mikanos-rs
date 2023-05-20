@@ -10,7 +10,7 @@
 #![feature(result_option_inspect)]
 extern crate alloc;
 
-use core::alloc::Layout;
+
 use core::panic::PanicInfo;
 
 use uefi::table::boot::MemoryMapIter;
@@ -92,7 +92,7 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 #[alloc_error_handler]
-fn on_oom(layout: Layout) -> ! {
+fn on_oom(layout: core::alloc::Layout) -> ! {
     println!("Failed Heap Allocate! {:?}", layout);
     common_lib::assembly::hlt_forever();
 }

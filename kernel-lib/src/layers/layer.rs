@@ -1,10 +1,8 @@
 use auto_delegate::Delegate;
 
-use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::transform2d::Transformable2D;
 
 use crate::error::{KernelError, KernelResult, LayerReason};
-use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::console::ConsoleLayer;
 use crate::layers::cursor::CursorLayer;
 use crate::layers::layer_key::LayerKey;
@@ -12,7 +10,7 @@ use crate::layers::layer_updatable::LayerUpdatable;
 use crate::layers::shape::ShapeLayer;
 
 #[derive(Delegate)]
-#[to(Transformable2D)]
+#[to(Transformable2D, LayerUpdatable)]
 pub enum Layer {
     Cursor(CursorLayer),
     Console(ConsoleLayer),
@@ -39,21 +37,6 @@ impl Layer {
 
     pub fn into_layer_key(self, key: &str) -> LayerKey {
         LayerKey::new(key, self)
-    }
-}
-
-
-impl LayerUpdatable for Layer {
-    fn update_shadow_buffer(
-        &mut self,
-        shadow_buffer: &mut ShadowFrameBuffer,
-        draw_area: &Rectangle<usize>,
-    ) -> KernelResult {
-        match self {
-            Self::Cursor(cursor) => cursor.update_shadow_buffer(shadow_buffer, draw_area),
-            Self::Console(console) => console.update_shadow_buffer(shadow_buffer, draw_area),
-            Self::Shape(shape) => shape.update_shadow_buffer(shadow_buffer, draw_area),
-        }
     }
 }
 
