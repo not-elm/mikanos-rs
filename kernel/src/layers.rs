@@ -3,6 +3,9 @@ use core::cell::{OnceCell, RefCell, RefMut};
 use core::fmt::Write;
 
 use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::math::size::Size;
+use common_lib::math::vector::Vector2D;
+use common_lib::transform::transform2d::Transform2D;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::layers::console::console_colors::ConsoleColors;
@@ -12,6 +15,7 @@ use kernel_lib::layers::layer_key::LayerKey;
 use kernel_lib::layers::shape::shape_colors::ShapeColors;
 use kernel_lib::layers::shape::shape_drawer::ShapeDrawer;
 use kernel_lib::layers::shape::ShapeLayer;
+use kernel_lib::layers::window::WindowLayer;
 use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
@@ -21,6 +25,7 @@ pub struct GlobalLayers(OnceCell<Rc<RefCell<Layers>>>);
 
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
 
+pub const WINDOW_LAYER_KEY: &str = "WINDOW";
 
 pub const MOUSE_LAYER_KEY: &str = "MOUSE_CURSOR";
 
@@ -58,6 +63,7 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     let mut layers = layers.borrow_mut();
 
     add_background_layer(frame_buffer_config, &mut layers);
+    add_window_layer(frame_buffer_config, &mut layers);
     add_console_layer(frame_buffer_config, &mut layers);
     add_mouse_layer(frame_buffer_config, &mut layers);
 
@@ -77,6 +83,18 @@ fn add_background_layer(frame_buffer_config: FrameBufferConfig, layers: &mut Ref
         ShapeLayer::new(shape_drawer, transform)
             .into_enum()
             .into_layer_key(BACKGROUND_LAYER_KEY),
+    );
+}
+
+
+fn add_window_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
+    layers.new_layer(
+        WindowLayer::new(
+            config,
+            Transform2D::new(Vector2D::zeros(), Size::new(500, 300)),
+        )
+        .into_enum()
+        .into_layer_key(WINDOW_LAYER_KEY),
     );
 }
 

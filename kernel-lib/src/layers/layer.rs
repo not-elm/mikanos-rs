@@ -8,6 +8,7 @@ use crate::layers::cursor::CursorLayer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::layer_updatable::LayerUpdatable;
 use crate::layers::shape::ShapeLayer;
+use crate::layers::window::WindowLayer;
 
 #[derive(Delegate)]
 #[to(Transformable2D, LayerUpdatable)]
@@ -15,6 +16,7 @@ pub enum Layer {
     Cursor(CursorLayer),
     Console(ConsoleLayer),
     Shape(ShapeLayer),
+    Window(WindowLayer),
 }
 
 

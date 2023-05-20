@@ -1,4 +1,4 @@
-use core::cmp::max;
+use core::cmp::{max, min};
 use core::fmt::Debug;
 use core::ops::{Add, Sub};
 
@@ -63,14 +63,8 @@ impl Rectangle<usize> {
         let a = self;
         let sx = max(a.origin.x(), r.origin.x());
         let sy = max(a.origin.y(), r.origin.y());
-        let ex = max(
-            a.origin.x() + a.size().width(),
-            r.origin.x() + r.size().width(),
-        );
-        let ey = max(
-            a.origin.y() + a.size().height(),
-            r.origin.y() + r.size().height(),
-        );
+        let ex = min(a.end.x(), r.end.x());
+        let ey = min(a.end.y(), r.end.y());
 
         let w = ex - sx;
         let h = ey - sy;
@@ -426,7 +420,7 @@ mod tests {
     fn it_intersect_when_cross_sides() {
         let r1 = Rectangle::new(
             Vector2D::new(100usize, 100usize),
-            Vector2D::new(100usize, 100usize),
+            Vector2D::new(200usize, 200usize),
         );
         let r2 = Rectangle::new(Vector2D::new(10usize, 10), Vector2D::new(110, 110));
 
@@ -439,6 +433,19 @@ mod tests {
         assert!(rect.is_some_and(
             |r| r.origin() == Vector2D::new(100, 100) && r.end() == Vector2D::new(110, 110)
         ));
+    }
+
+
+    #[test]
+    fn it_intersect_3() {
+        let r1 = Rectangle::new(Vector2D::new(0usize, 0), Vector2D::new(500, 300));
+        let r2 = Rectangle::new(Vector2D::new(0usize, 0), Vector2D::new(1024, 768));
+        assert!(r1
+            .intersect(&r2)
+            .is_some_and(|r| r == r1));
+        assert!(r2
+            .intersect(&r1)
+            .is_some_and(|r| r == r1));
     }
 
 
