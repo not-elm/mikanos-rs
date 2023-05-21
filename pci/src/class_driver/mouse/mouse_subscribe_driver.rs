@@ -3,16 +3,17 @@ use alloc::boxed::Box;
 use common_lib::math::vector::Vector2D;
 
 use crate::class_driver::boot_protocol_buffer::BootProtocolBuffer;
-use crate::class_driver::ClassDriverOperate;
-use crate::class_driver::mouse::{
-    current_cursor_pos, mouse_button_boot_protocol, MOUSE_DATA_BUFF_SIZE,
-};
 use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
+use crate::class_driver::mouse::{
+    current_cursor_pos, mouse_button_boot_protocol, MouseButton, MOUSE_DATA_BUFF_SIZE,
+};
+use crate::class_driver::ClassDriverOperate;
 use crate::error::{PciError, PciResult};
 
 pub struct MouseSubscribeDriver {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
     current_pos: Vector2D<usize>,
+    current_button: Option<MouseButton>,
     subscriber: Box<dyn MouseSubscribable>,
 }
 
@@ -27,12 +28,16 @@ impl ClassDriverOperate for MouseSubscribeDriver {
         }
 
         let prev_cursor = self.current_pos;
+        let prev_button = self.current_button.clone();
+        self.current_button = mouse_button_boot_protocol(BootProtocolBuffer::new(&self.data_buff));
+
         self.current_pos = current_cursor_pos(prev_cursor, &self.data_buff);
         self.subscriber
             .subscribe(
                 prev_cursor,
                 self.current_pos,
-                mouse_button_boot_protocol(BootProtocolBuffer::new(&self.data_buff)),
+                prev_button,
+                self.current_button.clone(),
             )
             .map_err(|_| PciError::UserError)?;
 
@@ -53,6 +58,7 @@ impl MouseSubscribeDriver {
         Self {
             current_pos: Vector2D::new(0, 0),
             data_buff: [0; MOUSE_DATA_BUFF_SIZE],
+            current_button: None,
             subscriber,
         }
     }

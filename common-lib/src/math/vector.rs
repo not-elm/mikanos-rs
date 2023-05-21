@@ -1,3 +1,4 @@
+use core::cmp::max;
 use core::fmt::Debug;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
@@ -143,6 +144,14 @@ impl Vector2D<usize> {
 
     pub const fn zeros() -> Vector2D<usize> {
         Self::new(0, 0)
+    }
+
+
+    pub fn relative(&self, pos: Vector2D<usize>) -> Vector2D<isize> {
+        let x = max(0, self.x() as isize - pos.x() as isize);
+        let y = max(0, self.y() as isize - pos.y() as isize);
+
+        Vector2D::new(x, y)
     }
 }
 

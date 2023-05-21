@@ -66,8 +66,8 @@ impl Rectangle<usize> {
         let ex = min(a.end.x(), r.end.x());
         let ey = min(a.end.y(), r.end.y());
 
-        let w = ex - sx;
-        let h = ey - sy;
+        let w = ex.checked_sub(sx)?;
+        let h = ey.checked_sub(sy)?;
         if w > 0 && h > 0 {
             return Some(Rectangle::from_pos_and_size(
                 Vector2D::new(sx, sy),

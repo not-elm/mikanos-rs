@@ -1,4 +1,5 @@
 use auto_delegate::delegate;
+use core::cmp::max;
 
 use crate::math::rectangle::Rectangle;
 use crate::math::size::Size;
@@ -15,12 +16,23 @@ pub trait Transformable2D {
     fn rect(&self) -> Rectangle<usize>;
 
 
+    fn pos(&self) -> Vector2D<usize>;
+
+
     fn transform_ref(&self) -> &Transform2D;
 
 
     fn feed_transform(&mut self, transform: &Transform2D) {
         self.move_to(transform.pos());
         self.resize(transform.size());
+    }
+
+
+    fn move_to_relative(&mut self, pos: Vector2D<isize>) {
+        let x = max(0, self.pos().x() as isize + pos.x()) as usize;
+        let y = max(0, self.pos().y() as isize + pos.y()) as usize;
+
+        self.move_to(Vector2D::new(x, y));
     }
 }
 
@@ -38,11 +50,6 @@ impl Transform2D {
     }
 
 
-    pub fn pos(&self) -> Vector2D<usize> {
-        self.pos
-    }
-
-
     pub fn size(&self) -> Size {
         self.size
     }
@@ -56,6 +63,7 @@ impl Transform2D {
     pub fn set_pos(&mut self, pos: Vector2D<usize>) {
         self.pos = pos;
     }
+
 
     pub fn resize(&mut self, size: Size) {
         self.size = size;
@@ -82,6 +90,11 @@ impl Transformable2D for Transform2D {
 
     fn rect(&self) -> Rectangle<usize> {
         self.rect()
+    }
+
+
+    fn pos(&self) -> Vector2D<usize> {
+        self.pos
     }
 
 

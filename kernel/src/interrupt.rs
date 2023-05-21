@@ -10,6 +10,7 @@ use crate::println;
 
 use self::mouse::interrupt_mouse_handler;
 
+pub mod interrupt_queue_waiter;
 pub mod mouse;
 
 pub fn init_idt() -> KernelResult {

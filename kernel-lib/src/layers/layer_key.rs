@@ -1,4 +1,5 @@
 use alloc::string::String;
+use auto_delegate::Delegate;
 
 use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::transform2d::Transformable2D;
@@ -8,8 +9,10 @@ use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
 
+#[derive(Delegate)]
 pub struct LayerKey {
     key: String,
+    #[to(LayerUpdatable, Transformable2D)]
     layer: Layer,
 }
 

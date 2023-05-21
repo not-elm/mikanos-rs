@@ -2,6 +2,7 @@ use alloc::vec::Vec;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
+use common_lib::math::vector::Vector2D;
 use common_lib::transform::builder::Transform2DBuilder;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
@@ -10,12 +11,14 @@ use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
+use crate::serial_println;
 
 pub mod console;
 pub mod cursor;
 pub mod layer;
 pub mod layer_key;
 pub mod layer_updatable;
+pub mod multiple_layer;
 pub mod plain;
 pub mod shape;
 pub mod window;
@@ -50,21 +53,31 @@ impl Layers {
     }
 
 
+    pub fn find_window_layer_by_pos(&self, pos: &Vector2D<usize>) -> Option<&str> {
+        self.layers
+            .iter()
+            .filter(|layer| layer.rect().with_in_pos(pos))
+            .filter(|layer| layer.layer_ref().is_window())
+            .map(|layer| layer.key())
+            .last()
+    }
+
+
     pub fn update_layer(&mut self, key: &str, fun: impl FnOnce(&mut Layer)) -> KernelResult {
         let prev = self
             .layer_ref(key)?
             .transform_ref()
             .clone();
+
         let frame_rect = self.frame_rect();
         let layer = self.layer_mut(key)?;
         fun(layer);
 
-
         if !frame_rect.with_in_rect(&layer.rect()) {
-            layer.feed_transform(&prev);
+            serial_println!("{:?}", layer.rect());
+            layer.move_to(prev.pos());
             return Ok(());
         }
-
 
         self.draw_from_at(key, &prev.rect())
     }
@@ -75,7 +88,6 @@ impl Layers {
             layer.update_shadow_buffer(&mut self.shadow_buffer)?;
         }
 
-
         self.flush(&Rectangle::from_size(
             self.frame_buffer_config
                 .frame_size(),
@@ -84,11 +96,12 @@ impl Layers {
 
 
     fn draw_from_at(&mut self, key: &str, prev_area: &Rectangle<usize>) -> KernelResult {
-        self.update_shadow_buffer_in_area(&prev_area, None, Some(key))?;
+        self.update_shadow_buffer_in_area(prev_area, None, Some(key))?;
 
         let draw_area = &self.layer_ref(key)?.rect();
 
         self.update_shadow_buffer_in_area(draw_area, Some(key), None)?;
+
         self.flush(&prev_area.union(draw_area))
     }
 
@@ -108,10 +121,8 @@ impl Layers {
                 return Ok(());
             }
 
-
             layer.update_shadow_buffer_in_area(&mut self.shadow_buffer, area)?;
         }
-
 
         Ok(())
     }
@@ -126,7 +137,6 @@ impl Layers {
                     .frame_buff_length(),
             )
         };
-
 
         copy_frame_buff_in_area(
             self.shadow_buffer.raw_ref(),

@@ -1,6 +1,7 @@
-use alloc::rc::Rc;
 use core::cell::{OnceCell, RefCell, RefMut};
 use core::fmt::Write;
+
+use spin::Mutex;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::size::Size;
@@ -20,7 +21,7 @@ use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
-pub struct GlobalLayers(OnceCell<Rc<RefCell<Layers>>>);
+pub struct GlobalLayers(OnceCell<Mutex<RefCell<Layers>>>);
 
 
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
@@ -28,7 +29,6 @@ pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
 pub const WINDOW_LAYER_KEY: &str = "WINDOW";
 
 pub const MOUSE_LAYER_KEY: &str = "MOUSE_CURSOR";
-
 
 pub const CONSOLE_LAYER_KEY: &str = "CONSOLE";
 
@@ -42,13 +42,13 @@ impl GlobalLayers {
         let layers = Layers::new(frame_buffer_config);
 
         self.0
-            .set(Rc::new(RefCell::new(layers)))
+            .set(Mutex::new(RefCell::new(layers)))
             .map_err(|_| KernelError::FailedOperateLayer(LayerReason::FailedInitialize))
     }
 
 
-    pub fn layers_mut(&self) -> Rc<RefCell<Layers>> {
-        Rc::clone(self.0.get().unwrap())
+    pub fn layers_mut(&self) -> &Mutex<RefCell<Layers>> {
+        self.0.get().unwrap()
     }
 }
 
@@ -59,12 +59,13 @@ unsafe impl Sync for GlobalLayers {}
 pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
     LAYERS.init(frame_buffer_config)?;
 
-    let layers = LAYERS.layers_mut();
+    let biding = LAYERS.layers_mut();
+    let layers = biding.lock();
     let mut layers = layers.borrow_mut();
 
     add_background_layer(frame_buffer_config, &mut layers);
-    add_window_layer(frame_buffer_config, &mut layers);
     add_console_layer(frame_buffer_config, &mut layers);
+    add_window_layer(frame_buffer_config, &mut layers);
     add_mouse_layer(frame_buffer_config, &mut layers);
 
     layers.draw_all_layer()
@@ -91,7 +92,7 @@ fn add_window_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
     layers.new_layer(
         WindowLayer::new(
             config,
-            Transform2D::new(Vector2D::zeros(), Size::new(500, 300)),
+            Transform2D::new(Vector2D::new(100, 0), Size::new(300, 300)),
         )
         .into_enum()
         .into_layer_key(WINDOW_LAYER_KEY),
@@ -123,6 +124,7 @@ fn add_mouse_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
 pub fn _print(args: core::fmt::Arguments) {
     LAYERS
         .layers_mut()
+        .lock()
         .borrow_mut()
         .update_layer(CONSOLE_LAYER_KEY, |layer| {
             layer

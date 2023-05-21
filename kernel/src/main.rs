@@ -78,7 +78,7 @@ pub extern "sysv64" fn kernel_main(
 #[cfg(not(test))]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    serial_println!("{:?}", info);
+    serial_println!("{}", info);
 
     common_lib::assembly::hlt_forever();
 }
@@ -94,5 +94,6 @@ fn panic(info: &PanicInfo) -> ! {
 #[alloc_error_handler]
 fn on_oom(layout: core::alloc::Layout) -> ! {
     println!("Failed Heap Allocate! {:?}", layout);
+    serial_println!("Failed Heap Allocate! {:?}", layout);
     common_lib::assembly::hlt_forever();
 }

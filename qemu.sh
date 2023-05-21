@@ -25,7 +25,7 @@ elif [ "$QEMU_STATE" = "test" ]; then
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
 else
   qemu-system-x86_64 \
-    -m 8G \
+    -m 2G \
     -bios OVMF.fd \
     -drive if=ide,index=0,media=disk,format=raw,file='disk.img' \
     -device nec-usb-xhci,id=xhci \

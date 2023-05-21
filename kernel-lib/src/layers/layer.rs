@@ -37,6 +37,19 @@ impl Layer {
     }
 
 
+    pub fn require_window(&mut self) -> KernelResult<&mut WindowLayer> {
+        match self {
+            Self::Window(window) => Ok(window),
+            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+        }
+    }
+
+
+    pub fn is_window(&self) -> bool {
+        matches!(self, Self::Window(_))
+    }
+
+
     pub fn into_layer_key(self, key: &str) -> LayerKey {
         LayerKey::new(key, self)
     }
