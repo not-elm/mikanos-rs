@@ -35,13 +35,9 @@ impl MultipleLayer {
 
 impl Transformable2D for MultipleLayer {
     fn move_to(&mut self, pos: Vector2D<usize>) {
-        self.transform.move_to(pos);
-
         let relative = pos.relative(self.pos());
 
-        self.layers
-            .iter_mut()
-            .for_each(|layer| layer.move_to_relative(relative));
+        self.move_to_relative(relative);
     }
 
     fn resize(&mut self, size: Size) {
@@ -59,6 +55,16 @@ impl Transformable2D for MultipleLayer {
     fn transform_ref(&self) -> &Transform2D {
         self.transform.transform_ref()
     }
+
+
+    fn move_to_relative(&mut self, pos: Vector2D<isize>) {
+        self.transform
+            .move_to_relative(pos);
+
+        self.layers
+            .iter_mut()
+            .for_each(|layer| layer.move_to_relative(pos));
+    }
 }
 
 
@@ -70,7 +76,7 @@ impl LayerUpdatable for MultipleLayer {
     ) -> KernelResult {
         for layer in self.layers.iter_mut() {
             if let Some(draw_rect) = draw_area.intersect(&layer.rect()) {
-                layer.update_shadow_buffer(shadow_frame_buff, &draw_area)?;
+                layer.update_shadow_buffer(shadow_frame_buff, &draw_rect)?;
             }
         }
 

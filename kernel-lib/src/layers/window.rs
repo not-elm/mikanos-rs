@@ -3,7 +3,7 @@ use auto_delegate::Delegate;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::transform2d::{Transform2D, Transformable2D};
+use common_lib::transform::transform2d::Transform2D;
 
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::console::console_colors::ConsoleColors;
@@ -49,7 +49,7 @@ fn window_background_layer(config: FrameBufferConfig, transform: Transform2D) ->
         ),
         transform,
     )
-    .into_enum()
+        .into_enum()
 }
 
 
@@ -67,7 +67,7 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
             Size::new(transform.size().width(), height),
         ),
     )
-    .into_enum()
+        .into_enum()
 }
 
 

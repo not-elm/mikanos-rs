@@ -1,4 +1,3 @@
-use core::cmp::max;
 use core::fmt::Debug;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Sub};
 
@@ -12,8 +11,8 @@ pub struct Vector2D<T> {
 
 
 impl<T> Add for Vector2D<T>
-where
-    T: Add + Copy,
+    where
+        T: Add + Copy,
 {
     type Output = Vector2D<T::Output>;
 
@@ -26,7 +25,7 @@ where
 }
 
 
-impl<Num: Copy + Add<Output = Num>> Add<Num> for Vector2D<Num> {
+impl<Num: Copy + Add<Output=Num>> Add<Num> for Vector2D<Num> {
     type Output = Vector2D<Num::Output>;
 
     fn add(self, rhs: Num) -> Self::Output {
@@ -50,7 +49,7 @@ impl Add<Size> for Vector2D<usize> {
 }
 
 
-impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Vector2D<Num> {
+impl<Num: Copy + Sub<Output=Num>> Sub<Vector2D<Num>> for Vector2D<Num> {
     type Output = Vector2D<Num>;
 
     fn sub(self, rhs: Vector2D<Num>) -> Self::Output {
@@ -59,7 +58,7 @@ impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Vector2D<Num> {
 }
 
 
-impl<Num: Copy + Sub<Output = Num>> Sub<Num> for Vector2D<Num> {
+impl<Num: Copy + Sub<Output=Num>> Sub<Num> for Vector2D<Num> {
     type Output = Vector2D<Num>;
 
     fn sub(self, rhs: Num) -> Self::Output {
@@ -69,8 +68,8 @@ impl<Num: Copy + Sub<Output = Num>> Sub<Num> for Vector2D<Num> {
 
 
 impl<T: Copy + PartialOrd> AddAssign for Vector2D<T>
-where
-    T: AddAssign + Copy + Clone + Debug,
+    where
+        T: AddAssign + Copy + Clone + Debug,
 {
     fn add_assign(&mut self, rhs: Self) {
         self.x += rhs.x;
@@ -79,7 +78,7 @@ where
 }
 
 
-impl<Num: Copy + Mul<Output = Num>> Mul<Num> for Vector2D<Num> {
+impl<Num: Copy + Mul<Output=Num>> Mul<Num> for Vector2D<Num> {
     type Output = Vector2D<Num>;
 
     fn mul(self, rhs: Num) -> Self::Output {
@@ -88,7 +87,7 @@ impl<Num: Copy + Mul<Output = Num>> Mul<Num> for Vector2D<Num> {
 }
 
 
-impl<Num: Copy + Mul<Output = Num>> MulAssign<Num> for Vector2D<Num> {
+impl<Num: Copy + Mul<Output=Num>> MulAssign<Num> for Vector2D<Num> {
     fn mul_assign(&mut self, rhs: Num) {
         self.x = self.x * rhs;
         self.y = self.y * rhs;
@@ -148,8 +147,8 @@ impl Vector2D<usize> {
 
 
     pub fn relative(&self, pos: Vector2D<usize>) -> Vector2D<isize> {
-        let x = max(0, self.x() as isize - pos.x() as isize);
-        let y = max(0, self.y() as isize - pos.y() as isize);
+        let x = self.x() as isize - pos.x() as isize;
+        let y = self.y() as isize - pos.y() as isize;
 
         Vector2D::new(x, y)
     }
@@ -235,5 +234,16 @@ mod tests {
         v1 *= 3;
 
         assert_eq!(v1, Vector2D::new(15, 15));
+    }
+
+
+    #[test]
+    fn it_relative_move_left() {
+        let origin = Vector2D::<usize>::new(5, 5);
+        let moved = Vector2D::<usize>::new(3, 5);
+
+        let relative = moved.relative(origin);
+
+        assert_eq!(relative, Vector2D::new(-2, 0));
     }
 }

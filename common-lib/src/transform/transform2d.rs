@@ -30,7 +30,7 @@ pub trait Transformable2D {
 
     fn move_to_relative(&mut self, pos: Vector2D<isize>) {
         let x = max(0, self.pos().x() as isize + pos.x()) as usize;
-        let y = max(0, self.pos().y() as isize + pos.y()) as usize;
+        let y =   max(0, self.pos().y() as isize + pos.y()) as usize;
 
         self.move_to(Vector2D::new(x, y));
     }

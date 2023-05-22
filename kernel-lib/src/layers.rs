@@ -11,7 +11,6 @@ use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
-use crate::serial_println;
 
 pub mod console;
 pub mod cursor;
@@ -74,7 +73,6 @@ impl Layers {
         fun(layer);
 
         if !frame_rect.with_in_rect(&layer.rect()) {
-            serial_println!("{:?}", layer.rect());
             layer.move_to(prev.pos());
             return Ok(());
         }
