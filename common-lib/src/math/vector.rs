@@ -1,5 +1,6 @@
 use core::fmt::Debug;
 use core::ops::{Add, AddAssign, Mul, MulAssign, Sub};
+use crate::math::Align;
 
 use crate::math::size::Size;
 
@@ -108,6 +109,16 @@ impl<T: Copy> Vector2D<T> {
 
     pub const fn y(&self) -> T {
         self.y
+    }
+}
+
+
+impl Align<Vector2D<usize>> for Vector2D<usize> {
+    fn align_up(&self, align: usize) -> Option<Vector2D<usize>> {
+        let x = self.x.align_up(align)?;
+        let y= self.y.align_up(align)?;
+
+        Some(Vector2D::new(x, y))
     }
 }
 

@@ -24,12 +24,9 @@ pub struct WindowLayer {
 impl WindowLayer {
     pub fn new(config: FrameBufferConfig, transform: Transform2D) -> Self {
         let mut multiple_layer = MultipleLayer::new(transform.clone());
-        multiple_layer.new_layer(window_background_layer(
-            config,
-            Transform2D::new(Vector2D::zeros(), transform.size()),
-        ));
-        multiple_layer.new_layer(toolbar_layer(config, &transform));
 
+        multiple_layer.new_layer(window_background_layer(config, &transform));
+        multiple_layer.new_layer(toolbar_layer(config, &transform));
 
         Self { multiple_layer }
     }
@@ -41,13 +38,13 @@ impl WindowLayer {
 }
 
 
-fn window_background_layer(config: FrameBufferConfig, transform: Transform2D) -> Layer {
+fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
     ShapeLayer::new(
         ShapeDrawer::new(
             config,
-            ShapeColors::default().change_foreground(PixelColor::black()),
+            ShapeColors::default().change_foreground(PixelColor::yellow()),
         ),
-        transform,
+        Transform2D::new(Vector2D::zeros(), transform.size()),
     )
         .into_enum()
 }

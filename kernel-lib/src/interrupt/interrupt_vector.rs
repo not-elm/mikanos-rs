@@ -2,6 +2,8 @@
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum InterruptVector {
+    Overflow = 0x04,
+    PageFault = 0x08,
     Xhci = 0x40,
     NotSupport,
 }

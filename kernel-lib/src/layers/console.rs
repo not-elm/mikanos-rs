@@ -1,12 +1,14 @@
+use core::cmp::{max, min};
 use core::fmt::Error;
 
 use auto_delegate::Delegate;
 
 use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::math::Align;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::transform2d::Transform2D;
+use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 use console_colors::ConsoleColors;
 
 use crate::error::KernelResult;
@@ -15,7 +17,6 @@ use crate::gop::char::char_writable::CharWritable;
 use crate::gop::pixel::calc_pixel_pos_from_vec2d;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::console::console_frame::ConsoleFrame;
-use crate::layers::frame_buffer_layer_transform;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
 
@@ -35,9 +36,9 @@ pub struct ConsoleLayer {
 
 impl ConsoleLayer {
     pub fn new(config: FrameBufferConfig, colors: ConsoleColors) -> Self {
-        let transform = frame_buffer_layer_transform(config);
         let ascii = AscIICharWriter::new();
         let font_unit = ascii.font_unit();
+        let transform = Transform2D::new(Vector2D::zeros(), Size::new(300, 500));
         let font_frame_size = calc_text_frame_size(transform.size(), font_unit);
         let frame = ConsoleFrame::new(colors, ascii, font_frame_size, config.pixel_format);
 
@@ -54,6 +55,7 @@ impl ConsoleLayer {
         self.frame
             .resize_text_frame(calc_text_frame_size(layer_size, self.font_unit))
     }
+
 
     pub fn into_enum(self) -> Layer {
         Layer::Console(self)
@@ -74,21 +76,29 @@ impl LayerUpdatable for ConsoleLayer {
     fn update_shadow_buffer(
         &mut self,
         shadow_buff: &mut ShadowFrameBuffer,
-        _draw_area: &Rectangle<usize>,
+        draw_area: &Rectangle<usize>,
     ) -> KernelResult {
-        for (y, line) in self
-            .frame
-            .frame_buff_lines()
-            .into_iter()
-            .flatten()
-            .enumerate()
-        {
-            let origin = calc_pixel_pos_from_vec2d(&self.config, &Vector2D::new(0, y))?;
+        let x = draw_area.origin().x();
+        for (iy, line) in self
+                .frame
+                .frame_buff_lines()
+                .into_iter()
+                .flatten()
+                .enumerate()
+            {
+                let y = iy + draw_area.origin().y();
+                if draw_area.end().y() < y {
+                    return Ok(());
+                }
 
-            let end = origin + line.len();
+                let origin = calc_pixel_pos_from_vec2d(&self.config, &Vector2D::new(x, y))?;
 
-            shadow_buff.raw_mut()[origin..end].copy_from_slice(line);
-        }
+                let width = line.len();
+                let end = origin + width;
+
+                shadow_buff.raw_mut()[origin..end].copy_from_slice(line);
+            }
+
         Ok(())
     }
 }
@@ -99,11 +109,32 @@ fn calc_text_frame_size(layer_size: Size, font_unit_size: Size) -> Size {
 }
 
 
+fn calc_text_line_range(
+    layer_rec: &Rectangle<usize>,
+    draw_rec: &Rectangle<usize>,
+    font_unit: &Size,
+) -> Option<(usize, usize)> {
+    let lo = layer_rec.origin().x();
+    let lo = if lo == 0 { 0 } else { lo.align_up(font_unit.width())? };
+
+    let xo = draw_rec.origin().x().align_up(font_unit.width())?;
+    let io = xo.checked_sub(lo)? * 4;
+
+    let text_len = draw_rec.end().x().checked_sub(xo)? / font_unit.width();
+
+    let ie = io + text_len * font_unit.width() * 4;
+
+    Some((io, ie))
+}
+
+
 #[cfg(test)]
 mod tests {
+    use common_lib::math::rectangle::Rectangle;
     use common_lib::math::size::Size;
+    use common_lib::math::vector::Vector2D;
 
-    use crate::layers::console::calc_text_frame_size;
+    use crate::layers::console::{calc_text_frame_size, calc_text_line_range};
 
     #[test]
     fn it_font_frame_size() {
@@ -112,5 +143,25 @@ mod tests {
 
         let font_frame_size = calc_text_frame_size(Size::new(83, 163), Size::new(8, 16));
         assert_eq!(font_frame_size, Size::new(10, 10));
+    }
+
+
+    #[test]
+    fn it_calc_text_line_range_one_text() {
+        let layer_rect = Rectangle::from_size(Size::new(100, 100));
+        let draw_area = Rectangle::new(Vector2D::new(8, 0), Vector2D::new(16, 0));
+        let (io, ie) = calc_text_line_range(&layer_rect, &draw_area, &Size::new(8, 16)).unwrap();
+        assert_eq!(io, 32);
+        assert_eq!(ie, 64)
+    }
+
+
+    #[test]
+    fn it_calc_text_line_range() {
+        let layer_rect = Rectangle::from_size(Size::new(100, 100));
+        let draw_area = Rectangle::new(Vector2D::new(3, 0), Vector2D::new(90, 0));
+        let (io, ie) = calc_text_line_range(&layer_rect, &draw_area, &Size::new(8, 16)).unwrap();
+        assert_eq!(io, 32);
+        assert_eq!(ie, 352)
     }
 }

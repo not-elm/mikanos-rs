@@ -88,26 +88,6 @@ impl CursorBuffer {
         self.0[0].len()
     }
 
-    //
-    // pub fn cursor_pixels_checked(
-    //     &self,
-    //     transform: &Transform2D,
-    //     cursor_color: PixelColor,
-    //     border_color: PixelColor,
-    // ) -> KernelResult<impl PixelIter + '_> {
-    //     if self.is_not_drawable(transform.rect(), transform.pos()) {
-    //         return Err(KernelError::FailedOperateLayer(
-    //             LayerReason::WindowSizeOver(transform.rect()),
-    //         ));
-    //     }
-    //     Ok(self.cursor_pixels(
-    //         transform.pos(),
-    //         Some(transform.rect().end()),
-    //         cursor_color,
-    //         border_color,
-    //     ))
-    // }
-
 
     pub fn cursor_pixels(
         &self,
@@ -157,6 +137,7 @@ impl CursorBuffer {
         window_rect.with_in_pos(&cursor_pos)
     }
 
+    
     #[cfg(test)]
     fn is_not_drawable(&self, layer_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
         !self.is_drawable(layer_rect, cursor_pos)
@@ -180,7 +161,7 @@ mod tests {
     use common_lib::math::vector::Vector2D;
 
     use crate::layers::cursor::cursor_buffer::{
-        CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
+        CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH, CursorBuffer,
     };
 
     #[test]
