@@ -1,3 +1,5 @@
+use auto_delegate::delegate;
+
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
 
@@ -9,13 +11,13 @@ pub mod bgr_pixel_mapper;
 pub mod enum_pixel_mapper;
 pub mod rgb_pixel_mapper;
 
-
+#[delegate]
 pub trait PixelMapper {
     /// 1ピクセルあたりのバイト数
     fn pixel_len(&self) -> usize;
 
 
-    fn convert_to_buff(&mut self, color: &PixelColor) -> &[u8];
+    fn convert_to_buff(&mut self, color: &PixelColor) -> &[u8; 4];
 
 
     fn write_frame_buff(

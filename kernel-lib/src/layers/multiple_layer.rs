@@ -30,6 +30,12 @@ impl MultipleLayer {
         layer.move_to(layer.pos() + self.pos());
         self.layers.push(layer);
     }
+
+
+
+    pub fn layers_mut(&mut self) -> &mut Vec<Layer>{
+        &mut self.layers
+    }
 }
 
 

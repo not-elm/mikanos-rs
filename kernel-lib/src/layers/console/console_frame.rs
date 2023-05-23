@@ -36,7 +36,14 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
     }
 
 
-    pub fn write_string(&mut self, str: &str) -> KernelResult {
+    pub fn update_string(&mut self, str: &str) -> KernelResult {
+        self.rows.remove(0);
+        self.add_row();
+        self.append_string(str)
+    }
+
+
+    pub fn append_string(&mut self, str: &str) -> KernelResult {
         for c in str.chars() {
             if self.write_char(c)? {
                 self.new_line();
@@ -63,6 +70,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
             self.rows
                 .resize_with(text_frame_size.height(), || {
                     ConsoleRow::new(
+                        self.colors.background(),
                         self.char_writer.font_unit(),
                         text_frame_size.width(),
                         self.pixel_format,
@@ -109,6 +117,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
 
     fn new_row(&self) -> ConsoleRow {
         ConsoleRow::new(
+            self.colors.background(),
             self.char_writer.font_unit(),
             self.text_frame_size.width(),
             self.pixel_format,
@@ -153,12 +162,12 @@ mod tests {
             PixelFormat::Rgb,
         );
         frame
-            .write_string("ABC")
+            .append_string("ABC")
             .unwrap();
         assert_eq!(frame.rows.len(), 1);
 
         frame
-            .write_string("A")
+            .append_string("A")
             .unwrap();
         assert_eq!(frame.rows.len(), 2);
     }
@@ -173,7 +182,7 @@ mod tests {
             PixelFormat::Rgb,
         );
         frame
-            .write_string("Hello")
+            .append_string("Hello")
             .unwrap();
 
         assert_eq!(frame.frame_buff_lines().len(), 2);
@@ -194,7 +203,7 @@ mod tests {
         assert_eq!(frame.text_frame_size, Size::new(5, 5));
 
         frame
-            .write_string("hello")
+            .append_string("hello")
             .unwrap();
         assert_eq!(frame.rows.len(), 1);
 
@@ -202,7 +211,7 @@ mod tests {
         assert_eq!(frame.rows[0].max_text_len(), 5);
 
         frame
-            .write_string("!")
+            .append_string("!")
             .unwrap();
         assert_eq!(frame.rows.len(), 2);
         assert_eq!(frame.rows[1].current_text_len(), 1);
@@ -219,13 +228,13 @@ mod tests {
             PixelFormat::Rgb,
         );
         frame
-            .write_string("1234")
+            .append_string("1234")
             .unwrap();
         frame
-            .write_string("123")
+            .append_string("123")
             .unwrap();
         frame
-            .write_string("12")
+            .append_string("12")
             .unwrap();
 
         frame.resize_text_frame(Size::new(1, 1));
@@ -237,7 +246,7 @@ mod tests {
         assert_eq!(frame.rows[0].max_text_len(), 1);
 
         frame
-            .write_string("!")
+            .append_string("!")
             .unwrap();
         assert_eq!(frame.rows.len(), 1);
         assert_eq!(frame.rows[0].current_text_len(), 1);

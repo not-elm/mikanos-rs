@@ -5,8 +5,8 @@ use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::layers::cursor::cursor_colors::CursorColors;
-use kernel_lib::timer::apic::local_apic_timer::OneShotLocalApicTimer;
 use kernel_lib::timer::apic::ApicTimer;
+use kernel_lib::timer::apic::local_apic_timer::OneShotLocalApicTimer;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
 
@@ -37,9 +37,8 @@ impl MouseSubscribable for MouseSubscriber {
 
         {
             update_cursor_layer(current_cursor, button)?;
-            update_draggable_layer(prev_cursor, current_cursor, prev_button, button)?;
+            update_draggable_layer(prev_cursor, current_cursor, prev_button, button, timer.elapsed() as usize)?;
         }
-
 
         println!("Done Xhc All Events Time = {}", timer.elapsed());
         timer.stop();
@@ -54,6 +53,7 @@ fn update_draggable_layer(
     current_cursor: Vector2D<usize>,
     prev_button: Option<MouseButton>,
     button: Option<MouseButton>,
+    count: usize,
 ) -> Result<(), ()> {
     let prev_drag = prev_button.is_some_and(|b| matches!(b, MouseButton::Button1));
     let current_drag = button.is_some_and(|b| matches!(b, MouseButton::Button1));
@@ -68,6 +68,9 @@ fn update_draggable_layer(
                 .borrow_mut()
                 .update_layer(window_key.as_str(), |layer| {
                     layer.move_to_relative(relative);
+                    layer.require_window()
+                        .unwrap()
+                        .write_count(count);
                 })
                 .map_err(|_| ())?;
         }

@@ -24,7 +24,7 @@ impl PixelMapper for BgrPixelMapper {
         4
     }
 
-    fn convert_to_buff(&mut self, color: &PixelColor) -> &[u8] {
+    fn convert_to_buff(&mut self, color: &PixelColor) -> &[u8; 4] {
         self.0 = [
             color.b(),
             color.g(),

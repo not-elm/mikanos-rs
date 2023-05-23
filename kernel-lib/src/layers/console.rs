@@ -1,4 +1,3 @@
-use core::cmp::{max, min};
 use core::fmt::Error;
 
 use auto_delegate::Delegate;
@@ -8,7 +7,7 @@ use common_lib::math::Align;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::transform2d::{Transform2D, Transformable2D};
+use common_lib::transform::transform2d::Transform2D;
 use console_colors::ConsoleColors;
 
 use crate::error::KernelResult;
@@ -35,10 +34,13 @@ pub struct ConsoleLayer {
 
 
 impl ConsoleLayer {
-    pub fn new(config: FrameBufferConfig, colors: ConsoleColors) -> Self {
+    pub fn new(
+        config: FrameBufferConfig,
+        transform: Transform2D,
+        colors: ConsoleColors) -> Self {
         let ascii = AscIICharWriter::new();
         let font_unit = ascii.font_unit();
-        let transform = Transform2D::new(Vector2D::zeros(), Size::new(300, 500));
+
         let font_frame_size = calc_text_frame_size(transform.size(), font_unit);
         let frame = ConsoleFrame::new(colors, ascii, font_frame_size, config.pixel_format);
 
@@ -48,6 +50,11 @@ impl ConsoleLayer {
             font_unit,
             config,
         }
+    }
+
+
+    pub fn update_string(&mut self, str: &str) -> KernelResult {
+        self.frame.update_string(str)
     }
 
 
@@ -66,7 +73,7 @@ impl ConsoleLayer {
 impl core::fmt::Write for ConsoleLayer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.frame
-            .write_string(s)
+            .append_string(s)
             .map_err(|_| Error)
     }
 }
@@ -79,7 +86,8 @@ impl LayerUpdatable for ConsoleLayer {
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         let x = draw_area.origin().x();
-        for (iy, line) in self
+        if let Some((io, ie)) = calc_text_line_range(&self.transform.rect(), draw_area, &self.font_unit) {
+            for (iy, line) in self
                 .frame
                 .frame_buff_lines()
                 .into_iter()
@@ -92,12 +100,12 @@ impl LayerUpdatable for ConsoleLayer {
                 }
 
                 let origin = calc_pixel_pos_from_vec2d(&self.config, &Vector2D::new(x, y))?;
+                let width = ie - io;
 
-                let width = line.len();
-                let end = origin + width;
-
-                shadow_buff.raw_mut()[origin..end].copy_from_slice(line);
+                shadow_buff.raw_mut()[origin..(origin + width)].copy_from_slice(&line[io..ie]);
             }
+        }
+
 
         Ok(())
     }
@@ -117,7 +125,7 @@ fn calc_text_line_range(
     let lo = layer_rec.origin().x();
     let lo = if lo == 0 { 0 } else { lo.align_up(font_unit.width())? };
 
-    let xo = draw_rec.origin().x().align_up(font_unit.width())?;
+    let xo = if draw_rec.origin().x() == 0 { 0 } else { draw_rec.origin().x().align_up(font_unit.width())? };
     let io = xo.checked_sub(lo)? * 4;
 
     let text_len = draw_rec.end().x().checked_sub(xo)? / font_unit.width();

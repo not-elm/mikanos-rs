@@ -1,3 +1,5 @@
+use alloc::format;
+
 use auto_delegate::Delegate;
 
 use common_lib::frame_buffer::FrameBufferConfig;
@@ -25,10 +27,25 @@ impl WindowLayer {
     pub fn new(config: FrameBufferConfig, transform: Transform2D) -> Self {
         let mut multiple_layer = MultipleLayer::new(transform.clone());
 
+        multiple_layer.new_layer(shadow_layer(config, &transform));
         multiple_layer.new_layer(window_background_layer(config, &transform));
         multiple_layer.new_layer(toolbar_layer(config, &transform));
+        multiple_layer.new_layer(toolbar_title_layer(config));
+        multiple_layer.new_layer(count_text_layer(config));
 
         Self { multiple_layer }
+    }
+
+
+    pub fn write_count(&mut self, count: usize) {
+        self.multiple_layer
+            .layers_mut()
+            .get_mut(4)
+            .unwrap()
+            .require_console()
+            .unwrap()
+            .update_string(format!("{}", count).as_str())
+            .unwrap();
     }
 
 
@@ -38,11 +55,11 @@ impl WindowLayer {
 }
 
 
-fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
+fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
     ShapeLayer::new(
         ShapeDrawer::new(
             config,
-            ShapeColors::default().change_foreground(PixelColor::yellow()),
+            ShapeColors::default().change_foreground(PixelColor::black()),
         ),
         Transform2D::new(Vector2D::zeros(), transform.size()),
     )
@@ -50,24 +67,49 @@ fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -
 }
 
 
-fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
-    let height = transform.size().height() as f64 * 0.1;
-    let height = height as usize;
-
+fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
     ShapeLayer::new(
         ShapeDrawer::new(
             config,
-            ShapeColors::new(PixelColor::new(0x33, 0x33, 0x33), None),
+            ShapeColors::default().change_foreground(PixelColor::new(0xC6, 0xC6, 0xC6)),
+        ),
+        Transform2D::new(Vector2D::zeros(), Size::new(transform.size().width() - 1, transform.size().height() - 1)),
+    )
+        .into_enum()
+}
+
+
+fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
+    ShapeLayer::new(
+        ShapeDrawer::new(
+            config,
+            ShapeColors::new(PixelColor::new(0x00, 0x00, 0x84), None),
         ),
         Transform2D::new(
-            Vector2D::zeros(),
-            Size::new(transform.size().width(), height),
+            Vector2D::new(3, 3),
+            Size::new(transform.size().width() - 6, 18),
         ),
     )
         .into_enum()
 }
 
 
+fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
+    let mut text = ConsoleLayer::new(config,
+                                     Transform2D::new(Vector2D::new(24, 4), Size::new(200, 100)),
+                                     ConsoleColors::new(PixelColor::white(), PixelColor::new(0x00, 0x00, 0x84)),
+    );
+
+    text.update_string("Hello Window").unwrap();
+
+    text.into_enum()
+}
+
+
 fn count_text_layer(config: FrameBufferConfig) -> Layer {
-    ConsoleLayer::new(config, ConsoleColors::default()).into_enum()
+    ConsoleLayer::new(config,
+                      Transform2D::new(Vector2D::new(100, 100), Size::new(100, 100)),
+                      ConsoleColors::new(PixelColor::white(), PixelColor::black()),
+    )
+        .into_enum()
 }
