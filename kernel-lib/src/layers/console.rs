@@ -3,10 +3,10 @@ use core::fmt::Error;
 use auto_delegate::Delegate;
 
 use common_lib::frame_buffer::FrameBufferConfig;
-use common_lib::math::Align;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
+use common_lib::math::Align;
 use common_lib::transform::transform2d::Transform2D;
 use console_colors::ConsoleColors;
 
@@ -34,10 +34,7 @@ pub struct ConsoleLayer {
 
 
 impl ConsoleLayer {
-    pub fn new(
-        config: FrameBufferConfig,
-        transform: Transform2D,
-        colors: ConsoleColors) -> Self {
+    pub fn new(config: FrameBufferConfig, transform: Transform2D, colors: ConsoleColors) -> Self {
         let ascii = AscIICharWriter::new();
         let font_unit = ascii.font_unit();
 
@@ -86,7 +83,9 @@ impl LayerUpdatable for ConsoleLayer {
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         let x = draw_area.origin().x();
-        if let Some((io, ie)) = calc_text_line_range(&self.transform.rect(), draw_area, &self.font_unit) {
+        if let Some((io, ie)) =
+            calc_text_line_range(&self.transform.rect(), draw_area, &self.font_unit)
+        {
             for (iy, line) in self
                 .frame
                 .frame_buff_lines()
@@ -123,12 +122,27 @@ fn calc_text_line_range(
     font_unit: &Size,
 ) -> Option<(usize, usize)> {
     let lo = layer_rec.origin().x();
-    let lo = if lo == 0 { 0 } else { lo.align_up(font_unit.width())? };
+    let lo = if lo == 0 {
+        0
+    } else {
+        lo.align_up(font_unit.width())?
+    };
 
-    let xo = if draw_rec.origin().x() == 0 { 0 } else { draw_rec.origin().x().align_up(font_unit.width())? };
+    let xo = if draw_rec.origin().x() == 0 {
+        0
+    } else {
+        draw_rec
+            .origin()
+            .x()
+            .align_up(font_unit.width())?
+    };
     let io = xo.checked_sub(lo)? * 4;
 
-    let text_len = draw_rec.end().x().checked_sub(xo)? / font_unit.width();
+    let text_len = draw_rec
+        .end()
+        .x()
+        .checked_sub(xo)?
+        / font_unit.width();
 
     let ie = io + text_len * font_unit.width() * 4;
 

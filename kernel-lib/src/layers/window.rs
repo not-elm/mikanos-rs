@@ -63,7 +63,7 @@ fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
         ),
         Transform2D::new(Vector2D::zeros(), transform.size()),
     )
-        .into_enum()
+    .into_enum()
 }
 
 
@@ -73,9 +73,12 @@ fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -
             config,
             ShapeColors::default().change_foreground(PixelColor::new(0xC6, 0xC6, 0xC6)),
         ),
-        Transform2D::new(Vector2D::zeros(), Size::new(transform.size().width() - 1, transform.size().height() - 1)),
+        Transform2D::new(
+            Vector2D::zeros(),
+            Size::new(transform.size().width() - 1, transform.size().height() - 1),
+        ),
     )
-        .into_enum()
+    .into_enum()
 }
 
 
@@ -90,26 +93,29 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
             Size::new(transform.size().width() - 6, 18),
         ),
     )
-        .into_enum()
+    .into_enum()
 }
 
 
 fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
-    let mut text = ConsoleLayer::new(config,
-                                     Transform2D::new(Vector2D::new(24, 4), Size::new(200, 100)),
-                                     ConsoleColors::new(PixelColor::white(), PixelColor::new(0x00, 0x00, 0x84)),
+    let mut text = ConsoleLayer::new(
+        config,
+        Transform2D::new(Vector2D::new(24, 4), Size::new(200, 20)),
+        ConsoleColors::new(PixelColor::white(), PixelColor::new(0x00, 0x00, 0x84)),
     );
 
-    text.update_string("Hello Window").unwrap();
+    text.update_string("Hello Window")
+        .unwrap();
 
     text.into_enum()
 }
 
 
 fn count_text_layer(config: FrameBufferConfig) -> Layer {
-    ConsoleLayer::new(config,
-                      Transform2D::new(Vector2D::new(100, 100), Size::new(100, 100)),
-                      ConsoleColors::new(PixelColor::white(), PixelColor::black()),
+    ConsoleLayer::new(
+        config,
+        Transform2D::new(Vector2D::new(100, 100), Size::new(100, 20)),
+        ConsoleColors::new(PixelColor::white(), PixelColor::black()),
     )
-        .into_enum()
+    .into_enum()
 }

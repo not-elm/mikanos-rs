@@ -32,8 +32,7 @@ impl MultipleLayer {
     }
 
 
-
-    pub fn layers_mut(&mut self) -> &mut Vec<Layer>{
+    pub fn layers_mut(&mut self) -> &mut Vec<Layer> {
         &mut self.layers
     }
 }
