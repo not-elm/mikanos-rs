@@ -1,4 +1,5 @@
 use alloc::vec::Vec;
+use core::num::TryFromIntError;
 
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
@@ -62,13 +63,19 @@ impl Transformable2D for MultipleLayer {
     }
 
 
-    fn move_to_relative(&mut self, pos: Vector2D<isize>) {
-        self.transform
-            .move_to_relative(pos);
+    fn move_to_relative(&mut self, pos: Vector2D<isize>) -> Result<(), TryFromIntError> {
+        if self
+            .transform
+            .move_to_relative(pos)
+            .is_ok()
+        {
+            for layer in self.layers.iter_mut() {
+                layer.move_to_relative(pos)?;
+            }
+        }
 
-        self.layers
-            .iter_mut()
-            .for_each(|layer| layer.move_to_relative(pos));
+
+        Ok(())
     }
 }
 

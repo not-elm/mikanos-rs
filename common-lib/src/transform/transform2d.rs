@@ -1,5 +1,6 @@
+use core::num::TryFromIntError;
+
 use auto_delegate::delegate;
-use core::cmp::max;
 
 use crate::math::rectangle::Rectangle;
 use crate::math::size::Size;
@@ -28,11 +29,14 @@ pub trait Transformable2D {
     }
 
 
-    fn move_to_relative(&mut self, pos: Vector2D<isize>) {
-        let x = max(0, self.pos().x() as isize + pos.x()) as usize;
-        let y =   max(0, self.pos().y() as isize + pos.y()) as usize;
+    fn move_to_relative(&mut self, pos: Vector2D<isize>) -> Result<(), TryFromIntError> {
+        let x = usize::try_from(self.pos().x() as isize + pos.x())?;
+
+        let y = usize::try_from(self.pos().y() as isize + pos.y())?;
 
         self.move_to(Vector2D::new(x, y));
+
+        Ok(())
     }
 }
 
