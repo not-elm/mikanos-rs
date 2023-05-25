@@ -43,7 +43,7 @@ impl Transformable2D for MultipleLayer {
     fn move_to(&mut self, pos: Vector2D<usize>) {
         let relative = pos.relative(self.pos());
 
-        self.move_to_relative(relative);
+        self.move_to_relative(relative).unwrap_or(());
     }
 
     fn resize(&mut self, size: Size) {
