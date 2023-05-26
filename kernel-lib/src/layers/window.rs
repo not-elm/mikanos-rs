@@ -1,5 +1,3 @@
-use alloc::format;
-
 use auto_delegate::Delegate;
 
 use common_lib::math::size::Size;
@@ -7,9 +5,11 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
 use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transformable2D};
 
+use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::console::console_colors::ConsoleColors;
 use crate::layers::console::ConsoleLayer;
+use crate::layers::count::CountLayer;
 use crate::layers::layer::Layer;
 use crate::layers::multiple_layer::MultipleLayer;
 use crate::layers::shape::shape_colors::ShapeColors;
@@ -32,8 +32,7 @@ impl WindowLayer {
         multiple_layer.new_layer(shadow_layer(config, &transform));
         multiple_layer.new_layer(window_background_layer(config, &transform));
         multiple_layer.new_layer(toolbar_layer(config, &transform));
-        multiple_layer.new_layer(count_text_background_layer(config));
-        multiple_layer.new_layer(count_text_layer(config, &transform));
+        multiple_layer.new_layer(count_layer(config, &transform).unwrap());
 
         Self { multiple_layer }
     }
@@ -42,12 +41,11 @@ impl WindowLayer {
     pub fn write_count(&mut self, count: usize) {
         self.multiple_layer
             .layers_mut()
-            .get_mut(4)
+            .get_mut(3)
             .unwrap()
-            .require_console()
+            .require_count()
             .unwrap()
-            .update_string(format!("{}", count).as_str())
-            .unwrap();
+            .write_count(count);
     }
 
 
@@ -135,22 +133,47 @@ fn toolbar_close_button(config: FrameBufferConfig, transform: &Transform2D) -> L
 }
 
 
-fn count_text_background_layer(config: FrameBufferConfig) -> Layer {
-    ShapeLayer::new(
-        ShapeDrawer::new(config, ShapeColors::new(PixelColor::black(), None)),
-        Transform2D::new(Vector2D::new(50, 50), Size::new(200, 100)),
-    )
-    .into_enum()
+fn count_layer(config: FrameBufferConfig, window_transform: &Transform2D) -> KernelResult<Layer> {
+    const TOOLBAR_HEIGHT: usize = 24;
+    const PADDING: usize = 10;
+
+    let size = window_transform.size() / 2;
+    let x = (window_transform
+        .size()
+        .width()
+        - size.width())
+        / 2;
+
+    let y: usize = (window_transform
+        .size()
+        .height()
+        - size.height()
+        - TOOLBAR_HEIGHT)
+        / 2
+        + TOOLBAR_HEIGHT;
+    let pos = Vector2D::new(x, y);
+    let count = CountLayer::new(config, Transform2D::new(pos, size))?;
+
+    Ok(count.into_enum())
 }
 
 
-fn count_text_layer(config: FrameBufferConfig, window_transform: &Transform2D) -> Layer {
-    let size = window_transform.rect().size() - 30;
-    
-    ConsoleLayer::new(
-        config,
-        Transform2D::new(Vector2D::new(100, 100), size),
-        ConsoleColors::new(PixelColor::white(), PixelColor::black()),
-    )
-    .into_enum()
+#[cfg(test)]
+mod tests {
+    use common_lib::frame_buffer::FrameBufferConfig;
+    use common_lib::math::size::Size;
+    use common_lib::math::vector::Vector2D;
+    use common_lib::transform::transform2d::Transform2D;
+
+    use crate::layers::window::WindowLayer;
+
+    #[test]
+    fn it_update_count_not_panic() {
+        let mut window = WindowLayer::new(
+            FrameBufferConfig::mock(),
+            Transform2D::new(Vector2D::zeros(), Size::new(300, 300)),
+        );
+
+        window.write_count(1);
+    }
 }

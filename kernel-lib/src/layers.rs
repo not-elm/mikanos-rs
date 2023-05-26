@@ -12,7 +12,9 @@ use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 
+pub mod close_button;
 pub mod console;
+mod count;
 pub mod cursor;
 pub mod layer;
 pub mod layer_key;
@@ -21,7 +23,6 @@ pub mod multiple_layer;
 pub mod plain;
 pub mod shape;
 pub mod window;
-pub mod close_button;
 
 
 pub fn frame_buffer_layer_transform(frame_buffer_config: FrameBufferConfig) -> Transform2D {

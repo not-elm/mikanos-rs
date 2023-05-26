@@ -5,6 +5,7 @@ use crate::math::rectangle::Rectangle;
 use crate::math::vector::Vector2D;
 
 mod sub;
+mod div;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(transparent)]

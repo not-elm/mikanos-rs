@@ -4,6 +4,7 @@ use common_lib::transform::transform2d::Transformable2D;
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::layers::console::ConsoleLayer;
+use crate::layers::count::CountLayer;
 use crate::layers::cursor::CursorLayer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::layer_updatable::LayerUpdatable;
@@ -21,7 +22,8 @@ pub enum Layer {
     Shape(ShapeLayer),
     Window(WindowLayer),
     CloseButton(CloseButtonLayer),
-    Multiple(MultipleLayer)
+    Multiple(MultipleLayer),
+    Count(CountLayer),
 }
 
 
@@ -45,6 +47,14 @@ impl Layer {
     pub fn require_window(&mut self) -> KernelResult<&mut WindowLayer> {
         match self {
             Self::Window(window) => Ok(window),
+            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+        }
+    }
+
+
+    pub fn require_count(&mut self) -> KernelResult<&mut CountLayer> {
+        match self {
+            Self::Count(count) => Ok(count),
             _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
         }
     }
