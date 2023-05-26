@@ -2,10 +2,10 @@ use alloc::format;
 
 use auto_delegate::Delegate;
 
-use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transformable2D};
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
+use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transformable2D};
 
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::console::console_colors::ConsoleColors;
@@ -16,7 +16,7 @@ use crate::layers::shape::shape_colors::ShapeColors;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
 
-use super::close_button::{CloseButtonLayer, CLOSE_BUTTON_WIDTH, CLOSE_BUTTON_HEIGHT};
+use super::close_button::{CloseButtonLayer, CLOSE_BUTTON_HEIGHT, CLOSE_BUTTON_WIDTH};
 
 #[derive(Delegate)]
 pub struct WindowLayer {
@@ -32,7 +32,8 @@ impl WindowLayer {
         multiple_layer.new_layer(shadow_layer(config, &transform));
         multiple_layer.new_layer(window_background_layer(config, &transform));
         multiple_layer.new_layer(toolbar_layer(config, &transform));
-        multiple_layer.new_layer(count_text_layer(config));
+        multiple_layer.new_layer(count_text_background_layer(config));
+        multiple_layer.new_layer(count_text_layer(config, &transform));
 
         Self { multiple_layer }
     }
@@ -41,7 +42,7 @@ impl WindowLayer {
     pub fn write_count(&mut self, count: usize) {
         self.multiple_layer
             .layers_mut()
-            .get_mut(3)
+            .get_mut(4)
             .unwrap()
             .require_console()
             .unwrap()
@@ -84,24 +85,26 @@ fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -
 
 
 fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
-    let toolbar_transform =  Transform2D::new(
+    let toolbar_transform = Transform2D::new(
         Vector2D::new(3, 3),
         Size::new(transform.size().width() - 6, 24),
     );
     let mut layer = MultipleLayer::new(toolbar_transform);
 
-    layer.new_layer(ShapeLayer::new(
-        ShapeDrawer::new(
-            config,
-            ShapeColors::new(PixelColor::new(0x00, 0x00, 0x84), None),
-        ),
-        Transform2D::new(Vector2D::zeros(), layer.rect().size()),
-    )
-    .into_enum());
+    layer.new_layer(
+        ShapeLayer::new(
+            ShapeDrawer::new(
+                config,
+                ShapeColors::new(PixelColor::new(0x00, 0x00, 0x84), None),
+            ),
+            Transform2D::new(Vector2D::zeros(), layer.rect().size()),
+        )
+        .into_enum(),
+    );
 
     layer.new_layer(toolbar_title_layer(config));
     layer.new_layer(toolbar_close_button(config, layer.transform_ref()));
-    
+
     layer.into_enum()
 }
 
@@ -120,19 +123,33 @@ fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
 }
 
 
-fn toolbar_close_button(config: FrameBufferConfig, transform: &Transform2D) -> Layer{
-    CloseButtonLayer::new(config, Vector2D::new(
-        transform.size().width() - CLOSE_BUTTON_WIDTH - 5,  
-    (transform.size().height() - CLOSE_BUTTON_HEIGHT) / 2)
+fn toolbar_close_button(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
+    CloseButtonLayer::new(
+        config,
+        Vector2D::new(
+            transform.size().width() - CLOSE_BUTTON_WIDTH - 5,
+            (transform.size().height() - CLOSE_BUTTON_HEIGHT) / 2,
+        ),
     )
-        .into_enum()
+    .into_enum()
 }
 
 
-fn count_text_layer(config: FrameBufferConfig) -> Layer {
+fn count_text_background_layer(config: FrameBufferConfig) -> Layer {
+    ShapeLayer::new(
+        ShapeDrawer::new(config, ShapeColors::new(PixelColor::black(), None)),
+        Transform2D::new(Vector2D::new(50, 50), Size::new(200, 100)),
+    )
+    .into_enum()
+}
+
+
+fn count_text_layer(config: FrameBufferConfig, window_transform: &Transform2D) -> Layer {
+    let size = window_transform.rect().size() - 30;
+    
     ConsoleLayer::new(
         config,
-        Transform2D::new(Vector2D::new(100, 100), Size::new(100, 20)),
+        Transform2D::new(Vector2D::new(100, 100), size),
         ConsoleColors::new(PixelColor::white(), PixelColor::black()),
     )
     .into_enum()

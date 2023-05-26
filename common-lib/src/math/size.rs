@@ -1,8 +1,10 @@
-use core::ops::{Div, Mul, MulAssign, Sub};
+use core::ops::{Div, Mul, MulAssign};
 
 use crate::math::pixel_with_in_rect_iter::PointsWithInRectIter;
 use crate::math::rectangle::Rectangle;
 use crate::math::vector::Vector2D;
+
+mod sub;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(transparent)]
@@ -56,15 +58,6 @@ impl Mul<usize> for Size {
 impl MulAssign<usize> for Size {
     fn mul_assign(&mut self, rhs: usize) {
         *self = *self * rhs;
-    }
-}
-
-
-impl Sub<Size> for Size {
-    type Output = Size;
-
-    fn sub(self, rhs: Size) -> Self::Output {
-        Size::new(self.width() - rhs.width(), self.height() - rhs.height())
     }
 }
 
