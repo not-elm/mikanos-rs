@@ -33,13 +33,13 @@ impl LayerKey {
 
 
 impl LayerKey {
-    pub fn update_shadow_buffer(&mut self, shadow_buff: &mut ShadowFrameBuffer) -> KernelResult {
+    pub fn update_back_buffer(&mut self, shadow_buff: &mut ShadowFrameBuffer) -> KernelResult {
         self.layer
             .update_back_buffer(shadow_buff, &self.layer.rect())
     }
 
 
-    pub fn update_shadow_buffer_in_area(
+    pub fn update_back_buffer_in_area(
         &mut self,
         shadow_buff: &mut ShadowFrameBuffer,
         area: &Rectangle<usize>,

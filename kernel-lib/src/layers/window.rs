@@ -135,7 +135,6 @@ fn toolbar_close_button(config: FrameBufferConfig, transform: &Transform2D) -> L
 
 fn count_layer(config: FrameBufferConfig, window_transform: &Transform2D) -> KernelResult<Layer> {
     const TOOLBAR_HEIGHT: usize = 24;
-    const PADDING: usize = 10;
 
     let size = window_transform.size() / 2;
     let x = (window_transform

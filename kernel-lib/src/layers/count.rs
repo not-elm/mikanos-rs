@@ -70,8 +70,6 @@ fn background_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> 
 
 
 fn text_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> KernelResult<Layer> {
-    const PADDING: usize = 5;
-
     let root_size = root_transform.size();
     let pos = Vector2D::new(root_size.width() / 2 - 64, root_size.height() / 2 - 8);
 

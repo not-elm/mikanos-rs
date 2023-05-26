@@ -34,7 +34,7 @@ pub fn frame_buffer_layer_transform(frame_buffer_config: FrameBufferConfig) -> T
 
 pub struct Layers {
     frame_buffer_config: FrameBufferConfig,
-    shadow_buffer: ShadowFrameBuffer,
+    back_buffer: ShadowFrameBuffer,
     layers: Vec<LayerKey>,
 }
 
@@ -42,7 +42,7 @@ pub struct Layers {
 impl Layers {
     pub fn new(frame_buffer_config: FrameBufferConfig) -> Layers {
         Self {
-            shadow_buffer: ShadowFrameBuffer::new(frame_buffer_config),
+            back_buffer: ShadowFrameBuffer::new(frame_buffer_config),
             layers: Vec::new(),
             frame_buffer_config,
         }
@@ -85,7 +85,7 @@ impl Layers {
 
     pub fn draw_all_layer(&mut self) -> KernelResult {
         for layer in self.layers.iter_mut() {
-            layer.update_shadow_buffer(&mut self.shadow_buffer)?;
+            layer.update_back_buffer(&mut self.back_buffer)?;
         }
 
         self.flush(&Rectangle::from_size(
@@ -96,17 +96,17 @@ impl Layers {
 
 
     fn draw_from_at(&mut self, key: &str, prev_area: &Rectangle<usize>) -> KernelResult {
-        self.update_shadow_buffer_in_area(prev_area, None, Some(key))?;
+        self.update_back_buffer_in_area(prev_area, None, Some(key))?;
 
         let draw_area = &self.layer_ref(key)?.rect();
 
-        self.update_shadow_buffer_in_area(draw_area, Some(key), None)?;
+        self.update_back_buffer_in_area(draw_area, Some(key), None)?;
 
         self.flush(&prev_area.union(draw_area))
     }
 
 
-    fn update_shadow_buffer_in_area(
+    fn update_back_buffer_in_area(
         &mut self,
         area: &Rectangle<usize>,
         start_key: Option<&str>,
@@ -121,7 +121,7 @@ impl Layers {
                 return Ok(());
             }
 
-            layer.update_shadow_buffer_in_area(&mut self.shadow_buffer, area)?;
+            layer.update_back_buffer_in_area(&mut self.back_buffer, area)?;
         }
 
         Ok(())
@@ -139,7 +139,7 @@ impl Layers {
         };
 
         copy_frame_buff_in_area(
-            self.shadow_buffer.raw_ref(),
+            self.back_buffer.raw_ref(),
             frame_buffer,
             &self.frame_buffer_config,
             area,
