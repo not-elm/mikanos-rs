@@ -63,6 +63,7 @@ pub extern "sysv64" fn kernel_main(
     test_main();
     serial_println!("Hello Serial Port!");
     println!("Hello Mikan OS RS!");
+    serial_println!("{:?}", frame_buffer_config);
 
     let general_header = first_general_header();
     enable_msi(general_header.clone()).unwrap();

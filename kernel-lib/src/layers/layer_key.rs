@@ -35,7 +35,7 @@ impl LayerKey {
 impl LayerKey {
     pub fn update_shadow_buffer(&mut self, shadow_buff: &mut ShadowFrameBuffer) -> KernelResult {
         self.layer
-            .update_shadow_buffer(shadow_buff, &self.layer.rect())
+            .update_back_buffer(shadow_buff, &self.layer.rect())
     }
 
 
@@ -46,7 +46,7 @@ impl LayerKey {
     ) -> KernelResult {
         if let Some(draw_area) = area.intersect(&self.layer.rect()) {
             self.layer
-                .update_shadow_buffer(shadow_buff, &draw_area)
+                .update_back_buffer(shadow_buff, &draw_area)
         } else {
             Ok(())
         }

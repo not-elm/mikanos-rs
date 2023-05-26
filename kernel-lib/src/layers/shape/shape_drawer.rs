@@ -25,7 +25,7 @@ impl ShapeDrawer {
 
 
 impl LayerUpdatable for ShapeDrawer {
-    fn update_shadow_buffer(
+    fn update_back_buffer(
         &mut self,
         shadow_frame: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,

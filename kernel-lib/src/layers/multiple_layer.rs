@@ -17,7 +17,6 @@ pub struct MultipleLayer {
     transform: Transform2D,
 }
 
-
 impl MultipleLayer {
     pub const fn new(transform: Transform2D) -> Self {
         Self {
@@ -35,6 +34,11 @@ impl MultipleLayer {
 
     pub fn layers_mut(&mut self) -> &mut Vec<Layer> {
         &mut self.layers
+    }
+
+
+    pub fn into_enum(self) -> Layer{
+        Layer::Multiple(self)
     }
 }
 
@@ -81,14 +85,14 @@ impl Transformable2D for MultipleLayer {
 
 
 impl LayerUpdatable for MultipleLayer {
-    fn update_shadow_buffer(
+    fn update_back_buffer(
         &mut self,
         shadow_frame_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         for layer in self.layers.iter_mut() {
             if let Some(draw_rect) = draw_area.intersect(&layer.rect()) {
-                layer.update_shadow_buffer(shadow_frame_buff, &draw_rect)?;
+                layer.update_back_buffer(shadow_frame_buff, &draw_rect)?;
             }
         }
 
@@ -122,7 +126,7 @@ mod tests {
             Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
         )));
 
-        layer.move_to_relative(Vector2D::new(10, 10));
+        layer.move_to_relative(Vector2D::new(10, 10)).unwrap();
 
         assert_eq!(layer.layers[0].pos(), Vector2D::new(110, 110));
     }

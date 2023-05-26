@@ -7,10 +7,10 @@ use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 
 #[delegate]
 pub trait LayerUpdatable {
-    /// 指定された領域内で現在のウィンドウの状態を描画します。
-    fn update_shadow_buffer(
+    /// Update Back buffer corresponding to frame buffer
+    fn update_back_buffer(
         &mut self,
-        shadow_frame_buff: &mut ShadowFrameBuffer,
+        back_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult;
 }

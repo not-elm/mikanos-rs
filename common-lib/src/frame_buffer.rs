@@ -62,10 +62,10 @@ impl FrameBufferConfig {
     pub fn mock() -> Self {
         Self {
             frame_buffer_base_addr: 0,
-            frame_buffer_size: 0,
-            pixel_per_scanline: 0,
-            horizontal_resolution: 0,
-            vertical_resolution: 0,
+            frame_buffer_size: 3145728,
+            pixel_per_scanline: 1024,
+            horizontal_resolution: 1024,
+            vertical_resolution: 768,
             pixel_format: PixelFormat::Rgb,
         }
     }

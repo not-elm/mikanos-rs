@@ -10,6 +10,9 @@ use crate::layers::layer_updatable::LayerUpdatable;
 use crate::layers::shape::ShapeLayer;
 use crate::layers::window::WindowLayer;
 
+use super::close_button::CloseButtonLayer;
+use super::multiple_layer::MultipleLayer;
+
 #[derive(Delegate)]
 #[to(Transformable2D, LayerUpdatable)]
 pub enum Layer {
@@ -17,6 +20,8 @@ pub enum Layer {
     Console(ConsoleLayer),
     Shape(ShapeLayer),
     Window(WindowLayer),
+    CloseButton(CloseButtonLayer),
+    Multiple(MultipleLayer)
 }
 
 

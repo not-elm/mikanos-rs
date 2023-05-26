@@ -35,12 +35,12 @@ impl ShapeLayer {
 
 
 impl LayerUpdatable for ShapeLayer {
-    fn update_shadow_buffer(
+    fn update_back_buffer(
         &mut self,
         shadow_frame_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         self.drawer
-            .update_shadow_buffer(shadow_frame_buff, draw_area)
+            .update_back_buffer(shadow_frame_buff, draw_area)
     }
 }

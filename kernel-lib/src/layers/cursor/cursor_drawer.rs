@@ -46,7 +46,7 @@ impl CursorDrawer {
 
 
 impl LayerUpdatable for CursorDrawer {
-    fn update_shadow_buffer(
+    fn update_back_buffer(
         &mut self,
         shadow_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
