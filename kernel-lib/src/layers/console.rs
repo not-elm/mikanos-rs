@@ -1,3 +1,4 @@
+use core::cmp::min;
 use core::fmt::Error;
 
 use auto_delegate::Delegate;
@@ -30,15 +31,22 @@ pub struct ConsoleLayer {
     frame: ConsoleFrame<AscIICharWriter>,
     font_unit: Size,
     config: FrameBufferConfig,
+    ascii: AscIICharWriter,
 }
 
 
 impl ConsoleLayer {
-    pub fn new(config: FrameBufferConfig, transform: Transform2D, colors: ConsoleColors) -> Self {
+    pub fn new(
+        config: FrameBufferConfig,
+        pos: Vector2D<usize>,
+        font_frame_size: Size,
+        colors: ConsoleColors,
+    ) -> Self {
         let ascii = AscIICharWriter::new();
         let font_unit = ascii.font_unit();
 
-        let font_frame_size = calc_text_frame_size(transform.size(), font_unit);
+        let transform = Transform2D::new(pos, font_unit * font_frame_size);
+
         let frame = ConsoleFrame::new(colors, ascii, font_frame_size, config.pixel_format);
 
         Self {
@@ -46,6 +54,7 @@ impl ConsoleLayer {
             frame,
             font_unit,
             config,
+            ascii: AscIICharWriter::new(),
         }
     }
 
@@ -79,32 +88,29 @@ impl core::fmt::Write for ConsoleLayer {
 impl LayerUpdatable for ConsoleLayer {
     fn update_back_buffer(
         &mut self,
-        shadow_buff: &mut ShadowFrameBuffer,
+        back_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         let x = draw_area.origin().x();
-        if let Some((io, ie)) =
-            calc_text_line_range(&self.transform.rect(), draw_area, &self.font_unit)
+        let y = draw_area.origin().y();
+
+        for (iy, line) in self
+            .frame
+            .frame_buff_lines(0)
+            .into_iter()
+            .flatten()
+            .enumerate()
         {
-            for (iy, line) in self
-                .frame
-                .frame_buff_lines()
-                .into_iter()
-                .flatten()
-                .enumerate()
-            {
-                let y = iy + draw_area.origin().y();
-                if draw_area.end().y() < y {
-                    return Ok(());
-                }
+            let y = iy + y;
 
-                let origin = calc_pixel_pos_from_vec2d(&self.config, &Vector2D::new(x, y))?;
-                let width = ie - io;
-
-                shadow_buff.raw_mut()[origin..(origin + width)].copy_from_slice(&line[io..ie]);
+            let origin = calc_pixel_pos_from_vec2d(&self.config, &Vector2D::new(x, y))?;
+            if draw_area.end().y() < y {
+                return Ok(());
             }
-        }
+            let width = min(line.len(), draw_area.size().width() * 4 * 8);
 
+            back_buff.raw_mut()[origin..(origin + width)].copy_from_slice(&line[..width]);
+        }
 
         Ok(())
     }
@@ -138,13 +144,9 @@ fn calc_text_line_range(
     };
     let io = xo.checked_sub(lo)? * 4;
 
-    let text_len = draw_rec
-        .end()
-        .x()
-        .checked_sub(xo)?
-        / font_unit.width();
+    let text_len = draw_rec.size().width() * 4;
 
-    let ie = io + text_len * font_unit.width() * 4;
+    let ie = io + text_len;
 
     Some((io, ie))
 }
@@ -152,11 +154,14 @@ fn calc_text_line_range(
 
 #[cfg(test)]
 mod tests {
+    use common_lib::frame_buffer::FrameBufferConfig;
     use common_lib::math::rectangle::Rectangle;
     use common_lib::math::size::Size;
     use common_lib::math::vector::Vector2D;
+    use common_lib::transform::transform2d::Transformable2D;
 
-    use crate::layers::console::{calc_text_frame_size, calc_text_line_range};
+    use crate::layers::console::console_colors::ConsoleColors;
+    use crate::layers::console::{calc_text_frame_size, calc_text_line_range, ConsoleLayer};
 
     #[test]
     fn it_font_frame_size() {
@@ -185,5 +190,24 @@ mod tests {
         let (io, ie) = calc_text_line_range(&layer_rect, &draw_area, &Size::new(8, 16)).unwrap();
         assert_eq!(io, 32);
         assert_eq!(ie, 352)
+    }
+
+
+    #[test]
+    fn it_layer_size() {
+        let console = ConsoleLayer::new(
+            FrameBufferConfig::mock(),
+            Vector2D::zeros(),
+            Size::new(10, 10),
+            ConsoleColors::default(),
+        );
+
+        let size = console.rect().size();
+        assert_eq!(size, Size::new(80, 160));
+        assert_eq!(console.pos(), Vector2D::zeros());
+        assert_eq!(
+            console.rect(),
+            Rectangle::new(Vector2D::zeros(), Vector2D::new(80, 160))
+        )
     }
 }

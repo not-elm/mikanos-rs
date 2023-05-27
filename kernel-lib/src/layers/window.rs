@@ -110,7 +110,8 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
 fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
     let mut text = ConsoleLayer::new(
         config,
-        Transform2D::new(Vector2D::new(24, 4), Size::new(200, 16)),
+        Vector2D::new(24, 4),
+        Size::new(12, 1),
         ConsoleColors::new(PixelColor::white(), PixelColor::new(0x00, 0x00, 0x84)),
     );
 

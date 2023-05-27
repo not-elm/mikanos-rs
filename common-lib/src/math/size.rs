@@ -6,6 +6,7 @@ use crate::math::vector::Vector2D;
 
 mod sub;
 mod div;
+mod mul;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(transparent)]

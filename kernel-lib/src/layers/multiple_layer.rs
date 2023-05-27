@@ -28,6 +28,7 @@ impl MultipleLayer {
 
     pub fn new_layer(&mut self, mut layer: Layer) {
         layer.move_to(layer.pos() + self.pos());
+
         self.layers.push(layer);
     }
 
@@ -37,7 +38,7 @@ impl MultipleLayer {
     }
 
 
-    pub fn into_enum(self) -> Layer{
+    pub fn into_enum(self) -> Layer {
         Layer::Multiple(self)
     }
 }
@@ -47,7 +48,8 @@ impl Transformable2D for MultipleLayer {
     fn move_to(&mut self, pos: Vector2D<usize>) {
         let relative = pos.relative(self.pos());
 
-        self.move_to_relative(relative).unwrap_or(());
+        self.move_to_relative(relative)
+            .unwrap_or(());
     }
 
     fn resize(&mut self, size: Size) {
@@ -126,7 +128,9 @@ mod tests {
             Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
         )));
 
-        layer.move_to_relative(Vector2D::new(10, 10)).unwrap();
+        layer
+            .move_to_relative(Vector2D::new(10, 10))
+            .unwrap();
 
         assert_eq!(layer.layers[0].pos(), Vector2D::new(110, 110));
     }

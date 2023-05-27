@@ -44,6 +44,18 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
 
 
     pub fn append_string(&mut self, str: &str) -> KernelResult {
+        if str.is_empty() {
+            return Ok(());
+        }
+        if self
+            .rows
+            .last()
+            .unwrap()
+            .need_new_line()
+        {
+            self.new_line();
+        }
+
         for c in str.chars() {
             if self.write_char(c)? {
                 self.new_line();
@@ -55,10 +67,18 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
     }
 
 
-    pub fn frame_buff_lines(&self) -> Vec<Vec<&[u8]>> {
+    pub fn text_lines_ref(&self) -> Vec<&[char]>{
         self.rows
             .iter()
-            .filter_map(|row| row.frame_buff_lines())
+            .filter_map(|row| row.texts_ref())
+            .collect()
+    }
+
+
+    pub fn frame_buff_lines(&self, relative_x: usize) -> Vec<Vec<&[u8]>> {
+        self.rows
+            .iter()
+            .filter_map(|row| row.frame_buff_lines(relative_x))
             .collect()
     }
 
@@ -70,7 +90,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
             self.rows
                 .resize_with(text_frame_size.height(), || {
                     ConsoleRow::new(
-                        self.colors.background(),
+                        *self.colors.background(),
                         self.char_writer.font_unit(),
                         text_frame_size.width(),
                         self.pixel_format,
@@ -117,7 +137,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
 
     fn new_row(&self) -> ConsoleRow {
         ConsoleRow::new(
-            self.colors.background(),
+            *self.colors.background(),
             self.char_writer.font_unit(),
             self.text_frame_size.width(),
             self.pixel_format,
@@ -185,7 +205,12 @@ mod tests {
             .append_string("Hello")
             .unwrap();
 
-        assert_eq!(frame.frame_buff_lines().len(), 2);
+        assert_eq!(
+            frame
+                .frame_buff_lines(0)
+                .len(),
+            2
+        );
     }
 
 

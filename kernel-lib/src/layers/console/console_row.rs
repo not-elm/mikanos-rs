@@ -18,24 +18,29 @@ pub struct ConsoleRow {
     text_buffs: Vec<u8>,
     buff_pixel_writer: BuffPixelWriter,
     font_unit: Size,
+    background: PixelColor,
+    texts: Vec<char>,
     max_text_len: usize,
     current_text_len: usize,
     pixel_format: PixelFormat,
+    is_need_newline: bool,
 }
 
 
 impl ConsoleRow {
     pub fn new(
-        background: &PixelColor,
+        background: PixelColor,
         font_unit: Size,
         max_text_len: usize,
-        pixel_format: PixelFormat) -> Self {
+        pixel_format: PixelFormat,
+    ) -> Self {
         Self::new_with_buff(
-            new_text_row_buff(background, &font_unit, max_text_len, pixel_format),
+            new_text_row_buff(&background, &font_unit, max_text_len, pixel_format),
             max_text_len,
             font_unit,
             pixel_format,
             0,
+            background
         )
     }
 
@@ -59,10 +64,12 @@ impl ConsoleRow {
         colors: &ConsoleColors,
         char_writer: &mut impl CharWritable,
     ) -> KernelResult<bool> {
-        if self.max_text_len <= self.current_text_len || c == '\n' {
+        if self.max_text_len <= self.current_text_len || self.texts.last().is_some_and(|c| *c == '\n') {
             return Ok(true);
         }
+        self.texts.push(c);
 
+      
         let pos = Vector2D::new(self.current_text_len * self.font_unit.width(), 0);
         char_writer.write(
             self.text_buffs.as_mut_slice(),
@@ -77,7 +84,19 @@ impl ConsoleRow {
     }
 
 
-    pub fn frame_buff_lines(&self) -> Option<Vec<&[u8]>> {
+    pub fn texts_ref(&self) -> Option<&[char]>{
+        if self.texts.is_empty(){
+            None
+        }else{
+            Some(&self.texts)
+        }
+    }
+
+    pub fn need_new_line(&self) -> bool {
+        self.is_need_newline
+    }
+
+    pub fn frame_buff_lines(&self, relative_x: usize) -> Option<Vec<&[u8]>> {
         if self.current_text_len == 0 {
             return None;
         }
@@ -124,6 +143,7 @@ impl ConsoleRow {
         font_unit: Size,
         pixel_format: PixelFormat,
         current_text_len: usize,
+        background: PixelColor
     ) -> Self {
         let buff_size = text_buffer_size(max_text_len, &font_unit);
 
@@ -133,7 +153,10 @@ impl ConsoleRow {
             buff_pixel_writer: BuffPixelWriter::new(buff_size, pixel_format),
             max_text_len,
             current_text_len,
+            texts: Vec::with_capacity(max_text_len),
             pixel_format,
+            is_need_newline: false,
+            background
         }
     }
 }
@@ -154,19 +177,44 @@ fn text_buffer_length(max_text_len: usize, font_unit: &Size) -> usize {
 }
 
 
+fn padding_buff(
+    padding: usize,
+    background: &PixelColor,
+    font_unit: &Size,
+    pixel_format: PixelFormat,
+    text_buff: &[u8],
+) -> Vec<u8> {
+    let mut buf = vec![
+        *EnumPixelMapper::new(pixel_format).convert_to_buff(background);
+        padding * font_unit.width() * 4
+    ]
+    .flatten()
+    .to_vec();
+
+
+    buf.extend_from_slice(text_buff);
+    buf.resize(text_buff.len(), 0x00);
+    buf
+}
+
+
 fn new_text_row_buff(
     background: &PixelColor,
     font_unit: &Size,
     max_text_len: usize,
     pixel_format: PixelFormat,
 ) -> Vec<u8> {
-    vec![*EnumPixelMapper::new(pixel_format).convert_to_buff(background); max_text_len * font_unit.width() * font_unit.height()]
-        .flatten()
-        .to_vec()
+    vec![
+        *EnumPixelMapper::new(pixel_format).convert_to_buff(background);
+        max_text_len * font_unit.width() * font_unit.height()
+    ]
+    .flatten()
+    .to_vec()
 }
 
 #[cfg(test)]
 mod tests {
+  
     use common_lib::array::eq_array;
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::size::Size;
@@ -175,15 +223,20 @@ mod tests {
     use crate::gop::char::char_writable::CharWritable;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::layers::console::console_colors::ConsoleColors;
-    use crate::layers::console::console_row::{ConsoleRow, new_text_row_buff};
+    use crate::layers::console::console_row::{new_text_row_buff, ConsoleRow, padding_buff};
 
     #[test]
     fn it_write_char() {
         let mut writer = AscIICharWriter::new();
-        let mut row = ConsoleRow::new(&PixelColor::black(), writer.font_unit(), 5, PixelFormat::Rgb);
+        let mut row = ConsoleRow::new(
+            PixelColor::black(),
+            writer.font_unit(),
+            5,
+            PixelFormat::Rgb,
+        );
 
         assert!(row
-            .frame_buff_lines()
+            .frame_buff_lines(0)
             .is_none());
 
         row.write_char(
@@ -191,11 +244,11 @@ mod tests {
             &ConsoleColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(row.buff_width(), writer.font_unit().width() * 4);
         assert!(row
-            .frame_buff_lines()
+            .frame_buff_lines(0)
             .is_some_and(|lines| lines.len() == writer.font_unit().height()));
     }
 
@@ -203,7 +256,12 @@ mod tests {
     #[test]
     fn it_over_size() {
         let mut writer = AscIICharWriter::new();
-        let mut row = ConsoleRow::new(&PixelColor::black(), writer.font_unit(), 1, PixelFormat::Rgb);
+        let mut row = ConsoleRow::new(
+            PixelColor::black(),
+            writer.font_unit(),
+            1,
+            PixelFormat::Rgb,
+        );
 
         row.resize_text_len(2);
         assert_eq!(row.current_text_len, 0);
@@ -228,25 +286,30 @@ mod tests {
     #[test]
     fn it_small_size() {
         let mut writer = AscIICharWriter::new();
-        let mut row = ConsoleRow::new(&PixelColor::black(), writer.font_unit(), 5, PixelFormat::Rgb);
+        let mut row = ConsoleRow::new(
+            PixelColor::black(),
+            writer.font_unit(),
+            5,
+            PixelFormat::Rgb,
+        );
         row.write_char(
             'h',
             &ConsoleColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
         row.write_char(
             'h',
             &ConsoleColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
         row.write_char(
             'h',
             &ConsoleColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
 
         row.resize_text_len(2);
         assert_eq!(row.current_text_len, 2);
@@ -267,7 +330,9 @@ mod tests {
         let row = new_text_row_buff(&background, &Size::new(8, 16), 3, PixelFormat::Rgb);
 
         assert_eq!(row.len(), 96 * 16);
-        assert!(row.chunks(4).all(|pixel_buff| eq_array(pixel_buff, &[0xFF, 0xFF, 0x00, 0x00])));
+        assert!(row
+            .chunks(4)
+            .all(|pixel_buff| eq_array(pixel_buff, &[0xFF, 0xFF, 0x00, 0x00])));
     }
 
 
@@ -277,6 +342,46 @@ mod tests {
         let row = new_text_row_buff(&background, &Size::new(8, 16), 3, PixelFormat::Bgr);
 
         assert_eq!(row.len(), 96 * 16);
-        assert!(row.chunks(4).all(|pixel_buff| eq_array(pixel_buff, &[0x00, 0xFF, 0xFF, 0x00])));
+        assert!(row
+            .chunks(4)
+            .all(|pixel_buff| eq_array(pixel_buff, &[0x00, 0xFF, 0xFF, 0x00])));
+    }
+
+
+
+    #[test]
+    fn it_padding_text_buff_not_resize() {
+        let font_unit = Size::new(8, 16);
+        let text_buff = vec![0; font_unit.width() * 8 * 4];
+        let buf = padding_buff(
+            8, 
+            &PixelColor::yellow(),
+             &font_unit,
+             PixelFormat::Rgb,
+             text_buff.as_ref()
+         );
+
+        assert_eq!(buf.len(), text_buff.len());
+    }
+
+
+
+    #[test]
+    fn it_padding_text_buff() {
+        const FONT_UNIT: Size = Size::new(8, 16);
+        let buf_len = FONT_UNIT.width() * 8 * 4;
+
+        let text_buff = vec![0; buf_len];
+        let buf = padding_buff(
+            8, 
+            &PixelColor::yellow(),
+             &FONT_UNIT,
+             PixelFormat::Rgb,
+             text_buff.as_ref()
+        );
+
+        
+        const PADDING_LEN: usize = 8;
+        assert!(eq_array(vec![[0xFF, 0xFF, 0x00, 0x00]; PADDING_LEN / 4].flatten().as_ref(), &buf[0..PADDING_LEN]));
     }
 }

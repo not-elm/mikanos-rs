@@ -10,7 +10,6 @@ use common_lib::transform::transform2d::Transform2D;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 use kernel_lib::layers::console::console_colors::ConsoleColors;
 use kernel_lib::layers::console::ConsoleLayer;
 use kernel_lib::layers::cursor::CursorLayer;
@@ -19,6 +18,7 @@ use kernel_lib::layers::shape::shape_colors::ShapeColors;
 use kernel_lib::layers::shape::shape_drawer::ShapeDrawer;
 use kernel_lib::layers::shape::ShapeLayer;
 use kernel_lib::layers::window::WindowLayer;
+use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
@@ -95,17 +95,22 @@ fn add_window_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
             config,
             Transform2D::new(Vector2D::new(100, 0), Size::new(300, 300)),
         )
-            .into_enum()
-            .into_layer_key(WINDOW_LAYER_KEY),
+        .into_enum()
+        .into_layer_key(WINDOW_LAYER_KEY),
     );
 }
 
 
 fn add_console_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
     layers.new_layer(
-        ConsoleLayer::new(config, Transform2D::new(Vector2D::zeros(), Size::new(300, 500)), ConsoleColors::default().change_background(PixelColor::black()))
-            .into_enum()
-            .into_layer_key(CONSOLE_LAYER_KEY),
+        ConsoleLayer::new(
+            config,
+            Vector2D::zeros(),
+            Size::new(30, 10),
+            ConsoleColors::default().change_background(PixelColor::black()),
+        )
+        .into_enum()
+        .into_layer_key(CONSOLE_LAYER_KEY),
     );
 }
 

@@ -71,11 +71,12 @@ fn background_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> 
 
 fn text_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> KernelResult<Layer> {
     let root_size = root_transform.size();
-    let pos = Vector2D::new(root_size.width() / 2 - 64, root_size.height() / 2 - 8);
+    let pos = Vector2D::new(root_size.width() / 2, root_size.height() / 2) - 8 * 5;
 
     let mut text = ConsoleLayer::new(
         config,
-        Transform2D::new(pos, Size::new(100, 16)),
+        pos,
+        Size::new(10, 1),
         ConsoleColors::new(PixelColor::white(), PixelColor::black()),
     );
 
