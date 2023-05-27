@@ -121,7 +121,9 @@ impl Layers {
                 return Ok(());
             }
 
-            layer.update_back_buffer_in_area(&mut self.back_buffer, area)?;
+            if let Some(draw_rect) = area.intersect(&layer.rect()) {
+                layer.update_back_buffer_in_area(&mut self.back_buffer, &draw_rect)?;
+            }
         }
 
         Ok(())
@@ -180,9 +182,12 @@ pub(crate) fn copy_frame_buff_in_area(
     config: &FrameBufferConfig,
     area: &Rectangle<usize>,
 ) -> KernelResult {
+    let ox = area.origin().x();
+    let ex = area.end().x();
+
     for y in area.origin().y()..area.end().y() {
-        let origin = calc_pixel_pos(config, area.origin().x(), y)?;
-        let end = calc_pixel_pos(config, area.end().x(), y)?;
+        let origin = calc_pixel_pos(config, ox, y)?;
+        let end = calc_pixel_pos(config, ex, y)?;
 
         dist[origin..end].copy_from_slice(&src[origin..end]);
     }

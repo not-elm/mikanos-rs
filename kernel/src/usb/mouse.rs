@@ -5,8 +5,8 @@ use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::layers::cursor::cursor_colors::CursorColors;
-use kernel_lib::timer::apic::ApicTimer;
 use kernel_lib::timer::apic::local_apic_timer::OneShotLocalApicTimer;
+use kernel_lib::timer::apic::ApicTimer;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
 
@@ -73,7 +73,9 @@ fn update_draggable_layer(
                 .lock()
                 .borrow_mut()
                 .update_layer(window_key.as_str(), |layer| {
-                    layer.move_to_relative(relative).unwrap_or(());
+                    layer
+                        .move_to_relative(relative)
+                        .unwrap_or(());
                     layer
                         .require_window()
                         .unwrap()

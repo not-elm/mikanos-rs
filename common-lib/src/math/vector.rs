@@ -1,3 +1,4 @@
+use core::cmp::{max, min};
 use core::fmt::Debug;
 
 mod add;
@@ -74,9 +75,19 @@ impl Default for Vector2D<usize> {
 }
 
 
+pub fn min_vector2d<T: Ord + Copy>(lhs: &Vector2D<T>, rhs: &Vector2D<T>) -> Vector2D<T> {
+    Vector2D::new(min(lhs.x(), rhs.x()), min(lhs.y(), rhs.y()))
+}
+
+
+pub fn max_vector2d<T: Ord + Copy>(lhs: &Vector2D<T>, rhs: &Vector2D<T>) -> Vector2D<T> {
+    Vector2D::new(max(lhs.x(), rhs.x()), max(lhs.y(), rhs.y()))
+}
+
+
 #[cfg(test)]
 mod tests {
-    use crate::math::vector::Vector2D;
+    use crate::math::vector::{max_vector2d, min_vector2d, Vector2D};
 
     #[test]
     fn it_relative_move_left() {
@@ -86,5 +97,23 @@ mod tests {
         let relative = moved.relative(origin);
 
         assert_eq!(relative, Vector2D::new(-2, 0));
+    }
+
+
+    #[test]
+    fn it_min_vector2d() {
+        let origin = Vector2D::<usize>::new(5, 5);
+        let moved = Vector2D::<usize>::new(10, 0);
+
+        assert_eq!(min_vector2d(&origin, &moved), Vector2D::new(5, 0));
+    }
+
+
+    #[test]
+    fn it_max_vector2d() {
+        let origin = Vector2D::<usize>::new(5, 5);
+        let moved = Vector2D::<usize>::new(10, 0);
+
+        assert_eq!(max_vector2d(&origin, &moved), Vector2D::new(10, 5));
     }
 }

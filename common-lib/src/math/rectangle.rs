@@ -1,10 +1,9 @@
-use core::cmp::{max, min};
 use core::fmt::Debug;
 use core::ops::{Add, Sub};
 
 use crate::math::pixel_with_in_rect_iter::PointsWithInRectIter;
 use crate::math::size::Size;
-use crate::math::vector::Vector2D;
+use crate::math::vector::{max_vector2d, min_vector2d, Vector2D};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Rectangle<T: Copy> {
@@ -60,22 +59,18 @@ impl Rectangle<usize> {
 
 
     pub fn intersect(&self, r: &Rectangle<usize>) -> Option<Rectangle<usize>> {
-        let a = self;
-        let sx = max(a.origin.x(), r.origin.x());
-        let sy = max(a.origin.y(), r.origin.y());
-        let ex = min(a.end.x(), r.end.x());
-        let ey = min(a.end.y(), r.end.y());
-
-        let w = ex.checked_sub(sx)?;
-        let h = ey.checked_sub(sy)?;
-        if w > 0 && h > 0 {
-            return Some(Rectangle::from_pos_and_size(
-                Vector2D::new(sx, sy),
-                Size::new(w, h),
-            ));
+        if self.end.x() < r.origin.x()
+            || self.end.y() < r.origin.y()
+            || r.end.x() < self.origin.x()
+            || r.end.y() < self.origin.y()
+        {
+            return None;
         }
 
-        None
+
+        let origin = max_vector2d(&self.origin, &r.origin);
+        let end = min_vector2d(&self.end, &r.end);
+        Some(Rectangle::new(origin, end))
     }
 
 
@@ -423,7 +418,7 @@ mod tests {
             Vector2D::new(200usize, 200usize),
         );
         let r2 = Rectangle::new(Vector2D::new(10usize, 10), Vector2D::new(110, 110));
-
+        println!("{:?}", r1.intersect(&r2));
         let rect = r1.intersect(&r2);
         assert!(rect.is_some_and(
             |r| r.origin() == Vector2D::new(100, 100) && r.end() == Vector2D::new(110, 110)
@@ -440,6 +435,7 @@ mod tests {
     fn it_intersect_3() {
         let r1 = Rectangle::new(Vector2D::new(0usize, 0), Vector2D::new(500, 300));
         let r2 = Rectangle::new(Vector2D::new(0usize, 0), Vector2D::new(1024, 768));
+
         assert!(r1
             .intersect(&r2)
             .is_some_and(|r| r == r1));
