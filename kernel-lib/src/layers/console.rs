@@ -18,11 +18,6 @@ use crate::gop::pixel::writer::pixel_writable::PixelWritable;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
-use crate::serial_println;
-use crate::timer::apic::local_apic_timer::OneShotLocalApicTimer;
-use crate::timer::apic::ApicTimer;
-
-use self::text_frame::TextFrame;
 
 pub mod console_colors;
 mod console_frame;
@@ -94,6 +89,7 @@ impl core::fmt::Write for ConsoleLayer {
     }
 }
 
+use crate::layers::console::text_frame::TextFrame;
 use alloc::vec::Vec;
 
 impl LayerUpdatable for ConsoleLayer {
