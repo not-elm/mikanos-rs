@@ -23,9 +23,9 @@ use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
-use crate::usb::{enable_msi, first_general_header};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
+use crate::usb::{enable_msi, first_general_header};
 
 mod allocate;
 mod entry_point;
@@ -78,7 +78,6 @@ pub extern "sysv64" fn kernel_main(
 #[panic_handler]
 #[cfg(not(test))]
 fn panic(info: &PanicInfo) -> ! {
-    println!("{}", info);
     serial_println!("{}", info);
 
     common_lib::assembly::hlt_forever();

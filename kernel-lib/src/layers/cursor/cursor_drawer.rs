@@ -54,7 +54,6 @@ impl LayerUpdatable for CursorDrawer {
         for pixel in self
             .cursor_buff
             .cursor_pixels(draw_area.origin(), Some(draw_area.end()), self.colors)
-            .filter(|pixel| draw_area.with_in_pos(&pixel.pos()))
         {
             if let Some(color) = pixel.color() {
                 unsafe {

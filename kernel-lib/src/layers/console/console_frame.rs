@@ -67,7 +67,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
     }
 
 
-    pub fn text_lines_ref(&self) -> Vec<&[char]>{
+    pub fn text_lines_ref(&self) -> Vec<&[char]> {
         self.rows
             .iter()
             .filter_map(|row| row.texts_ref())
@@ -78,7 +78,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
     pub fn frame_buff_lines(&self, relative_x: usize) -> Vec<Vec<&[u8]>> {
         self.rows
             .iter()
-            .filter_map(|row| row.frame_buff_lines(relative_x))
+            .filter_map(|row| row.frame_buff_lines())
             .collect()
     }
 

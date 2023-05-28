@@ -1,3 +1,5 @@
+mod sub;
+
 use core::fmt::Debug;
 use core::ops::{Add, Sub};
 
@@ -161,15 +163,6 @@ impl Add<Size> for Rectangle<usize> {
 
     fn add(self, rhs: Size) -> Self::Output {
         Rectangle::new(self.origin, self.end + rhs)
-    }
-}
-
-
-impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Rectangle<Num> {
-    type Output = Rectangle<Num>;
-
-    fn sub(self, rhs: Vector2D<Num>) -> Self::Output {
-        Rectangle::new(self.origin - rhs, self.end - rhs)
     }
 }
 

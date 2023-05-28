@@ -1,5 +1,6 @@
 use crate::gop::char::char_writable::CharWritable;
 
+pub mod ascii;
 pub mod ascii_char_writer;
 pub mod char_writable;
 
