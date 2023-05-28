@@ -4,15 +4,13 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
+use super::layer::Layer;
+use super::layer_updatable::LayerUpdatable;
 use crate::error::KernelResult;
 use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::mapper::PixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
-use crate::serial_println;
-
-use super::layer::Layer;
-use super::layer_updatable::LayerUpdatable;
 pub(crate) const CLOSE_BUTTON_WIDTH: usize = 16;
 pub(crate) const CLOSE_BUTTON_HEIGHT: usize = 14;
 
@@ -48,7 +46,7 @@ impl LayerUpdatable for CloseButtonLayer {
     fn update_back_buffer(
         &mut self,
         back_buff: &mut ShadowFrameBuffer,
-        draw_area: &common_lib::math::rectangle::Rectangle<usize>,
+        _draw_area: &common_lib::math::rectangle::Rectangle<usize>,
     ) -> KernelResult {
         const CLOSE_BUTTON: [&[u8; CLOSE_BUTTON_WIDTH]; CLOSE_BUTTON_HEIGHT] = [
             b"...............@",

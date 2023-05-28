@@ -9,8 +9,6 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
-use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::layers::console::console_colors::ConsoleColors;
 use kernel_lib::layers::console::ConsoleLayer;
 use kernel_lib::layers::cursor::CursorLayer;
 use kernel_lib::layers::layer_key::LayerKey;
@@ -103,14 +101,9 @@ fn add_window_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
 
 fn add_console_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
     layers.new_layer(
-        ConsoleLayer::new(
-            config,
-            Vector2D::zeros(),
-            Size::new(30, 10),
-            ConsoleColors::default().change_background(PixelColor::black()),
-        )
-        .into_enum()
-        .into_layer_key(CONSOLE_LAYER_KEY),
+        ConsoleLayer::new(config, Vector2D::zeros(), Size::new(30, 10))
+            .into_enum()
+            .into_layer_key(CONSOLE_LAYER_KEY),
     );
 }
 

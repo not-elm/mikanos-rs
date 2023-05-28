@@ -9,7 +9,6 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::layers::console::console_colors::ConsoleColors;
 use crate::layers::console::ConsoleLayer;
 use crate::layers::layer::Layer;
 use crate::layers::multiple_layer::MultipleLayer;
@@ -73,12 +72,7 @@ fn text_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> Kernel
     let root_size = root_transform.size();
     let pos = Vector2D::new(root_size.width() / 2, root_size.height() / 2) - 8 * 5;
 
-    let mut text = ConsoleLayer::new(
-        config,
-        pos,
-        Size::new(10, 1),
-        ConsoleColors::new(PixelColor::white(), PixelColor::black()),
-    );
+    let mut text = ConsoleLayer::new(config, pos, Size::new(10, 1));
 
     text.update_string("0")?;
 

@@ -7,7 +7,6 @@ use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transf
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::layers::console::console_colors::ConsoleColors;
 use crate::layers::console::ConsoleLayer;
 use crate::layers::count::CountLayer;
 use crate::layers::layer::Layer;
@@ -108,12 +107,7 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
 
 
 fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
-    let mut text = ConsoleLayer::new(
-        config,
-        Vector2D::new(24, 4),
-        Size::new(12, 1),
-        ConsoleColors::new(PixelColor::white(), PixelColor::new(0x00, 0x00, 0x84)),
-    );
+    let mut text = ConsoleLayer::new(config, Vector2D::new(24, 4), Size::new(12, 1));
 
     text.update_string("Hello Window")
         .unwrap();
