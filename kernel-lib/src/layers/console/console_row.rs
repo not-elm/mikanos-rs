@@ -65,9 +65,9 @@ impl ConsoleRow {
     ) -> KernelResult<bool> {
         if self.max_text_len <= self.current_text_len
             || self
-            .texts
-            .last()
-            .is_some_and(|c| *c == '\n')
+                .texts
+                .last()
+                .is_some_and(|c| *c == '\n')
         {
             return Ok(true);
         }
@@ -179,10 +179,10 @@ fn new_text_row_buff(
     max_text_len: usize,
     pixel_format: PixelFormat,
 ) -> Vec<u8> {
-    vec![
-        *EnumPixelMapper::new(pixel_format).convert_to_buff(background);
-        max_text_len * font_unit.width() * font_unit.height(),
-    ]
+    let mut pixel_mapper = EnumPixelMapper::new(pixel_format);
+    let buff = pixel_mapper.convert_to_buff(background);
+
+    vec![*buff; max_text_len * font_unit.width() * font_unit.height()]
         .flatten()
         .to_vec()
 }
@@ -202,7 +202,7 @@ mod tests {
     use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::layers::console::console_colors::ConsoleColors;
-    use crate::layers::console::console_row::{ConsoleRow, new_text_row_buff};
+    use crate::layers::console::console_row::{new_text_row_buff, ConsoleRow};
 
     fn padding_buff(
         padding: usize,
@@ -213,10 +213,10 @@ mod tests {
     ) -> Vec<u8> {
         let mut buf = vec![
             *EnumPixelMapper::new(pixel_format).convert_to_buff(background);
-            padding * font_unit.width() * 4,
+            padding * font_unit.width() * 4
         ]
-            .flatten()
-            .to_vec();
+        .flatten()
+        .to_vec();
 
         buf.extend_from_slice(text_buff);
         buf.resize(text_buff.len(), 0x00);
@@ -237,7 +237,7 @@ mod tests {
             &ConsoleColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(row.buff_width(), writer.font_unit().width() * 4);
         assert!(row
@@ -280,19 +280,19 @@ mod tests {
             &ConsoleColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
         row.write_char(
             'h',
             &ConsoleColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
         row.write_char(
             'h',
             &ConsoleColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
 
         row.resize_text_len(2);
         assert_eq!(row.current_text_len, 2);
