@@ -16,6 +16,8 @@ use crate::layers::shape::shape_colors::ShapeColors;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
 
+use super::console::console_colors::ConsoleColors;
+
 #[derive(Delegate)]
 pub struct CountLayer {
     #[to(Transformable2D, LayerUpdatable)]
@@ -72,7 +74,12 @@ fn text_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> Kernel
     let root_size = root_transform.size();
     let pos = Vector2D::new(root_size.width() / 2, root_size.height() / 2) - 8 * 5;
 
-    let mut text = ConsoleLayer::new(config, pos, Size::new(10, 1));
+    let mut text = ConsoleLayer::new(
+        config,
+        ConsoleColors::default().change_background(PixelColor::window_background()),
+        pos,
+        Size::new(10, 1),
+    );
 
     text.update_string("0")?;
 

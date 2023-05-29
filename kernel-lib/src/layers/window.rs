@@ -16,6 +16,7 @@ use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
 
 use super::close_button::{CloseButtonLayer, CLOSE_BUTTON_HEIGHT, CLOSE_BUTTON_WIDTH};
+use super::console::console_colors::ConsoleColors;
 
 #[derive(Delegate)]
 pub struct WindowLayer {
@@ -70,7 +71,7 @@ fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -
     ShapeLayer::new(
         ShapeDrawer::new(
             config,
-            ShapeColors::default().change_foreground(PixelColor::new(0xC6, 0xC6, 0xC6)),
+            ShapeColors::default().change_foreground(PixelColor::window_background()),
         ),
         Transform2D::new(
             Vector2D::zeros(),
@@ -107,7 +108,7 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
 
 
 fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
-    let mut text = ConsoleLayer::new(config, Vector2D::new(24, 4), Size::new(12, 1));
+    let mut text = ConsoleLayer::new(config, ConsoleColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)), Vector2D::new(24, 4), Size::new(12, 1));
 
     text.update_string("Hello Window")
         .unwrap();

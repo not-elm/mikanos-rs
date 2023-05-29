@@ -46,6 +46,12 @@ impl PixelColor {
         }
     }
 
+
+    pub const fn window_background() -> Self {
+        Self::new(0xC6, 0xC6, 0xC6)
+    }
+
+
     pub fn r(&self) -> u8 {
         self.r
     }

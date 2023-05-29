@@ -1,6 +1,7 @@
 use core::cell::{OnceCell, RefCell, RefMut};
 use core::fmt::Write;
 
+use kernel_lib::layers::console::console_colors::ConsoleColors;
 use spin::Mutex;
 
 use common_lib::frame_buffer::FrameBufferConfig;
@@ -101,9 +102,14 @@ fn add_window_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
 
 fn add_console_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
     layers.new_layer(
-        ConsoleLayer::new(config, Vector2D::zeros(), Size::new(30, 10))
-            .into_enum()
-            .into_layer_key(CONSOLE_LAYER_KEY),
+        ConsoleLayer::new(
+            config,
+            ConsoleColors::default(),
+            Vector2D::zeros(),
+            Size::new(30, 10),
+        )
+        .into_enum()
+        .into_layer_key(CONSOLE_LAYER_KEY),
     );
 }
 
