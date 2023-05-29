@@ -1,60 +1,56 @@
 use core::cmp::min;
+use core::fmt::Error;
 
 use auto_delegate::Delegate;
 
-use crate::error::KernelResult;
-use crate::gop::char::ascii_char_writer::AscIICharWriter;
-use crate::gop::char::char_writable::CharWritable;
-use crate::gop::pixel::pixel_color::PixelColor;
-use crate::gop::pixel::writer::frame_buffer_pixel_writer::FrameBufferPixelWriter;
-use crate::gop::pixel::writer::pixel_writable::PixelWritable;
-use crate::gop::pixel::{calc_pixel_pos, calc_pixel_pos_from_vec2d};
-use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
-use crate::layers::layer::Layer;
-use crate::layers::layer_updatable::LayerUpdatable;
-use crate::serial_println;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
+use crate::error::KernelResult;
+use crate::gop::char::ascii_char_writer::AscIICharWriter;
+use crate::gop::char::char_writable::CharWritable;
+use crate::gop::pixel::calc_pixel_pos;
+use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
+
+use crate::layers::layer::Layer;
+use crate::layers::layer_updatable::LayerUpdatable;
+
+use self::console_colors::ConsoleColors;
+use self::console_frame::ConsoleFrame;
+
 pub mod console_colors;
 mod console_frame;
 mod console_row;
-mod text_frame;
-mod text_row;
+
 
 #[derive(Delegate)]
 pub struct ConsoleLayer {
     #[to(Transformable2D)]
     transform: Transform2D,
-
-    console_frame: ConsoleFrame<AscIICharWriter>,
     config: FrameBufferConfig,
+    console_frame: ConsoleFrame<AscIICharWriter>,
 }
 
 
 impl ConsoleLayer {
     pub fn new(
         config: FrameBufferConfig,
-        colors: ConsoleColors,
         pos: Vector2D<usize>,
         font_frame_size: Size,
+        colors: ConsoleColors,
     ) -> Self {
         let ascii = AscIICharWriter::new();
         let font_unit = ascii.font_unit();
+
         let transform = Transform2D::new(pos, font_unit * font_frame_size);
 
 
         Self {
             transform,
-            console_frame: ConsoleFrame::new(
-                ConsoleColors::default(),
-                AscIICharWriter::new(),
-                font_frame_size,
-                config.pixel_format,
-            ),
+            console_frame: ConsoleFrame::new(colors, ascii, font_frame_size, config.pixel_format),
             config,
         }
     }
@@ -62,9 +58,7 @@ impl ConsoleLayer {
 
     pub fn update_string(&mut self, str: &str) -> KernelResult {
         self.console_frame
-            .update_string(str);
-
-        Ok(())
+            .update_string(str)
     }
 
 
@@ -77,16 +71,10 @@ impl ConsoleLayer {
 impl core::fmt::Write for ConsoleLayer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.console_frame
-            .append_string(s);
-
-
-        Ok(())
+            .append_string(s)
+            .map_err(|_| Error)
     }
 }
-
-
-use self::console_colors::ConsoleColors;
-use self::console_frame::ConsoleFrame;
 
 
 impl LayerUpdatable for ConsoleLayer {
@@ -95,29 +83,34 @@ impl LayerUpdatable for ConsoleLayer {
         back_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
+        let relative = draw_area.safe_sub_pos(&self.transform.pos());
         for (y, line) in self
             .console_frame
-            .frame_buff_lines(0)
+            .frame_buff_lines()
             .into_iter()
             .flatten()
             .enumerate()
-            .skip_while(|(y, _)| *y < draw_area.origin().y())
+            .skip_while(|(y, _)| *y < relative.origin().y())
         {
-            let x = draw_area.origin().x() - self.transform.pos().x();
+            if relative.size().height() <= y {
+                return Ok(());
+            }
+
+
+            let x = relative.origin().x();
+
             if line.len() <= x {
                 continue;
             }
+
             let pos = self.pos() + Vector2D::new(x, y);
-            // let draw_origin = calc_pixel_pos_from_vec2d(&self.config,
-            // &draw_area.origin())?; let draw_end =
-            // calc_pixel_pos_from_vec2d(&self.config, &draw_area.end());
 
             let origin = calc_pixel_pos(&self.config, pos.x(), pos.y())?;
             let len = min(line.len() - x * 4, draw_area.size().width() * 4);
 
             let end = origin + len;
 
-            back_buff.raw_mut()[origin..end].copy_from_slice(&line[x..(x + len)]);
+            back_buff.raw_mut()[origin..end].copy_from_slice(&line[x * 4..(x * 4 + len)]);
         }
 
 

@@ -1,14 +1,12 @@
 use alloc::vec::Vec;
 
-use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
+use common_lib::frame_buffer::PixelFormat;
 use common_lib::math::size::Size;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
-
 use crate::layers::console::console_colors::ConsoleColors;
 use crate::layers::console::console_row::ConsoleRow;
-
 
 pub struct ConsoleFrame<Char> {
     rows: Vec<ConsoleRow>,
@@ -69,15 +67,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
     }
 
 
-    pub fn text_lines_ref(&self) -> Vec<&[char]> {
-        self.rows
-            .iter()
-            .filter_map(|row| row.texts_ref())
-            .collect()
-    }
-
-
-    pub fn frame_buff_lines(&self, relative_x: usize) -> Vec<Vec<&[u8]>> {
+    pub fn frame_buff_lines(&self) -> Vec<Vec<&[u8]>> {
         self.rows
             .iter()
             .filter_map(|row| row.frame_buff_lines())
@@ -85,6 +75,7 @@ impl<Char: CharWritable> ConsoleFrame<Char> {
     }
 
 
+    #[allow(unused)]
     pub fn resize_text_frame(&mut self, text_frame_size: Size) {
         let prev = self.text_frame_size;
         self.text_frame_size = text_frame_size;
@@ -209,7 +200,7 @@ mod tests {
 
         assert_eq!(
             frame
-                .frame_buff_lines(0)
+                .frame_buff_lines()
                 .len(),
             2
         );

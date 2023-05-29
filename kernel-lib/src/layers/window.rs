@@ -108,7 +108,7 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
 
 
 fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
-    let mut text = ConsoleLayer::new(config, ConsoleColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)), Vector2D::new(24, 4), Size::new(12, 1));
+    let mut text = ConsoleLayer::new(config, Vector2D::new(24, 4), Size::new(12, 1), ConsoleColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)), );
 
     text.update_string("Hello Window")
         .unwrap();

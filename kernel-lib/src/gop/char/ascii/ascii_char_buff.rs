@@ -11,7 +11,7 @@ pub struct AsciiCharBuff {
 }
 
 pub type CharLine = Vec<Option<PixelColor>>;
-pub type CharLines = Vec<CharLine>;
+pub type CharLines = [CharLine; 16];
 
 impl AsciiCharBuff {
     pub fn new(ascii: AsciiChar) -> Self {
@@ -19,8 +19,25 @@ impl AsciiCharBuff {
     }
 
 
-    pub fn into_text_lines(self) -> CharLines {
-        self.into_iter().collect()
+    pub fn into_text_lines(mut self) -> CharLines {
+        [
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+            self.next().unwrap(),
+        ]
     }
 }
 

@@ -1,6 +1,3 @@
-use alloc::vec;
-use alloc::vec::Vec;
-
 use crate::gop::char::ascii::ascii_char::AsciiChar;
 use crate::gop::char::ascii::ascii_char_buff::{AsciiCharBuff, CharLines};
 
@@ -23,7 +20,7 @@ pub struct TextRow {
 impl TextRow {
     pub fn new(max_text_len: usize) -> Self {
         Self {
-            texts: vec![Vec::with_capacity(max_text_len * 8); 16],
+            texts: Default::default(),
             max_text_len,
             current_text_len: 0,
             need_new_line: false,

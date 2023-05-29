@@ -3,7 +3,6 @@ use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelError::NotSupportCharacter;
 use crate::error::KernelResult;
-
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::font::get_font_from;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
@@ -27,6 +26,10 @@ impl CharWritable for AscIICharWriter {
         colors: &ConsoleColors,
         pixel_writer: &mut impl PixelWritable,
     ) -> KernelResult {
+        if c == '\n' {
+            return Ok(());
+        }
+
         let ascii_char = get_font_from(c).ok_or(NotSupportCharacter)?;
         let ascii_char = unsafe { core::slice::from_raw_parts_mut(ascii_char, 16) };
         for (dy, line) in ascii_char.iter().enumerate() {

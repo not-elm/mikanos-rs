@@ -66,7 +66,7 @@ fn background_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> 
         ShapeDrawer::new(config, ShapeColors::new(PixelColor::black(), None)),
         Transform2D::new(Vector2D::zeros(), root_transform.size()),
     )
-    .into_enum()
+        .into_enum()
 }
 
 
@@ -76,9 +76,9 @@ fn text_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> Kernel
 
     let mut text = ConsoleLayer::new(
         config,
-        ConsoleColors::default().change_background(PixelColor::window_background()),
         pos,
         Size::new(10, 1),
+        ConsoleColors::default().change_background(PixelColor::black()),
     );
 
     text.update_string("0")?;
@@ -102,7 +102,7 @@ mod tests {
             FrameBufferConfig::mock(),
             Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
         )
-        .unwrap();
+            .unwrap();
         count.write_count(100);
     }
 }

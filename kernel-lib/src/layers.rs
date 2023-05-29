@@ -7,7 +7,6 @@ use common_lib::transform::builder::Transform2DBuilder;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::{KernelError, KernelResult, LayerReason};
-use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
@@ -179,18 +178,11 @@ impl Layers {
 pub(crate) fn copy_frame_buff_in_area(
     src: &[u8],
     dist: &mut [u8],
-    config: &FrameBufferConfig,
-    area: &Rectangle<usize>,
+    _config: &FrameBufferConfig,
+    _area: &Rectangle<usize>,
 ) -> KernelResult {
-    let ox = area.origin().x();
-    let ex = area.end().x();
+    dist.copy_from_slice(src);
 
-    for y in area.origin().y()..area.end().y() {
-        let origin = calc_pixel_pos(config, ox, y)?;
-        let end = calc_pixel_pos(config, ex, y)?;
-
-        dist[origin..end].copy_from_slice(&src[origin..end]);
-    }
 
     Ok(())
 }

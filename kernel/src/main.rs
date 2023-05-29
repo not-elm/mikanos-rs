@@ -23,9 +23,9 @@ use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
+use crate::usb::{enable_msi, first_general_header};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
-use crate::usb::{enable_msi, first_general_header};
 
 mod allocate;
 mod entry_point;
@@ -63,7 +63,6 @@ pub extern "sysv64" fn kernel_main(
     test_main();
     serial_println!("Hello Serial Port!");
     println!("Hello Mikan OS RS!");
-    serial_println!("{:?}", frame_buffer_config);
 
     let general_header = first_general_header();
     enable_msi(general_header.clone()).unwrap();

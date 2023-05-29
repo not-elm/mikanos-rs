@@ -13,7 +13,7 @@ pub struct ShadowFrameBuffer {
 impl ShadowFrameBuffer {
     pub fn new(config: FrameBufferConfig) -> Self {
         Self {
-            buff: vec![0; config.frame_buffer_size],
+            buff: vec![0; config.frame_buff_length()],
             config,
         }
     }
