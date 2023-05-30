@@ -10,18 +10,18 @@ checksum = "bd8b2abd55bf1f9cffbf00fd594566c51a9d31402553284920c1309ca8351086"
 
 [[package]]
 name = "auto-delegate"
-version = "0.0.4"
+version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a7458edccbc2b37a6abba281d1d8a565759cb38d4b1153edfe22b0c689a8a4d"
+checksum = "bf3c976ff5d97340ea6d76009f892dbdb6892fca1d115cefb26f4ed417a7b626"
 dependencies = [
  "auto-delegate-macros",
 ]
 
 [[package]]
 name = "auto-delegate-macros"
-version = "0.0.4"
+version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac11c132e9eebdc0d7f666678dbbf82bc91c36c76f920376f04e20e06013ecab"
+checksum = "5ed86868a398ba5c30ec06f76ab046ba90d77775189d57cfcc92c9769f6100df"
 dependencies = [
  "proc-macro2",
  "quote",

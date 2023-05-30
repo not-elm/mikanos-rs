@@ -19,4 +19,4 @@ modular-bitfield = "0.11.2"
 dyn-clone = "1.0.10"
 uefi = { version = "0.20.0", features = ["alloc"] }
 uefi-services = "0.17.0"
-auto-delegate = "0.0.4"
+auto-delegate = "0.0.5"
