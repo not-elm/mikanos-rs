@@ -11,6 +11,7 @@
 extern crate alloc;
 
 
+use core::ffi::c_void;
 use core::panic::PanicInfo;
 
 use uefi::table::boot::MemoryMapIter;
@@ -46,6 +47,7 @@ kernel_entry_point!();
 pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
     memory_map: &MemoryMapIter<'static>,
+    rsdp: &Option<*const c_void>,
 ) {
     init_gdt();
 

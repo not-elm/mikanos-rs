@@ -1,9 +1,11 @@
 use alloc::vec;
 use alloc::vec::Vec;
+use core::ffi::c_void;
 
 use uefi::prelude::{Boot, SystemTable};
 use uefi::proto::media::file::{Directory, File, FileInfo, FileMode, RegularFile};
 use uefi::table::boot::MemoryDescriptor;
+use uefi::table::cfg::ACPI2_GUID;
 
 use bootloader_lib::error::LibResult;
 use bootloader_lib::kernel::entry_point::EntryPoint;
@@ -38,11 +40,23 @@ pub fn execute_kernel(entry_point: EntryPoint, system_table: SystemTable<Boot>) 
 
     let frame_buffer_config = obtain_frame_buffer_config(&mut open_gop(&system_table).unwrap());
 
+    let rsdp_ptr = find_rsdp_pointer(&system_table);
     let (_, memory_map) = system_table.exit_boot_services();
-    entry_point.execute(&frame_buffer_config, &memory_map.entries());
+
+    entry_point.execute(&frame_buffer_config, &memory_map.entries(), &rsdp_ptr);
     core::mem::forget(memory_map_vec);
     Ok(())
 }
+
+
+fn find_rsdp_pointer(system_table: &SystemTable<Boot>) -> Option<*const c_void> {
+    system_table
+        .config_table()
+        .iter()
+        .find(|config| config.guid == ACPI2_GUID)
+        .map(|config| config.address)
+}
+
 
 fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
     // カーネルファイルの大きさを知るため、ファイル情報を読み取る

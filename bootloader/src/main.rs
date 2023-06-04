@@ -37,6 +37,7 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     )
     .unwrap();
 
+
     let entry_point = kernel::process::load_kernel(
         &mut root_dir,
         &"kernel.elf",

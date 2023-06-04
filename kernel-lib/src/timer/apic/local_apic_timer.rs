@@ -1,11 +1,9 @@
-use volatile_bits::{VolatileAddress, VolatileBitsReadable, VolatileBitsWritable};
+use volatile_bits::{VolatileBitsReadable, VolatileBitsWritable};
 
 use crate::apic::device_config::LocalApicTimerDivide;
 use crate::apic::lvt_timer::timer_mode::TimerMode::Periodic;
-use crate::apic::lvt_timer::LvtTimerAddr;
 use crate::apic::LocalApicRegisters;
 use crate::interrupt::interrupt_vector::InterruptVector;
-use crate::serial_println;
 use crate::timer::apic::ApicTimer;
 
 #[derive(Default)]
@@ -52,13 +50,8 @@ impl ApicTimer for LocalApicTimer {
 
         self.local_apic_registers
             .initial_count()
-            .write_volatile(u32::MAX)
+            .write_volatile(u32::MAX / 5)
             .unwrap();
-
-
-        serial_println!("Timer 0x{:b}", unsafe {
-            core::ptr::read_volatile(LvtTimerAddr::default().address() as *const u32)
-        });
     }
 
 
@@ -68,7 +61,7 @@ impl ApicTimer for LocalApicTimer {
             .current_count()
             .read_volatile();
 
-        u32::MAX - current
+        u32::MAX / 5 - current
     }
 
 
