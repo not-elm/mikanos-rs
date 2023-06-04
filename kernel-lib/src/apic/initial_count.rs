@@ -1,13 +1,13 @@
-use crate::apic::LocalApicRegistersAddr;
-use macros::VolatileBits;
+use volatile_bits::volatile_bits;
 
-#[derive(VolatileBits)]
-#[add_addr_bytes(0x380)]
-pub struct InitialCount(usize);
+use crate::apic::LocalApicRegistersAddr;
+
+#[volatile_bits(add = 0x380, type = u32)]
+pub struct InitialCount(LocalApicRegistersAddr);
 
 
 impl InitialCount {
     pub fn new(local_apic_addr: LocalApicRegistersAddr) -> Self {
-        Self::new_uncheck(local_apic_addr.addr())
+        Self::from(local_apic_addr)
     }
 }

@@ -1,4 +1,4 @@
-use crate::error::{DeviceContextReason, PciError, PciResult};
+use crate::error::{DeviceContextReason, OldPciError, OldPciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::DeviceCollectable;
 use crate::xhc::device_manager::device::Device;
@@ -18,9 +18,9 @@ where
     Doorbell: DoorbellRegistersAccessible,
     Memory: MemoryAllocatable,
 {
-    fn check_specify_slot_id(&self, slot_id: u8) -> PciResult {
+    fn check_specify_slot_id(&self, slot_id: u8) -> OldPciResult {
         if self.device_slots - 1 < slot_id {
-            Err(PciError::FailedOperateDeviceContext(
+            Err(OldPciError::FailedOperateDeviceContext(
                 DeviceContextReason::ExceedMasSlots {
                     max_slots: self.device_slots,
                     specified_slot_id: slot_id,
@@ -45,18 +45,21 @@ where
         }
     }
     fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device<Doorbell, Memory>> {
-        self.check_specify_slot_id(slot_id).ok()?;
+        self.check_specify_slot_id(slot_id)
+            .ok()?;
 
-        self.device.as_mut().and_then(|device| {
-            if device.slot_id() == slot_id {
-                Some(device)
-            } else {
-                None
-            }
-        })
+        self.device
+            .as_mut()
+            .and_then(|device| {
+                if device.slot_id() == slot_id {
+                    Some(device)
+                } else {
+                    None
+                }
+            })
     }
 
-    fn set(&mut self, device_slot: Device<Doorbell, Memory>) -> PciResult {
+    fn set(&mut self, device_slot: Device<Doorbell, Memory>) -> OldPciResult {
         self.check_specify_slot_id(device_slot.slot_id())?;
         self.device = Some(device_slot);
         Ok(())

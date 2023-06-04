@@ -7,7 +7,7 @@ use xhci::context::EndpointType;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::request_type::RequestType;
@@ -66,7 +66,7 @@ where
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
         mouse_driver_factory: MouseDriverFactory,
-    ) -> PciResult<Self> {
+    ) -> OldPciResult<Self> {
         let mut me = Self::new(slot_id, allocator, doorbell, mouse_driver_factory)?;
 
         me.slot
@@ -82,7 +82,7 @@ where
         Ok(me)
     }
 
-    pub fn start_initialize(&mut self) -> PciResult {
+    pub fn start_initialize(&mut self) -> OldPciResult {
         let buff = self
             .device_descriptor_buff
             .as_mut_ptr();
@@ -107,7 +107,7 @@ where
         &mut self,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<InitStatus> {
+    ) -> OldPciResult<InitStatus> {
         let (init_status, phase) = self
             .phase
             .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
@@ -117,7 +117,7 @@ where
 
         Ok(init_status)
     }
-    pub fn on_endpoints_configured(&mut self) -> PciResult {
+    pub fn on_endpoints_configured(&mut self) -> OldPciResult {
         let request_type = RequestType::new()
             .with_ty(1)
             .with_recipient(1);
@@ -160,7 +160,7 @@ where
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
         mouse_driver_factory: MouseDriverFactory,
-    ) -> PciResult<Self> {
+    ) -> OldPciResult<Self> {
         let slot = DeviceSlot::new(slot_id, doorbell, allocator)?;
         let phase = Box::new(Phase1::new(mouse_driver_factory));
         Ok(Self {

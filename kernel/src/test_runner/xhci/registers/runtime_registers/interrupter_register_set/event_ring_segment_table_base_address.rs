@@ -16,6 +16,7 @@ fn it_access_correct_event_ring_segment_table_base_address() {
         0
     )
 }
+
 #[test_case]
 fn it_update_correct_event_ring_segment_table_base_address() {
     execute_reset_host_controller();

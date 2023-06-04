@@ -1,4 +1,4 @@
-use crate::error::{AllocateReason, PciError, PciResult};
+use crate::error::{AllocateReason, OldPciError, OldPciResult};
 use crate::xhc::allocator::aligned_address::AlignedAddress;
 
 /// デバイスコンテキストの配列などのメモリを確保する際に使います。
@@ -13,13 +13,13 @@ pub trait MemoryAllocatable {
         bounds: usize,
     ) -> Option<AlignedAddress>;
 
-    fn try_allocate_trb_ring(&mut self, ring_size: usize) -> PciResult<u64> {
+    fn try_allocate_trb_ring(&mut self, ring_size: usize) -> OldPciResult<u64> {
         unsafe {
             self.try_allocate_with_align(core::mem::size_of::<u128>() * ring_size, 64, 4096)?
                 .address()
         }
     }
-    fn try_allocate_device_context_array(&mut self, max_slots: u8) -> PciResult<u64> {
+    fn try_allocate_device_context_array(&mut self, max_slots: u8) -> OldPciResult<u64> {
         unsafe {
             self.try_allocate_with_align(
                 core::mem::size_of::<u64>() * max_slots as usize,
@@ -29,13 +29,13 @@ pub trait MemoryAllocatable {
             .address()
         }
     }
-    fn try_allocate_input_context(&mut self) -> PciResult<u64> {
+    fn try_allocate_input_context(&mut self) -> OldPciResult<u64> {
         unsafe {
             self.try_allocate_with_align(core::mem::size_of::<xhci::context::Input32Byte>(), 64, 0)?
                 .address()
         }
     }
-    fn try_allocate_device_context(&mut self) -> PciResult<u64> {
+    fn try_allocate_device_context(&mut self) -> OldPciResult<u64> {
         unsafe {
             self.try_allocate_with_align(
                 core::mem::size_of::<xhci::context::Device32Byte>(),
@@ -45,7 +45,7 @@ pub trait MemoryAllocatable {
             .address()
         }
     }
-    fn try_allocate_max_scratchpad_buffers(&mut self, len: usize) -> PciResult<u64> {
+    fn try_allocate_max_scratchpad_buffers(&mut self, len: usize) -> OldPciResult<u64> {
         unsafe {
             self.try_allocate_with_align(core::mem::size_of::<u64>() * len, 4096, 4096)?
                 .address()
@@ -56,9 +56,9 @@ pub trait MemoryAllocatable {
         bytes: usize,
         align: usize,
         bounds: usize,
-    ) -> PciResult<AlignedAddress> {
+    ) -> OldPciResult<AlignedAddress> {
         self.allocate_with_align(bytes, align, bounds)
-            .ok_or(PciError::FailedAllocate(AllocateReason::NotEnoughMemory))
+            .ok_or(OldPciError::FailedAllocate(AllocateReason::NotEnoughMemory))
     }
 
     unsafe fn free(&mut self, base_addr: usize);

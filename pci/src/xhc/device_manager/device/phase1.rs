@@ -3,7 +3,7 @@ use alloc::boxed::Box;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
@@ -36,7 +36,7 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
+    ) -> OldPciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         const CONFIGURATION_TYPE: u16 = 2;
 
         let data_buff_addr = slot.data_buff_addr();

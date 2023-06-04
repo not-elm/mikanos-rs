@@ -1,6 +1,6 @@
-use crate::queue::queueing::Queueing;
 use alloc::collections::VecDeque;
 
+use crate::queue::queueing::Queueing;
 
 #[derive(Debug)]
 pub struct VectorQueue<T> {
@@ -23,6 +23,7 @@ impl<T> VectorQueue<T> {
             queue: VecDeque::new(),
         }
     }
+
 
     pub fn count(&self) -> usize {
         self.queue.len()

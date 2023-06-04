@@ -1,6 +1,4 @@
-use core::marker::PhantomData;
-
-use macros::VolatileBits;
+use kernel_lib::volatile_bits::volatile_bits;
 
 use crate::xhc::transfer::event::event_ring_segment_table::SegmentTableAddr;
 
@@ -13,7 +11,9 @@ use crate::xhc::transfer::event::event_ring_segment_table::SegmentTableAddr;
 /// [Xhci Document] : 515 Page
 ///
 /// [Xhci Document]: https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-#[derive(VolatileBits)]
-#[add_addr_bytes(0x08)]
-#[bits(16)]
-pub struct RingSegmentSize(usize, PhantomData<SegmentTableAddr>);
+#[volatile_bits(
+type = u32,
+add = 0x08,
+bits = 16
+)]
+pub struct RingSegmentSize(SegmentTableAddr);

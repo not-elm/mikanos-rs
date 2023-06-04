@@ -1,4 +1,4 @@
-use crate::error::{PciError, PciResult};
+use crate::error::{OldPciError, OldPciResult};
 
 #[repr(u8)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd)]
@@ -8,11 +8,11 @@ pub enum CapabilityId {
 }
 
 impl CapabilityId {
-    pub fn try_from_u8(v: u8) -> PciResult<Self> {
+    pub fn try_from_u8(v: u8) -> OldPciResult<Self> {
         match v {
             0x05 => Ok(CapabilityId::Msi),
             0x11 => Ok(CapabilityId::MsiX),
-            _ => Err(PciError::IllegalEnumValue(v as usize)),
+            _ => Err(OldPciError::IllegalEnumValue(v as usize)),
         }
     }
 }

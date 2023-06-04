@@ -1,11 +1,10 @@
-use core::marker::PhantomData;
-
-use macros::VolatileBits;
+use volatile_bits::volatile_bits;
 
 use crate::apic::lvt_timer::LvtTimerAddr;
 
-#[derive(VolatileBits)]
-#[offset_bit(16)]
-#[volatile_type(u8)]
-#[bits(1)]
-pub struct Mask(usize, PhantomData<LvtTimerAddr>);
+#[volatile_bits(
+type = u32,
+bits = 1,
+offset = 16
+)]
+pub struct Mask(LvtTimerAddr);

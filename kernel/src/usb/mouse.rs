@@ -2,16 +2,12 @@ use alloc::string::String;
 
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transformable2D;
-use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::layers::cursor::cursor_colors::CursorColors;
-use kernel_lib::timer::apic::local_apic_timer::OneShotLocalApicTimer;
-use kernel_lib::timer::apic::ApicTimer;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
 
 use crate::layers::{LAYERS, MOUSE_LAYER_KEY};
-use crate::println;
 
 #[derive(Debug, Clone)]
 pub struct MouseSubscriber;
@@ -32,20 +28,8 @@ impl MouseSubscribable for MouseSubscriber {
         prev_button: Option<MouseButton>,
         button: Option<MouseButton>,
     ) -> Result<(), ()> {
-        let mut timer = OneShotLocalApicTimer::new();
-        timer.start(LocalApicTimerDivide::By1);
-
         update_cursor_layer(current_cursor, button)?;
-        update_draggable_layer(
-            prev_cursor,
-            current_cursor,
-            prev_button,
-            button,
-            timer.elapsed() as usize,
-        )?;
-
-        println!("Done Xhc All Events Time = {}", timer.elapsed());
-        timer.stop();
+        update_draggable_layer(prev_cursor, current_cursor, prev_button, button)?;
 
         Ok(())
     }
@@ -57,7 +41,6 @@ fn update_draggable_layer(
     current_cursor: Vector2D<usize>,
     prev_button: Option<MouseButton>,
     button: Option<MouseButton>,
-    count: usize,
 ) -> Result<(), ()> {
     let prev_drag = prev_button.is_some_and(|b| matches!(b, MouseButton::Button1));
     let current_drag = button.is_some_and(|b| matches!(b, MouseButton::Button1));
@@ -76,10 +59,6 @@ fn update_draggable_layer(
                     layer
                         .move_to_relative(relative)
                         .unwrap_or(());
-                    layer
-                        .require_window()
-                        .unwrap()
-                        .write_count(count);
                 })
                 .map_err(|_| ())?;
         }

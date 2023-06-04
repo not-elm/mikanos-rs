@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::interrupt_in::InterruptIn;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase};
@@ -37,7 +37,7 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
+    ) -> OldPciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         for interrupt in self.interrupters.iter_mut() {
             interrupt.get_report(slot.default_control_pipe_mut())?;
         }

@@ -1,14 +1,12 @@
-use macros::Address;
+use alloc::string::ToString;
+use kernel_lib::volatile_bits::{volatile_address, VolatileBitsWritable};
 
-use crate::error::PciResult;
+use crate::error::{PciError, PciResult};
 use crate::xhc::transfer::event::event_ring_segment_table::ring_segment_addr_entry::EventRingAddressEntry;
 use crate::xhc::transfer::event::event_ring_segment_table::ring_segment_size::RingSegmentSize;
-use crate::xhc::transfer::event::event_ring_segment_table::ring_segment_table_field::RingSegmentTableField;
-use crate::VolatileAccessible;
 
 mod ring_segment_addr_entry;
 mod ring_segment_size;
-mod ring_segment_table_field;
 
 #[derive(Debug)]
 pub struct EventRingSegmentTable {}
@@ -19,14 +17,18 @@ impl EventRingSegmentTable {
         event_ring_segment_addr: u64,
         ring_segment_size: usize,
     ) -> PciResult<Self> {
-        let addr = SegmentTableAddr::new(event_ring_segment_table_addr as usize);
-        EventRingAddressEntry::new(addr).write_volatile(event_ring_segment_addr);
-        RingSegmentSize::new(addr).write_volatile(ring_segment_size as u32);
+        let addr = SegmentTableAddr::from(event_ring_segment_table_addr);
+        EventRingAddressEntry::from(addr)
+            .write_volatile(event_ring_segment_addr)
+            .map_err(|_| PciError::new("Failed write Event Ring Segment Addr".to_string()))?;
+
+        RingSegmentSize::from(addr)
+            .write_volatile(ring_segment_size as u32)
+            .map_err(|_| PciError::new("Failed write Ring Segment Size".to_string()))?;
 
         Ok(Self {})
     }
 }
 
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Address)]
-#[repr(transparent)]
-pub(crate) struct SegmentTableAddr(usize);
+#[volatile_address]
+pub struct SegmentTableAddr(u64);

@@ -5,6 +5,7 @@ pub enum InterruptVector {
     Overflow = 0x04,
     PageFault = 0x08,
     Xhci = 0x40,
+    ApicTimer = 0x41,
     NotSupport,
 }
 

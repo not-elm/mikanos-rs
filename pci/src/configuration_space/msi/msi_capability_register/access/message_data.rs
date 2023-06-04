@@ -4,7 +4,7 @@ use crate::configuration_space::msi::msi_capability_register::access::msi_capabi
 use crate::configuration_space::msi::msi_capability_register::structs::from_u32::TryFromU32;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::MessageData;
 use crate::configuration_space::ConfigurationSpace;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 #[derive(Debug, Clone)]
 pub struct MessageDataAccessor {}
@@ -26,7 +26,7 @@ where
         io: &mut Io,
         configuration_space: &ConfigurationSpace,
         msi_cap_addr: u8,
-    ) -> PciResult<MessageData> {
+    ) -> OldPciResult<MessageData> {
         io.write_config_addr(config_addr_register(configuration_space, msi_cap_addr));
         let raw_data = io.read_config_data();
         MessageData::try_from_u32(raw_data)

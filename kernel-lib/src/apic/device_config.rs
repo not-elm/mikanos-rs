@@ -1,21 +1,23 @@
-use macros::VolatileBits;
+use volatile_bits::{volatile_bits, VolatileBitsWritable};
 
 use crate::apic::LocalApicRegistersAddr;
 
-#[derive(VolatileBits)]
-#[add_addr_bytes(0x3E0)]
-#[bits(4)]
-#[volatile_type(u8)]
-pub struct DivideConfig(usize);
+#[volatile_bits(
+bits = 4,
+type = u32,
+add = 0x3E0,
+)]
+pub struct DivideConfig(LocalApicRegistersAddr);
 
 
 impl DivideConfig {
     pub fn new(local_apic_addr: LocalApicRegistersAddr) -> Self {
-        Self(local_apic_addr.addr())
+        Self(local_apic_addr)
     }
 
     pub fn update_divide(&self, divide: LocalApicTimerDivide) {
-        self.write_volatile(divide as u8)
+        self.write_volatile(divide as u32)
+            .unwrap();
     }
 }
 

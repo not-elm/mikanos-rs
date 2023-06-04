@@ -3,7 +3,7 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::transfer::{DataStage, Direction, SetupStage, TransferType};
 
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 use crate::xhc::device_manager::control_pipe::control_in::ControlIn;
 use crate::xhc::device_manager::control_pipe::control_out::ControlOut;
@@ -37,7 +37,7 @@ where
         device_context_index: DeviceContextIndex,
         doorbell: &Rc<RefCell<T>>,
         transfer_ring: TransferRing,
-    ) -> PciResult<Self> {
+    ) -> OldPciResult<Self> {
         let transfer_ring = Rc::new(RefCell::new(transfer_ring));
         let control_in = ControlIn::new(slot_id, device_context_index, doorbell, &transfer_ring);
         let control_out = ControlOut::new(slot_id, device_context_index, doorbell, &transfer_ring);
@@ -56,13 +56,15 @@ where
     }
 
     pub fn transfer_ring_base_addr(&self) -> u64 {
-        self.transfer_ring.borrow().base_address()
+        self.transfer_ring
+            .borrow()
+            .base_address()
     }
 }
 
 pub trait ControlPipeTransfer {
-    fn no_data(&mut self, request: Request) -> PciResult;
-    fn with_data(&mut self, request: Request, data_buff_addr: u64, len: u32) -> PciResult;
+    fn no_data(&mut self, request: Request) -> OldPciResult;
+    fn with_data(&mut self, request: Request, data_buff_addr: u64, len: u32) -> OldPciResult;
 }
 
 pub(crate) fn make_setup_stage(setup_data: SetupStage, transfer_type: TransferType) -> SetupStage {

@@ -2,7 +2,7 @@ use alloc::boxed::Box;
 
 use xhci::ring::trb::event::TransferEvent;
 
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
@@ -39,5 +39,5 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)>;
+    ) -> OldPciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)>;
 }

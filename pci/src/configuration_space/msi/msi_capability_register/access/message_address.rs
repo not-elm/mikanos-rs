@@ -3,7 +3,7 @@ use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
 use crate::configuration_space::msi::msi_capability_register::access::msi_capability_accessible::MsiCapabilityAccessible;
 use crate::configuration_space::msi::msi_capability_register::structs::message_address::MessageAddress;
 use crate::configuration_space::ConfigurationSpace;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 #[derive(Debug, Clone)]
 pub struct MessageAddressAccessor {
@@ -27,7 +27,7 @@ where
         io: &mut Io,
         configuration_space: &ConfigurationSpace,
         msi_cap_addr: u8,
-    ) -> PciResult<MessageAddress> {
+    ) -> OldPciResult<MessageAddress> {
         let msi_lower_addr = io.read_config_data_with_set_addr(config_addr_offset_lower(
             configuration_space,
             msi_cap_addr,

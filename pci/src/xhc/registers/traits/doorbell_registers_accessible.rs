@@ -1,5 +1,5 @@
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 pub trait DoorbellRegistersAccessible {
-    fn notify_at(&mut self, index: usize, target: u8, stream_id: u16) -> PciResult;
+    fn notify_at(&mut self, index: usize, target: u8, stream_id: u16) -> OldPciResult;
 }

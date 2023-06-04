@@ -1,6 +1,6 @@
 use kernel_lib::apic::LocalApicRegisters;
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
-use kernel_lib::VolatileAccessible;
+use kernel_lib::volatile_bits::VolatileBitsReadable;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::configuration_space::device::header_type::general_header::GeneralHeader;
@@ -8,13 +8,13 @@ use pci::configuration_space::io::io_memory_accessible::real_memory_accessor::Re
 use pci::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
 use pci::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
 use pci::configuration_space::msi::InterruptCapabilityRegisterIter;
-use pci::error::PciResult;
+use pci::error::OldPciResult;
 use pci::pci_device_searcher::PciDeviceSearcher;
 
 pub mod mouse;
 pub mod xhci;
 
-pub fn enable_msi(general_header: GeneralHeader) -> PciResult {
+pub fn enable_msi(general_header: GeneralHeader) -> OldPciResult {
     let io = RealIoMemoryAccessor::new();
     let bsp_local_apic_id: u8 = LocalApicRegisters::default()
         .local_apic_id()

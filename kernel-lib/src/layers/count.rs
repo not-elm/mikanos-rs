@@ -12,9 +12,6 @@ use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::console::ConsoleLayer;
 use crate::layers::layer::Layer;
 use crate::layers::multiple_layer::MultipleLayer;
-use crate::layers::shape::shape_colors::ShapeColors;
-use crate::layers::shape::shape_drawer::ShapeDrawer;
-use crate::layers::shape::ShapeLayer;
 
 use super::console::console_colors::ConsoleColors;
 
@@ -36,7 +33,7 @@ impl CountLayer {
     pub fn write_count(&mut self, count: usize) {
         self.layers
             .layers_mut()
-            .get_mut(1)
+            .get_mut(0)
             .unwrap()
             .require_console()
             .unwrap()
@@ -54,31 +51,22 @@ impl CountLayer {
 fn count_layers(config: FrameBufferConfig, transform: Transform2D) -> KernelResult<MultipleLayer> {
     let mut layers = MultipleLayer::new(transform);
 
-    layers.new_layer(background_layer(config, layers.transform_ref()));
     layers.new_layer(text_layer(config, layers.transform_ref())?);
 
     Ok(layers)
 }
 
 
-fn background_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> Layer {
-    ShapeLayer::new(
-        ShapeDrawer::new(config, ShapeColors::new(PixelColor::black(), None)),
-        Transform2D::new(Vector2D::zeros(), root_transform.size()),
-    )
-        .into_enum()
-}
-
-
-fn text_layer(config: FrameBufferConfig, root_transform: &Transform2D) -> KernelResult<Layer> {
-    let root_size = root_transform.size();
-    let pos = Vector2D::new(root_size.width() / 2, root_size.height() / 2) - 8 * 5;
+fn text_layer(config: FrameBufferConfig, _root_transform: &Transform2D) -> KernelResult<Layer> {
+    let pos = Vector2D::zeros();
 
     let mut text = ConsoleLayer::new(
         config,
         pos,
         Size::new(10, 1),
-        ConsoleColors::default().change_background(PixelColor::black()),
+        ConsoleColors::default()
+            .change_foreground(PixelColor::black())
+            .change_background(PixelColor::window_background()),
     );
 
     text.update_string("0")?;
@@ -102,7 +90,7 @@ mod tests {
             FrameBufferConfig::mock(),
             Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
         )
-            .unwrap();
+        .unwrap();
         count.write_count(100);
     }
 }

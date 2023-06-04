@@ -1,8 +1,8 @@
 use crate::xhc::registers::internal::capability_registers::runtime_register_space_offset::RuntimeRegisterSpaceOffset;
-use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 use crate::xhc::registers::internal::runtime_registers::interrupter_register_set::{
     InterrupterRegisterSet, InterrupterRegisterSetOffset,
 };
+use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 
 pub mod interrupter_register_set;
 

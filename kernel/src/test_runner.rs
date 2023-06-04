@@ -1,5 +1,3 @@
-use common_lib::math::vector::Vector2D;
-use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::pci_device_searcher::PciDeviceSearcher;
@@ -7,9 +5,8 @@ use pci::pci_device_searcher::PciDeviceSearcher;
 use crate::qemu::{exit_qemu, QemuExitCode};
 use crate::serial_println;
 
-mod macros_test;
 mod msi;
-mod xhci;
+
 
 pub trait Testable {
     fn run(&self);

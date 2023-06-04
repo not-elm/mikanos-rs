@@ -1,58 +1,29 @@
-use crate::apic::lvt_timer::lvt_timer_field::LvtTimerField;
+use volatile_bits::{volatile_address, volatile_bit_field, VolatileAddress};
+
+use crate::apic::lvt_timer::interrupt_id_number::InterruptIdNumber;
 use crate::apic::lvt_timer::mask::Mask;
 use crate::apic::lvt_timer::timer_mode::TimerModeField;
 use crate::apic::LocalApicRegistersAddr;
 
-pub mod lvt_timer_field;
+pub mod interrupt_id_number;
 pub mod mask;
 pub mod timer_mode;
 
 
-#[derive(Debug)]
+#[volatile_bit_field(addr_ty = LvtTimerAddr)]
 pub struct LvtTimer {
+    interrupt_id_num: InterruptIdNumber,
     mask: Mask,
     timer_mode: TimerModeField,
 }
 
 
-impl LvtTimer {
-    pub fn new(lvt_timer_addr: LvtTimerAddr) -> Self {
-        Self {
-            mask: Mask::new(lvt_timer_addr),
-            timer_mode: TimerModeField::new(lvt_timer_addr),
-        }
-    }
-
-
-    pub fn mask(&self) -> &Mask {
-        &self.mask
-    }
-
-
-    pub fn timer_mode(&self) -> &TimerModeField {
-        &self.timer_mode
-    }
-}
-
-
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct LvtTimerAddr(usize);
-
-
-impl LvtTimerAddr {
-    pub fn new(addr: LocalApicRegistersAddr) -> Self {
-        Self(addr.addr() + 0x320)
-    }
-
-
-    pub fn raw(&self) -> usize {
-        self.0
-    }
-}
+#[volatile_address]
+pub struct LvtTimerAddr(u64);
 
 
 impl Default for LvtTimerAddr {
     fn default() -> Self {
-        Self::new(LocalApicRegistersAddr::default())
+        Self::from(LocalApicRegistersAddr::default().address() + 0x320)
     }
 }

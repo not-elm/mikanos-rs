@@ -1,7 +1,7 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::ControlPipe;
 use crate::xhc::device_manager::device::phase::DATA_BUFF_SIZE;
@@ -34,8 +34,10 @@ where
         slot_id: u8,
         doorbell: &Rc<RefCell<Doorbell>>,
         allocator: &Rc<RefCell<Memory>>,
-    ) -> PciResult<DeviceSlot<Memory, Doorbell>> {
-        let transfer_ring = allocator.borrow_mut().try_allocate_trb_ring(32)?;
+    ) -> OldPciResult<DeviceSlot<Memory, Doorbell>> {
+        let transfer_ring = allocator
+            .borrow_mut()
+            .try_allocate_trb_ring(32)?;
         let transfer_ring = TransferRing::new(transfer_ring, 32, true);
 
         let default_control_pipe = ControlPipe::new(
@@ -87,7 +89,7 @@ where
     pub fn doorbell(&self) -> &Rc<RefCell<Doorbell>> {
         &self.doorbell
     }
-    pub fn try_alloc_transfer_ring(&mut self, ring_size: usize) -> PciResult<TransferRing> {
+    pub fn try_alloc_transfer_ring(&mut self, ring_size: usize) -> OldPciResult<TransferRing> {
         let transfer_ring_addr = self
             .allocator
             .borrow_mut()

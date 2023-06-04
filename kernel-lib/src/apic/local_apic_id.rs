@@ -1,15 +1,16 @@
-use macros::VolatileBits;
+use volatile_bits::volatile_bits;
 
 use crate::apic::LocalApicRegistersAddr;
 
-#[derive(VolatileBits)]
-#[add_addr_bytes(0x20)]
-#[volatile_type(u8)]
-pub struct LocalApicId(usize);
+#[volatile_bits(
+type = u8,
+add = 0x20
+)]
+pub struct LocalApicId(LocalApicRegistersAddr);
 
 
 impl LocalApicId {
     pub fn new(addr: LocalApicRegistersAddr) -> Self {
-        Self::new_uncheck(addr.addr())
+        Self::from(addr)
     }
 }

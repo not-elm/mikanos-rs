@@ -14,7 +14,6 @@ use crate::gop::char::ascii_char_writer::AscIICharWriter;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
-
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
 
@@ -84,6 +83,7 @@ impl LayerUpdatable for ConsoleLayer {
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         let relative = draw_area.safe_sub_pos(&self.transform.pos());
+
         for (y, line) in self
             .console_frame
             .frame_buff_lines()
@@ -92,10 +92,9 @@ impl LayerUpdatable for ConsoleLayer {
             .enumerate()
             .skip_while(|(y, _)| *y < relative.origin().y())
         {
-            if relative.size().height() <= y {
+            if relative.end().y() < y {
                 return Ok(());
             }
-
 
             let x = relative.origin().x();
 

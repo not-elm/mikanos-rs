@@ -1,4 +1,4 @@
-use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
+use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use crate::VolatileAccessible;
 
 pub trait CapabilityRegistersField<T, VolatileType, Addr>

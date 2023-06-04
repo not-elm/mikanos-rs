@@ -1,7 +1,7 @@
 use multiple_function_device::MultipleFunctionDevice;
 
 use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
-use crate::error::{FunctionReason, PciError, PciResult};
+use crate::error::{FunctionReason, OldPciError, OldPciResult};
 
 pub mod multiple_function_device;
 pub mod single_function_device;
@@ -13,11 +13,13 @@ pub enum Function {
 }
 
 impl Function {
-    pub fn expect_single(self) -> PciResult<SingleFunctionDevice> {
+    pub fn expect_single(self) -> OldPciResult<SingleFunctionDevice> {
         if let Function::Single(single) = self {
             Ok(single)
         } else {
-            Err(PciError::InvalidFunction(FunctionReason::NotSingleFunction))
+            Err(OldPciError::InvalidFunction(
+                FunctionReason::NotSingleFunction,
+            ))
         }
     }
 }

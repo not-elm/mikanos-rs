@@ -5,7 +5,7 @@ use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::interrupt_in::InterruptIn;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::descriptor::hid::HidDeviceDescriptors;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
@@ -70,7 +70,7 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
+    ) -> OldPciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         slot.input_context_mut()
             .clear_control();
         slot.copy_device_context_to_input();

@@ -1,6 +1,6 @@
 use crate::error::PciResult;
 use crate::xhc::registers::internal::capability_registers::structural_parameters2::event_ring_segment_table_max::EventRingSegmentTableMax;
-use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
+use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 
 pub mod event_ring_segment_table_max;
 pub mod structural_parameters2_field;

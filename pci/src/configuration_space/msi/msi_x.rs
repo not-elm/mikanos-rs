@@ -3,7 +3,7 @@ use crate::configuration_space::msi::msi_capability_register::access::control::C
 use crate::configuration_space::msi::msi_capability_register::access::msi_capability_accessible::MsiCapabilityAccessible;
 use crate::configuration_space::msi::msi_capability_register::structs::control::Control;
 use crate::configuration_space::ConfigurationSpace;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 #[derive(Debug)]
 pub struct MsiXCapabilityRegisters<Io>
@@ -24,7 +24,7 @@ where
         msi_cap_addr: u8,
         configuration_space: ConfigurationSpace,
         io: Io,
-    ) -> PciResult<MsiXCapabilityRegisters<Io>> {
+    ) -> OldPciResult<MsiXCapabilityRegisters<Io>> {
         let control = ControlAccessor::new();
 
 
@@ -37,7 +37,7 @@ where
     }
 
 
-    pub fn read_control_register(&mut self) -> PciResult<Control> {
+    pub fn read_control_register(&mut self) -> OldPciResult<Control> {
         self.control
             .read(&mut self.io, &self.configuration_space, self.msi_cap_addr)
     }

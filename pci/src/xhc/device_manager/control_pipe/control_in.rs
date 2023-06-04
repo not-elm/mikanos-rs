@@ -3,7 +3,7 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::transfer::{Direction, StatusStage, TransferType};
 
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::{
     make_data_stage, make_setup_stage, ControlPipeTransfer,
@@ -40,7 +40,7 @@ where
         }
     }
 
-    fn notify(&mut self) -> PciResult {
+    fn notify(&mut self) -> OldPciResult {
         self.doorbell
             .borrow_mut()
             .notify_at(
@@ -51,7 +51,7 @@ where
             )
     }
 
-    fn push(&mut self, trb_buff: [u32; 4]) -> PciResult {
+    fn push(&mut self, trb_buff: [u32; 4]) -> OldPciResult {
         self.transfer_ring
             .borrow_mut()
             .push(trb_buff)
@@ -62,7 +62,7 @@ impl<T> ControlPipeTransfer for ControlIn<T>
 where
     T: DoorbellRegistersAccessible,
 {
-    fn no_data(&mut self, request: Request) -> PciResult {
+    fn no_data(&mut self, request: Request) -> OldPciResult {
         let setup_stage = make_setup_stage(request.setup_stage(), TransferType::No);
         self.push(setup_stage.into_raw())?;
 
@@ -73,7 +73,7 @@ where
         self.notify()
     }
 
-    fn with_data(&mut self, request: Request, buff_addr: u64, len: u32) -> PciResult {
+    fn with_data(&mut self, request: Request, buff_addr: u64, len: u32) -> OldPciResult {
         let setup = make_setup_stage(request.setup_stage(), TransferType::In);
         self.push(setup.into_raw())?;
 

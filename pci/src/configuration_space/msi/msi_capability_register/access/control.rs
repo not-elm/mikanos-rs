@@ -4,11 +4,10 @@ use crate::configuration_space::msi::msi_capability_register::access::msi_capabi
 use crate::configuration_space::msi::msi_capability_register::structs::control::Control;
 use crate::configuration_space::msi::msi_capability_register::structs::from_u32::TryFromU32;
 use crate::configuration_space::ConfigurationSpace;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 #[derive(Debug, Clone)]
 pub struct ControlAccessor {}
-
 
 
 impl ControlAccessor {
@@ -26,7 +25,7 @@ where
         io: &mut Io,
         configuration_space: &ConfigurationSpace,
         msi_cap_addr: u8,
-    ) -> PciResult<Control> {
+    ) -> OldPciResult<Control> {
         let raw = io.read_config_data_with_set_addr(config_addr_register_control(
             configuration_space,
             msi_cap_addr,

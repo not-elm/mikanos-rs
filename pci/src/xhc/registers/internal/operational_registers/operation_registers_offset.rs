@@ -1,6 +1,5 @@
-use crate::xhc::registers::internal::{
-    capability_registers::capability_length::CapabilityLength, memory_mapped_addr::MemoryMappedAddr,
-};
+use crate::xhc::registers::internal::capability_registers::capability_length::CapabilityLength;
+use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use crate::VolatileAccessible;
 
 /// Address: MemoryMappedAddress + CapLength

@@ -3,14 +3,11 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::command::ConfigureEndpoint;
 
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
-pub struct CommandRing<T>
-where
-    T: DoorbellRegistersAccessible,
-{
+pub struct CommandRing<T> {
     transfer_ring: TransferRing,
     doorbell: Rc<RefCell<T>>,
 }
@@ -25,12 +22,16 @@ where
             doorbell: Rc::clone(doorbell),
         }
     }
-    pub fn push_no_op(&mut self) -> PciResult {
+    pub fn push_no_op(&mut self) -> OldPciResult {
         self.transfer_ring
             .push(xhci::ring::trb::command::Noop::new().into_raw())?;
         self.notify()
     }
-    pub fn push_configure_endpoint(&mut self, input_context_addr: u64, slot_id: u8) -> PciResult {
+    pub fn push_configure_endpoint(
+        &mut self,
+        input_context_addr: u64,
+        slot_id: u8,
+    ) -> OldPciResult {
         let mut configure_endpoint_trb = ConfigureEndpoint::new();
         configure_endpoint_trb.set_slot_id(slot_id);
         configure_endpoint_trb.set_input_context_pointer(input_context_addr);
@@ -39,7 +40,7 @@ where
             .push(configure_endpoint_trb.into_raw())?;
         self.notify()
     }
-    pub fn push_address_command(&mut self, input_context_addr: u64, slot_id: u8) -> PciResult {
+    pub fn push_address_command(&mut self, input_context_addr: u64, slot_id: u8) -> OldPciResult {
         let mut address_command = xhci::ring::trb::command::AddressDevice::new();
         address_command.set_input_context_pointer(input_context_addr);
         address_command.set_slot_id(slot_id);
@@ -49,13 +50,13 @@ where
         self.notify()
     }
 
-    pub fn push_enable_slot(&mut self) -> PciResult {
+    pub fn push_enable_slot(&mut self) -> OldPciResult {
         self.transfer_ring
             .push(xhci::ring::trb::command::EnableSlot::new().into_raw())?;
         self.notify()
     }
 
-    fn notify(&mut self) -> PciResult {
+    fn notify(&mut self) -> OldPciResult {
         self.doorbell
             .borrow_mut()
             .notify_at(0, 0, 0)

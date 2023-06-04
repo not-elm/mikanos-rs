@@ -1,4 +1,4 @@
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::DeviceCollectable;
 use crate::xhc::device_manager::control_pipe::unstable_hash_map::UnstableHashMap;
@@ -28,8 +28,9 @@ where
         self.map.get_mut(slot_id)
     }
 
-    fn set(&mut self, device: Device<Doorbell, Memory>) -> PciResult {
-        self.map.set(device.slot_id(), device);
+    fn set(&mut self, device: Device<Doorbell, Memory>) -> OldPciResult {
+        self.map
+            .set(device.slot_id(), device);
         Ok(())
     }
 }

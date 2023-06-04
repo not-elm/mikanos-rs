@@ -137,13 +137,13 @@ impl<T: Copy + PartialOrd> Rectangle<T> {
 }
 
 
-impl<T: Copy + Sub<Output = T>> Rectangle<T> {
-    pub fn width(&self) -> T {
+impl Rectangle<usize> {
+    pub fn width(&self) -> usize {
         self.end.x() - self.origin.x()
     }
 
 
-    pub fn height(&self) -> T {
+    pub fn height(&self) -> usize {
         self.end.y() - self.origin.y()
     }
 }

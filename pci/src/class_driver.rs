@@ -1,11 +1,11 @@
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
+pub mod boot_protocol_buffer;
 pub mod interrupt_in;
 pub mod mouse;
-pub mod boot_protocol_buffer;
 
 pub trait ClassDriverOperate {
-    fn on_data_received(&mut self) -> PciResult;
+    fn on_data_received(&mut self) -> OldPciResult;
     fn data_buff_addr(&self) -> u64;
     fn data_buff_len(&self) -> u32;
 }

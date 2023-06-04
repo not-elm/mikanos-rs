@@ -9,13 +9,15 @@ uefi = { workspace = true }
 x86_64 = { workspace = true }
 modular-bitfield = { workspace = true }
 lazy_static = { workspace = true }
-
 common-lib = { path = "../common-lib" }
 once = "0.3.4"
 spin = "0.9.5"
 uart_16550 = "0.2.0"
-macros = { path = "../macros", features = ["extra-traits"] }
 auto-delegate = { workspace = true }
+anyhow = { workspace = true }
+derive-getters = { workspace = true }
+volatile-bits = { workspace = true }
+
 
 [build-dependencies]
 cc = { version = "1.0" }

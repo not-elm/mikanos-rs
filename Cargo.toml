@@ -6,7 +6,7 @@ members = [
     "kernel",
     "kernel-lib",
     "pci",
-    "macros"
+    "macros",
 ]
 
 
@@ -20,3 +20,6 @@ dyn-clone = "1.0.10"
 uefi = { version = "0.20.0", features = ["alloc"] }
 uefi-services = "0.17.0"
 auto-delegate = "0.0.5"
+anyhow = { version = "1.0.71", default-features = false }
+derive-getters = "0.2.1"
+volatile-bits = { git = "https://github.com/elm-register/volatile-bits", branch = "master" }

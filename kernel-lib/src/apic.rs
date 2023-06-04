@@ -1,4 +1,4 @@
-use macros::Address;
+use volatile_bits::volatile_address;
 
 use crate::apic::current_count::CurrentCount;
 use crate::apic::device_config::DivideConfig;
@@ -15,10 +15,10 @@ pub mod initial_count;
 pub mod local_apic_id;
 pub mod lvt_timer;
 
-#[derive(Address, Clone, Copy)]
-pub struct LocalApicRegistersAddr(usize);
+#[volatile_address]
+pub struct LocalApicRegistersAddr(u64);
 
-#[derive(Debug)]
+
 pub struct LocalApicRegisters {
     local_apic_id: LocalApicId,
     end_of_interrupt: EndOfInterrupt,
@@ -31,7 +31,7 @@ pub struct LocalApicRegisters {
 
 impl Default for LocalApicRegistersAddr {
     fn default() -> Self {
-        LocalApicRegistersAddr::new(0xFEE00000)
+        LocalApicRegistersAddr::from(0xFEE00000)
     }
 }
 
@@ -41,7 +41,7 @@ impl LocalApicRegisters {
         Self {
             local_apic_id: LocalApicId::new(local_apic_addr),
             end_of_interrupt: EndOfInterrupt::new(local_apic_addr),
-            lvt_timer: LvtTimer::new(LvtTimerAddr::new(local_apic_addr)),
+            lvt_timer: LvtTimer::from(LvtTimerAddr::default()),
             initial_count: InitialCount::new(local_apic_addr),
             current_count: CurrentCount::new(local_apic_addr),
             divide_config: DivideConfig::new(local_apic_addr),

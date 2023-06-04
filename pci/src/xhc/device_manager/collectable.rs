@@ -2,7 +2,7 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::{DeviceReason, PciError, PciResult};
+use crate::error::{DeviceReason, OldPciError, OldPciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::Device;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
@@ -20,7 +20,7 @@ where
     fn mut_at(&mut self, slot_id: u8) -> Option<&mut Device<Doorbell, Memory>>;
 
     /// 指定したスロットIDのデバイスを作成します。
-    fn set(&mut self, device: Device<Doorbell, Memory>) -> PciResult;
+    fn set(&mut self, device: Device<Doorbell, Memory>) -> OldPciResult;
 
     fn new_set(
         &mut self,
@@ -30,7 +30,7 @@ where
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
         mouse_driver_factory: MouseDriverFactory,
-    ) -> PciResult<&mut Device<Doorbell, Memory>> {
+    ) -> OldPciResult<&mut Device<Doorbell, Memory>> {
         self.set(Device::new_with_init_default_control_pipe(
             parent_hub_slot_id,
             port_speed,
@@ -41,8 +41,8 @@ where
         )?)?;
 
         self.mut_at(slot_id)
-            .ok_or(PciError::FailedOperateDevice(DeviceReason::NotExistsSlot(
-                slot_id,
-            )))
+            .ok_or(OldPciError::FailedOperateDevice(
+                DeviceReason::NotExistsSlot(slot_id),
+            ))
     }
 }

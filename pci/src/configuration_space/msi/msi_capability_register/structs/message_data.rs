@@ -4,7 +4,7 @@ use crate::configuration_space::msi::msi_capability_register::structs::from_u32:
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::level_for_trigger_mode::LevelForTriggerMode;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 pub mod delivery_mode;
 pub mod level_for_trigger_mode;
@@ -47,7 +47,7 @@ impl MessageData {
 }
 
 impl TryFromU32<MessageData> for MessageData {
-    fn try_from_u32(raw_value: u32) -> PciResult<MessageData> {
+    fn try_from_u32(raw_value: u32) -> OldPciResult<MessageData> {
         Ok(Self {
             vector: InterruptVector::new((raw_value & 0xFF) as u8),
             delivery_mode: DeliveryMode::new(((raw_value >> 8) & 0b111) as u8)?,

@@ -1,14 +1,13 @@
-use macros::VolatileBits;
+use volatile_bits::volatile_bits;
 
 use crate::apic::LocalApicRegistersAddr;
 
-#[derive(VolatileBits)]
-#[add_addr_bytes(0x0390)]
-pub struct CurrentCount(usize);
+#[volatile_bits(add = 0x0390, type = u32)]
+pub struct CurrentCount(LocalApicRegistersAddr);
 
 
 impl CurrentCount {
     pub fn new(local_apic_addr: LocalApicRegistersAddr) -> Self {
-        Self::new_uncheck(local_apic_addr.addr())
+        Self::from(local_apic_addr)
     }
 }

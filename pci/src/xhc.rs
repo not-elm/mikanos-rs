@@ -10,10 +10,9 @@ use registers::traits::usb_command_register_accessible::UsbCommandRegisterAccess
 use transfer::event::event_ring::EventRing;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::device_map::DeviceMap;
-use crate::xhc::device_manager::collectable::DeviceCollectable;
 use crate::xhc::device_manager::DeviceManager;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
 use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
@@ -32,16 +31,7 @@ pub mod device_manager;
 pub mod registers;
 pub mod transfer;
 
-pub struct XhcController<Register, Collectable, Memory>
-where
-    Register: RegistersOperation
-        + InterrupterSetRegisterAccessible
-        + PortRegistersAccessible
-        + DoorbellRegistersAccessible
-        + 'static,
-    Collectable: DeviceCollectable<Register, Memory>,
-    Memory: MemoryAllocatable,
-{
+pub struct XhcController<Register, Collectable, Memory> {
     registers: Rc<RefCell<Register>>,
     event_ring: EventRing<Register>,
     command_ring: CommandRing<Register>,
@@ -66,7 +56,7 @@ where
         registers: Register,
         mut allocator: Memory,
         mouse_driver_factory: MouseDriverFactory,
-    ) -> PciResult<Self> {
+    ) -> OldPciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
 
         registers
@@ -91,7 +81,6 @@ where
         let command_ring = setup_command_ring(&mut registers, 32, &mut allocator)?;
 
         let (_, event_ring) = setup_event_ring(&mut registers, 1, 32, &mut allocator)?;
-
 
         registers.borrow_mut().run()?;
 
@@ -124,7 +113,7 @@ where
         {}
     }
 
-    pub fn process_event(&mut self) -> Option<PciResult> {
+    pub fn process_event(&mut self) -> Option<OldPciResult> {
         if let Some(event_trb) = self
             .event_ring
             .read_event_trb()
@@ -135,7 +124,7 @@ where
         None
     }
 
-    fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
+    fn on_event(&mut self, event_trb: EventTrb) -> OldPciResult {
         match event_trb {
             EventTrb::TransferEvent {
                 transfer_event,
@@ -158,7 +147,7 @@ where
         &mut self,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult {
+    ) -> OldPciResult {
         let is_init = self
             .device_manager
             .process_transfer_event(transfer_event.slot_id(), transfer_event, target_event)?;
@@ -176,7 +165,7 @@ where
         Ok(())
     }
 
-    fn process_completion_event(&mut self, completion: CommandCompletion) -> PciResult {
+    fn process_completion_event(&mut self, completion: CommandCompletion) -> OldPciResult {
         match TrbRawData::from_addr(completion.command_trb_pointer())
             .template()
             .trb_type()
@@ -189,13 +178,13 @@ where
             _ => Ok(()),
         }
     }
-    fn init_device(&mut self, completion: CommandCompletion) -> PciResult {
+    fn init_device(&mut self, completion: CommandCompletion) -> OldPciResult {
         self.device_manager
             .start_initialize_at(completion.slot_id())?;
 
         Ok(())
     }
-    fn address_device(&mut self, completion: CommandCompletion) -> PciResult {
+    fn address_device(&mut self, completion: CommandCompletion) -> OldPciResult {
         let input_context_addr = self
             .device_manager
             .address_device(completion.slot_id(), &self.allocator)?;
@@ -203,7 +192,7 @@ where
             .push_address_command(input_context_addr, completion.slot_id())
     }
 
-    fn enable_slot(&mut self, port_status: PortStatusChange) -> PciResult {
+    fn enable_slot(&mut self, port_status: PortStatusChange) -> OldPciResult {
         let port_id = port_status.port_id();
         self.registers
             .borrow_mut()
@@ -219,6 +208,7 @@ where
     }
 }
 
+#[allow(unused)]
 pub(crate) fn bit_mask_zeros_lower_for(bits: u32, target_value: usize) -> usize {
     let mask = !0 >> (usize::BITS - bits);
     // 下位5Bitsは予約領域

@@ -1,4 +1,4 @@
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::device_context::scratchpad_buffer_ptr::ScratchpadBufferPtr;
 
@@ -9,7 +9,7 @@ impl ScratchpadBuffersArrayPtr {
     pub fn new(
         scratchpad_buffers_len: usize,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<Self> {
+    ) -> OldPciResult<Self> {
         unsafe {
             Ok(Self(Self::allocate_scratchpad_buffers(
                 scratchpad_buffers_len,
@@ -23,7 +23,7 @@ impl ScratchpadBuffersArrayPtr {
     unsafe fn allocate_scratchpad_buffers(
         scratchpad_buffers_len: usize,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<u64> {
+    ) -> OldPciResult<u64> {
         let scratchpad_buffers_array_address =
             allocator.try_allocate_max_scratchpad_buffers(scratchpad_buffers_len)?;
 

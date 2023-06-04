@@ -2,7 +2,7 @@ use common_lib::nums::{FlagConvertible, FlagNumConvertible};
 
 use crate::configuration_space::msi::msi_capability_register::structs::capability_id::CapabilityId;
 use crate::configuration_space::msi::msi_capability_register::structs::from_u32::TryFromU32;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 #[derive(Debug, Clone)]
 pub struct Control {
@@ -76,7 +76,7 @@ impl Control {
 }
 
 impl TryFromU32<Control> for Control {
-    fn try_from_u32(raw: u32) -> PciResult<Control> {
+    fn try_from_u32(raw: u32) -> OldPciResult<Control> {
         Ok(Self {
             capability_id: capability_id(raw)?,
             next_cap_ptr: next_cap_ptr(raw),
@@ -89,7 +89,7 @@ impl TryFromU32<Control> for Control {
     }
 }
 
-fn capability_id(raw: u32) -> PciResult<CapabilityId> {
+fn capability_id(raw: u32) -> OldPciResult<CapabilityId> {
     CapabilityId::try_from_u8((raw & 0xFF) as u8)
 }
 
@@ -129,7 +129,7 @@ mod tests {
     use crate::configuration_space::msi::msi_capability_register::structs::capability_id::CapabilityId;
     use crate::configuration_space::msi::msi_capability_register::structs::control::Control;
     use crate::configuration_space::msi::msi_capability_register::structs::from_u32::TryFromU32;
-    use crate::error::PciResult;
+    use crate::error::OldPciResult;
 
     #[test]
     fn it_new_control_is_ok() {
@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[allow(clippy::unusual_byte_groupings)]
-    fn control_register() -> PciResult<Control> {
+    fn control_register() -> OldPciResult<Control> {
         Control::try_from_u32(0b0_101_111_1_11111111_00000101)
     }
 }

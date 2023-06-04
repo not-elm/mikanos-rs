@@ -6,8 +6,8 @@ use crate::error::{InvalidRegisterReason, PciError, PciResult};
 use crate::xhc::bit_mask_zeros_lower_for;
 use crate::xhc::registers::internal::capability_registers::capability_length::CapabilityLength;
 use crate::xhc::registers::internal::capability_registers::capability_registers_field::CapabilityRegistersField;
-use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
 use crate::xhc::registers::internal::operational_registers::operation_registers_offset::OperationalRegistersOffset;
+use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 
 /// RTS OFF
 ///
@@ -34,7 +34,8 @@ impl RuntimeRegisterSpaceOffset {
         mmio_addr: MemoryMappedAddr,
         cap_length: &CapabilityLength,
     ) -> PciResult<Self> {
-        // MemoryMappedAddr + CAP LENGTHのオフセットにはOperationalRegistersが来るはずのため、
+        // MemoryMappedAddr + CAP
+        // LENGTHのオフセットにはOperationalRegistersが来るはずのため、
         // 少なくともこれ以上のサイズは必要
         let operation_registers_offset = OperationalRegistersOffset::new(mmio_addr, cap_length);
         let me = RuntimeRegisterSpaceOffset::new(mmio_addr);

@@ -1,4 +1,4 @@
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::command_ring::CommandRing;
@@ -6,14 +6,14 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 
 pub trait UsbCommandRegisterAccessible {
-    fn write_command_ring_addr(&mut self, command_ring_addr: u64) -> PciResult;
+    fn write_command_ring_addr(&mut self, command_ring_addr: u64) -> OldPciResult;
 }
 
 pub(crate) fn setup_command_ring<T>(
     registers: &mut Rc<RefCell<T>>,
     command_ring_size: usize,
     allocator: &mut impl MemoryAllocatable,
-) -> PciResult<CommandRing<T>>
+) -> OldPciResult<CommandRing<T>>
 where
     T: UsbCommandRegisterAccessible + DoorbellRegistersAccessible,
 {

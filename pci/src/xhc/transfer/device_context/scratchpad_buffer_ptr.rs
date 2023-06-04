@@ -1,4 +1,4 @@
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 
 #[repr(transparent)]
@@ -8,7 +8,7 @@ impl ScratchpadBufferPtr {
     pub fn new_with_allocate(
         address: u64,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<Self> {
+    ) -> OldPciResult<Self> {
         let mut me = Self::new(address);
         unsafe {
             me.allocate(allocator)?;
@@ -20,7 +20,7 @@ impl ScratchpadBufferPtr {
         Self(address)
     }
 
-    unsafe fn allocate(&mut self, allocator: &mut impl MemoryAllocatable) -> PciResult {
+    unsafe fn allocate(&mut self, allocator: &mut impl MemoryAllocatable) -> OldPciResult {
         let buff = allocator.try_allocate_device_context()?;
 
         *(self.0 as *mut u64) = buff;

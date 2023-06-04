@@ -2,11 +2,10 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::marker::PhantomData;
 
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-
 use xhci::ring::trb::event::TransferEvent;
 
-use crate::error::{DeviceContextReason, DeviceReason, PciError, PciResult};
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::error::{DeviceContextReason, DeviceReason, OldPciError, OldPciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::collectable::DeviceCollectable;
 use crate::xhc::device_manager::device::Device;
@@ -27,12 +26,7 @@ pub mod endpoint_id;
 pub mod initialize_phase;
 mod input_context;
 
-pub struct DeviceManager<Doorbell, Collectable, Memory>
-where
-    Doorbell: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
-    Collectable: DeviceCollectable<Doorbell, Memory>,
-    Memory: MemoryAllocatable,
-{
+pub struct DeviceManager<Doorbell, Collectable, Memory> {
     devices: Collectable,
     device_context_array: DeviceContextArrayPtr,
     addressing_port_id: Option<u8>,
@@ -72,16 +66,19 @@ where
         &mut self,
         slot_id: u8,
         allocator: &Rc<RefCell<Memory>>,
-    ) -> PciResult<u64> {
+    ) -> OldPciResult<u64> {
         let port_id = self.try_addressing_port_id()?;
 
         let device = self.devices.new_set(
             port_id,
-            self.registers.borrow().read_port_speed_at(port_id)?,
+            self.registers
+                .borrow()
+                .read_port_speed_at(port_id)?,
             slot_id,
             allocator,
             &self.registers,
-            self.mouse_driver_factory.clone(),
+            self.mouse_driver_factory
+                .clone(),
         )?;
 
         self.device_context_array
@@ -90,11 +87,11 @@ where
         Ok(device.input_context_addr())
     }
 
-    pub fn start_initialize_at(&mut self, slot_id: u8) -> PciResult {
+    pub fn start_initialize_at(&mut self, slot_id: u8) -> OldPciResult {
         let device = self
             .devices
             .mut_at(slot_id)
-            .ok_or(PciError::FailedOperateDeviceContext(
+            .ok_or(OldPciError::FailedOperateDeviceContext(
                 DeviceContextReason::NotExistsAddressingPort,
             ))?;
         device.start_initialize()
@@ -104,33 +101,33 @@ where
         slot_id: u8,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<bool> {
+    ) -> OldPciResult<bool> {
         let deive = self.device_mut_at(slot_id)?;
         let init_status = deive.on_transfer_event_received(transfer_event, target_event)?;
         Ok(init_status.is_initialised())
     }
 
-    pub fn configure_endpoint(&mut self, slot_id: u8) -> PciResult {
+    pub fn configure_endpoint(&mut self, slot_id: u8) -> OldPciResult {
         let device = self
             .devices
             .mut_at(slot_id)
-            .ok_or(PciError::FailedOperateDeviceContext(
+            .ok_or(OldPciError::FailedOperateDeviceContext(
                 DeviceContextReason::NotExistsAddressingPort,
             ))?;
         device.on_endpoints_configured()
     }
 
-    fn try_addressing_port_id(&self) -> PciResult<u8> {
+    fn try_addressing_port_id(&self) -> OldPciResult<u8> {
         self.addressing_port_id
-            .ok_or(PciError::FailedOperateDeviceContext(
+            .ok_or(OldPciError::FailedOperateDeviceContext(
                 DeviceContextReason::NotExistsAddressingPort,
             ))
     }
-    fn device_mut_at(&mut self, slot_id: u8) -> PciResult<&mut Device<Doorbell, Memory>> {
+    fn device_mut_at(&mut self, slot_id: u8) -> OldPciResult<&mut Device<Doorbell, Memory>> {
         self.devices
             .mut_at(slot_id)
-            .ok_or(PciError::FailedOperateDevice(DeviceReason::NotExistsSlot(
-                slot_id,
-            )))
+            .ok_or(OldPciError::FailedOperateDevice(
+                DeviceReason::NotExistsSlot(slot_id),
+            ))
     }
 }

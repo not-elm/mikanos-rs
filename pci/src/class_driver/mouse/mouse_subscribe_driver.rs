@@ -8,7 +8,7 @@ use crate::class_driver::mouse::{
     current_cursor_pos, mouse_button_boot_protocol, MouseButton, MOUSE_DATA_BUFF_SIZE,
 };
 use crate::class_driver::ClassDriverOperate;
-use crate::error::{PciError, PciResult};
+use crate::error::{OldPciError, OldPciResult};
 
 pub struct MouseSubscribeDriver {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
@@ -18,7 +18,7 @@ pub struct MouseSubscribeDriver {
 }
 
 impl ClassDriverOperate for MouseSubscribeDriver {
-    fn on_data_received(&mut self) -> PciResult {
+    fn on_data_received(&mut self) -> OldPciResult {
         if self
             .data_buff
             .iter()
@@ -39,7 +39,7 @@ impl ClassDriverOperate for MouseSubscribeDriver {
                 prev_button,
                 self.current_button.clone(),
             )
-            .map_err(|_| PciError::UserError)?;
+            .map_err(|_| OldPciError::UserError)?;
 
         Ok(())
     }

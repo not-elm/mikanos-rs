@@ -108,7 +108,12 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
 
 
 fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
-    let mut text = ConsoleLayer::new(config, Vector2D::new(24, 4), Size::new(12, 1), ConsoleColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)), );
+    let mut text = ConsoleLayer::new(
+        config,
+        Vector2D::new(24, 4),
+        Size::new(12, 1),
+        ConsoleColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)),
+    );
 
     text.update_string("Hello Window")
         .unwrap();
@@ -132,22 +137,19 @@ fn toolbar_close_button(config: FrameBufferConfig, transform: &Transform2D) -> L
 fn count_layer(config: FrameBufferConfig, window_transform: &Transform2D) -> KernelResult<Layer> {
     const TOOLBAR_HEIGHT: usize = 24;
 
-    let size = window_transform.size() / 2;
-    let x = (window_transform
-        .size()
-        .width()
-        - size.width())
-        / 2;
-
-    let y: usize = (window_transform
-        .size()
-        .height()
-        - size.height()
-        - TOOLBAR_HEIGHT)
-        / 2
-        + TOOLBAR_HEIGHT;
-    let pos = Vector2D::new(x, y);
-    let count = CountLayer::new(config, Transform2D::new(pos, size))?;
+    let size = window_transform.size() - Size::new(20, 0);
+    let pos = Vector2D::new(
+        window_transform
+            .size()
+            .width()
+            / 2
+            - 32,
+        TOOLBAR_HEIGHT + 10,
+    );
+    let count = CountLayer::new(
+        config,
+        Transform2D::new(pos, size.unwrap_or(window_transform.size())),
+    )?;
 
     Ok(count.into_enum())
 }

@@ -15,7 +15,7 @@ use crate::configuration_space::msi::msi_capability_register::structs::message_d
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::level_for_trigger_mode::LevelForTriggerMode;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::MessageData;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 pub mod access;
 pub mod structs;
@@ -72,7 +72,7 @@ where
         msi_cap_addr: u8,
         configuration_space: ConfigurationSpace,
         mut io: Io,
-    ) -> PciResult<MsiCapabilityRegister<Io>> {
+    ) -> OldPciResult<MsiCapabilityRegister<Io>> {
         let control = ControlAccessor::new();
         let message_address = MessageAddressAccessor::new(
             control
@@ -91,19 +91,19 @@ where
     }
 
 
-    pub fn read_control_register(&mut self) -> PciResult<Control> {
+    pub fn read_control_register(&mut self) -> OldPciResult<Control> {
         self.control
             .read(&mut self.io, &self.configuration_space, self.msi_cap_addr)
     }
 
 
-    pub fn read_message_address_register(&mut self) -> PciResult<MessageAddress> {
+    pub fn read_message_address_register(&mut self) -> OldPciResult<MessageAddress> {
         self.message_address
             .read(&mut self.io, &self.configuration_space, self.msi_cap_addr)
     }
 
 
-    pub fn read_message_data_register(&mut self) -> PciResult<MessageData> {
+    pub fn read_message_data_register(&mut self) -> OldPciResult<MessageData> {
         self.message_data
             .read(&mut self.io, &self.configuration_space, self.msi_cap_addr)
     }
@@ -115,7 +115,7 @@ where
         vector: InterruptVector,
         delivery_mode: DeliveryMode,
         multiple_msg_enable: u8,
-    ) -> PciResult {
+    ) -> OldPciResult {
         self.control.update(
             &mut self.io,
             &self.configuration_space,

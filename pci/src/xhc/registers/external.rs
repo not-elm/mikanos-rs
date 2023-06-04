@@ -1,7 +1,7 @@
 use core::fmt::Debug;
 
-use crate::error::PciResult;
-use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
+use crate::error::OldPciResult;
+use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
 use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
 use crate::xhc::registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
@@ -52,7 +52,7 @@ impl<M> RegistersOperation for External<M>
 where
     M: xhci::accessor::Mapper + Clone + Debug,
 {
-    fn reset(&mut self) -> PciResult {
+    fn reset(&mut self) -> OldPciResult {
         let registers = self.registers_mut();
         registers
             .operational
@@ -83,7 +83,7 @@ where
         Ok(())
     }
 
-    fn run(&mut self) -> PciResult {
+    fn run(&mut self) -> OldPciResult {
         self.0
             .operational
             .usbcmd
@@ -135,7 +135,7 @@ impl<M> ConfigRegisterAccessible for External<M>
 where
     M: xhci::accessor::Mapper + Clone,
 {
-    fn write_max_device_slots_enabled(&mut self, device_slots: u8) -> PciResult {
+    fn write_max_device_slots_enabled(&mut self, device_slots: u8) -> OldPciResult {
         self.registers_mut()
             .operational
             .config
@@ -151,7 +151,7 @@ impl<M> UsbCommandRegisterAccessible for External<M>
 where
     M: xhci::accessor::Mapper + Clone,
 {
-    fn write_command_ring_addr(&mut self, command_ring_addr: u64) -> PciResult {
+    fn write_command_ring_addr(&mut self, command_ring_addr: u64) -> OldPciResult {
         let registers = self.registers_mut();
 
         registers
@@ -171,7 +171,7 @@ impl<M> DeviceContextBaseAddressArrayPointerAccessible for External<M>
 where
     M: xhci::accessor::Mapper + Clone,
 {
-    fn write_device_context_array_addr(&mut self, device_context_addr: u64) -> PciResult {
+    fn write_device_context_array_addr(&mut self, device_context_addr: u64) -> OldPciResult {
         self.registers_mut()
             .operational
             .dcbaap
@@ -189,7 +189,7 @@ where
         &mut self,
         index: usize,
         event_ring_segment_addr: u64,
-    ) -> PciResult {
+    ) -> OldPciResult {
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
@@ -203,7 +203,7 @@ where
         &mut self,
         index: usize,
         event_ring_segment_table_addr: u64,
-    ) -> PciResult {
+    ) -> OldPciResult {
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
@@ -213,7 +213,7 @@ where
         Ok(())
     }
 
-    fn write_interrupter_enable_at(&mut self, index: usize, is_enable: bool) -> PciResult {
+    fn write_interrupter_enable_at(&mut self, index: usize, is_enable: bool) -> OldPciResult {
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
@@ -229,7 +229,7 @@ where
         Ok(())
     }
 
-    fn write_interrupter_pending_at(&mut self, index: usize, is_pending: bool) -> PciResult {
+    fn write_interrupter_pending_at(&mut self, index: usize, is_pending: bool) -> OldPciResult {
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
@@ -254,7 +254,7 @@ where
             .event_ring_dequeue_pointer()
     }
 
-    fn write_event_ring_segment_table_size(&mut self, index: usize, size: u16) -> PciResult {
+    fn write_event_ring_segment_table_size(&mut self, index: usize, size: u16) -> OldPciResult {
         self.registers_mut()
             .interrupter_register_set
             .interrupter_mut(index)
@@ -269,7 +269,7 @@ impl<M> DoorbellRegistersAccessible for External<M>
 where
     M: xhci::accessor::Mapper + Clone,
 {
-    fn notify_at(&mut self, index: usize, target: u8, stream_id: u16) -> PciResult {
+    fn notify_at(&mut self, index: usize, target: u8, stream_id: u16) -> OldPciResult {
         self.registers_mut()
             .doorbell
             .update_volatile_at(index, |doorbell| {
@@ -285,7 +285,7 @@ impl<M> PortRegistersAccessible for External<M>
 where
     M: xhci::accessor::Mapper + Clone,
 {
-    fn reset_port_at(&mut self, port_id: u8) -> PciResult {
+    fn reset_port_at(&mut self, port_id: u8) -> OldPciResult {
         self.registers_mut()
             .port_register_set
             .update_volatile_at(port_index(port_id), |port| {
@@ -301,7 +301,7 @@ where
         Ok(())
     }
 
-    fn read_port_speed_at(&self, port_id: u8) -> PciResult<u8> {
+    fn read_port_speed_at(&self, port_id: u8) -> OldPciResult<u8> {
         Ok(self
             .0
             .port_register_set
@@ -310,7 +310,7 @@ where
             .port_speed())
     }
 
-    fn read_port_reset_change_status(&self, port_id: u8) -> PciResult<bool> {
+    fn read_port_reset_change_status(&self, port_id: u8) -> OldPciResult<bool> {
         Ok(self
             .0
             .port_register_set
@@ -319,7 +319,7 @@ where
             .port_reset_change())
     }
 
-    fn clear_port_reset_change_at(&mut self, port_id: u8) -> PciResult {
+    fn clear_port_reset_change_at(&mut self, port_id: u8) -> OldPciResult {
         self.registers_mut()
             .port_register_set
             .update_volatile_at(port_index(port_id), |port| {

@@ -1,4 +1,4 @@
-use crate::error::{PciError, PciResult};
+use crate::error::{OldPciError, OldPciResult};
 
 // TODO
 #[repr(u8)]
@@ -14,7 +14,7 @@ pub enum DeliveryMode {
 }
 
 impl DeliveryMode {
-    pub fn new(raw: u8) -> PciResult<Self> {
+    pub fn new(raw: u8) -> OldPciResult<Self> {
         match raw {
             0b000 => Ok(Self::Fixed),
             0b001 => Ok(Self::LowestPriority),
@@ -22,7 +22,7 @@ impl DeliveryMode {
             0b100 => Ok(Self::Nmt),
             0b101 => Ok(Self::Init),
             0b111 => Ok(Self::ExtInt),
-            _ => Err(PciError::IllegalEnumValue(raw as usize)),
+            _ => Err(OldPciError::IllegalEnumValue(raw as usize)),
         }
     }
 }

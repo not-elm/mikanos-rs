@@ -7,7 +7,7 @@ use xhci::ring::trb::transfer::Normal;
 use kernel_lib::serial_println;
 
 use crate::class_driver::ClassDriverOperate;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
@@ -54,7 +54,7 @@ where
     pub fn get_report<Doorbell>(
         &mut self,
         default_control_pipe: &mut ControlPipe<Doorbell>,
-    ) -> PciResult
+    ) -> OldPciResult
     where
         Doorbell: DoorbellRegistersAccessible,
     {
@@ -73,7 +73,7 @@ where
     }
 
 
-    pub fn interrupter_in(&mut self) -> PciResult {
+    pub fn interrupter_in(&mut self) -> OldPciResult {
         self.class_driver
             .on_data_received()?;
 
@@ -116,7 +116,7 @@ where
             .data_buff_addr()
     }
 
-    fn notify(&mut self) -> PciResult {
+    fn notify(&mut self) -> OldPciResult {
         self.doorbell
             .borrow_mut()
             .notify_at(

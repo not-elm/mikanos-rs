@@ -1,19 +1,19 @@
-use core::marker::PhantomData;
-
-use macros::VolatileBits;
+use volatile_bits::{volatile_bits, VolatileBitsWritable};
 
 use crate::apic::lvt_timer::LvtTimerAddr;
 
-#[derive(VolatileBits)]
-#[bits(2)]
-#[offset_bit(17)]
-#[volatile_type(u8)]
-pub struct TimerModeField(usize, PhantomData<LvtTimerAddr>);
+#[volatile_bits(
+offset = 17,
+bits = 3,
+type = u32
+)]
+pub struct TimerModeField(LvtTimerAddr);
 
 
 impl TimerModeField {
     pub fn update_timer_mode(&self, timer_mode: TimerMode) {
-        self.write_volatile(timer_mode as u8);
+        self.write_volatile(timer_mode as u32)
+            .unwrap();
     }
 }
 
@@ -33,13 +33,13 @@ mod tests {
 
     use crate::apic::lvt_timer::timer_mode::TimerMode::Periodic;
     use crate::apic::lvt_timer::timer_mode::TimerModeField;
-    use crate::VolatileAccessible;
+    use crate::apic::lvt_timer::LvtTimerAddr;
 
     #[test]
     fn it_update_timer_mode() {
         let buff = [0u32; 1];
 
-        let timer_mode = TimerModeField::new_uncheck(buff.as_ptr().addr());
+        let timer_mode = TimerModeField::from(LvtTimerAddr::from(buff.as_ptr() as u64));
         timer_mode.update_timer_mode(Periodic);
         assert!(((buff[0] >> 17) & 0b1).is_true())
     }

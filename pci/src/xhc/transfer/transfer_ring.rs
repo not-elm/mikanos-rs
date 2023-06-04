@@ -1,4 +1,4 @@
-use crate::error::{PciError, PciResult};
+use crate::error::{OldPciError, OldPciResult};
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
@@ -26,11 +26,11 @@ impl TransferRing {
         ring_size: usize,
         cycle_bit: bool,
         allocator: &mut impl MemoryAllocatable,
-    ) -> PciResult<Self> {
+    ) -> OldPciResult<Self> {
         let ring_ptr_base_address = allocator.try_allocate_trb_ring(ring_size)?;
         Ok(Self::new(ring_ptr_base_address, ring_size, cycle_bit))
     }
-    pub fn push(&mut self, trb: [u32; 4]) -> PciResult {
+    pub fn push(&mut self, trb: [u32; 4]) -> OldPciResult {
         self.write(trb)?;
 
         self.ring_ptr_address += trb_byte_size();
@@ -74,7 +74,7 @@ impl TransferRing {
     pub fn cycle_bit(&self) -> bool {
         self.cycle_bit
     }
-    fn rollback(&mut self) -> PciResult {
+    fn rollback(&mut self) -> OldPciResult {
         let mut link = xhci::ring::trb::Link::new();
         link.set_toggle_cycle();
         link.set_ring_segment_pointer(self.ring_ptr_base_address);
@@ -85,11 +85,11 @@ impl TransferRing {
         self.toggle_cycle_bit();
         Ok(())
     }
-    fn write(&mut self, src_buff: [u32; 4]) -> PciResult {
+    fn write(&mut self, src_buff: [u32; 4]) -> OldPciResult {
         let dest_deref = unsafe {
             (self.ring_ptr_address as *mut u128)
                 .as_mut()
-                .ok_or(PciError::FailedOperateTransferRing)
+                .ok_or(OldPciError::FailedOperateTransferRing)
         }?;
         let dest_buff = trb_buffer_from_address(dest_deref);
 
@@ -122,7 +122,9 @@ mod tests {
         let mut ring = TransferRing::new(buff.as_ptr() as u64, 32, true);
         let enable_slot_trb =
             TrbRawData::from(xhci::ring::trb::command::EnableSlot::new().into_raw());
-        let is_ok = ring.push(enable_slot_trb.into_u32_array()).is_ok();
+        let is_ok = ring
+            .push(enable_slot_trb.into_u32_array())
+            .is_ok();
 
         assert!(is_ok);
         let enable_slot_buff: [u32; 4] = enable_slot_trb.into();
@@ -148,13 +150,18 @@ mod tests {
         let enable_slot_trb =
             TrbRawData::try_from(xhci::ring::trb::command::EnableSlot::new().into_raw()).unwrap();
 
-        assert!(ring.push(enable_slot_trb.into_u32_array()).is_ok());
+        assert!(ring
+            .push(enable_slot_trb.into_u32_array())
+            .is_ok());
 
         let mut link = xhci::ring::trb::Link::new();
         link.set_toggle_cycle();
         let link_buff = link.into_raw();
         unsafe {
-            let buff = buff.as_ptr().add(1).cast::<u32>();
+            let buff = buff
+                .as_ptr()
+                .add(1)
+                .cast::<u32>();
             let buff = core::slice::from_raw_parts(buff, 4);
             assert_eq!(buff[0], (ring.ring_ptr_base_address & 0xFFFF_FFFF) as u32);
             assert_eq!(buff[1], (ring.ring_ptr_base_address >> 32) as u32);

@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
@@ -41,7 +41,7 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
+    ) -> OldPciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         let data_stage = target_event.data_stage()?;
 
         let conf_desc_buff = data_stage.data_buffer_pointer() as *mut u8;
@@ -85,7 +85,7 @@ where
 fn set_configuration<T: DoorbellRegistersAccessible>(
     config_value: u16,
     default_control_pipe: &mut ControlPipe<T>,
-) -> PciResult {
+) -> OldPciResult {
     default_control_pipe
         .control_out()
         .no_data(Request::configuration(config_value))

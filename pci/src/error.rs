@@ -1,9 +1,27 @@
+use alloc::string::String;
 use core::fmt::Debug;
 
 pub type PciResult<T = ()> = Result<T, PciError>;
 
+
 #[derive(Debug)]
-pub enum PciError {
+#[repr(transparent)]
+pub struct PciError(anyhow::Error);
+
+impl PciError {
+    pub fn new(message: String) -> Self {
+        Self(anyhow::anyhow!(message))
+    }
+}
+
+
+// FIXME: 将来的にPciResultに置き換える
+pub type OldPciResult<T = ()> = Result<T, OldPciError>;
+
+
+// FIXME: 将来的にPciResultに置き換える
+#[derive(Debug)]
+pub enum OldPciError {
     UserError,
     InvalidTrb(u128),
     FailedOperateTransferRing,

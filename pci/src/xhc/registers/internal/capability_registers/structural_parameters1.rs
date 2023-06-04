@@ -2,7 +2,7 @@ use crate::VolatileAccessible;
 use crate::xhc::registers::internal::capability_registers::structural_parameters1::number_of_device_slots::NumberOfDeviceSlots;
 use crate::xhc::registers::internal::capability_registers::structural_parameters1::number_of_ports::NumberOfPorts;
 use crate::xhc::registers::internal::capability_registers::structural_parameters1::structural_parameters1_field::StructuralParameters1Field;
-use crate::xhc::registers::internal::memory_mapped_addr::MemoryMappedAddr;
+use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 
 pub mod number_of_device_slots;
 mod number_of_ports;

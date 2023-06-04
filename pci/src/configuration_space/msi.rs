@@ -8,7 +8,7 @@ use crate::configuration_space::msi::msi_capability_register::access::msi_capabi
 use crate::configuration_space::msi::msi_capability_register::structs::capability_id::CapabilityId;
 use crate::configuration_space::msi::msi_capability_register::MsiCapabilityRegister;
 use crate::configuration_space::msi::msi_x::MsiXCapabilityRegisters;
-use crate::error::PciResult;
+use crate::error::OldPciResult;
 
 pub mod msi_capability_register;
 pub mod msi_x;
@@ -42,7 +42,7 @@ impl<Io> Iterator for InterruptCapabilityRegisterIter<Io>
 where
     Io: IoMemoryAccessible + Debug + Clone,
 {
-    type Item = PciResult<InterruptCapabilityRegister<Io>>;
+    type Item = OldPciResult<InterruptCapabilityRegister<Io>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.msi_cap_addr == 0 {
@@ -83,7 +83,7 @@ where
         general_header: GeneralHeader,
         msi_cap_addr: u8,
         mut io: Io,
-    ) -> PciResult<InterruptCapabilityRegister<Io>> {
+    ) -> OldPciResult<InterruptCapabilityRegister<Io>> {
         let configuration_space = general_header
             .as_config_space()
             .clone();
@@ -105,7 +105,7 @@ where
         }
     }
 
-    pub fn next_msi_cap_addr(&mut self) -> PciResult<u8> {
+    pub fn next_msi_cap_addr(&mut self) -> OldPciResult<u8> {
         Ok(match self {
             Self::Msi(msi) => msi
                 .read_control_register()?
