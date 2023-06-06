@@ -8,6 +8,7 @@ pub type KernelResult<T = ()> = Result<T, KernelError>;
 /// Errors emitted from kernel-lib
 #[derive(Debug)]
 pub enum KernelError {
+    Anyhow(anyhow::Error),
     ExceededFrameBufferSize,
     NotSupportCharacter,
     FailedCast,
@@ -15,6 +16,31 @@ pub enum KernelError {
     FailedOperateLayer(LayerReason),
     FailedAllocate(AllocateReason),
     TryFromIntError(TryFromIntError),
+}
+
+
+#[macro_export]
+macro_rules! kernel_error {
+    ($message: expr) => {
+        $crate::error::KernelError::Anyhow(anyhow::anyhow!($message))
+    };
+
+
+    ($fmt: expr, $($args:tt)*) => {
+        $crate::kernel_error!(alloc::format!($fmt, $($args)*))
+    };
+}
+
+
+#[macro_export]
+macro_rules! kernel_bail {
+    ($message: expr) => {
+        Err($crate::kernel_error!($message))
+    };
+
+    ($fmt: expr, $($args:tt)*) => {
+        Err($crate::kernel_error!($fmt, $($args)*))
+    };
 }
 
 

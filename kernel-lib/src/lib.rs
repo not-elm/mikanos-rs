@@ -10,6 +10,7 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
+pub mod acpi;
 pub mod allocator;
 pub mod apic;
 pub mod control_registers;
@@ -23,6 +24,7 @@ pub mod register;
 pub mod segmentation;
 pub mod serial;
 pub mod timer;
+
 
 pub mod volatile_bits {
     pub use volatile_bits::*;
