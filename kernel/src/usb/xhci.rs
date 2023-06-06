@@ -1,10 +1,7 @@
 use core::num::NonZeroUsize;
 
-use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::interrupt::asm::sti;
-use kernel_lib::timer::apic::local_apic_timer::LocalApicTimer;
 use kernel_lib::timer::apic::timeout::Timeout;
-use kernel_lib::timer::apic::ApicTimer;
 use kernel_lib::timer::timer_manager::TimeOutManager;
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
@@ -36,9 +33,6 @@ pub fn start_xhci_host_controller(
 
     let mut timer_manager = new_time_manager();
 
-    let mut timer = LocalApicTimer::new();
-    timer.start(LocalApicTimerDivide::By1);
-
     let queue_waiter = InterruptQueueWaiter::new();
     queue_waiter.for_each(|message| match message {
         InterruptMessage::Xhci => {
@@ -52,8 +46,6 @@ pub fn start_xhci_host_controller(
                         println!("Timeout = {}", timeout);
                     });
             }
-
-            update_count(timer.elapsed());
         }
     });
 
@@ -65,6 +57,9 @@ fn new_time_manager() -> TimeOutManager<usize> {
     let mut timer_manager = TimeOutManager::<usize>::default();
     timer_manager.push_timeout(Timeout::new(1, 1));
     timer_manager.push_timeout(Timeout::new(3, 3));
+    timer_manager.push_timeout(Timeout::new(10, 10));
+    timer_manager.push_timeout(Timeout::new(30, 30));
+    timer_manager.push_timeout(Timeout::new(60, 60));
 
     timer_manager
 }

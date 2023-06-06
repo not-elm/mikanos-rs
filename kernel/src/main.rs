@@ -18,6 +18,7 @@ use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
+use kernel_lib::acpi::rsdp::Rsdp;
 use kernel_lib::{acpi, serial_println};
 
 use crate::gdt::init_gdt;
@@ -29,6 +30,7 @@ use crate::usb::xhci::start_xhci_host_controller;
 use crate::usb::{enable_msi, first_general_header};
 
 mod allocate;
+mod apic;
 mod entry_point;
 mod gdt;
 mod interrupt;
@@ -59,9 +61,7 @@ pub extern "sysv64" fn kernel_main(
 
     init_layers(*frame_buffer_config).unwrap();
 
-    let fadt = acpi::init_acpi_timer(*rsdp).unwrap();
-
-    fadt.wait_milli_for(3000);
+    apic::start_timer(*rsdp).unwrap();
 
     #[cfg(test)]
     test_main();

@@ -5,7 +5,7 @@ pub mod timeout;
 
 
 pub trait ApicTimer {
-    fn start(&mut self, divide: LocalApicTimerDivide);
+    fn start(&mut self, initial_count: u32, divide: LocalApicTimerDivide);
 
 
     fn elapsed(&self) -> u32;

@@ -31,7 +31,6 @@ impl Fadt {
             while start <= self.read_count() {}
         }
 
-
         while self.read_count() < end {}
     }
 

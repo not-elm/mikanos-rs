@@ -24,11 +24,10 @@ impl LocalApicTimer {
 
 
 impl ApicTimer for LocalApicTimer {
-    fn start(&mut self, divide: LocalApicTimerDivide) {
+    fn start(&mut self, initial_count: u32, divide: LocalApicTimerDivide) {
         self.local_apic_registers
             .divide_config()
             .update_divide(divide);
-
 
         let lvt_timer = self
             .local_apic_registers
@@ -50,18 +49,20 @@ impl ApicTimer for LocalApicTimer {
 
         self.local_apic_registers
             .initial_count()
-            .write_volatile(u32::MAX / 5)
+            .write_volatile(initial_count)
             .unwrap();
     }
 
 
     fn elapsed(&self) -> u32 {
-        let current = self
-            .local_apic_registers
+        let r = &self.local_apic_registers;
+        let current = r
             .current_count()
             .read_volatile();
 
-        u32::MAX / 5 - current
+        r.initial_count()
+            .read_volatile()
+            - current
     }
 
 
