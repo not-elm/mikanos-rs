@@ -17,11 +17,10 @@ pub struct RsdpAddr(u64);
 
 #[derive(Debug)]
 pub struct Rsdp {
-    addr: RsdpAddr,
-    signature: Signature,
-    check_sum: CheckSum,
+    _signature: Signature,
+    _check_sum: CheckSum,
     // oem_id: VolatileChars<6>,
-    revision: Revision,
+    _revision: Revision,
     // rsdt_address: u32,
     // length: u32,
     xsdt_address: XsdtAddress,
@@ -33,10 +32,9 @@ pub struct Rsdp {
 impl Rsdp {
     pub fn new(addr: RsdpAddr) -> KernelResult<Self> {
         Ok(Self {
-            addr,
-            signature: Signature::new(addr)?,
-            check_sum: CheckSum::from(addr),
-            revision: Revision::new(addr)?,
+            _signature: Signature::new(addr)?,
+            _check_sum: CheckSum::from(addr),
+            _revision: Revision::new(addr)?,
             xsdt_address: XsdtAddress::new(addr),
         })
     }

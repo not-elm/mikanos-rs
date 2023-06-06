@@ -1,8 +1,8 @@
 use core::fmt::Debug;
+use kernel_lib::io::io_memory_accessible::IoMemoryAccessible;
 
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::device::header_type::general_header::GeneralHeader;
-use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
 use crate::configuration_space::msi::msi_capability_register::access::control::ControlAccessor;
 use crate::configuration_space::msi::msi_capability_register::access::msi_capability_accessible::MsiCapabilityAccessible;
 use crate::configuration_space::msi::msi_capability_register::structs::capability_id::CapabilityId;

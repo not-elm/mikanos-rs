@@ -59,7 +59,9 @@ pub extern "sysv64" fn kernel_main(
 
     init_layers(*frame_buffer_config).unwrap();
 
-    acpi::init_acpi_timer(*rsdp).unwrap();
+    let fadt = acpi::init_acpi_timer(*rsdp).unwrap();
+
+    fadt.wait_milli_for(3000);
 
     #[cfg(test)]
     test_main();

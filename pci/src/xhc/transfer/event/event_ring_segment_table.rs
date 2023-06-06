@@ -1,5 +1,6 @@
 use alloc::string::ToString;
-use kernel_lib::volatile_bits::{volatile_address, VolatileBitsWritable};
+
+use volatile_bits::{volatile_address, VolatileBitsWritable};
 
 use crate::error::{PciError, PciResult};
 use crate::xhc::transfer::event::event_ring_segment_table::ring_segment_addr_entry::EventRingAddressEntry;

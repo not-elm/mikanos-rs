@@ -1,4 +1,4 @@
-use pci::configuration_space::io::asm::io_out32;
+use kernel_lib::io::asm::io_out32;
 
 #[cfg_attr(not(test), allow(dead_code))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

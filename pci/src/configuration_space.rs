@@ -1,3 +1,6 @@
+use kernel_lib::io::asm::{fetch_config_data, write_config_addr};
+use kernel_lib::io::config_address_register::ConfigAddrRegister;
+
 use crate::configuration_space::common_header::class_code::ClassCode;
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::common_header::sub_class::Subclass;
@@ -6,12 +9,9 @@ use crate::configuration_space::device::function::single_function_device::Single
 use crate::configuration_space::device::function::Function;
 use crate::configuration_space::device::header_type::general_header::GeneralHeader;
 use crate::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
-use crate::configuration_space::io::asm::{fetch_config_data, write_config_addr};
-use crate::configuration_space::io::config_address_register::ConfigAddrRegister;
 
 pub mod common_header;
 pub mod device;
-pub mod io;
 pub mod msi;
 
 #[derive(Clone, Debug)]
@@ -26,19 +26,24 @@ impl ConfigurationSpace {
     pub fn try_new(bus: u8, device_slot: u8, function: u8) -> Option<Self> {
         let me = ConfigurationSpace::new(bus, device_slot, function);
         if me.vendor_id().valid_device() {
-            return Some(me);
+            Some(me)
         } else {
             None
         }
     }
 
     pub fn cast_device(self) -> Function {
-        if self.header_type().is_multiple_function() {
+        if self
+            .header_type()
+            .is_multiple_function()
+        {
             Function::Multiple(MultipleFunctionDevice::new(self))
         } else {
             select_single_function_device(self)
         }
     }
+
+
     pub fn bus(&self) -> u8 {
         self.bus
     }

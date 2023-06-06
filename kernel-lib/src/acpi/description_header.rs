@@ -1,7 +1,6 @@
 use volatile_bits::VolatileBitsReadable;
 
 use crate::error::KernelResult;
-use crate::{acpi, serial_println};
 
 mod length;
 mod signature;
@@ -11,6 +10,7 @@ pub const SIZE: u64 = 4 + 4 + 1 + 1 + 6 + 8 + 4 + 4 + 4;
 
 #[derive(Debug, Clone)]
 pub struct DescriptionHeader {
+    addr: u64,
     signature: signature::Signature,
     length: length::Length,
 }
@@ -19,6 +19,7 @@ pub struct DescriptionHeader {
 impl DescriptionHeader {
     pub fn new_with_check(addr: u64, expected_signature: &str) -> KernelResult<Self> {
         Ok(Self {
+            addr,
             signature: signature::Signature::new_with_check(addr, expected_signature)?,
             length: length::Length::from(addr),
         })
@@ -27,9 +28,15 @@ impl DescriptionHeader {
 
     pub fn new(addr: u64) -> Self {
         Self {
+            addr,
             signature: signature::Signature::new(addr),
             length: length::Length::from(addr),
         }
+    }
+
+
+    pub fn addr(&self) -> u64 {
+        self.addr
     }
 
 

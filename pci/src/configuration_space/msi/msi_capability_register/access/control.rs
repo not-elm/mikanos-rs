@@ -1,10 +1,10 @@
-use crate::configuration_space::io::config_address_register::ConfigAddrRegister;
-use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
 use crate::configuration_space::msi::msi_capability_register::access::msi_capability_accessible::MsiCapabilityAccessible;
 use crate::configuration_space::msi::msi_capability_register::structs::control::Control;
 use crate::configuration_space::msi::msi_capability_register::structs::from_u32::TryFromU32;
 use crate::configuration_space::ConfigurationSpace;
 use crate::error::OldPciResult;
+use kernel_lib::io::config_address_register::ConfigAddrRegister;
+use kernel_lib::io::io_memory_accessible::IoMemoryAccessible;
 
 #[derive(Debug, Clone)]
 pub struct ControlAccessor {}

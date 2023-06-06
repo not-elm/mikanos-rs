@@ -1,9 +1,8 @@
 use alloc::vec::Vec;
 
-use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
+use crate::io::io_memory_accessible::IoMemoryAccessible;
 
 /// TEST用のモックI/O空間アクセッサーです
-///
 pub struct MockMemoryAccessor {
     base_addr: usize,
 
@@ -39,6 +38,7 @@ mod tests {
     use alloc::vec;
 
     use crate::configuration_space::io::io_memory_accessible::mock_memory_accessor::MockMemoryAccessor;
+    use crate::io::io_memory_accessible::mock_memory_accessor::MockMemoryAccessor;
 
     #[test]
     fn it_index_is_1() {

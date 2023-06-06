@@ -2,9 +2,9 @@ use core::cmp::min;
 use core::fmt::{Debug, Formatter};
 
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
+use kernel_lib::io::io_memory_accessible::IoMemoryAccessible;
 
 use crate::configuration_space::ConfigurationSpace;
-use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
 use crate::configuration_space::msi::msi_capability_register::access::control::ControlAccessor;
 use crate::configuration_space::msi::msi_capability_register::access::message_address::MessageAddressAccessor;
 use crate::configuration_space::msi::msi_capability_register::access::message_data::MessageDataAccessor;

@@ -1,6 +1,6 @@
-use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
 use crate::configuration_space::ConfigurationSpace;
 use crate::error::OldPciResult;
+use kernel_lib::io::io_memory_accessible::IoMemoryAccessible;
 
 pub trait MsiCapabilityAccessible<Io, Register>
 where

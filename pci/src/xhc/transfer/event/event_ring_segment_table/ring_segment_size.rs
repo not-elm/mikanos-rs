@@ -1,4 +1,4 @@
-use kernel_lib::volatile_bits::volatile_bits;
+use volatile_bits::volatile_bits;
 
 use crate::xhc::transfer::event::event_ring_segment_table::SegmentTableAddr;
 

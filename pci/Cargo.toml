@@ -6,10 +6,10 @@ edition = "2021"
 
 [dependencies]
 enum-try-from = "0.0.1"
-kernel-lib = { path = "../kernel-lib" }
 xhci = { workspace = true }
 modular-bitfield = { workspace = true }
 common-lib = { path = "../common-lib" }
 dyn-clone = { workspace = true }
 volatile-bits = { workspace = true }
 anyhow = { workspace = true }
+kernel-lib = { path = "../kernel-lib" }

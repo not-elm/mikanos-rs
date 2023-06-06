@@ -1,10 +1,10 @@
 use kernel_lib::apic::LocalApicRegisters;
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
+use kernel_lib::io::io_memory_accessible::real_memory_accessor::RealIoMemoryAccessor;
 use kernel_lib::volatile_bits::VolatileBitsReadable;
 use pci::configuration_space::common_header::class_code::ClassCode;
 use pci::configuration_space::common_header::sub_class::Subclass;
 use pci::configuration_space::device::header_type::general_header::GeneralHeader;
-use pci::configuration_space::io::io_memory_accessible::real_memory_accessor::RealIoMemoryAccessor;
 use pci::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
 use pci::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
 use pci::configuration_space::msi::InterruptCapabilityRegisterIter;

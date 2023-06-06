@@ -1,11 +1,11 @@
-mod sub;
-
 use core::fmt::Debug;
-use core::ops::{Add, Sub};
+use core::ops::Add;
 
 use crate::math::pixel_with_in_rect_iter::PointsWithInRectIter;
 use crate::math::size::Size;
 use crate::math::vector::{max_vector2d, min_vector2d, Vector2D};
+
+mod sub;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Rectangle<T: Copy> {

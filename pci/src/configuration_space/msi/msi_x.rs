@@ -1,9 +1,9 @@
-use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
 use crate::configuration_space::msi::msi_capability_register::access::control::ControlAccessor;
 use crate::configuration_space::msi::msi_capability_register::access::msi_capability_accessible::MsiCapabilityAccessible;
 use crate::configuration_space::msi::msi_capability_register::structs::control::Control;
 use crate::configuration_space::ConfigurationSpace;
 use crate::error::OldPciResult;
+use kernel_lib::io::io_memory_accessible::IoMemoryAccessible;
 
 #[derive(Debug)]
 pub struct MsiXCapabilityRegisters<Io>

@@ -1,5 +1,6 @@
 use crate::acpi::description_header;
 use crate::acpi::description_header::DescriptionHeader;
+use crate::acpi::fadt::Fadt;
 use crate::error::KernelResult;
 
 #[derive(Debug, Clone)]
@@ -20,8 +21,9 @@ impl Xsdt {
     }
 
 
-    pub fn fadt(mut self) -> Option<DescriptionHeader> {
+    pub fn fadt(mut self) -> Option<Fadt> {
         self.find(|header| header.valid_signature("FACP"))
+            .map(|header| Fadt::from(header.addr()))
     }
 }
 

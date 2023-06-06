@@ -1,7 +1,7 @@
 use modular_bitfield::bitfield;
 use modular_bitfield::prelude::B2;
 
-use super::gate_type::GateType;
+use crate::interrupt::gate_type::GateType;
 
 #[bitfield]
 #[repr(u8)]

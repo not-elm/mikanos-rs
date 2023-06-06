@@ -17,6 +17,7 @@ pub mod control_registers;
 pub mod error;
 pub mod gop;
 pub mod interrupt;
+pub mod io;
 #[cfg(feature = "alloc")]
 pub mod layers;
 pub mod paging;
@@ -24,7 +25,6 @@ pub mod register;
 pub mod segmentation;
 pub mod serial;
 pub mod timer;
-
 
 pub mod volatile_bits {
     pub use volatile_bits::*;

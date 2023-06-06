@@ -1,4 +1,4 @@
-use crate::configuration_space::io::config_address_register::ConfigAddrRegister;
+use crate::io::config_address_register::ConfigAddrRegister;
 
 pub mod mock_memory_accessor;
 pub mod real_memory_accessor;

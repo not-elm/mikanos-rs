@@ -1,5 +1,5 @@
-use crate::configuration_space::io::asm::{io_in32, io_out32};
-use crate::configuration_space::io::io_memory_accessible::IoMemoryAccessible;
+use crate::io::asm::{io_in32, io_out32};
+use crate::io::io_memory_accessible::IoMemoryAccessible;
 
 #[derive(Debug, Clone)]
 pub struct RealIoMemoryAccessor {}

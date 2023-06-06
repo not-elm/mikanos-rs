@@ -25,6 +25,7 @@ impl<const N: usize> CharBuff<N> {
         }
     }
 
+
     pub fn equal(&self, str: &str) -> bool {
         self.as_string().as_str() == str
     }
