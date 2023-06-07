@@ -4,7 +4,7 @@ use core::cell::RefCell;
 use xhci::ring::trb::command::ConfigureEndpoint;
 
 use crate::error::PciResult;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
 pub struct CommandRing<T> {

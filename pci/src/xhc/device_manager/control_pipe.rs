@@ -8,7 +8,7 @@ use crate::xhc::device_manager::control_pipe::control_in::ControlIn;
 use crate::xhc::device_manager::control_pipe::control_out::ControlOut;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
 pub mod control_in;

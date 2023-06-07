@@ -10,7 +10,7 @@ use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase};
 use crate::xhc::device_manager::device::phase2::Phase2;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
 /// コンフィグディスクリプタを取得します。

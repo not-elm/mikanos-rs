@@ -9,7 +9,7 @@ use crate::xhc::device_manager::control_pipe::{
 };
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
 pub struct ControlOut<T> {

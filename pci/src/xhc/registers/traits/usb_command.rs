@@ -3,7 +3,7 @@ use core::cell::RefCell;
 
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::command_ring::CommandRing;
 
 pub trait UsbCommandRegisterAccessible {

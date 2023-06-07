@@ -2,6 +2,7 @@ use crate::error::PciResult;
 
 pub mod boot_protocol_buffer;
 pub mod interrupt_in;
+pub mod keyboard;
 pub mod mouse;
 
 
@@ -14,4 +15,3 @@ pub trait ClassDriverOperate {
 
     fn data_buff_len(&self) -> u32;
 }
-

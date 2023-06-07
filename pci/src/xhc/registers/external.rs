@@ -3,7 +3,7 @@ use core::num::NonZeroUsize;
 
 use crate::error::PciResult;
 use crate::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
-use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
+use crate::xhc::registers::traits::config::ConfigRegisterAccessible;
 use crate::xhc::registers::traits::registers_operation::RegistersOperation;
 use crate::xhc::registers::XhcRegisters;
 
@@ -26,6 +26,7 @@ where
 {
     pub fn new(mmio_addr: MemoryMappedAddr, mapper: M) -> Self {
         let registers = unsafe { xhci::Registers::new(mmio_addr.addr(), mapper.clone()) };
+
         Self(registers)
     }
 
@@ -130,6 +131,7 @@ where
 
 #[derive(Clone, Debug, Default)]
 pub struct IdentityMapper;
+
 
 impl xhci::accessor::Mapper for IdentityMapper {
     unsafe fn map(&mut self, phys_start: usize, _bytes: usize) -> NonZeroUsize {

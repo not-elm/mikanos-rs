@@ -1,6 +1,6 @@
 use crate::error::PciResult;
 use crate::xhc::registers::external::External;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 
 impl<M> DoorbellRegistersAccessible for External<M>
 where

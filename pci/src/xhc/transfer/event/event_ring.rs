@@ -2,7 +2,7 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 
 use crate::error::PciResult;
-use crate::xhc::registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
+use crate::xhc::registers::traits::interrupter::InterrupterSetRegisterAccessible;
 use crate::xhc::transfer::event::event_trb::EventTrb;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 use crate::xhc::transfer::trb_byte_size;

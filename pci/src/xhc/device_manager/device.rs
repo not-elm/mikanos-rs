@@ -16,7 +16,7 @@ use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{DATA_BUFF_SIZE, InitStatus, Phase};
 use crate::xhc::device_manager::device::phase1::Phase1;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
 mod device_slot;

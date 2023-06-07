@@ -8,7 +8,7 @@ use crate::xhc::device_manager::device::phase::DATA_BUFF_SIZE;
 use crate::xhc::device_manager::device_context::DeviceContext;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::input_context::InputContext;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
 pub struct DeviceSlot<Memory, Doorbell>

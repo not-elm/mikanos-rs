@@ -1,6 +1,7 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
+use kernel_lib::serial_println;
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
 use transfer::event::event_ring::EventRing;
@@ -9,10 +10,10 @@ use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::DeviceManager;
-use crate::xhc::registers::XhcRegisters;
 use crate::xhc::registers::traits::device_context_bae_address_array_pointer_accessible::setup_device_manager;
-use crate::xhc::registers::traits::interrupter_set_register_accessible::setup_event_ring;
-use crate::xhc::registers::traits::usb_command_register_accessible::setup_command_ring;
+use crate::xhc::registers::traits::interrupter::setup_event_ring;
+use crate::xhc::registers::traits::usb_command::setup_command_ring;
+use crate::xhc::registers::XhcRegisters;
 use crate::xhc::transfer::command_ring::CommandRing;
 use crate::xhc::transfer::event::event_trb::EventTrb;
 use crate::xhc::transfer::event::target_event::TargetEvent;
@@ -33,9 +34,9 @@ pub struct XhcController<Register, Memory> {
 
 
 impl<Register, Memory> XhcController<Register, Memory>
-    where
-        Register: XhcRegisters + 'static,
-        Memory: MemoryAllocatable,
+where
+    Register: XhcRegisters + 'static,
+    Memory: MemoryAllocatable,
 {
     pub fn new(
         registers: Register,
@@ -201,6 +202,7 @@ impl<Register, Memory> XhcController<Register, Memory>
 
     fn enable_slot(&mut self, port_status: PortStatusChange) -> PciResult {
         let port_id = port_status.port_id();
+
         self.registers
             .borrow_mut()
             .clear_port_reset_change_at(port_id)?;

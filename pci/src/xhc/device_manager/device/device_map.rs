@@ -7,7 +7,7 @@ use crate::error::PciResult;
 use crate::pci_error;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::Device;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 
 pub struct DeviceMap<Doorbell, Memory> {
     map: BTreeMap<u8, Device<Doorbell, Memory>>,

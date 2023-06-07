@@ -1,6 +1,8 @@
+use alloc::vec::Vec;
+
 use crate::error::PciResult;
 use crate::xhc::registers::external::External;
-use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
+use crate::xhc::registers::traits::port::PortRegistersAccessible;
 
 impl<M> PortRegistersAccessible for External<M>
 where
@@ -56,29 +58,35 @@ where
 
 
     fn reset_all(&mut self) {
-        let connect_index = self
+        let ports = self
             .0
             .port_register_set
             .into_iter()
-            .position(|p| {
+            .enumerate()
+            .filter(|(_, p)| {
                 p.portsc
                     .current_connect_status()
             })
-            .unwrap();
+            .map(|(i, _)| i)
+            .collect::<Vec<usize>>();
 
-        self.0
-            .port_register_set
-            .update_volatile_at(connect_index, |p| {
-                p.portsc.set_port_reset();
+        ports
+            .into_iter()
+            .for_each(|port_id| {
+                self.0
+                    .port_register_set
+                    .update_volatile_at(port_id, |p| {
+                        p.portsc.set_port_reset();
+                    });
+
+                while self
+                    .0
+                    .port_register_set
+                    .read_volatile_at(port_id)
+                    .portsc
+                    .port_reset()
+                {}
             });
-
-        while self
-            .0
-            .port_register_set
-            .read_volatile_at(connect_index)
-            .portsc
-            .port_reset()
-        {}
     }
 }
 

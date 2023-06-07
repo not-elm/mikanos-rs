@@ -1,6 +1,5 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
-use core::marker::PhantomData;
 
 use xhci::ring::trb::event::TransferEvent;
 
@@ -11,15 +10,14 @@ use crate::error::PciResult;
 use crate::pci_error;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::Device;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
-use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::port::PortRegistersAccessible;
 use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
-pub mod device;
-
 pub mod control_pipe;
 pub mod descriptor;
+pub mod device;
 mod device_context;
 pub(crate) mod device_context_index;
 pub(crate) mod endpoint_config;
@@ -33,13 +31,13 @@ pub struct DeviceManager<Doorbell, Memory> {
     addressing_port_id: Option<u8>,
     registers: Rc<RefCell<Doorbell>>,
     mouse_driver_factory: MouseDriverFactory,
-    _maker: PhantomData<Memory>,
 }
 
+
 impl<Doorbell, Memory> DeviceManager<Doorbell, Memory>
-    where
-        Doorbell: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
-        Memory: MemoryAllocatable,
+where
+    Doorbell: DoorbellRegistersAccessible + PortRegistersAccessible + 'static,
+    Memory: MemoryAllocatable,
 {
     pub fn new(
         devices: DeviceMap<Doorbell, Memory>,
@@ -53,7 +51,6 @@ impl<Doorbell, Memory> DeviceManager<Doorbell, Memory>
             addressing_port_id: None,
             registers: Rc::clone(registers),
             mouse_driver_factory,
-            _maker: PhantomData,
         }
     }
 
@@ -122,7 +119,8 @@ impl<Doorbell, Memory> DeviceManager<Doorbell, Memory>
         slot_id: u8,
         allocator: &Rc<RefCell<Memory>>,
     ) -> PciResult<&mut Device<Doorbell, Memory>> {
-        let port_speed = self.registers
+        let port_speed = self
+            .registers
             .borrow()
             .read_port_speed_at(parent_hub_slot_id)?;
 
@@ -132,9 +130,11 @@ impl<Doorbell, Memory> DeviceManager<Doorbell, Memory>
             slot_id,
             allocator,
             &self.registers,
-            self.mouse_driver_factory.clone(),
+            self.mouse_driver_factory
+                .clone(),
         )
     }
+
 
     fn try_addressing_port_id(&self) -> PciResult<u8> {
         self.addressing_port_id
@@ -143,7 +143,6 @@ impl<Doorbell, Memory> DeviceManager<Doorbell, Memory>
 
 
     fn device_mut_at(&mut self, slot_id: u8) -> PciResult<&mut Device<Doorbell, Memory>> {
-        self.devices
-            .get_mut(slot_id)
+        self.devices.get_mut(slot_id)
     }
 }

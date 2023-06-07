@@ -1,6 +1,6 @@
 use crate::error::PciResult;
 use crate::xhc::registers::external::External;
-use crate::xhc::registers::traits::usb_command_register_accessible::UsbCommandRegisterAccessible;
+use crate::xhc::registers::traits::usb_command::UsbCommandRegisterAccessible;
 
 impl<M> UsbCommandRegisterAccessible for External<M>
 where

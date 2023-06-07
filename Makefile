@@ -36,19 +36,19 @@ $(subdirs):
 
 .PHONY:make-img
 make-img:
-	sh make_img.sh $(KERNEL)
+	sh ./scripts/make_img.sh $(KERNEL)
 
 .PHONY:run
 run:
 	make make-img KERNEL=$(KERNEL)
-	sh qemu.sh
+	sh ./scripts/qemu.sh
 
 .PHONY:run-test
 run-test:
 	make make-img KERNEL=$(KERNEL)
-	sh qemu.sh "test"
+	sh ./scripts/qemu.sh "test"
 
 run-debug:
 	make make-img KERNEL=$(KERNEL)
-	sh qemu.sh "debug"
+	sh ./scripts/qemu.sh "debug"
 

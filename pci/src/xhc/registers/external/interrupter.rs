@@ -1,6 +1,6 @@
 use crate::error::PciResult;
 use crate::xhc::registers::external::External;
-use crate::xhc::registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
+use crate::xhc::registers::traits::interrupter::InterrupterSetRegisterAccessible;
 
 impl<M> InterrupterSetRegisterAccessible for External<M>
 where

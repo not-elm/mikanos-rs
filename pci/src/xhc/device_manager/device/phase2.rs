@@ -16,7 +16,7 @@ use crate::xhc::device_manager::descriptor::structs::interface_descriptor::Inter
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase};
 use crate::xhc::device_manager::device::phase3::Phase3;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
 pub struct Phase2 {

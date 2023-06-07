@@ -1,5 +1,5 @@
 use crate::xhc::registers::external::External;
-use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
+use crate::xhc::registers::traits::capability::CapabilityRegistersAccessible;
 
 impl<M> CapabilityRegistersAccessible for External<M>
 where

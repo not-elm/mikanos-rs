@@ -6,8 +6,8 @@ use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::device_map::DeviceMap;
 use crate::xhc::device_manager::DeviceManager;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
-use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
+use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
+use crate::xhc::registers::traits::port::PortRegistersAccessible;
 use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
 use crate::xhc::transfer::device_context::scratchpad_buffers_array_ptr::ScratchpadBuffersArrayPtr;
 
