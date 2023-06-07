@@ -1,10 +1,7 @@
-use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
-use crate::class_driver::mouse::MouseButton;
+use kernel_lib::serial_println;
+
 use crate::class_driver::ClassDriverOperate;
 use crate::error::PciResult;
-use alloc::boxed::Box;
-use common_lib::math::vector::Vector2D;
-use kernel_lib::serial_println;
 
 pub struct KeyboardDriver {
     data_buff: [i8; 8],

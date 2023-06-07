@@ -1,7 +1,6 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use kernel_lib::serial_println;
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
 use transfer::event::event_ring::EventRing;
@@ -10,6 +9,7 @@ use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::DeviceManager;
+use crate::xhc::ports::Ports;
 use crate::xhc::registers::traits::device_context_bae_address_array_pointer_accessible::setup_device_manager;
 use crate::xhc::registers::traits::interrupter::setup_event_ring;
 use crate::xhc::registers::traits::usb_command::setup_command_ring;
@@ -21,6 +21,7 @@ use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 pub mod allocator;
 pub mod device_manager;
+mod ports;
 pub mod registers;
 pub mod transfer;
 
@@ -28,6 +29,7 @@ pub struct XhcController<Register, Memory> {
     registers: Rc<RefCell<Register>>,
     event_ring: EventRing<Register>,
     command_ring: CommandRing<Register>,
+    ports: Ports,
     device_manager: DeviceManager<Register, Memory>,
     allocator: Rc<RefCell<Memory>>,
 }
@@ -77,14 +79,35 @@ where
             command_ring,
             device_manager,
             allocator: Rc::new(RefCell::new(allocator)),
+            ports: Ports::default(),
         })
     }
 
 
-    pub fn reset_port(&mut self) {
+    pub fn reset_port(&mut self) -> PciResult {
+        let connect_ports = self
+            .registers
+            .borrow()
+            .connecting_ports();
+
+        if connect_ports.is_empty() {
+            return Ok(());
+        }
+
         self.registers
             .borrow_mut()
-            .reset_all();
+            .reset_port_at(connect_ports[0])?;
+
+
+        for port_id in connect_ports
+            .into_iter()
+            .skip(1)
+        {
+            self.ports
+                .push_waiting_port(port_id);
+        }
+
+        Ok(())
     }
 
 
@@ -129,7 +152,9 @@ where
             EventTrb::CommandCompletionEvent(completion) => {
                 self.process_completion_event(completion)?
             }
-            EventTrb::PortStatusChangeEvent(port_status) => self.enable_slot(port_status)?,
+            EventTrb::PortStatusChangeEvent(port_status) => {
+                self.on_port_status_change(port_status)?
+            }
             EventTrb::NotSupport { .. } => {}
         };
 
@@ -152,6 +177,7 @@ where
         if is_init {
             self.configure_endpoint(slot_id)?;
         }
+
         Ok(())
     }
 
@@ -184,6 +210,8 @@ where
 
 
     fn init_device(&mut self, completion: CommandCompletion) -> PciResult {
+        self.reset_waiting_port_if_need()?;
+
         self.device_manager
             .start_initialize_at(completion.slot_id())?;
 
@@ -200,9 +228,23 @@ where
     }
 
 
-    fn enable_slot(&mut self, port_status: PortStatusChange) -> PciResult {
+    fn on_port_status_change(&mut self, port_status: PortStatusChange) -> PciResult {
         let port_id = port_status.port_id();
+        if self
+            .device_manager
+            .address_port(port_id)
+        {
+            self.enable_slot(port_id)?;
+        } else {
+            self.ports
+                .push_waiting_port(port_id);
+        }
 
+        Ok(())
+    }
+
+
+    fn enable_slot(&mut self, port_id: u8) -> PciResult {
         self.registers
             .borrow_mut()
             .clear_port_reset_change_at(port_id)?;
@@ -211,7 +253,16 @@ where
             .set_addressing_port_id(port_id);
 
         self.command_ring
-            .push_enable_slot()?;
+            .push_enable_slot()
+    }
+
+
+    fn reset_waiting_port_if_need(&mut self) -> PciResult {
+        if let Some(port_id) = self.ports.pop_waiting_port() {
+            self.registers
+                .borrow_mut()
+                .reset_port_at(port_id)?;
+        }
 
         Ok(())
     }

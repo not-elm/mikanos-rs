@@ -9,38 +9,38 @@ use xhci::ring::trb::event::TransferEvent;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::request_type::RequestType;
+use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
-use crate::xhc::device_manager::device::phase::{DATA_BUFF_SIZE, InitStatus, Phase};
+use crate::xhc::device_manager::device::phase::{InitStatus, Phase, DATA_BUFF_SIZE};
 use crate::xhc::device_manager::device::phase1::Phase1;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
+pub mod device_map;
 mod device_slot;
 mod phase;
 mod phase1;
 mod phase2;
 mod phase3;
 mod phase4;
-pub mod device_map;
 
-#[repr(C, align(64))]
+
 pub struct Device<Doorbell, Memory> {
     slot_id: u8,
     phase: Box<dyn Phase<Doorbell, Memory>>,
     doorbell: Rc<RefCell<Doorbell>>,
     slot: DeviceSlot<Memory, Doorbell>,
     device_descriptor_buff: [u8; DATA_BUFF_SIZE],
-    _maker: PhantomData<Memory>,
 }
 
+
 impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
-    where
-        Doorbell: DoorbellRegistersAccessible,
-        Memory: MemoryAllocatable,
+where
+    Doorbell: DoorbellRegistersAccessible,
+    Memory: MemoryAllocatable,
 {
     pub fn device_context_addr(&self) -> u64 {
         self.slot
@@ -180,7 +180,6 @@ impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
             doorbell: Rc::clone(doorbell),
             slot,
             device_descriptor_buff: [0; DATA_BUFF_SIZE],
-            _maker: PhantomData,
         })
     }
 }

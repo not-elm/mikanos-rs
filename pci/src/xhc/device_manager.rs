@@ -55,6 +55,15 @@ where
     }
 
 
+    pub fn address_port(&self, port: u8) -> bool {
+        if let Some(addressing_port) = self.addressing_port_id {
+            port == addressing_port
+        } else {
+            true
+        }
+    }
+
+
     pub fn set_addressing_port_id(&mut self, port_id: u8) {
         self.addressing_port_id = Some(port_id);
     }
@@ -79,6 +88,8 @@ where
         self.device_context_array
             .set_device_context_at(slot_id as usize, device_context_addr);
 
+        self.addressing_port_id = None;
+
         Ok(input_context_addr)
     }
 
@@ -100,6 +111,7 @@ where
     ) -> PciResult<bool> {
         let deive = self.device_mut_at(slot_id)?;
         let init_status = deive.on_transfer_event_received(transfer_event, target_event)?;
+
         Ok(init_status.is_initialised())
     }
 

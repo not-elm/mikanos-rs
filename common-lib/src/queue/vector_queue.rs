@@ -17,6 +17,7 @@ impl<Value> Queueing<Value> for VectorQueue<Value> {
     }
 }
 
+
 impl<T> VectorQueue<T> {
     pub const fn new() -> Self {
         Self {

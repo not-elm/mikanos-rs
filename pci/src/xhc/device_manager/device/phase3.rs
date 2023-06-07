@@ -36,9 +36,9 @@ impl Phase3 {
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
     ) -> Vec<InterruptIn<Doorbell>>
-        where
-            Memory: MemoryAllocatable,
-            Doorbell: DoorbellRegistersAccessible,
+    where
+        Memory: MemoryAllocatable,
+        Doorbell: DoorbellRegistersAccessible,
     {
         self.hid_device_descriptor_vec
             .iter()
@@ -61,9 +61,9 @@ impl Phase3 {
 }
 
 impl<Doorbell, Memory> Phase<Doorbell, Memory> for Phase3
-    where
-        Memory: MemoryAllocatable,
-        Doorbell: DoorbellRegistersAccessible + 'static,
+where
+    Memory: MemoryAllocatable,
+    Doorbell: DoorbellRegistersAccessible + 'static,
 {
     fn on_transfer_event_received(
         &mut self,
@@ -73,7 +73,9 @@ impl<Doorbell, Memory> Phase<Doorbell, Memory> for Phase3
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         slot.input_context_mut()
             .clear_control();
+
         slot.copy_device_context_to_input();
+
         slot.input_context_mut()
             .set_enable_slot_context();
 

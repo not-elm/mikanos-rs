@@ -5,12 +5,12 @@ use crate::configuration_space::common_header::class_code::ClassCode;
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::common_header::sub_class::Subclass;
 use crate::configuration_space::common_header::vendor_id::VendorId;
-use crate::configuration_space::ConfigurationSpace;
 use crate::configuration_space::device::device_slots::DeviceSlots;
-use crate::configuration_space::device::function::Function;
 use crate::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
 use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
+use crate::configuration_space::device::function::Function;
 use crate::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
+use crate::configuration_space::ConfigurationSpace;
 
 pub struct PciDeviceSearcher {
     vendor_id: Option<VendorId>,
@@ -70,6 +70,7 @@ fn find_pci_devices_with(target: &PciDeviceSearcher) -> Option<Vec<Configuration
     }
 }
 
+
 fn find_from_device_slots(
     device_slot: DeviceSlots,
     target: &PciDeviceSearcher,
@@ -79,10 +80,8 @@ fn find_from_device_slots(
         .collect()
 }
 
-fn find_from_function(
-    target: &PciDeviceSearcher,
-    function: Function,
-) -> Vec<ConfigurationSpace> {
+
+fn find_from_function(target: &PciDeviceSearcher, function: Function) -> Vec<ConfigurationSpace> {
     match function {
         Function::Single(single) => find_from_single(target, single),
         Function::Multiple(multiple) => find_from_multiple(target, multiple),
@@ -130,6 +129,7 @@ fn find_within_bridge(
         .collect::<Vec<ConfigurationSpace>>()
 }
 
+
 fn get_if_target_device(
     target: &PciDeviceSearcher,
     device: &impl CommonHeaderHoldable,
@@ -157,5 +157,9 @@ fn get_if_target_device(
         }
     }
 
-    Some(device.as_config_space().clone())
+    Some(
+        device
+            .as_config_space()
+            .clone(),
+    )
 }

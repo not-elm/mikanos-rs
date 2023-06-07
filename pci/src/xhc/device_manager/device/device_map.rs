@@ -1,5 +1,6 @@
 use alloc::collections::BTreeMap;
 use alloc::rc::Rc;
+use alloc::vec::Vec;
 use core::cell::RefCell;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
@@ -59,7 +60,7 @@ where
 impl<Doorbell, Memory> Default for DeviceMap<Doorbell, Memory> {
     fn default() -> Self {
         Self {
-            map: BTreeMap::new(),
+            map: BTreeMap::default(),
         }
     }
 }

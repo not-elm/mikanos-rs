@@ -12,42 +12,54 @@ pub struct EndpointConfig {
     interval: u8,
 }
 
+
 impl EndpointConfig {
     pub fn new(endpoint: &EndpointDescriptor) -> Self {
+        let ep_num = endpoint
+            .endpoint_address()
+            .number() as usize;
+
+        let dir_in = endpoint
+            .endpoint_address()
+            .dir_in();
+
+        let transfer_type = endpoint
+            .attributes()
+            .transfer_type();
+
         Self {
-            ep_id: EndpointId::from_endpoint_num(
-                endpoint
-                    .endpoint_address()
-                    .number() as usize,
-                endpoint
-                    .endpoint_address()
-                    .dir_in(),
-            ),
-            ep_type: to_endpoint_type(
-                endpoint
-                    .attributes()
-                    .transfer_type(),
-            ),
+            ep_id: EndpointId::from_endpoint_num(ep_num, dir_in),
+            ep_type: to_endpoint_type(transfer_type),
             max_packet_size: endpoint.max_packet_size(),
             interval: endpoint.interval(),
         }
     }
+
+
     pub fn endpoint_id(&self) -> EndpointId {
         self.ep_id
     }
+
+
     pub fn endpoint_type(&self) -> EndpointType {
         self.ep_type
     }
+
+
     pub fn max_packet_size(&self) -> u16 {
         self.max_packet_size
     }
+
+
     pub fn interval(&self) -> u8 {
         self.interval
     }
 
+
     pub fn device_context_index(&self) -> DeviceContextIndex {
         DeviceContextIndex::from_endpoint_id(self.ep_id)
     }
+
 
     pub fn write_endpoint_context(
         &self,
@@ -65,6 +77,7 @@ impl EndpointConfig {
         endpoint_ctx.set_dequeue_cycle_state();
     }
 }
+
 
 fn to_endpoint_type(v: u8) -> EndpointType {
     match v {

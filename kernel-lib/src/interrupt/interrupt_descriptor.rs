@@ -12,7 +12,9 @@ use crate::interrupt::interrupt_descriptor_attribute::InterruptDescriptorAttribu
 pub type PageFaultHandler =
     extern "x86-interrupt" fn(stack_frame: InterruptStackFrame, error_code: PageFaultErrorCode);
 
+
 pub type InterruptHandler = extern "x86-interrupt" fn(stack_frame: InterruptStackFrame);
+
 
 #[bitfield(bits = 128)]
 #[derive(Debug, Copy, Clone)]
@@ -46,6 +48,8 @@ impl InterruptDescriptor {
 
         Ok(())
     }
+
+
     pub fn set_handler(
         &mut self,
         handler: InterruptHandler,

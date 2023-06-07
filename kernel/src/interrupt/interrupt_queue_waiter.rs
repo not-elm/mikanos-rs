@@ -17,6 +17,7 @@ impl Iterator for InterruptQueueWaiter {
 
     fn next(&mut self) -> Option<Self::Item> {
         cli();
+
         let mut value = INTERRUPT_QUEUE
             .lock()
             .borrow_mut()
@@ -30,8 +31,6 @@ impl Iterator for InterruptQueueWaiter {
                 .lock()
                 .borrow_mut()
                 .dequeue();
-
-            sti();
         }
 
 
