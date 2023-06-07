@@ -73,25 +73,16 @@ impl<Doorbell, Memory> DeviceManager<Doorbell, Memory>
         slot_id: u8,
         allocator: &Rc<RefCell<Memory>>,
     ) -> PciResult<u64> {
-        let port_id = self.try_addressing_port_id()?;
+        let parent_hub_slot_id = self.try_addressing_port_id()?;
 
-
-        let device = self.devices.new_set(
-            port_id,
-            self.registers
-                .borrow()
-                .read_port_speed_at(port_id)?,
-            slot_id,
-            allocator,
-            &self.registers,
-            self.mouse_driver_factory
-                .clone(),
-        )?;
+        let device = self.new_device(parent_hub_slot_id, slot_id, allocator)?;
+        let device_context_addr = device.device_context_addr();
+        let input_context_addr = device.input_context_addr();
 
         self.device_context_array
-            .set_device_context_at(slot_id as usize, device.device_context_addr());
+            .set_device_context_at(slot_id as usize, device_context_addr);
 
-        Ok(device.input_context_addr())
+        Ok(input_context_addr)
     }
 
 
@@ -124,6 +115,26 @@ impl<Doorbell, Memory> DeviceManager<Doorbell, Memory>
         device.on_endpoints_configured()
     }
 
+
+    fn new_device(
+        &mut self,
+        parent_hub_slot_id: u8,
+        slot_id: u8,
+        allocator: &Rc<RefCell<Memory>>,
+    ) -> PciResult<&mut Device<Doorbell, Memory>> {
+        let port_speed = self.registers
+            .borrow()
+            .read_port_speed_at(parent_hub_slot_id)?;
+
+        self.devices.new_set(
+            parent_hub_slot_id,
+            port_speed,
+            slot_id,
+            allocator,
+            &self.registers,
+            self.mouse_driver_factory.clone(),
+        )
+    }
 
     fn try_addressing_port_id(&self) -> PciResult<u8> {
         self.addressing_port_id

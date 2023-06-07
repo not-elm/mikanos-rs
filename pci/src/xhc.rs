@@ -3,22 +3,15 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
-use registers::traits::device_context_bae_address_array_pointer_accessible::DeviceContextBaseAddressArrayPointerAccessible;
-use registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
-use registers::traits::registers_operation::RegistersOperation;
-use registers::traits::usb_command_register_accessible::UsbCommandRegisterAccessible;
 use transfer::event::event_ring::EventRing;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::DeviceManager;
-use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
-use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
+use crate::xhc::registers::XhcRegisters;
 use crate::xhc::registers::traits::device_context_bae_address_array_pointer_accessible::setup_device_manager;
-use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::registers::traits::interrupter_set_register_accessible::setup_event_ring;
-use crate::xhc::registers::traits::port_registers_accessible::PortRegistersAccessible;
 use crate::xhc::registers::traits::usb_command_register_accessible::setup_command_ring;
 use crate::xhc::transfer::command_ring::CommandRing;
 use crate::xhc::transfer::event::event_trb::EventTrb;
@@ -38,17 +31,10 @@ pub struct XhcController<Register, Memory> {
     allocator: Rc<RefCell<Memory>>,
 }
 
+
 impl<Register, Memory> XhcController<Register, Memory>
     where
-        Register: RegistersOperation
-        + CapabilityRegistersAccessible
-        + InterrupterSetRegisterAccessible
-        + UsbCommandRegisterAccessible
-        + DoorbellRegistersAccessible
-        + PortRegistersAccessible
-        + ConfigRegisterAccessible
-        + DeviceContextBaseAddressArrayPointerAccessible
-        + 'static,
+        Register: XhcRegisters + 'static,
         Memory: MemoryAllocatable,
 {
     pub fn new(
@@ -109,6 +95,7 @@ impl<Register, Memory> XhcController<Register, Memory>
         }
     }
 
+
     pub fn process_all_events(&mut self) {
         while self
             .process_event()
@@ -155,24 +142,28 @@ impl<Register, Memory> XhcController<Register, Memory>
         transfer_event: TransferEvent,
         target_event: TargetEvent,
     ) -> PciResult {
+        let slot_id = transfer_event.slot_id();
+
         let is_init = self
             .device_manager
-            .process_transfer_event(transfer_event.slot_id(), transfer_event, target_event)?;
+            .process_transfer_event(slot_id, transfer_event, target_event)?;
 
         if is_init {
-            let input_context_addr = self
-                .device_manager
-                .device_slot_at(transfer_event.slot_id())
-                .unwrap()
-                .input_context_addr();
-
-            self.command_ring
-                .push_configure_endpoint(
-                    input_context_addr,
-                    transfer_event.slot_id(),
-                )?;
+            self.configure_endpoint(slot_id)?;
         }
         Ok(())
+    }
+
+
+    fn configure_endpoint(&mut self, slot_id: u8) -> PciResult {
+        let input_context_addr = self
+            .device_manager
+            .device_slot_at(slot_id)
+            .unwrap()
+            .input_context_addr();
+
+        self.command_ring
+            .push_configure_endpoint(input_context_addr, slot_id)
     }
 
 
@@ -223,6 +214,7 @@ impl<Register, Memory> XhcController<Register, Memory>
         Ok(())
     }
 }
+
 
 #[allow(unused)]
 pub(crate) fn bit_mask_zeros_lower_for(bits: u32, target_value: usize) -> usize {

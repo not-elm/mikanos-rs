@@ -7,6 +7,7 @@ use crate::pci_bail;
 pub mod multiple_function_device;
 pub mod single_function_device;
 
+
 #[derive(Debug)]
 pub enum Function {
     Single(SingleFunctionDevice),

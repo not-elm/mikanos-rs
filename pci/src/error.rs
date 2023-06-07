@@ -5,6 +5,7 @@ use anyhow::Error;
 
 pub type PciResult<T = ()> = Result<T, PciError>;
 
+
 #[macro_export]
 #[doc(hidden)]
 macro_rules! pci_error {
@@ -21,8 +22,6 @@ macro_rules! pci_bail {
         Err($crate::pci_error!($($message)*))
     };
 }
-
-
 
 
 #[derive(Debug)]
@@ -47,5 +46,3 @@ impl PciError {
         pci_error!("Invalid target event")
     }
 }
-
-

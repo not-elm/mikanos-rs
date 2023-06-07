@@ -13,7 +13,7 @@ sudo apt-get install -y curl  \
     ovmf
 
 
-RUST_VERSION=nightly
+RUST_VERSION=nightly-2023-04-20
 # rustup,rustc,cargoをインストールできる
 sudo curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION}
 source "${HOME}"/.cargo/env

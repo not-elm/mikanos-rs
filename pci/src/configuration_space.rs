@@ -4,9 +4,9 @@ use kernel_lib::io::config_address_register::ConfigAddrRegister;
 use crate::configuration_space::common_header::class_code::ClassCode;
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::common_header::sub_class::Subclass;
+use crate::configuration_space::device::function::Function;
 use crate::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
 use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
-use crate::configuration_space::device::function::Function;
 use crate::configuration_space::device::header_type::general_header::GeneralHeader;
 use crate::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
 
@@ -21,6 +21,7 @@ pub struct ConfigurationSpace {
     device_slot: u8,
     function: u8,
 }
+
 
 impl ConfigurationSpace {
     pub fn try_new(bus: u8, device_slot: u8, function: u8) -> Option<Self> {
@@ -48,18 +49,22 @@ impl ConfigurationSpace {
         self.bus
     }
 
+
     pub fn device_slot(&self) -> u8 {
         self.device_slot
     }
+
 
     pub fn function(&self) -> u8 {
         self.function
     }
 
+
     pub(crate) fn fetch_data_offset_at(&self, offset: u8) -> u32 {
         write_config_addr(self.config_addr_at(offset));
         fetch_config_data()
     }
+
 
     fn new(bus: u8, device_slot: u8, function: u8) -> Self {
         Self {
@@ -69,16 +74,19 @@ impl ConfigurationSpace {
         }
     }
 
+
     fn config_addr_at(&self, offset: u8) -> ConfigAddrRegister {
         ConfigAddrRegister::new(offset, self.function, self.device_slot, self.bus)
     }
 }
+
 
 impl CommonHeaderHoldable for ConfigurationSpace {
     fn as_config_space(&self) -> &ConfigurationSpace {
         self
     }
 }
+
 
 fn select_single_function_device(config_space: ConfigurationSpace) -> Function {
     let device_header = if (config_space.class_code() == ClassCode::BridgeDevice)
@@ -91,6 +99,7 @@ fn select_single_function_device(config_space: ConfigurationSpace) -> Function {
 
     Function::Single(device_header)
 }
+
 
 #[cfg(test)]
 mod tests {
