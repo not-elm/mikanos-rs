@@ -14,14 +14,15 @@ mod interrupter;
 mod port;
 mod usb_command;
 
+
 pub struct External<M>(xhci::registers::Registers<M>)
-    where
-        M: xhci::accessor::Mapper + Clone;
+where
+    M: xhci::accessor::Mapper + Clone;
 
 
 impl<M> External<M>
-    where
-        M: xhci::accessor::Mapper + Clone,
+where
+    M: xhci::accessor::Mapper + Clone,
 {
     pub fn new(mmio_addr: MemoryMappedAddr, mapper: M) -> Self {
         let registers = unsafe { xhci::Registers::new(mmio_addr.addr(), mapper.clone()) };
@@ -39,8 +40,8 @@ impl<M> XhcRegisters for External<M> where M: xhci::accessor::Mapper + Clone + D
 
 
 impl<M> RegistersOperation for External<M>
-    where
-        M: xhci::accessor::Mapper + Clone + Debug,
+where
+    M: xhci::accessor::Mapper + Clone + Debug,
 {
     fn reset(&mut self) -> PciResult {
         let registers = self.registers_mut();
@@ -111,8 +112,8 @@ impl<M> RegistersOperation for External<M>
 
 
 impl<M> ConfigRegisterAccessible for External<M>
-    where
-        M: xhci::accessor::Mapper + Clone,
+where
+    M: xhci::accessor::Mapper + Clone,
 {
     fn write_max_device_slots_enabled(&mut self, device_slots: u8) -> PciResult {
         self.registers_mut()
