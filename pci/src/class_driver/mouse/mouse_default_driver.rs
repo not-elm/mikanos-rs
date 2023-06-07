@@ -1,16 +1,17 @@
 use common_lib::math::vector::Vector2D;
 
-use crate::class_driver::mouse::MOUSE_DATA_BUFF_SIZE;
 use crate::class_driver::ClassDriverOperate;
-use crate::error::OldPciResult;
+use crate::class_driver::mouse::MOUSE_DATA_BUFF_SIZE;
+use crate::error::PciResult;
 
 pub struct MouseDefaultDriver {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
     _current_pos: Vector2D<usize>,
 }
 
+
 impl ClassDriverOperate for MouseDefaultDriver {
-    fn on_data_received(&mut self) -> OldPciResult {
+    fn on_data_received(&mut self) -> PciResult {
         // if self
         //     .data_buff
         //     .iter()

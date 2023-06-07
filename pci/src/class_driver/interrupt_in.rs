@@ -7,17 +7,17 @@ use xhci::ring::trb::transfer::Normal;
 use kernel_lib::serial_println;
 
 use crate::class_driver::ClassDriverOperate;
-use crate::error::OldPciResult;
-use crate::xhc::device_manager::control_pipe::request::Request;
+use crate::error::PciResult;
 use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
+use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::endpoint_config::EndpointConfig;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
 pub struct InterruptIn<T>
-where
-    T: DoorbellRegistersAccessible,
+    where
+        T: DoorbellRegistersAccessible,
 {
     slot_id: u8,
     class_driver: Box<dyn ClassDriverOperate>,
@@ -27,8 +27,8 @@ where
 }
 
 impl<T> InterruptIn<T>
-where
-    T: DoorbellRegistersAccessible,
+    where
+        T: DoorbellRegistersAccessible,
 {
     pub fn new(
         slot_id: u8,
@@ -48,15 +48,15 @@ where
 }
 
 impl<T> InterruptIn<T>
-where
-    T: DoorbellRegistersAccessible,
+    where
+        T: DoorbellRegistersAccessible,
 {
     pub fn get_report<Doorbell>(
         &mut self,
         default_control_pipe: &mut ControlPipe<Doorbell>,
-    ) -> OldPciResult
-    where
-        Doorbell: DoorbellRegistersAccessible,
+    ) -> PciResult
+        where
+            Doorbell: DoorbellRegistersAccessible,
     {
         self.class_driver
             .on_data_received()?;
@@ -73,7 +73,7 @@ where
     }
 
 
-    pub fn interrupter_in(&mut self) -> OldPciResult {
+    pub fn interrupter_in(&mut self) -> PciResult {
         self.class_driver
             .on_data_received()?;
 
@@ -116,7 +116,7 @@ where
             .data_buff_addr()
     }
 
-    fn notify(&mut self) -> OldPciResult {
+    fn notify(&mut self) -> PciResult {
         self.doorbell
             .borrow_mut()
             .notify_at(
@@ -125,7 +125,7 @@ where
                     self.endpoint_config
                         .endpoint_id(),
                 )
-                .as_u8(),
+                    .as_u8(),
                 0,
             )
     }

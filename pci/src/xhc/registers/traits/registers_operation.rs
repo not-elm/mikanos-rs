@@ -1,6 +1,6 @@
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 
 pub trait RegistersOperation {
-    fn reset(&mut self) -> OldPciResult;
-    fn run(&mut self) -> OldPciResult;
+    fn reset(&mut self) -> PciResult;
+    fn run(&mut self) -> PciResult;
 }

@@ -1,8 +1,8 @@
 use alloc::boxed::Box;
 
 use xhci::ring::trb::event::TransferEvent;
+use crate::error::PciResult;
 
-use crate::error::OldPciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
@@ -12,6 +12,7 @@ pub(crate) const DATA_BUFF_SIZE: usize = 256;
 
 /// Configure Commandを送信するか
 pub struct InitStatus(bool);
+
 
 impl InitStatus {
     pub fn new(is_initialized: bool) -> Self {
@@ -29,15 +30,16 @@ impl InitStatus {
     }
 }
 
+
 pub trait Phase<Doorbell, Memory>
-where
-    Memory: MemoryAllocatable,
-    Doorbell: DoorbellRegistersAccessible,
+    where
+        Memory: MemoryAllocatable,
+        Doorbell: DoorbellRegistersAccessible,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> OldPciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)>;
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)>;
 }

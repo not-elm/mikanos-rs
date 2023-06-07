@@ -1,6 +1,7 @@
-use crate::error::{DeviceReason, OldPciError, OldPciResult};
-use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use xhci::ring::trb::transfer::{DataStage, Normal, SetupStage, StatusStage};
+
+use crate::error::{PciError, PciResult};
+use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug)]
 pub enum TargetEvent {
@@ -9,6 +10,7 @@ pub enum TargetEvent {
     DataStage(DataStage),
     StatusStage(StatusStage),
 }
+
 
 impl TargetEvent {
     pub fn new(target_pointer_addr: u64) -> Option<Self> {
@@ -33,33 +35,30 @@ impl TargetEvent {
         }
     }
 
-    pub fn data_stage(self) -> OldPciResult<DataStage> {
+
+    pub fn data_stage(self) -> PciResult<DataStage> {
         if let TargetEvent::DataStage(data_stage) = self {
             Ok(data_stage)
         } else {
-            Err(OldPciError::FailedOperateDevice(
-                DeviceReason::InvalidTargetEvent,
-            ))
+            Err(PciError::invalid_target_event())
         }
     }
 
-    pub fn status_stage(self) -> OldPciResult<StatusStage> {
+
+    pub fn status_stage(self) -> PciResult<StatusStage> {
         if let TargetEvent::StatusStage(status_stage) = self {
             Ok(status_stage)
         } else {
-            Err(OldPciError::FailedOperateDevice(
-                DeviceReason::InvalidTargetEvent,
-            ))
+            Err(PciError::invalid_target_event())
         }
     }
 
-    pub fn normal(self) -> OldPciResult<Normal> {
+
+    pub fn normal(self) -> PciResult<Normal> {
         if let TargetEvent::Normal(normal) = self {
             Ok(normal)
         } else {
-            Err(OldPciError::FailedOperateDevice(
-                DeviceReason::InvalidTargetEvent,
-            ))
+            Err(PciError::invalid_target_event())
         }
     }
 }

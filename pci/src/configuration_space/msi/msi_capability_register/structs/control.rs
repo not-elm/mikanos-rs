@@ -2,7 +2,7 @@ use common_lib::nums::{FlagConvertible, FlagNumConvertible};
 
 use crate::configuration_space::msi::msi_capability_register::structs::capability_id::CapabilityId;
 use crate::configuration_space::msi::msi_capability_register::structs::from_u32::TryFromU32;
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 
 #[derive(Debug, Clone)]
 pub struct Control {
@@ -14,6 +14,7 @@ pub struct Control {
     is_64bit_addr_capable: bool,
     per_vector_masking_capable: bool,
 }
+
 
 impl Control {
     pub fn capability_id(&self) -> CapabilityId {
@@ -34,6 +35,7 @@ impl Control {
     pub fn is_64bit_addr_capable(&self) -> bool {
         self.is_64bit_addr_capable
     }
+
     pub fn set_msi_enable(&mut self) {
         self.msi_enable = true;
     }
@@ -52,9 +54,11 @@ impl Control {
         self.multiple_msg_enable = multiple_msg_enable & 0b111;
     }
 
+
     pub fn multiple_msg_capable(&mut self) -> u8 {
         self.multiple_msg_capable
     }
+
 
     pub fn raw(&self) -> u32 {
         let left = |v: u32, shift: u32| v << shift;
@@ -75,8 +79,9 @@ impl Control {
     }
 }
 
+
 impl TryFromU32<Control> for Control {
-    fn try_from_u32(raw: u32) -> OldPciResult<Control> {
+    fn try_from_u32(raw: u32) -> PciResult<Control> {
         Ok(Self {
             capability_id: capability_id(raw)?,
             next_cap_ptr: next_cap_ptr(raw),
@@ -89,7 +94,8 @@ impl TryFromU32<Control> for Control {
     }
 }
 
-fn capability_id(raw: u32) -> OldPciResult<CapabilityId> {
+
+fn capability_id(raw: u32) -> PciResult<CapabilityId> {
     CapabilityId::try_from_u8((raw & 0xFF) as u8)
 }
 
@@ -119,17 +125,19 @@ fn per_vector_masking_capable(raw: u32) -> bool {
     flag(raw, 24)
 }
 
+
 fn flag(raw: u32, right_shift: usize) -> bool {
     let v = (raw >> right_shift) & 0b1;
     v.is_true()
 }
+
 
 #[cfg(test)]
 mod tests {
     use crate::configuration_space::msi::msi_capability_register::structs::capability_id::CapabilityId;
     use crate::configuration_space::msi::msi_capability_register::structs::control::Control;
     use crate::configuration_space::msi::msi_capability_register::structs::from_u32::TryFromU32;
-    use crate::error::OldPciResult;
+    use crate::error::PciResult;
 
     #[test]
     fn it_new_control_is_ok() {
@@ -187,7 +195,7 @@ mod tests {
     }
 
     #[allow(clippy::unusual_byte_groupings)]
-    fn control_register() -> OldPciResult<Control> {
+    fn control_register() -> PciResult<Control> {
         Control::try_from_u32(0b0_101_111_1_11111111_00000101)
     }
 }

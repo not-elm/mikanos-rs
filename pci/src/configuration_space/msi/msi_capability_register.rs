@@ -1,5 +1,4 @@
 use core::cmp::min;
-use core::fmt::{Debug, Formatter};
 
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 use kernel_lib::io::io_memory_accessible::IoMemoryAccessible;
@@ -15,15 +14,15 @@ use crate::configuration_space::msi::msi_capability_register::structs::message_d
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::level_for_trigger_mode::LevelForTriggerMode;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::MessageData;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 
 pub mod access;
 pub mod structs;
 
 #[derive(Clone)]
 pub struct MsiCapabilityRegister<Io>
-where
-    Io: IoMemoryAccessible,
+    where
+        Io: IoMemoryAccessible,
 {
     control: ControlAccessor,
     message_address: MessageAddressAccessor,
@@ -33,46 +32,16 @@ where
     io: Io,
 }
 
-impl<Io> Debug for MsiCapabilityRegister<Io>
-where
-    Io: IoMemoryAccessible + Clone,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("MsiCapabilityRegister")
-            .field(
-                "Control",
-                &self
-                    .clone()
-                    .read_control_register()
-                    .unwrap(),
-            )
-            .field(
-                "MessageAddress",
-                &self
-                    .clone()
-                    .read_message_address_register()
-                    .unwrap(),
-            )
-            .field(
-                "MessageData",
-                &self
-                    .clone()
-                    .read_message_data_register()
-                    .unwrap(),
-            )
-            .finish()
-    }
-}
 
 impl<Io> MsiCapabilityRegister<Io>
-where
-    Io: IoMemoryAccessible,
+    where
+        Io: IoMemoryAccessible,
 {
     pub fn new(
         msi_cap_addr: u8,
         configuration_space: ConfigurationSpace,
         mut io: Io,
-    ) -> OldPciResult<MsiCapabilityRegister<Io>> {
+    ) -> PciResult<MsiCapabilityRegister<Io>> {
         let control = ControlAccessor::new();
         let message_address = MessageAddressAccessor::new(
             control
@@ -91,22 +60,23 @@ where
     }
 
 
-    pub fn read_control_register(&mut self) -> OldPciResult<Control> {
+    pub fn read_control_register(&mut self) -> PciResult<Control> {
         self.control
             .read(&mut self.io, &self.configuration_space, self.msi_cap_addr)
     }
 
 
-    pub fn read_message_address_register(&mut self) -> OldPciResult<MessageAddress> {
+    pub fn read_message_address_register(&mut self) -> PciResult<MessageAddress> {
         self.message_address
             .read(&mut self.io, &self.configuration_space, self.msi_cap_addr)
     }
 
 
-    pub fn read_message_data_register(&mut self) -> OldPciResult<MessageData> {
+    pub fn read_message_data_register(&mut self) -> PciResult<MessageData> {
         self.message_data
             .read(&mut self.io, &self.configuration_space, self.msi_cap_addr)
     }
+
 
     pub fn enable(
         &mut self,
@@ -115,7 +85,7 @@ where
         vector: InterruptVector,
         delivery_mode: DeliveryMode,
         multiple_msg_enable: u8,
-    ) -> OldPciResult {
+    ) -> PciResult {
         self.control.update(
             &mut self.io,
             &self.configuration_space,
@@ -127,6 +97,8 @@ where
                 control.set_multiple_msg_enable(min(capable, multiple_msg_enable));
             },
         )?;
+
+
         self.message_address.update(
             &mut self.io,
             &self.configuration_space,

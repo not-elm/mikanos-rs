@@ -1,89 +1,51 @@
 use alloc::string::String;
 use core::fmt::Debug;
 
+use anyhow::Error;
+
 pub type PciResult<T = ()> = Result<T, PciError>;
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! pci_error {
+    ($($message: tt) *) => {
+        $crate::error::PciError::from(anyhow::anyhow!($($message)*))
+    };
+}
+
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! pci_bail {
+    ($($message: tt) *) => {
+        Err($crate::pci_error!($($message)*))
+    };
+}
+
+
 
 
 #[derive(Debug)]
 #[repr(transparent)]
 pub struct PciError(anyhow::Error);
 
-impl PciError {
-    pub fn new(message: String) -> Self {
-        Self(anyhow::anyhow!(message))
+
+impl From<anyhow::Error> for PciError {
+    fn from(e: Error) -> Self {
+        Self(e)
     }
 }
 
 
-// FIXME: 将来的にPciResultに置き換える
-pub type OldPciResult<T = ()> = Result<T, OldPciError>;
+impl PciError {
+    pub fn new(message: String) -> Self {
+        Self(anyhow::anyhow!(message))
+    }
 
 
-// FIXME: 将来的にPciResultに置き換える
-#[derive(Debug)]
-pub enum OldPciError {
-    UserError,
-    InvalidTrb(u128),
-    FailedOperateTransferRing,
-    NullPointer,
-    IllegalEnumValue(usize),
-    FailedOperateDeviceContext(DeviceContextReason),
-    InvalidHeaderType(HeaderTypeReason),
-    InvalidFunction(FunctionReason),
-    FailedAllocate(AllocateReason),
-    FailedOperateDevice(DeviceReason),
-    FailedOperateToRegister(OperationReason),
-    InvalidRegister(InvalidRegisterReason),
+    pub fn invalid_target_event() -> Self {
+        pci_error!("Invalid target event")
+    }
 }
 
-#[derive(Debug)]
-pub enum FunctionReason {
-    NotSingleFunction,
-}
 
-#[derive(Debug)]
-pub enum HeaderTypeReason {
-    NotGeneralHeader,
-}
-
-#[derive(Debug)]
-pub enum AllocateReason {
-    NotAlignedAddress { expect_align_size: usize },
-    NotEnoughMemory,
-}
-
-#[derive(Debug)]
-pub enum DeviceContextReason {
-    NotExistsAddressingPort,
-    ExceedMasSlots {
-        max_slots: u8,
-        specified_slot_id: u8,
-    },
-}
-
-#[derive(Debug)]
-pub enum DeviceReason {
-    NotExistsSlot(u8),
-    InvalidTargetEvent,
-    InvalidPhase { current_phase: usize },
-}
-
-#[derive(Debug)]
-pub enum OperationReason {
-    MustBeCommandRingStopped,
-    CommandRingNotRunning,
-    OverMaxDeviceSlots { max: u8, specify: u8 },
-    HostControllerNotHalted,
-    FailedAllocate,
-    NotReflectedValue { expect: usize, value: usize },
-    XhcRunning,
-    ExceedsEventRingSegmentTableMax { max: u32, value: u16 },
-}
-
-#[derive(Debug)]
-pub enum InvalidRegisterReason {
-    IllegalBitFlag { expect: bool },
-    HostControllerNotHalted,
-    InvalidAddress { specified_address: usize },
-    ToSmallCapLength(u8),
-}

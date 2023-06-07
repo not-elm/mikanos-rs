@@ -5,7 +5,7 @@ use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::interrupt_in::InterruptIn;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::descriptor::hid::HidDeviceDescriptors;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
@@ -36,9 +36,9 @@ impl Phase3 {
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
     ) -> Vec<InterruptIn<Doorbell>>
-    where
-        Memory: MemoryAllocatable,
-        Doorbell: DoorbellRegistersAccessible,
+        where
+            Memory: MemoryAllocatable,
+            Doorbell: DoorbellRegistersAccessible,
     {
         self.hid_device_descriptor_vec
             .iter()
@@ -60,17 +60,17 @@ impl Phase3 {
     }
 }
 
-impl<Doorbell: 'static, Memory> Phase<Doorbell, Memory> for Phase3
-where
-    Memory: MemoryAllocatable,
-    Doorbell: DoorbellRegistersAccessible,
+impl<Doorbell, Memory> Phase<Doorbell, Memory> for Phase3
+    where
+        Memory: MemoryAllocatable,
+        Doorbell: DoorbellRegistersAccessible + 'static,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-    ) -> OldPciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         slot.input_context_mut()
             .clear_control();
         slot.copy_device_context_to_input();

@@ -3,28 +3,26 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::transfer::{Direction, StatusStage, TransferType};
 
-use crate::error::OldPciResult;
-use crate::xhc::device_manager::control_pipe::request::Request;
+use crate::error::PciResult;
 use crate::xhc::device_manager::control_pipe::{
-    make_data_stage, make_setup_stage, ControlPipeTransfer,
+    ControlPipeTransfer, make_data_stage, make_setup_stage,
 };
+use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
-pub struct ControlIn<T>
-where
-    T: DoorbellRegistersAccessible,
-{
+pub struct ControlIn<T> {
     slot_id: u8,
     device_context_index: DeviceContextIndex,
     doorbell: Rc<RefCell<T>>,
     transfer_ring: Rc<RefCell<TransferRing>>,
 }
 
+
 impl<T> ControlIn<T>
-where
-    T: DoorbellRegistersAccessible,
+    where
+        T: DoorbellRegistersAccessible,
 {
     pub fn new(
         slot_id: u8,
@@ -40,7 +38,7 @@ where
         }
     }
 
-    fn notify(&mut self) -> OldPciResult {
+    fn notify(&mut self) -> PciResult {
         self.doorbell
             .borrow_mut()
             .notify_at(
@@ -51,7 +49,8 @@ where
             )
     }
 
-    fn push(&mut self, trb_buff: [u32; 4]) -> OldPciResult {
+
+    fn push(&mut self, trb_buff: [u32; 4]) -> PciResult {
         self.transfer_ring
             .borrow_mut()
             .push(trb_buff)
@@ -59,10 +58,10 @@ where
 }
 
 impl<T> ControlPipeTransfer for ControlIn<T>
-where
-    T: DoorbellRegistersAccessible,
+    where
+        T: DoorbellRegistersAccessible,
 {
-    fn no_data(&mut self, request: Request) -> OldPciResult {
+    fn no_data(&mut self, request: Request) -> PciResult {
         let setup_stage = make_setup_stage(request.setup_stage(), TransferType::No);
         self.push(setup_stage.into_raw())?;
 
@@ -73,7 +72,8 @@ where
         self.notify()
     }
 
-    fn with_data(&mut self, request: Request, buff_addr: u64, len: u32) -> OldPciResult {
+
+    fn with_data(&mut self, request: Request, buff_addr: u64, len: u32) -> PciResult {
         let setup = make_setup_stage(request.setup_stage(), TransferType::In);
         self.push(setup.into_raw())?;
 

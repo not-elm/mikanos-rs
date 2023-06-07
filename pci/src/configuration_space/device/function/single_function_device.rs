@@ -1,6 +1,7 @@
 use crate::configuration_space::device::header_type::general_header::GeneralHeader;
 use crate::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
-use crate::error::{HeaderTypeReason, OldPciError, OldPciResult};
+use crate::error::PciResult;
+use crate::pci_bail;
 
 #[derive(Debug)]
 pub enum SingleFunctionDevice {
@@ -8,14 +9,13 @@ pub enum SingleFunctionDevice {
     PciToPciBride(PciToPciBridgeHeader),
 }
 
+
 impl SingleFunctionDevice {
-    pub fn expect_general(self) -> OldPciResult<GeneralHeader> {
+    pub fn expect_general(self) -> PciResult<GeneralHeader> {
         if let Self::General(general) = self {
             Ok(general)
         } else {
-            Err(OldPciError::InvalidHeaderType(
-                HeaderTypeReason::NotGeneralHeader,
-            ))
+            pci_bail!("Not General Header")
         }
     }
 }

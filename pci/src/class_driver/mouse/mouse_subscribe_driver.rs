@@ -3,12 +3,13 @@ use alloc::boxed::Box;
 use common_lib::math::vector::Vector2D;
 
 use crate::class_driver::boot_protocol_buffer::BootProtocolBuffer;
-use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
-use crate::class_driver::mouse::{
-    current_cursor_pos, mouse_button_boot_protocol, MouseButton, MOUSE_DATA_BUFF_SIZE,
-};
 use crate::class_driver::ClassDriverOperate;
-use crate::error::{OldPciError, OldPciResult};
+use crate::class_driver::mouse::{
+    current_cursor_pos, mouse_button_boot_protocol, MOUSE_DATA_BUFF_SIZE, MouseButton,
+};
+use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
+use crate::error::PciResult;
+use crate::pci_error;
 
 pub struct MouseSubscribeDriver {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
@@ -17,8 +18,9 @@ pub struct MouseSubscribeDriver {
     subscriber: Box<dyn MouseSubscribable>,
 }
 
+
 impl ClassDriverOperate for MouseSubscribeDriver {
-    fn on_data_received(&mut self) -> OldPciResult {
+    fn on_data_received(&mut self) -> PciResult {
         if self
             .data_buff
             .iter()
@@ -39,14 +41,16 @@ impl ClassDriverOperate for MouseSubscribeDriver {
                 prev_button,
                 self.current_button.clone(),
             )
-            .map_err(|_| OldPciError::UserError)?;
+            .map_err(|_| pci_error!("User Error"))?;
 
         Ok(())
     }
 
+    
     fn data_buff_addr(&self) -> u64 {
         self.data_buff.as_ptr() as u64
     }
+
 
     fn data_buff_len(&self) -> u32 {
         MOUSE_DATA_BUFF_SIZE as u32

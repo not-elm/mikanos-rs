@@ -39,6 +39,6 @@ fn it_fetch_mouse_device() {
     assert!(PciDeviceSearcher::new()
         .class_code(ClassCode::SerialBus)
         .sub_class(Subclass::Usb)
-        .search()
+        .searches()
         .is_some());
 }

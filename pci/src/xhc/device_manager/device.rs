@@ -7,13 +7,13 @@ use xhci::context::EndpointType;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::request_type::RequestType;
-use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
-use crate::xhc::device_manager::device::phase::{InitStatus, Phase, DATA_BUFF_SIZE};
+use crate::xhc::device_manager::device::phase::{DATA_BUFF_SIZE, InitStatus, Phase};
 use crate::xhc::device_manager::device::phase1::Phase1;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell_registers_accessible::DoorbellRegistersAccessible;
@@ -25,13 +25,10 @@ mod phase1;
 mod phase2;
 mod phase3;
 mod phase4;
+pub mod device_map;
 
 #[repr(C, align(64))]
-pub struct Device<Doorbell, Memory>
-where
-    Doorbell: DoorbellRegistersAccessible,
-    Memory: MemoryAllocatable,
-{
+pub struct Device<Doorbell, Memory> {
     slot_id: u8,
     phase: Box<dyn Phase<Doorbell, Memory>>,
     doorbell: Rc<RefCell<Doorbell>>,
@@ -41,23 +38,28 @@ where
 }
 
 impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
-where
-    Doorbell: DoorbellRegistersAccessible,
-    Memory: MemoryAllocatable,
+    where
+        Doorbell: DoorbellRegistersAccessible,
+        Memory: MemoryAllocatable,
 {
     pub fn device_context_addr(&self) -> u64 {
         self.slot
             .device_context()
             .device_context_addr()
     }
+
+
     pub fn input_context_addr(&self) -> u64 {
         self.slot
             .input_context()
             .input_context_addr()
     }
+
+
     pub fn slot_id(&self) -> u8 {
         self.slot_id
     }
+
 
     pub fn new_with_init_default_control_pipe(
         parent_hub_slot_id: u8,
@@ -66,12 +68,13 @@ where
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
         mouse_driver_factory: MouseDriverFactory,
-    ) -> OldPciResult<Self> {
+    ) -> PciResult<Self> {
         let mut me = Self::new(slot_id, allocator, doorbell, mouse_driver_factory)?;
 
         me.slot
             .input_context_mut()
             .set_enable_slot_context();
+
         me.slot
             .input_context_mut()
             .set_enable_endpoint(DeviceContextIndex::default());
@@ -82,7 +85,8 @@ where
         Ok(me)
     }
 
-    pub fn start_initialize(&mut self) -> OldPciResult {
+
+    pub fn start_initialize(&mut self) -> PciResult {
         let buff = self
             .device_descriptor_buff
             .as_mut_ptr();
@@ -103,11 +107,12 @@ where
             )
     }
 
+
     pub fn on_transfer_event_received(
         &mut self,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> OldPciResult<InitStatus> {
+    ) -> PciResult<InitStatus> {
         let (init_status, phase) = self
             .phase
             .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
@@ -117,7 +122,9 @@ where
 
         Ok(init_status)
     }
-    pub fn on_endpoints_configured(&mut self) -> OldPciResult {
+
+
+    pub fn on_endpoints_configured(&mut self) -> PciResult {
         let request_type = RequestType::new()
             .with_ty(1)
             .with_recipient(1);
@@ -128,6 +135,7 @@ where
             .no_data(Request::set_protocol(request_type))
     }
 
+
     fn init_slot_context(&mut self, root_port_hub_id: u8, port_speed: u8) {
         let input_context = self.slot.input_context_mut();
         let slot = input_context.slot_mut();
@@ -136,6 +144,7 @@ where
         slot.set_context_entries(1);
         slot.set_speed(port_speed);
     }
+
 
     fn init_default_control_pipe(&mut self, port_speed: u8) {
         let tr_dequeue_addr = self
@@ -155,12 +164,14 @@ where
         default_control_pipe.set_mult(0);
         default_control_pipe.set_error_count(3);
     }
+
+
     fn new(
         slot_id: u8,
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
         mouse_driver_factory: MouseDriverFactory,
-    ) -> OldPciResult<Self> {
+    ) -> PciResult<Self> {
         let slot = DeviceSlot::new(slot_id, doorbell, allocator)?;
         let phase = Box::new(Phase1::new(mouse_driver_factory));
         Ok(Self {

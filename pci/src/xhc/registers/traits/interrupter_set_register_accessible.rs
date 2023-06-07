@@ -1,7 +1,7 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::transfer::event::event_ring::EventRing;
 use crate::xhc::transfer::event::event_ring_segment_table::EventRingSegmentTable;
@@ -11,24 +11,33 @@ pub trait InterrupterSetRegisterAccessible {
         &mut self,
         index: usize,
         event_ring_segment_addr: u64,
-    ) -> OldPciResult;
+    ) -> PciResult;
+
+
     fn write_event_ring_segment_table_pointer_at(
         &mut self,
         index: usize,
         event_ring_segment_table_addr: u64,
-    ) -> OldPciResult;
+    ) -> PciResult;
 
-    fn write_interrupter_enable_at(&mut self, index: usize, is_enable: bool) -> OldPciResult;
-    fn write_interrupter_pending_at(&mut self, index: usize, is_pending: bool) -> OldPciResult;
+
+    fn write_interrupter_enable_at(&mut self, index: usize, is_enable: bool) -> PciResult;
+
+
+    fn write_interrupter_pending_at(&mut self, index: usize, is_pending: bool) -> PciResult;
+
 
     fn read_dequeue_pointer_addr_at(&mut self, index: usize) -> u64;
-    fn write_event_ring_segment_table_size(&mut self, index: usize, size: u16) -> OldPciResult;
+
+
+    fn write_event_ring_segment_table_size(&mut self, index: usize, size: u16) -> PciResult;
+
 
     fn update_dequeue_pointer_at(
         &mut self,
         index: usize,
         dequeue_pointer_addr: u64,
-    ) -> OldPciResult {
+    ) -> PciResult {
         self.write_interrupter_pending_at(index, true)?;
         self.write_event_ring_dequeue_pointer_at(index, dequeue_pointer_addr)?;
         Ok(())
@@ -40,9 +49,9 @@ pub(crate) fn setup_event_ring<T>(
     event_ring_segment_table_size: u16,
     event_ring_segment_size: usize,
     allocator: &mut impl MemoryAllocatable,
-) -> OldPciResult<(EventRingSegmentTable, EventRing<T>)>
-where
-    T: InterrupterSetRegisterAccessible,
+) -> PciResult<(EventRingSegmentTable, EventRing<T>)>
+    where
+        T: InterrupterSetRegisterAccessible,
 {
     let event_ring_segment_table_addr =
         allocator.try_allocate_trb_ring(event_ring_segment_table_size as usize)?;
@@ -61,7 +70,7 @@ where
         event_ring_segment_addr,
         event_ring_segment_size,
     )
-    .unwrap();
+        .unwrap();
 
     registers
         .borrow_mut()

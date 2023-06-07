@@ -1,7 +1,7 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 use crate::xhc::registers::traits::interrupter_set_register_accessible::InterrupterSetRegisterAccessible;
 use crate::xhc::transfer::event::event_trb::EventTrb;
 use crate::xhc::transfer::transfer_ring::TransferRing;
@@ -15,8 +15,8 @@ pub struct EventRing<T> {
 }
 
 impl<T> EventRing<T>
-where
-    T: InterrupterSetRegisterAccessible,
+    where
+        T: InterrupterSetRegisterAccessible,
 {
     pub fn new(segment_base_addr: u64, ring_size: usize, interrupter_set: &Rc<RefCell<T>>) -> Self {
         Self {
@@ -32,6 +32,7 @@ where
         }
     }
 
+
     pub fn read_event_trb(&self) -> Option<EventTrb> {
         let event_ring_dequeue_pointer_addr = self.read_dequeue_pointer_addr();
 
@@ -41,7 +42,8 @@ where
         unsafe { EventTrb::new(trb_raw_data, self.transfer_ring.cycle_bit()) }
     }
 
-    pub fn next_dequeue_pointer(&mut self) -> OldPciResult {
+
+    pub fn next_dequeue_pointer(&mut self) -> PciResult {
         let dequeue_pointer_addr = self.read_dequeue_pointer_addr();
         let next_addr = dequeue_pointer_addr + trb_byte_size();
         if self
@@ -56,12 +58,15 @@ where
         }
     }
 
+
     fn read_dequeue_pointer_addr(&self) -> u64 {
         self.interrupter_set
             .borrow_mut()
             .read_dequeue_pointer_addr_at(0)
     }
-    fn write_dequeue_pointer(&mut self, addr: u64) -> OldPciResult {
+
+
+    fn write_dequeue_pointer(&mut self, addr: u64) -> PciResult {
         self.interrupter_set
             .borrow_mut()
             .update_dequeue_pointer_at(0, addr)

@@ -18,16 +18,15 @@ use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::acpi::rsdp::Rsdp;
-use kernel_lib::{acpi, serial_println};
+use kernel_lib::serial_println;
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
+use crate::usb::{enable_msi, serial_bus_usb_devices};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
-use crate::usb::{enable_msi, first_general_header};
 
 mod allocate;
 mod apic;
@@ -68,10 +67,12 @@ pub extern "sysv64" fn kernel_main(
     serial_println!("Hello Serial Port!");
     println!("Hello Mikan OS RS!");
 
-    let general_header = first_general_header();
-    enable_msi(general_header.clone()).unwrap();
+    let devices = serial_bus_usb_devices();
+    let xhc_general_header = devices.first().unwrap();
 
-    start_xhci_host_controller(general_header.mmio_base_addr(), MouseSubscriber::new()).unwrap();
+    enable_msi(xhc_general_header.clone()).unwrap();
+
+    start_xhci_host_controller(xhc_general_header.mmio_base_addr(), MouseSubscriber::new()).unwrap();
 
     common_lib::assembly::hlt_forever();
 }

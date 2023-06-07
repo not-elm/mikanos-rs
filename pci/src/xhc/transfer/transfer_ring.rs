@@ -1,7 +1,8 @@
-use crate::error::{OldPciError, OldPciResult};
+use crate::error::PciResult;
+use crate::pci_error;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
+use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug, Copy, Clone)]
 pub struct TransferRing {
@@ -11,6 +12,7 @@ pub struct TransferRing {
     ring_size: usize,
     cycle_bit: bool,
 }
+
 
 impl TransferRing {
     pub fn new(ring_ptr_base_address: u64, ring_size: usize, cycle_bit: bool) -> Self {
@@ -22,15 +24,19 @@ impl TransferRing {
             cycle_bit,
         }
     }
+
+
     pub fn new_with_alloc(
         ring_size: usize,
         cycle_bit: bool,
         allocator: &mut impl MemoryAllocatable,
-    ) -> OldPciResult<Self> {
+    ) -> PciResult<Self> {
         let ring_ptr_base_address = allocator.try_allocate_trb_ring(ring_size)?;
         Ok(Self::new(ring_ptr_base_address, ring_size, cycle_bit))
     }
-    pub fn push(&mut self, trb: [u32; 4]) -> OldPciResult {
+
+
+    pub fn push(&mut self, trb: [u32; 4]) -> PciResult {
         self.write(trb)?;
 
         self.ring_ptr_address += trb_byte_size();
@@ -39,13 +45,17 @@ impl TransferRing {
         }
         Ok(())
     }
+
+
     pub fn read(&self) -> Option<TrbRawData> {
         self.read_transfer_request_block(self.ring_ptr_address)
     }
 
+
     pub fn ring_size(&self) -> usize {
         self.ring_size
     }
+
 
     pub fn read_transfer_request_block(&self, trb_addr: u64) -> Option<TrbRawData> {
         let ptr = trb_addr as *const u128;
@@ -54,27 +64,39 @@ impl TransferRing {
         }
         Some(TrbRawData::new_unchecked(unsafe { *(ptr) }))
     }
+
+
     pub fn base_address(&self) -> u64 {
         self.ring_ptr_base_address
     }
+
+
     pub fn toggle_cycle_bit(&mut self) {
         self.cycle_bit = !self.cycle_bit;
     }
+
 
     pub fn current_ptr_address(&self) -> u64 {
         self.ring_ptr_address
     }
 
+    
     pub fn is_end_address(&self, address: u64) -> bool {
         self.ring_end_address <= address
     }
+
+
     pub fn is_end_event_address(&self, address: u64) -> bool {
         self.ring_end_address + trb_byte_size() <= address
     }
+
+
     pub fn cycle_bit(&self) -> bool {
         self.cycle_bit
     }
-    fn rollback(&mut self) -> OldPciResult {
+
+
+    fn rollback(&mut self) -> PciResult {
         let mut link = xhci::ring::trb::Link::new();
         link.set_toggle_cycle();
         link.set_ring_segment_pointer(self.ring_ptr_base_address);
@@ -85,12 +107,15 @@ impl TransferRing {
         self.toggle_cycle_bit();
         Ok(())
     }
-    fn write(&mut self, src_buff: [u32; 4]) -> OldPciResult {
+
+
+    fn write(&mut self, src_buff: [u32; 4]) -> PciResult {
         let dest_deref = unsafe {
             (self.ring_ptr_address as *mut u128)
                 .as_mut()
-                .ok_or(OldPciError::FailedOperateTransferRing)
+                .ok_or(pci_error!("Failed operate transfer ring"))
         }?;
+
         let dest_buff = trb_buffer_from_address(dest_deref);
 
         dest_buff[0] = src_buff[0];
@@ -101,6 +126,7 @@ impl TransferRing {
         Ok(())
     }
 
+
     fn cycle_bit_as_u32(&self) -> u32 {
         if self.cycle_bit {
             1
@@ -109,6 +135,7 @@ impl TransferRing {
         }
     }
 }
+
 
 #[cfg(test)]
 mod tests {

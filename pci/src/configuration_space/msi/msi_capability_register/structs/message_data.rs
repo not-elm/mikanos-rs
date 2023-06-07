@@ -4,11 +4,12 @@ use crate::configuration_space::msi::msi_capability_register::structs::from_u32:
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::level_for_trigger_mode::LevelForTriggerMode;
 use crate::configuration_space::msi::msi_capability_register::structs::message_data::trigger_mode::TriggerMode;
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 
 pub mod delivery_mode;
 pub mod level_for_trigger_mode;
 pub mod trigger_mode;
+
 #[derive(Debug, Clone)]
 pub struct MessageData {
     vector: InterruptVector,
@@ -46,8 +47,9 @@ impl MessageData {
     }
 }
 
+
 impl TryFromU32<MessageData> for MessageData {
-    fn try_from_u32(raw_value: u32) -> OldPciResult<MessageData> {
+    fn try_from_u32(raw_value: u32) -> PciResult<MessageData> {
         Ok(Self {
             vector: InterruptVector::new((raw_value & 0xFF) as u8),
             delivery_mode: DeliveryMode::new(((raw_value >> 8) & 0b111) as u8)?,
@@ -57,11 +59,13 @@ impl TryFromU32<MessageData> for MessageData {
     }
 }
 
+
 #[cfg(test)]
 mod tests {
+    use kernel_lib::interrupt::interrupt_vector::InterruptVector;
+
     use crate::configuration_space::msi::msi_capability_register::structs::from_u32::TryFromU32;
     use crate::configuration_space::msi::msi_capability_register::structs::message_data::delivery_mode::DeliveryMode;
-    use kernel_lib::interrupt::interrupt_vector::InterruptVector;
     use crate::configuration_space::msi::msi_capability_register::structs::message_data::MessageData;
 
     const RAW_DATA: u32 = 0b1000000;

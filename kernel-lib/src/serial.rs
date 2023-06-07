@@ -25,12 +25,14 @@ pub fn _print(args: ::core::fmt::Arguments) {
         .expect("Printing to serial failed");
 }
 
+
 #[macro_export]
 macro_rules! serial_print {
     ($($arg:tt)*) => {
         $crate::serial::_print(format_args!($($arg)*));
     };
 }
+
 
 #[macro_export]
 macro_rules! serial_println {

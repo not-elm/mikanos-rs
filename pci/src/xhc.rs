@@ -10,9 +10,8 @@ use registers::traits::usb_command_register_accessible::UsbCommandRegisterAccess
 use transfer::event::event_ring::EventRing;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::collectable::device_map::DeviceMap;
 use crate::xhc::device_manager::DeviceManager;
 use crate::xhc::registers::traits::capability_registers_accessible::CapabilityRegistersAccessible;
 use crate::xhc::registers::traits::config_register_accessible::ConfigRegisterAccessible;
@@ -31,17 +30,17 @@ pub mod device_manager;
 pub mod registers;
 pub mod transfer;
 
-pub struct XhcController<Register, Collectable, Memory> {
+pub struct XhcController<Register, Memory> {
     registers: Rc<RefCell<Register>>,
     event_ring: EventRing<Register>,
     command_ring: CommandRing<Register>,
-    device_manager: DeviceManager<Register, Collectable, Memory>,
+    device_manager: DeviceManager<Register, Memory>,
     allocator: Rc<RefCell<Memory>>,
 }
 
-impl<Register, Memory> XhcController<Register, DeviceMap<Register, Memory>, Memory>
-where
-    Register: RegistersOperation
+impl<Register, Memory> XhcController<Register, Memory>
+    where
+        Register: RegistersOperation
         + CapabilityRegistersAccessible
         + InterrupterSetRegisterAccessible
         + UsbCommandRegisterAccessible
@@ -50,13 +49,13 @@ where
         + ConfigRegisterAccessible
         + DeviceContextBaseAddressArrayPointerAccessible
         + 'static,
-    Memory: MemoryAllocatable,
+        Memory: MemoryAllocatable,
 {
     pub fn new(
         registers: Register,
         mut allocator: Memory,
         mouse_driver_factory: MouseDriverFactory,
-    ) -> OldPciResult<Self> {
+    ) -> PciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
 
         registers
@@ -70,6 +69,7 @@ where
         let scratchpad_buffers_len = registers
             .borrow()
             .read_max_scratchpad_buffers_len();
+
         let device_manager = setup_device_manager(
             &mut registers,
             8,
@@ -92,11 +92,15 @@ where
             allocator: Rc::new(RefCell::new(allocator)),
         })
     }
+
+
     pub fn reset_port(&mut self) {
         self.registers
             .borrow_mut()
             .reset_all();
     }
+
+
     pub fn start_event_pooling(&mut self) -> ! {
         loop {
             let _ = self
@@ -113,7 +117,8 @@ where
         {}
     }
 
-    pub fn process_event(&mut self) -> Option<OldPciResult> {
+
+    pub fn process_event(&mut self) -> Option<PciResult> {
         if let Some(event_trb) = self
             .event_ring
             .read_event_trb()
@@ -124,7 +129,8 @@ where
         None
     }
 
-    fn on_event(&mut self, event_trb: EventTrb) -> OldPciResult {
+
+    fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
         match event_trb {
             EventTrb::TransferEvent {
                 transfer_event,
@@ -143,29 +149,34 @@ where
             .next_dequeue_pointer()
     }
 
+
     fn on_transfer_event(
         &mut self,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> OldPciResult {
+    ) -> PciResult {
         let is_init = self
             .device_manager
             .process_transfer_event(transfer_event.slot_id(), transfer_event, target_event)?;
 
         if is_init {
+            let input_context_addr = self
+                .device_manager
+                .device_slot_at(transfer_event.slot_id())
+                .unwrap()
+                .input_context_addr();
+
             self.command_ring
                 .push_configure_endpoint(
-                    self.device_manager
-                        .device_slot_at(transfer_event.slot_id())
-                        .unwrap()
-                        .input_context_addr(),
+                    input_context_addr,
                     transfer_event.slot_id(),
                 )?;
         }
         Ok(())
     }
 
-    fn process_completion_event(&mut self, completion: CommandCompletion) -> OldPciResult {
+
+    fn process_completion_event(&mut self, completion: CommandCompletion) -> PciResult {
         match TrbRawData::from_addr(completion.command_trb_pointer())
             .template()
             .trb_type()
@@ -178,13 +189,17 @@ where
             _ => Ok(()),
         }
     }
-    fn init_device(&mut self, completion: CommandCompletion) -> OldPciResult {
+
+
+    fn init_device(&mut self, completion: CommandCompletion) -> PciResult {
         self.device_manager
             .start_initialize_at(completion.slot_id())?;
 
         Ok(())
     }
-    fn address_device(&mut self, completion: CommandCompletion) -> OldPciResult {
+
+
+    fn address_device(&mut self, completion: CommandCompletion) -> PciResult {
         let input_context_addr = self
             .device_manager
             .address_device(completion.slot_id(), &self.allocator)?;
@@ -192,7 +207,8 @@ where
             .push_address_command(input_context_addr, completion.slot_id())
     }
 
-    fn enable_slot(&mut self, port_status: PortStatusChange) -> OldPciResult {
+
+    fn enable_slot(&mut self, port_status: PortStatusChange) -> PciResult {
         let port_id = port_status.port_id();
         self.registers
             .borrow_mut()

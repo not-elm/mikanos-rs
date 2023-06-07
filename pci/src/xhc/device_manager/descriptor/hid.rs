@@ -1,8 +1,7 @@
 use alloc::boxed::Box;
 
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-
 use crate::class_driver::ClassDriverOperate;
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::EndpointDescriptor;
 use crate::xhc::device_manager::descriptor::structs::interface_descriptor::InterfaceDescriptor;
 use crate::xhc::device_manager::endpoint_config::EndpointConfig;
@@ -31,6 +30,7 @@ impl HidDeviceDescriptors {
         }
     }
 
+    
     pub fn endpoint_config(&self) -> EndpointConfig {
         EndpointConfig::new(&self.endpoint)
     }

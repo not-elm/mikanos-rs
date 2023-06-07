@@ -4,15 +4,15 @@ use alloc::vec::Vec;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use crate::error::OldPciResult;
+use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
+use crate::xhc::device_manager::control_pipe::request::Request;
+use crate::xhc::device_manager::descriptor::Descriptor;
 use crate::xhc::device_manager::descriptor::descriptor_sequence::DescriptorSequence;
 use crate::xhc::device_manager::descriptor::hid::HidDeviceDescriptors;
 use crate::xhc::device_manager::descriptor::structs::configuration_descriptor::ConfigurationDescriptor;
 use crate::xhc::device_manager::descriptor::structs::interface_descriptor::InterfaceDescriptor;
-use crate::xhc::device_manager::descriptor::Descriptor;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase};
 use crate::xhc::device_manager::device::phase3::Phase3;
@@ -23,6 +23,7 @@ pub struct Phase2 {
     mouse_driver_factory: MouseDriverFactory,
 }
 
+
 impl Phase2 {
     pub fn new(mouse_driver_factory: MouseDriverFactory) -> Phase2 {
         Self {
@@ -31,17 +32,18 @@ impl Phase2 {
     }
 }
 
-impl<Doorbell: 'static, Memory> Phase<Doorbell, Memory> for Phase2
-where
-    Memory: MemoryAllocatable,
-    Doorbell: DoorbellRegistersAccessible,
+
+impl<Doorbell, Memory> Phase<Doorbell, Memory> for Phase2
+    where
+        Memory: MemoryAllocatable,
+        Doorbell: DoorbellRegistersAccessible + 'static,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-    ) -> OldPciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
+    ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         let data_stage = target_event.data_stage()?;
 
         let conf_desc_buff = data_stage.data_buffer_pointer() as *mut u8;
@@ -85,7 +87,7 @@ where
 fn set_configuration<T: DoorbellRegistersAccessible>(
     config_value: u16,
     default_control_pipe: &mut ControlPipe<T>,
-) -> OldPciResult {
+) -> PciResult {
     default_control_pipe
         .control_out()
         .no_data(Request::configuration(config_value))
