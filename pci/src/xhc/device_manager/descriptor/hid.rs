@@ -2,9 +2,8 @@ use alloc::boxed::Box;
 
 use kernel_lib::serial_println;
 
-use crate::class_driver::keyboard::KeyboardDriver;
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::class_driver::ClassDriverOperate;
+use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::EndpointDescriptor;
 use crate::xhc::device_manager::descriptor::structs::interface_descriptor::InterfaceDescriptor;
 use crate::xhc::device_manager::endpoint_config::EndpointConfig;
@@ -32,9 +31,10 @@ impl HidDeviceDescriptors {
             return Some(mouse_driver_factory.fact());
         }
 
-        if self.interface.is_keyboard() {
-            return Some(Box::new(KeyboardDriver::new()));
-        }
+        //TODO
+        // if self.interface.is_keyboard() {
+        //     return Some(Box::new(KeyboardDriver::new()));
+        // }
 
         None
     }

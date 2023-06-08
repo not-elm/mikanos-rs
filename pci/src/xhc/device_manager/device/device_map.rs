@@ -1,6 +1,5 @@
 use alloc::collections::BTreeMap;
 use alloc::rc::Rc;
-use alloc::vec::Vec;
 use core::cell::RefCell;
 
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
@@ -16,9 +15,9 @@ pub struct DeviceMap<Doorbell, Memory> {
 
 
 impl<Doorbell, Memory> DeviceMap<Doorbell, Memory>
-where
-    Doorbell: DoorbellRegistersAccessible + 'static,
-    Memory: MemoryAllocatable,
+    where
+        Doorbell: DoorbellRegistersAccessible + 'static,
+        Memory: MemoryAllocatable,
 {
     pub fn new_set(
         &mut self,

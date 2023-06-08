@@ -37,7 +37,6 @@ impl IoMemoryAccessible for MockMemoryAccessor {
 mod tests {
     use alloc::vec;
 
-    use crate::configuration_space::io::io_memory_accessible::mock_memory_accessor::MockMemoryAccessor;
     use crate::io::io_memory_accessible::mock_memory_accessor::MockMemoryAccessor;
 
     #[test]
