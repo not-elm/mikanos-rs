@@ -1,5 +1,5 @@
 use common_lib::queue::queueing::Queueing;
-use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
+use kernel_lib::interrupt::asm::{cli, sti_and_hlt};
 
 use crate::interrupt::mouse::INTERRUPT_QUEUE;
 use crate::interrupt::InterruptMessage;

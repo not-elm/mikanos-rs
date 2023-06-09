@@ -10,7 +10,7 @@ use common_lib::transform::transform2d::Transform2D;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::layers::console::console_colors::ConsoleColors;
-use kernel_lib::layers::console::ConsoleLayer;
+use kernel_lib::layers::console::TextLayer;
 use kernel_lib::layers::cursor::CursorLayer;
 use kernel_lib::layers::layer_key::LayerKey;
 use kernel_lib::layers::shape::shape_colors::ShapeColors;
@@ -102,7 +102,7 @@ fn add_window_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
 
 fn add_console_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
     layers.new_layer(
-        ConsoleLayer::new(
+        TextLayer::new(
             config,
             Vector2D::zeros(),
             Size::new(50, 10),
@@ -133,7 +133,7 @@ pub fn _print(args: core::fmt::Arguments) {
         .borrow_mut()
         .update_layer(CONSOLE_LAYER_KEY, |layer| {
             layer
-                .require_console()
+                .require_text()
                 .unwrap()
                 .write_fmt(args)
                 .unwrap();

@@ -1,6 +1,8 @@
 use alloc::vec::Vec;
 use core::num::TryFromIntError;
 
+use auto_delegate::delegate;
+
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
@@ -9,13 +11,21 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 use crate::error::KernelResult;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
+use crate::layers::layer_key::LayerKey;
 use crate::layers::layer_updatable::LayerUpdatable;
 
 pub struct MultipleLayer {
-    layers: Vec<Layer>,
+    layers: Vec<LayerKey>,
 
     transform: Transform2D,
 }
+
+
+#[delegate]
+pub trait LayerFindable {
+    fn find_by_key_mut(&mut self, key: &str) -> Option<&mut Layer>;
+}
+
 
 impl MultipleLayer {
     pub const fn new(transform: Transform2D) -> Self {
@@ -26,20 +36,29 @@ impl MultipleLayer {
     }
 
 
-    pub fn new_layer(&mut self, mut layer: Layer) {
+    pub fn new_layer(&mut self, mut layer: LayerKey) {
         layer.move_to(layer.pos() + self.pos());
 
         self.layers.push(layer);
     }
 
 
-    pub fn layers_mut(&mut self) -> &mut Vec<Layer> {
+    pub fn layers_mut(&mut self) -> &mut Vec<LayerKey> {
         &mut self.layers
     }
 
 
     pub fn into_enum(self) -> Layer {
         Layer::Multiple(self)
+    }
+}
+
+
+impl LayerFindable for MultipleLayer {
+    fn find_by_key_mut(&mut self, key: &str) -> Option<&mut Layer> {
+        self.layers
+            .iter_mut()
+            .find_map(|layer| layer.find_by_key_mut(key))
     }
 }
 
@@ -94,7 +113,7 @@ impl LayerUpdatable for MultipleLayer {
     ) -> KernelResult {
         for layer in self.layers.iter_mut() {
             if let Some(draw_rect) = draw_area.intersect(&layer.rect()) {
-                layer.update_back_buffer(shadow_frame_buff, &draw_rect)?;
+                layer.update_back_buffer_in_area(shadow_frame_buff, &draw_rect)?;
             }
         }
 

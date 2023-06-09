@@ -9,9 +9,10 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::layers::console::ConsoleLayer;
+use crate::layers::console::TextLayer;
 use crate::layers::layer::Layer;
-use crate::layers::multiple_layer::MultipleLayer;
+use crate::layers::layer_key::LayerKey;
+use crate::layers::multiple_layer::{LayerFindable, MultipleLayer};
 
 use super::console::console_colors::ConsoleColors;
 
@@ -32,10 +33,9 @@ impl CountLayer {
 
     pub fn write_count(&mut self, count: usize) {
         self.layers
-            .layers_mut()
-            .get_mut(0)
+            .find_by_key_mut("count text")
             .unwrap()
-            .require_console()
+            .require_text()
             .unwrap()
             .update_string(format!("{}", count).as_str())
             .unwrap();
@@ -57,10 +57,10 @@ fn count_layers(config: FrameBufferConfig, transform: Transform2D) -> KernelResu
 }
 
 
-fn text_layer(config: FrameBufferConfig, _root_transform: &Transform2D) -> KernelResult<Layer> {
+fn text_layer(config: FrameBufferConfig, _root_transform: &Transform2D) -> KernelResult<LayerKey> {
     let pos = Vector2D::zeros();
 
-    let mut text = ConsoleLayer::new(
+    let mut text = TextLayer::new(
         config,
         pos,
         Size::new(10, 1),
@@ -71,7 +71,9 @@ fn text_layer(config: FrameBufferConfig, _root_transform: &Transform2D) -> Kerne
 
     text.update_string("0")?;
 
-    Ok(text.into_enum())
+    Ok(text
+        .into_enum()
+        .into_layer_key("count text"))
 }
 
 

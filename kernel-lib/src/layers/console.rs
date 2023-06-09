@@ -26,7 +26,7 @@ mod console_row;
 
 
 #[derive(Delegate)]
-pub struct ConsoleLayer {
+pub struct TextLayer {
     #[to(Transformable2D)]
     transform: Transform2D,
     config: FrameBufferConfig,
@@ -34,7 +34,7 @@ pub struct ConsoleLayer {
 }
 
 
-impl ConsoleLayer {
+impl TextLayer {
     pub fn new(
         config: FrameBufferConfig,
         pos: Vector2D<usize>,
@@ -62,12 +62,12 @@ impl ConsoleLayer {
 
 
     pub fn into_enum(self) -> Layer {
-        Layer::Console(self)
+        Layer::Text(self)
     }
 }
 
 
-impl core::fmt::Write for ConsoleLayer {
+impl core::fmt::Write for TextLayer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.console_frame
             .append_string(s)
@@ -76,7 +76,7 @@ impl core::fmt::Write for ConsoleLayer {
 }
 
 
-impl LayerUpdatable for ConsoleLayer {
+impl LayerUpdatable for TextLayer {
     fn update_back_buffer(
         &mut self,
         back_buff: &mut ShadowFrameBuffer,
@@ -128,12 +128,12 @@ mod tests {
 
     use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
     use crate::layers::console::console_colors::ConsoleColors;
-    use crate::layers::console::ConsoleLayer;
+    use crate::layers::console::TextLayer;
     use crate::layers::layer_updatable::LayerUpdatable;
 
     #[test]
     fn it_layer_size() {
-        let console = ConsoleLayer::new(
+        let console = TextLayer::new(
             FrameBufferConfig::mock(),
             Vector2D::zeros(),
             Size::new(10, 10),
@@ -152,7 +152,7 @@ mod tests {
 
     #[test]
     fn it_update() {
-        let mut layer = ConsoleLayer::new(
+        let mut layer = TextLayer::new(
             FrameBufferConfig::mock(),
             Vector2D::zeros(),
             Size::new(10, 10),

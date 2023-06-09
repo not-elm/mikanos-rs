@@ -7,20 +7,21 @@ use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transf
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::layers::console::ConsoleLayer;
 use crate::layers::count::CountLayer;
 use crate::layers::layer::Layer;
-use crate::layers::multiple_layer::MultipleLayer;
+use crate::layers::layer_key::LayerKey;
+use crate::layers::multiple_layer::{LayerFindable, MultipleLayer};
 use crate::layers::shape::shape_colors::ShapeColors;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
+use crate::layers::window::toolbar::ToolbarLayer;
 
-use super::close_button::{CloseButtonLayer, CLOSE_BUTTON_HEIGHT, CLOSE_BUTTON_WIDTH};
-use super::console::console_colors::ConsoleColors;
+pub(crate) mod toolbar;
+
 
 #[derive(Delegate)]
 pub struct WindowLayer {
-    #[to(Transformable2D, LayerUpdatable)]
+    #[to(Transformable2D, LayerUpdatable, LayerFindable)]
     multiple_layer: MultipleLayer,
 }
 
@@ -40,8 +41,7 @@ impl WindowLayer {
 
     pub fn write_count(&mut self, count: usize) {
         self.multiple_layer
-            .layers_mut()
-            .get_mut(3)
+            .find_by_key_mut("window count")
             .unwrap()
             .require_count()
             .unwrap()
@@ -55,7 +55,7 @@ impl WindowLayer {
 }
 
 
-fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
+fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey {
     ShapeLayer::new(
         ShapeDrawer::new(
             config,
@@ -64,10 +64,11 @@ fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
         Transform2D::new(Vector2D::zeros(), transform.size()),
     )
     .into_enum()
+    .into_layer_key("window shadow")
 }
 
 
-fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
+fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey {
     ShapeLayer::new(
         ShapeDrawer::new(
             config,
@@ -79,62 +80,26 @@ fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -
         ),
     )
     .into_enum()
+    .into_layer_key("window background")
 }
 
 
-fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
+fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey {
     let toolbar_transform = Transform2D::new(
         Vector2D::new(3, 3),
         Size::new(transform.size().width() - 6, 24),
     );
-    let mut layer = MultipleLayer::new(toolbar_transform);
 
-    layer.new_layer(
-        ShapeLayer::new(
-            ShapeDrawer::new(
-                config,
-                ShapeColors::new(PixelColor::new(0x00, 0x00, 0x84), None),
-            ),
-            Transform2D::new(Vector2D::zeros(), layer.rect().size()),
-        )
-        .into_enum(),
-    );
-
-    layer.new_layer(toolbar_title_layer(config));
-    layer.new_layer(toolbar_close_button(config, layer.transform_ref()));
-
-    layer.into_enum()
+    ToolbarLayer::new(config, toolbar_transform)
+        .into_enum()
+        .into_layer_key("window toolbar")
 }
 
 
-fn toolbar_title_layer(config: FrameBufferConfig) -> Layer {
-    let mut text = ConsoleLayer::new(
-        config,
-        Vector2D::new(24, 4),
-        Size::new(12, 1),
-        ConsoleColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)),
-    );
-
-    text.update_string("Hello Window")
-        .unwrap();
-
-    text.into_enum()
-}
-
-
-fn toolbar_close_button(config: FrameBufferConfig, transform: &Transform2D) -> Layer {
-    CloseButtonLayer::new(
-        config,
-        Vector2D::new(
-            transform.size().width() - CLOSE_BUTTON_WIDTH - 5,
-            (transform.size().height() - CLOSE_BUTTON_HEIGHT) / 2,
-        ),
-    )
-    .into_enum()
-}
-
-
-fn count_layer(config: FrameBufferConfig, window_transform: &Transform2D) -> KernelResult<Layer> {
+fn count_layer(
+    config: FrameBufferConfig,
+    window_transform: &Transform2D,
+) -> KernelResult<LayerKey> {
     const TOOLBAR_HEIGHT: usize = 24;
 
     let size = window_transform.size() - Size::new(20, 0);
@@ -151,7 +116,9 @@ fn count_layer(config: FrameBufferConfig, window_transform: &Transform2D) -> Ker
         Transform2D::new(pos, size.unwrap_or(window_transform.size())),
     )?;
 
-    Ok(count.into_enum())
+    Ok(count
+        .into_enum()
+        .into_layer_key("window count"))
 }
 
 

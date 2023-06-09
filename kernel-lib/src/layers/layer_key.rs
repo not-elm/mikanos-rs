@@ -8,6 +8,7 @@ use crate::error::KernelResult;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
+use crate::layers::multiple_layer::LayerFindable;
 
 #[derive(Delegate)]
 pub struct LayerKey {
@@ -28,6 +29,19 @@ impl LayerKey {
 
     pub fn key(&self) -> &str {
         self.key.as_str()
+    }
+
+
+    pub fn find_by_key_mut(&mut self, key: &str) -> Option<&mut Layer> {
+        if self.key() == key {
+            return Some(&mut self.layer);
+        }
+
+        match &mut self.layer {
+            Layer::Multiple(multi) => multi.find_by_key_mut(key),
+            Layer::Window(window) => window.find_by_key_mut(key),
+            _ => None,
+        }
     }
 }
 
