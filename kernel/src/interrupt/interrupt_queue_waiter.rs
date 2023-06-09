@@ -18,19 +18,13 @@ impl Iterator for InterruptQueueWaiter {
     fn next(&mut self) -> Option<Self::Item> {
         cli();
 
-        let mut value = INTERRUPT_QUEUE
-            .lock()
-            .borrow_mut()
-            .dequeue();
+        let mut value = unsafe { INTERRUPT_QUEUE.dequeue() };
 
         while value.is_none() {
             sti_and_hlt();
 
             cli();
-            value = INTERRUPT_QUEUE
-                .lock()
-                .borrow_mut()
-                .dequeue();
+            value = unsafe { INTERRUPT_QUEUE.dequeue() };
         }
 
 

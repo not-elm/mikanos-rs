@@ -1,7 +1,6 @@
 use alloc::boxed::Box;
 use alloc::rc::Rc;
 use core::cell::RefCell;
-use core::marker::PhantomData;
 
 use xhci::context::EndpointType;
 use xhci::ring::trb::event::TransferEvent;
@@ -9,11 +8,11 @@ use xhci::ring::trb::event::TransferEvent;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::request_type::RequestType;
-use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
-use crate::xhc::device_manager::device::phase::{InitStatus, Phase, DATA_BUFF_SIZE};
+use crate::xhc::device_manager::device::phase::{DATA_BUFF_SIZE, InitStatus, Phase};
 use crate::xhc::device_manager::device::phase1::Phase1;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
@@ -38,9 +37,9 @@ pub struct Device<Doorbell, Memory> {
 
 
 impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
-where
-    Doorbell: DoorbellRegistersAccessible,
-    Memory: MemoryAllocatable,
+    where
+        Doorbell: DoorbellRegistersAccessible,
+        Memory: MemoryAllocatable,
 {
     pub fn device_context_addr(&self) -> u64 {
         self.slot
