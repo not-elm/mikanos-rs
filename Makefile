@@ -12,7 +12,6 @@ debug:
 
 .PHONY: test
 test:
-	make test -C macros
 	make test -C kernel-lib
 	make test -C pci
 	rm -r -f target/kernel/

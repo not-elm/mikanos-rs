@@ -142,10 +142,13 @@ mod tests {
             Size::new(100, 100),
         ));
 
-        layer.new_layer(Layer::Shape(ShapeLayer::new(
-            ShapeDrawer::new(FrameBufferConfig::mock(), ShapeColors::default()),
-            Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
-        )));
+        layer.new_layer(
+            Layer::Shape(ShapeLayer::new(
+                ShapeDrawer::new(FrameBufferConfig::mock(), ShapeColors::default()),
+                Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
+            ))
+            .into_layer_key(""),
+        );
 
         layer
             .move_to_relative(Vector2D::new(10, 10))
