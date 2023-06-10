@@ -1,7 +1,6 @@
 use alloc::string::ToString;
 use core::fmt::Write;
 
-use kernel_lib::interrupt::asm::cli;
 use kernel_lib::timer::apic::timeout::Timeout;
 use kernel_lib::timer::timer_manager::TimeOutManager;
 use pci::class_driver::keyboard;
@@ -34,7 +33,7 @@ pub fn start_xhci_host_controller(
             if timer_manager.tick().is_some() {
                 update_count(count);
                 count += 1;
-                // timer_manager.push_timeout(Timeout::new(1, 1));
+                timer_manager.push_timeout(Timeout::new(1, 1));
             }
         }
     });

@@ -54,6 +54,18 @@ impl Layers {
     }
 
 
+    pub fn bring_to_front(&mut self, key: &str) -> KernelResult {
+        let index = self
+            .index_by_key(key)
+            .ok_or(kernel_error!("Not found key = {}", key))?;
+
+        let layer = self.layers.remove(index);
+        self.layers.push(layer);
+
+        Ok(())
+    }
+
+
     pub fn find_window_layer_by_pos(&self, pos: &Vector2D<usize>) -> Option<&str> {
         self.layers
             .iter()
@@ -92,6 +104,13 @@ impl Layers {
             self.frame_buffer_config
                 .frame_size(),
         ))
+    }
+
+
+    fn index_by_key(&self, key: &str) -> Option<usize> {
+        self.layers
+            .iter()
+            .position(|layer| layer.key() == key)
     }
 
 

@@ -51,9 +51,19 @@ fn update_draggable_layer(
         if let Some(window_key) =
             draggable_layer_key(&prev_cursor).or(draggable_layer_key(&current_cursor))
         {
-            LAYERS
-                .layers_mut()
-                .lock()
+            let layers = LAYERS.layers_mut().lock();
+
+            layers
+                .borrow_mut()
+                .bring_to_front(window_key.as_str())
+                .map_err(|_| ())?;
+
+            layers
+                .borrow_mut()
+                .bring_to_front(MOUSE_LAYER_KEY)
+                .map_err(|_| ())?;
+
+            layers
                 .borrow_mut()
                 .update_layer(window_key.as_str(), |layer| {
                     layer
