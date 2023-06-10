@@ -5,10 +5,8 @@ use common_lib::math::vector::Vector2D;
 use crate::class_driver::boot_protocol_buffer::BootProtocolBuffer;
 use crate::class_driver::mouse::MouseButton::{Button1, Button2, Button3, DeviceSpecific};
 
-mod mouse_default_driver;
-pub mod mouse_driver_factory;
-pub mod mouse_subscribable;
-pub mod mouse_subscribe_driver;
+pub mod subscribable;
+pub mod driver;
 
 
 const MOUSE_DATA_BUFF_SIZE: usize = 3;

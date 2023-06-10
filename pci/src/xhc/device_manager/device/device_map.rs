@@ -2,7 +2,8 @@ use alloc::collections::BTreeMap;
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::keyboard::driver::KeyboardDriver;
+use crate::class_driver::mouse::driver::MouseDriver;
 use crate::error::PciResult;
 use crate::pci_error;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
@@ -13,32 +14,58 @@ pub struct DeviceMap<Doorbell, Memory> {
     map: BTreeMap<u8, Device<Doorbell, Memory>>,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct DeviceConfig {
+    parent_hub_slot_id: u8,
+    port_speed: u8,
+    slot_id: u8,
+}
 
-impl<Doorbell, Memory> DeviceMap<Doorbell, Memory>
-    where
-        Doorbell: DoorbellRegistersAccessible + 'static,
-        Memory: MemoryAllocatable,
-{
-    pub fn new_set(
-        &mut self,
-        parent_hub_slot_id: u8,
-        port_speed: u8,
-        slot_id: u8,
-        allocator: &Rc<RefCell<Memory>>,
-        doorbell: &Rc<RefCell<Doorbell>>,
-        mouse_driver_factory: MouseDriverFactory,
-    ) -> PciResult<&mut Device<Doorbell, Memory>> {
-        self.set(Device::new_with_init_default_control_pipe(
+
+impl DeviceConfig {
+    pub const fn new(parent_hub_slot_id: u8, port_speed: u8, slot_id: u8) -> Self {
+        Self {
             parent_hub_slot_id,
             port_speed,
             slot_id,
-            allocator,
-            doorbell,
-            mouse_driver_factory,
+        }
+    }
+
+    pub const fn parent_hub_slot_id(&self) -> u8 {
+        self.parent_hub_slot_id
+    }
+
+
+    pub const fn port_speed(&self) -> u8 {
+        self.port_speed
+    }
+
+
+    pub const fn slot_id(&self) -> u8 {
+        self.slot_id
+    }
+}
+
+
+impl<Doorbell, Memory> DeviceMap<Doorbell, Memory>
+where
+    Doorbell: DoorbellRegistersAccessible + 'static,
+    Memory: MemoryAllocatable,
+{
+    pub fn new_set(
+        &mut self,
+        config: DeviceConfig,
+        allocator: &Rc<RefCell<Memory>>,
+        doorbell: &Rc<RefCell<Doorbell>>,
+        mouse: MouseDriver,
+        keyboard: KeyboardDriver,
+    ) -> PciResult<&mut Device<Doorbell, Memory>> {
+        self.set(Device::new_with_init_default_control_pipe(
+            config, allocator, doorbell, mouse, keyboard,
         )?);
 
 
-        self.get_mut(slot_id)
+        self.get_mut(config.slot_id())
     }
 
 

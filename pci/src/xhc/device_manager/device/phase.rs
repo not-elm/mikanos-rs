@@ -2,7 +2,6 @@ use alloc::boxed::Box;
 
 use xhci::ring::trb::event::TransferEvent;
 
-use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
@@ -43,6 +42,5 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-        keyboard: KeyboardDriver,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)>;
 }

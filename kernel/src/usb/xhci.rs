@@ -5,8 +5,8 @@ use kernel_lib::timer::apic::timeout::Timeout;
 use kernel_lib::timer::timer_manager::TimeOutManager;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
-use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
-use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
+use pci::class_driver::mouse::driver::MouseDriver;
+use pci::class_driver::mouse::subscribable::MouseSubscribable;
 use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
 use pci::xhc::registers::external::{External, IdentityMapper};
 use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
@@ -69,12 +69,11 @@ fn start_xhc_controller(
 ) -> anyhow::Result<XhcController<External<IdentityMapper>, MikanOSPciMemoryAllocator>> {
     let registers = External::new(mmio_base_addr, IdentityMapper);
     let allocator = MikanOSPciMemoryAllocator::new();
-    let mouse_driver_factory = MouseDriverFactory::subscriber(mouse_subscriber);
 
     let mut xhc_controller = XhcController::new(
         registers,
         allocator,
-        mouse_driver_factory,
+        MouseDriver::new(mouse_subscriber),
         build_keyboard_driver(),
     )
     .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;

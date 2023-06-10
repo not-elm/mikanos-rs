@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::keyboard::driver::KeyboardDriver;
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::driver::MouseDriver;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -21,15 +21,14 @@ use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 
 pub struct Phase2 {
-    mouse_driver_factory: MouseDriverFactory,
+    mouse: MouseDriver,
+    keyboard: KeyboardDriver,
 }
 
 
 impl Phase2 {
-    pub fn new(mouse_driver_factory: MouseDriverFactory) -> Phase2 {
-        Self {
-            mouse_driver_factory,
-        }
+    pub const fn new(mouse: MouseDriver, keyboard: KeyboardDriver) -> Phase2 {
+        Self { mouse, keyboard }
     }
 }
 
@@ -44,7 +43,6 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-        _keyboard: KeyboardDriver,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         let data_stage = target_event.data_stage()?;
 
@@ -77,8 +75,8 @@ where
         Ok((
             InitStatus::not(),
             Some(Box::new(Phase3::new(
-                self.mouse_driver_factory
-                    .clone(),
+                self.mouse.clone(),
+                self.keyboard.clone(),
                 hid_device_descriptors,
             ))),
         ))

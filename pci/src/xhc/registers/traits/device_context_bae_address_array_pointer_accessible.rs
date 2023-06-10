@@ -1,18 +1,20 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::keyboard::driver::KeyboardDriver;
+use crate::class_driver::mouse::driver::MouseDriver;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::device_map::DeviceMap;
 use crate::xhc::device_manager::DeviceManager;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::registers::traits::port::PortRegistersAccessible;
-use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
 use crate::xhc::transfer::device_context::scratchpad_buffers_array_ptr::ScratchpadBuffersArrayPtr;
+use crate::xhc::transfer::device_context::DeviceContextArrayPtr;
 
 pub trait DeviceContextBaseAddressArrayPointerAccessible {
     fn write_device_context_array_addr(&mut self, device_context_addr: u64) -> PciResult;
+
 
     fn setup_device_context_array(
         &mut self,
@@ -37,16 +39,18 @@ pub trait DeviceContextBaseAddressArrayPointerAccessible {
     }
 }
 
+
 pub(crate) fn setup_device_manager<T, M>(
     registers: &mut Rc<RefCell<T>>,
     device_slots: u8,
     scratchpad_buffers_len: usize,
     allocator: &mut impl MemoryAllocatable,
-    mouse_driver_factory: MouseDriverFactory,
+    mouse: MouseDriver,
+    keyboard: KeyboardDriver,
 ) -> PciResult<DeviceManager<T, M>>
-    where
-        M: MemoryAllocatable,
-        T: DeviceContextBaseAddressArrayPointerAccessible
+where
+    M: MemoryAllocatable,
+    T: DeviceContextBaseAddressArrayPointerAccessible
         + DoorbellRegistersAccessible
         + PortRegistersAccessible
         + 'static,
@@ -59,6 +63,7 @@ pub(crate) fn setup_device_manager<T, M>(
         DeviceMap::default(),
         device_context_array,
         registers,
-        mouse_driver_factory,
+        mouse,
+        keyboard,
     ))
 }

@@ -5,7 +5,7 @@ use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::interrupt_in::InterruptIn;
 use crate::class_driver::keyboard::driver::KeyboardDriver;
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::driver::MouseDriver;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::descriptor::hid::HidDeviceDescriptors;
@@ -18,19 +18,21 @@ use crate::xhc::transfer::event::target_event::TargetEvent;
 use super::phase4::Phase4;
 
 pub struct Phase3 {
-    mouse_driver_factory: MouseDriverFactory,
-
+    mouse: MouseDriver,
+    keyboard: KeyboardDriver,
     hid_device_descriptor_vec: Vec<HidDeviceDescriptors>,
 }
 
 
 impl Phase3 {
-    pub fn new(
-        mouse_driver_factory: MouseDriverFactory,
+    pub const fn new(
+        mouse: MouseDriver,
+        keyboard: KeyboardDriver,
         hid_device_descriptor_vec: Vec<HidDeviceDescriptors>,
     ) -> Self {
         Self {
-            mouse_driver_factory,
+            mouse,
+            keyboard,
             hid_device_descriptor_vec,
         }
     }
@@ -38,7 +40,6 @@ impl Phase3 {
     fn interrupters<Memory, Doorbell>(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
-        keyboard: KeyboardDriver,
     ) -> Vec<InterruptIn<Doorbell>>
     where
         Memory: MemoryAllocatable,
@@ -47,8 +48,7 @@ impl Phase3 {
         self.hid_device_descriptor_vec
             .iter()
             .filter_map(|hid| {
-                let class_driver =
-                    hid.class_driver(&self.mouse_driver_factory, keyboard.clone())?;
+                let class_driver = hid.class_driver(&self.mouse, &self.keyboard)?;
                 let transfer_ring = slot
                     .try_alloc_transfer_ring(32)
                     .ok()?;
@@ -75,7 +75,6 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-        keyboard: KeyboardDriver,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         slot.input_context_mut()
             .clear_control();
@@ -88,7 +87,7 @@ where
         slot.input_context_mut()
             .slot_mut()
             .set_context_entries(31);
-        let interrupters = self.interrupters(slot, keyboard);
+        let interrupters = self.interrupters(slot);
 
         interrupters
             .iter()

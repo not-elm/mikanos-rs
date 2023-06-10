@@ -3,7 +3,8 @@ use alloc::boxed::Box;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::keyboard::driver::KeyboardDriver;
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::driver::MouseDriver;
+
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
@@ -16,15 +17,14 @@ use crate::xhc::transfer::event::target_event::TargetEvent;
 
 /// コンフィグディスクリプタを取得します。
 pub struct Phase1 {
-    mouse_driver_factory: MouseDriverFactory,
+    mouse: MouseDriver,
+    keyboard: KeyboardDriver,
 }
 
 
 impl Phase1 {
-    pub fn new(mouse_driver_factory: MouseDriverFactory) -> Phase1 {
-        Self {
-            mouse_driver_factory,
-        }
+    pub const fn new(mouse: MouseDriver, keyboard: KeyboardDriver) -> Phase1 {
+        Self { mouse, keyboard }
     }
 }
 
@@ -39,7 +39,6 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-        _keyboard: KeyboardDriver,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         const CONFIGURATION_TYPE: u16 = 2;
 
@@ -53,8 +52,8 @@ where
         Ok((
             InitStatus::not(),
             Some(Box::new(Phase2::new(
-                self.mouse_driver_factory
-                    .clone(),
+                self.mouse.clone(),
+                self.keyboard.clone(),
             ))),
         ))
     }

@@ -6,10 +6,11 @@ use xhci::ring::trb::event::TransferEvent;
 use device::device_map::DeviceMap;
 
 use crate::class_driver::keyboard::driver::KeyboardDriver;
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::driver::MouseDriver;
 use crate::error::PciResult;
 use crate::pci_error;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::device::device_map::DeviceConfig;
 use crate::xhc::device_manager::device::Device;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::registers::traits::port::PortRegistersAccessible;
@@ -31,7 +32,8 @@ pub struct DeviceManager<Doorbell, Memory> {
     device_context_array: DeviceContextArrayPtr,
     addressing_port_id: Option<u8>,
     registers: Rc<RefCell<Doorbell>>,
-    mouse_driver_factory: MouseDriverFactory,
+    mouse: MouseDriver,
+    keyboard: KeyboardDriver,
 }
 
 
@@ -44,14 +46,16 @@ where
         devices: DeviceMap<Doorbell, Memory>,
         device_context_array: DeviceContextArrayPtr,
         registers: &Rc<RefCell<Doorbell>>,
-        mouse_driver_factory: MouseDriverFactory,
+        mouse: MouseDriver,
+        keyboard: KeyboardDriver,
     ) -> DeviceManager<Doorbell, Memory> {
         Self {
             devices,
             device_context_array,
             addressing_port_id: None,
             registers: Rc::clone(registers),
-            mouse_driver_factory,
+            mouse,
+            keyboard,
         }
     }
 
@@ -111,11 +115,9 @@ where
         slot_id: u8,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-        keyboard: KeyboardDriver,
     ) -> PciResult<bool> {
         let device = self.device_mut_at(slot_id)?;
-        let init_status =
-            device.on_transfer_event_received(transfer_event, target_event, keyboard)?;
+        let init_status = device.on_transfer_event_received(transfer_event, target_event)?;
 
         Ok(init_status.is_initialised())
     }
@@ -140,15 +142,14 @@ where
             .registers
             .borrow()
             .read_port_speed_at(parent_hub_slot_id)?;
+        let config = DeviceConfig::new(parent_hub_slot_id, port_speed, slot_id);
 
         self.devices.new_set(
-            parent_hub_slot_id,
-            port_speed,
-            slot_id,
+            config,
             allocator,
             &self.registers,
-            self.mouse_driver_factory
-                .clone(),
+            self.mouse.clone(),
+            self.keyboard.clone(),
         )
     }
 

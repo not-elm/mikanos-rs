@@ -6,7 +6,7 @@ use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent}
 use transfer::event::event_ring::EventRing;
 
 use crate::class_driver::keyboard::driver::KeyboardDriver;
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::driver::MouseDriver;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::DeviceManager;
@@ -33,7 +33,6 @@ pub struct XhcController<Register, Memory> {
     waiting_ports: WaitingPorts,
     device_manager: DeviceManager<Register, Memory>,
     allocator: Rc<RefCell<Memory>>,
-    keyboard: KeyboardDriver,
 }
 
 
@@ -45,7 +44,7 @@ where
     pub fn new(
         registers: Register,
         mut allocator: Memory,
-        mouse_driver_factory: MouseDriverFactory,
+        mouse: MouseDriver,
         keyboard: KeyboardDriver,
     ) -> PciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
@@ -67,7 +66,8 @@ where
             8,
             scratchpad_buffers_len,
             &mut allocator,
-            mouse_driver_factory,
+            mouse,
+            keyboard,
         )?;
 
         let command_ring = setup_command_ring(&mut registers, 32, &mut allocator)?;
@@ -83,7 +83,6 @@ where
             device_manager,
             allocator: Rc::new(RefCell::new(allocator)),
             waiting_ports: WaitingPorts::default(),
-            keyboard,
         })
     }
 
@@ -177,7 +176,7 @@ where
 
         let is_init = self
             .device_manager
-            .process_transfer_event(slot_id, transfer_event, target_event, self.keyboard.clone())?;
+            .process_transfer_event(slot_id, transfer_event, target_event)?;
 
         if is_init {
             self.configure_endpoint(slot_id)?;

@@ -4,7 +4,6 @@ use alloc::vec::Vec;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::interrupt_in::InterruptIn;
-use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
@@ -23,10 +22,11 @@ impl<D> Phase4<D>
 where
     D: DoorbellRegistersAccessible,
 {
-    pub fn new(interrupters: Vec<InterruptIn<D>>) -> Self {
+    pub const fn new(interrupters: Vec<InterruptIn<D>>) -> Self {
         Self { interrupters }
     }
 }
+
 
 impl<Doorbell: 'static, Memory> Phase<Doorbell, Memory> for Phase4<Doorbell>
 where
@@ -38,7 +38,6 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
-        _keyboard: KeyboardDriver,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         for interrupt in self.interrupters.iter_mut() {
             interrupt.get_report(slot.default_control_pipe_mut())?;

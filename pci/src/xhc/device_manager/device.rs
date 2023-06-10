@@ -6,12 +6,13 @@ use xhci::context::EndpointType;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::keyboard::driver::KeyboardDriver;
-use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
+use crate::class_driver::mouse::driver::MouseDriver;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::request_type::RequestType;
 use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
+use crate::xhc::device_manager::device::device_map::DeviceConfig;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase, DATA_BUFF_SIZE};
 use crate::xhc::device_manager::device::phase1::Phase1;
@@ -61,14 +62,13 @@ where
 
 
     pub fn new_with_init_default_control_pipe(
-        parent_hub_slot_id: u8,
-        port_speed: u8,
-        slot_id: u8,
+        config: DeviceConfig,
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
-        mouse_driver_factory: MouseDriverFactory,
+        mouse: MouseDriver,
+        keyboard: KeyboardDriver,
     ) -> PciResult<Self> {
-        let mut me = Self::new(slot_id, allocator, doorbell, mouse_driver_factory)?;
+        let mut me = Self::new(config.slot_id(), allocator, doorbell, mouse, keyboard)?;
 
         me.slot
             .input_context_mut()
@@ -78,8 +78,8 @@ where
             .input_context_mut()
             .set_enable_endpoint(DeviceContextIndex::default());
 
-        me.init_slot_context(parent_hub_slot_id, port_speed);
-        me.init_default_control_pipe(port_speed);
+        me.init_slot_context(config.parent_hub_slot_id(), config.port_speed());
+        me.init_default_control_pipe(config.port_speed());
 
         Ok(me)
     }
@@ -111,11 +111,10 @@ where
         &mut self,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
-        keyboard: KeyboardDriver,
     ) -> PciResult<InitStatus> {
         let (init_status, phase) = self
             .phase
-            .on_transfer_event_received(&mut self.slot, transfer_event, target_event, keyboard)?;
+            .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
 
         if let Some(phase) = phase {
             self.phase = phase;
@@ -171,10 +170,11 @@ where
         slot_id: u8,
         allocator: &Rc<RefCell<Memory>>,
         doorbell: &Rc<RefCell<Doorbell>>,
-        mouse_driver_factory: MouseDriverFactory,
+        mouse: MouseDriver,
+        keyboard: KeyboardDriver,
     ) -> PciResult<Self> {
         let slot = DeviceSlot::new(slot_id, doorbell, allocator)?;
-        let phase = Box::new(Phase1::new(mouse_driver_factory));
+        let phase = Box::new(Phase1::new(mouse, keyboard));
         Ok(Self {
             slot_id,
             phase,
