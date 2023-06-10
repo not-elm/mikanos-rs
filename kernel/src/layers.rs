@@ -78,7 +78,7 @@ pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
     layers.new_layer(screen_background(config));
     layers.new_layer(console(config));
     layers.new_layer(time_count_window(config)?);
-    layers.new_layer(window_keyboard(config));
+    layers.new_layer(window_keyboard(config)?);
     layers.new_layer(mouse(config));
 
     layers.draw_all_layer()
@@ -100,7 +100,7 @@ fn time_count_window(config: FrameBufferConfig) -> KernelResult<LayerKey> {
     let transform = Transform2D::new(Vector2D::new(300, 100), Size::new(160, 52));
 
     let window = WindowLayer::new(config, transform.clone())
-        .new_layer(count_layer(config, &transform)?)
+        .new_layer(count_layer(config, &transform)?)?
         .into_enum()
         .into_layer_key(WINDOW_COUNT);
 
@@ -121,7 +121,7 @@ fn count_layer(
             .width()
             / 2
             - 32,
-        TOOLBAR_HEIGHT + 10,
+        0,
     );
 
     let count = CountLayer::new(

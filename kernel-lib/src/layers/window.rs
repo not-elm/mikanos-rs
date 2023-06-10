@@ -5,7 +5,9 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
 use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transformable2D};
 
+use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
+use crate::kernel_error;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::{LayerFindable, MultipleLayer};
@@ -16,6 +18,7 @@ use crate::layers::window::toolbar::ToolbarLayer;
 
 pub(crate) mod toolbar;
 
+const TOOLBAR_HEIGHT: usize = 24;
 
 #[derive(Delegate)]
 pub struct WindowLayer {
@@ -31,7 +34,6 @@ impl WindowLayer {
         multiple_layer.new_layer(shadow_layer(config, &transform));
         multiple_layer.new_layer(window_background_layer(config, &transform));
         multiple_layer.new_layer(toolbar_layer(config, &transform));
-        // multiple_layer.new_layer(count_layer(config, &transform).unwrap());
 
         Self {
             layers: multiple_layer,
@@ -39,10 +41,14 @@ impl WindowLayer {
     }
 
 
-    pub fn new_layer(mut self, layer: LayerKey) -> Self {
+    pub fn new_layer(mut self, mut layer: LayerKey) -> KernelResult<Self> {
+        layer
+            .move_to_relative(Vector2D::new(0, TOOLBAR_HEIGHT as isize + 5))
+            .map_err(|e| kernel_error!(e))?;
+
         self.layers.new_layer(layer);
 
-        self
+        Ok(self)
     }
 
 
@@ -84,7 +90,7 @@ fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -
 fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey {
     let toolbar_transform = Transform2D::new(
         Vector2D::new(3, 3),
-        Size::new(transform.size().width() - 6, 24),
+        Size::new(transform.size().width() - 6, TOOLBAR_HEIGHT),
     );
 
     ToolbarLayer::new(config, toolbar_transform)
@@ -108,7 +114,5 @@ mod tests {
             FrameBufferConfig::mock(),
             Transform2D::new(Vector2D::zeros(), Size::new(300, 300)),
         );
-
-        window.write_count(1);
     }
 }

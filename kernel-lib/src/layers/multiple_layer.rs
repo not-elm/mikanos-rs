@@ -60,8 +60,8 @@ impl MultipleLayer {
 impl LayerFindable for MultipleLayer {
     fn find_by_key(&self, key: &str) -> Option<&Layer> {
         self.layers
-        .iter()
-        .find_map(|layer|layer.find_by_key(key))
+            .iter()
+            .find_map(|layer| layer.find_by_key(key))
     }
 
 
