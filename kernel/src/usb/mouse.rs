@@ -22,12 +22,12 @@ impl MouseSubscriber {
 
 impl MouseSubscribable for MouseSubscriber {
     fn subscribe(
-        &mut self,
+        &self,
         prev_cursor: Vector2D<usize>,
         current_cursor: Vector2D<usize>,
         prev_button: Option<MouseButton>,
         button: Option<MouseButton>,
-    ) -> Result<(), ()> {
+    ) -> anyhow::Result<()> {
         update_cursor_layer(current_cursor, button)?;
         update_draggable_layer(prev_cursor, current_cursor, prev_button, button)?;
 
@@ -41,7 +41,7 @@ fn update_draggable_layer(
     current_cursor: Vector2D<usize>,
     prev_button: Option<MouseButton>,
     button: Option<MouseButton>,
-) -> Result<(), ()> {
+) -> anyhow::Result<()> {
     let prev_drag = prev_button.is_some_and(|b| matches!(b, MouseButton::Button1));
     let current_drag = button.is_some_and(|b| matches!(b, MouseButton::Button1));
 
@@ -56,12 +56,12 @@ fn update_draggable_layer(
             layers
                 .borrow_mut()
                 .bring_to_front(window_key.as_str())
-                .map_err(|_| ())?;
+                .map_err(|e| anyhow::anyhow!("{e:?}"))?;
 
             layers
                 .borrow_mut()
                 .bring_to_front(MOUSE_LAYER_KEY)
-                .map_err(|_| ())?;
+                .map_err(|e| anyhow::anyhow!("{e:?}"))?;
 
             layers
                 .borrow_mut()
@@ -70,7 +70,7 @@ fn update_draggable_layer(
                         .move_to_relative(relative)
                         .unwrap_or(());
                 })
-                .map_err(|_| ())?;
+                .map_err(|e| anyhow::anyhow!("{e:?}"))?;
         }
     }
     Ok(())
@@ -90,7 +90,7 @@ fn draggable_layer_key(current_cursor: &Vector2D<usize>) -> Option<String> {
 fn update_cursor_layer(
     current_cursor: Vector2D<usize>,
     button: Option<MouseButton>,
-) -> Result<(), ()> {
+) -> anyhow::Result<()> {
     let layers = LAYERS.layers_mut();
     let lock = layers.lock();
 
@@ -104,7 +104,7 @@ fn update_cursor_layer(
                 cursor.set_color(CursorColors::default().change_foreground(color))
             }
         })
-        .map_err(|_| ())
+        .map_err(|e| anyhow::anyhow!("{e:?}"))
 }
 
 

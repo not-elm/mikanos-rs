@@ -9,7 +9,6 @@ enum-try-from = "0.0.1"
 xhci = { workspace = true }
 modular-bitfield = { workspace = true }
 common-lib = { path = "../common-lib" }
-dyn-clone = { workspace = true }
 volatile-bits = { workspace = true }
 anyhow = { workspace = true }
 

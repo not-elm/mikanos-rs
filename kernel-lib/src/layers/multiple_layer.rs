@@ -23,9 +23,11 @@ pub struct MultipleLayer {
 
 #[delegate]
 pub trait LayerFindable {
+    /// Gets the layer with the target key from the descendant layers.
     fn find_by_key(&self, key: &str) -> Option<&Layer>;
 
 
+    /// Gets the layer with the target key from the descendant layers.
     fn find_by_key_mut(&mut self, key: &str) -> Option<&mut Layer>;
 }
 

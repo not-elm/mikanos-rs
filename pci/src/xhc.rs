@@ -10,7 +10,6 @@ use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::DeviceManager;
-use crate::xhc::ports::Ports;
 use crate::xhc::registers::traits::device_context_bae_address_array_pointer_accessible::setup_device_manager;
 use crate::xhc::registers::traits::interrupter::setup_event_ring;
 use crate::xhc::registers::traits::usb_command::setup_command_ring;
@@ -19,18 +18,19 @@ use crate::xhc::transfer::command_ring::CommandRing;
 use crate::xhc::transfer::event::event_trb::EventTrb;
 use crate::xhc::transfer::event::target_event::TargetEvent;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
+use crate::xhc::waiting_ports::WaitingPorts;
 
 pub mod allocator;
 pub mod device_manager;
-mod ports;
 pub mod registers;
 pub mod transfer;
+mod waiting_ports;
 
 pub struct XhcController<Register, Memory> {
     registers: Rc<RefCell<Register>>,
     event_ring: EventRing<Register>,
     command_ring: CommandRing<Register>,
-    ports: Ports,
+    waiting_ports: WaitingPorts,
     device_manager: DeviceManager<Register, Memory>,
     allocator: Rc<RefCell<Memory>>,
     keyboard: KeyboardDriver,
@@ -82,7 +82,7 @@ where
             command_ring,
             device_manager,
             allocator: Rc::new(RefCell::new(allocator)),
-            ports: Ports::default(),
+            waiting_ports: WaitingPorts::default(),
             keyboard,
         })
     }
@@ -102,12 +102,14 @@ where
             .borrow_mut()
             .reset_port_at(connect_ports[0])?;
 
+        // Since it is necessary to process one by one up to the address command,
+        // other ports are saved in the reserved area.
         for port_id in connect_ports
             .into_iter()
             .skip(1)
         {
-            self.ports
-                .push_waiting_port(port_id);
+            self.waiting_ports
+                .push(port_id);
         }
 
         Ok(())
@@ -202,8 +204,11 @@ where
             .template()
             .trb_type()
         {
-            9 => self.address_device(completion), // Enable Slot
-            11 => self.init_device(completion),   // Address Device
+            // Enable Slot
+            9 => self.address_device(completion),
+            // Address Device
+            11 => self.init_device(completion),
+            // Configure Endpoint
             12 => self
                 .device_manager
                 .configure_endpoint(completion.slot_id()),
@@ -226,6 +231,7 @@ where
         let input_context_addr = self
             .device_manager
             .address_device(completion.slot_id(), &self.allocator)?;
+
         self.command_ring
             .push_address_command(input_context_addr, completion.slot_id())
     }
@@ -235,12 +241,12 @@ where
         let port_id = port_status.port_id();
         if self
             .device_manager
-            .is_address_port(port_id)
+            .is_addressing_port(port_id)
         {
             self.enable_slot(port_id)?;
         } else {
-            self.ports
-                .push_waiting_port(port_id);
+            self.waiting_ports
+                .push(port_id);
         }
 
         Ok(())
@@ -261,7 +267,7 @@ where
 
 
     fn reset_waiting_port_if_need(&mut self) -> PciResult {
-        if let Some(port_id) = self.ports.pop_waiting_port() {
+        if let Some(port_id) = self.waiting_ports.pop() {
             self.registers
                 .borrow_mut()
                 .reset_port_at(port_id)?;

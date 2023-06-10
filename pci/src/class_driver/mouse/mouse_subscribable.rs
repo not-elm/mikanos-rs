@@ -1,43 +1,38 @@
-use dyn_clone::DynClone;
-
 use common_lib::math::vector::Vector2D;
 
 use crate::class_driver::mouse::MouseButton;
 
-/// 前回と現在のマウスカーソルの座標を元にユーザー定義の処理を行います。
-///
-/// このトレイトがMouseSubscribeDriverに登録されている場合、
-/// マウスの状態の変更が検知されるたびにこのトレイトの処理が呼び出されます。
-pub trait MouseSubscribable: DynClone {
+pub trait MouseSubscribable {
+    /// Performs user-defined processing based on previous and current mouse
+    /// cursor
+    ///
+    /// This Function is called whenever a mouse action occurs.
     fn subscribe(
-        &mut self,
+        &self,
         prev_cursor: Vector2D<usize>,
         current_cursor: Vector2D<usize>,
         prev_button: Option<MouseButton>,
         button: Option<MouseButton>,
-    ) -> Result<(), ()>;
+    ) -> anyhow::Result<()>;
 }
 
-
-dyn_clone::clone_trait_object!(MouseSubscribable);
 
 impl<T> MouseSubscribable for T
 where
     T: Fn(
-            Vector2D<usize>,
-            Vector2D<usize>,
-            Option<MouseButton>,
-            Option<MouseButton>,
-        ) -> Result<(), ()>
-        + Clone,
+        Vector2D<usize>,
+        Vector2D<usize>,
+        Option<MouseButton>,
+        Option<MouseButton>,
+    ) -> anyhow::Result<()>,
 {
     fn subscribe(
-        &mut self,
+        &self,
         prev_cursor: Vector2D<usize>,
         current_cursor: Vector2D<usize>,
         prev_button: Option<MouseButton>,
         button: Option<MouseButton>,
-    ) -> Result<(), ()> {
+    ) -> anyhow::Result<()> {
         self(prev_cursor, current_cursor, prev_button, button)
     }
 }

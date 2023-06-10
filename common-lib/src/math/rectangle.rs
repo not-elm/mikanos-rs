@@ -411,7 +411,7 @@ mod tests {
             Vector2D::new(200usize, 200usize),
         );
         let r2 = Rectangle::new(Vector2D::new(10usize, 10), Vector2D::new(110, 110));
-        println!("{:?}", r1.intersect(&r2));
+
         let rect = r1.intersect(&r2);
         assert!(rect.is_some_and(
             |r| r.origin() == Vector2D::new(100, 100) && r.end() == Vector2D::new(110, 110)

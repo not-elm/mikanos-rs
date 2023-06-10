@@ -15,7 +15,6 @@ x86_64 = "0.14.10"
 lazy_static = "1.4.0"
 xhci = "0.9.1"
 modular-bitfield = "0.11.2"
-dyn-clone = "1.0.10"
 uefi = { version = "0.20.0", features = ["alloc"] }
 uefi-services = "0.17.0"
 auto-delegate = "0.0.5"

@@ -24,9 +24,9 @@ use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
-use crate::usb::{enable_msi, serial_bus_usb_devices};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
+use crate::usb::{enable_msi, serial_bus_usb_devices};
 
 mod allocate;
 mod apic;
@@ -72,7 +72,8 @@ pub extern "sysv64" fn kernel_main(
 
     enable_msi(xhc_general_header.clone()).unwrap();
 
-    start_xhci_host_controller(xhc_general_header.mmio_base_addr(), MouseSubscriber::new()).unwrap();
+    start_xhci_host_controller(xhc_general_header.mmio_base_addr(), MouseSubscriber::new())
+        .unwrap();
 
     common_lib::assembly::hlt_forever();
 }
@@ -87,6 +88,7 @@ fn panic(info: &PanicInfo) -> ! {
     common_lib::assembly::hlt_forever();
 }
 
+
 #[panic_handler]
 #[cfg(test)]
 fn panic(info: &PanicInfo) -> ! {
@@ -94,6 +96,7 @@ fn panic(info: &PanicInfo) -> ! {
     serial_println!("{}", info);
     qemu::exit_qemu(qemu::QemuExitCode::Failed);
 }
+
 
 #[alloc_error_handler]
 fn on_oom(layout: core::alloc::Layout) -> ! {

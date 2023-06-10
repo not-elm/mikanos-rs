@@ -25,8 +25,15 @@ pub const RIGHT_GUI: u8 = 0b1000_0000;
 
 
 pub trait KeyboardSubscribable {
+    /// This Function is called whenever a keyboard action occurs.
     ///
     /// ## ModifierBits
+    ///
+    /// The modifier keys being pressed is represented by a 1 byte (8 bits).
+    /// There may be multiple of those keys, and each corresponding bit is set
+    /// to 1.
+    ///
+    /// See below for the corresponding bit for each key.
     ///
     /// - 0b0000_0001 = Left Control
     /// - 0b0000_0010 = Left Right

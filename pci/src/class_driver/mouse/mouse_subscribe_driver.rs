@@ -1,13 +1,13 @@
-use alloc::boxed::Box;
+use alloc::rc::Rc;
 
 use common_lib::math::vector::Vector2D;
 
 use crate::class_driver::boot_protocol_buffer::BootProtocolBuffer;
-use crate::class_driver::ClassDriverOperate;
-use crate::class_driver::mouse::{
-    current_cursor_pos, mouse_button_boot_protocol, MOUSE_DATA_BUFF_SIZE, MouseButton,
-};
 use crate::class_driver::mouse::mouse_subscribable::MouseSubscribable;
+use crate::class_driver::mouse::{
+    current_cursor_pos, mouse_button_boot_protocol, MouseButton, MOUSE_DATA_BUFF_SIZE,
+};
+use crate::class_driver::ClassDriverOperate;
 use crate::error::PciResult;
 use crate::pci_error;
 
@@ -15,7 +15,7 @@ pub struct MouseSubscribeDriver {
     data_buff: [i8; MOUSE_DATA_BUFF_SIZE],
     current_pos: Vector2D<usize>,
     current_button: Option<MouseButton>,
-    subscriber: Box<dyn MouseSubscribable>,
+    subscriber: Rc<dyn MouseSubscribable>,
 }
 
 
@@ -46,7 +46,7 @@ impl ClassDriverOperate for MouseSubscribeDriver {
         Ok(())
     }
 
-    
+
     fn data_buff_addr(&self) -> u64 {
         self.data_buff.as_ptr() as u64
     }
@@ -58,12 +58,12 @@ impl ClassDriverOperate for MouseSubscribeDriver {
 }
 
 impl MouseSubscribeDriver {
-    pub fn new(subscriber: Box<dyn MouseSubscribable>) -> Self {
+    pub fn new(subscriber: &Rc<dyn MouseSubscribable>) -> Self {
         Self {
             current_pos: Vector2D::new(0, 0),
             data_buff: [0; MOUSE_DATA_BUFF_SIZE],
             current_button: None,
-            subscriber,
+            subscriber: Rc::clone(subscriber),
         }
     }
 
