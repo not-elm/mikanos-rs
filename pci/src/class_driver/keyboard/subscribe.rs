@@ -17,27 +17,15 @@ pub(crate) type BoxedKeyboardSubscriber = Rc<dyn KeyboardSubscribable>;
 
 
 pub trait KeyboardSubscribable {
-    fn subscribe(
-        &self,
-        prev_modifiers: &[KeyModifier],
-        modifiers: &[KeyModifier],
-        prev_keycodes: &[char],
-        keycodes: &[char],
-    );
+    fn subscribe(&self, prev_modifiers: &[KeyModifier], modifiers: &[KeyModifier], keycode: char);
 }
 
 
 impl<F> KeyboardSubscribable for F
 where
-    F: Fn(&[KeyModifier], &[KeyModifier], &[char], &[char]),
+    F: Fn(&[KeyModifier], &[KeyModifier], char),
 {
-    fn subscribe(
-        &self,
-        prev_modifiers: &[KeyModifier],
-        modifiers: &[KeyModifier],
-        prev_keycodes: &[char],
-        keycodes: &[char],
-    ) {
-        self(prev_modifiers, modifiers, prev_keycodes, keycodes)
+    fn subscribe(&self, prev_modifiers: &[KeyModifier], modifiers: &[KeyModifier], keycode: char) {
+        self(prev_modifiers, modifiers, keycode)
     }
 }

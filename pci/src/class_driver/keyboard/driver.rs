@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-use kernel_lib::serial_println;
 
 use crate::class_driver::keyboard::keycode::Keycode;
 use crate::class_driver::keyboard::subscribe::{BoxedKeyboardSubscriber, KeyModifier};
@@ -8,6 +7,7 @@ use crate::error::PciResult;
 
 #[derive(Clone)]
 pub struct KeyboardDriver {
+    prev_buf: [u8; 8],
     data_buff: [u8; 8],
     auto_upper: bool,
     modifiers: Vec<KeyModifier>,
@@ -19,6 +19,7 @@ pub struct KeyboardDriver {
 impl KeyboardDriver {
     pub(crate) fn new(auto_upper: bool, subscribe: BoxedKeyboardSubscriber) -> KeyboardDriver {
         Self {
+            prev_buf: [0; 8],
             data_buff: [0; 8],
             auto_upper,
             modifiers: Vec::with_capacity(8),
@@ -56,16 +57,18 @@ impl ClassDriverOperate for KeyboardDriver {
     fn on_data_received(&mut self) -> PciResult {
         let prev_modifiers = self.modifiers.clone();
 
-        let prev_keys = self.keycodes.clone();
-        self.update_new_input_keys(&prev_keys);
-        serial_println!("prev= {:?}, current = {:?}", prev_keys, self.keycodes);
+        self.data_buff[2..]
+            .iter()
+            .filter(|key| !self.prev_buf[2..].contains(key))
+            .filter_map(|key| Keycode::new(*key).char())
+            .for_each(|key| {
+                self.subscribe
+                    .subscribe(prev_modifiers.as_slice(), self.modifiers.as_slice(), key);
+            });
 
-        self.subscribe.subscribe(
-            prev_modifiers.as_slice(),
-            self.modifiers.as_slice(),
-            prev_keys.as_slice(),
-            self.keycodes.as_slice(),
-        );
+        self.prev_buf
+            .copy_from_slice(&self.data_buff);
+
         Ok(())
     }
 

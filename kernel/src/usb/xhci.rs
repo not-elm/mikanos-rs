@@ -1,4 +1,4 @@
-use alloc::string::String;
+use alloc::string::ToString;
 use core::fmt::Write;
 
 use kernel_lib::interrupt::asm::sti;
@@ -107,20 +107,17 @@ fn build_keyboard_driver() -> KeyboardDriver {
 fn keyboard_subscribe(
     _prev_key_modifiers: &[KeyModifier],
     _key_modifiers: &[KeyModifier],
-    _prev_keycodes: &[char],
-    keycodes: &[char],
+    keycode: char,
 ) {
     LAYERS
         .layers_mut()
         .lock()
         .borrow_mut()
         .update_layer(KEYBOARD_TEXT, |layer| {
-            let inputs: String = keycodes.iter().collect();
-
             layer
                 .require_text()
                 .unwrap()
-                .write_str(inputs.as_str())
+                .write_str(keycode.to_string().as_str())
                 .unwrap();
         })
         .unwrap()
