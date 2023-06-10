@@ -15,8 +15,8 @@ pub struct EventRing<T> {
 }
 
 impl<T> EventRing<T>
-    where
-        T: InterrupterSetRegisterAccessible,
+where
+    T: InterrupterSetRegisterAccessible,
 {
     pub fn new(segment_base_addr: u64, ring_size: usize, interrupter_set: &Rc<RefCell<T>>) -> Self {
         Self {
@@ -39,7 +39,7 @@ impl<T> EventRing<T>
         let trb_raw_data =
             TrbRawData::new_unchecked(unsafe { *(event_ring_dequeue_pointer_addr as *mut u128) });
 
-        unsafe { EventTrb::new(trb_raw_data, self.transfer_ring.cycle_bit()) }
+        EventTrb::new(trb_raw_data, self.transfer_ring.cycle_bit())
     }
 
 

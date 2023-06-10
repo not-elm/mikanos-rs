@@ -30,7 +30,7 @@ impl ClassDriverOperate for MouseSubscribeDriver {
         }
 
         let prev_cursor = self.current_pos;
-        let prev_button = self.current_button.clone();
+        let prev_button = self.current_button;
         self.current_button = mouse_button_boot_protocol(BootProtocolBuffer::new(&self.data_buff));
 
         self.current_pos = current_cursor_pos(prev_cursor, &self.data_buff);
@@ -39,9 +39,9 @@ impl ClassDriverOperate for MouseSubscribeDriver {
                 prev_cursor,
                 self.current_pos,
                 prev_button,
-                self.current_button.clone(),
+                self.current_button,
             )
-            .map_err(|_| pci_error!("User Error"))?;
+            .map_err(|e| pci_error!("{e:?}"))?;
 
         Ok(())
     }

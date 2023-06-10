@@ -10,6 +10,7 @@ pub struct RequestType {
     pub direction: bool,
 }
 
+
 impl RequestType {
     pub fn raw(&self) -> u8 {
         self.clone().into_bytes()[0]

@@ -25,7 +25,7 @@ where
     M: xhci::accessor::Mapper + Clone,
 {
     pub fn new(mmio_addr: MemoryMappedAddr, mapper: M) -> Self {
-        let registers = unsafe { xhci::Registers::new(mmio_addr.addr(), mapper.clone()) };
+        let registers = unsafe { xhci::Registers::new(mmio_addr.addr(), mapper) };
 
         Self(registers)
     }

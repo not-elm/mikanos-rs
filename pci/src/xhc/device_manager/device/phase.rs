@@ -37,6 +37,7 @@ where
     Memory: MemoryAllocatable,
     Doorbell: DoorbellRegistersAccessible,
 {
+    #[allow(clippy::type_complexity)]
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,

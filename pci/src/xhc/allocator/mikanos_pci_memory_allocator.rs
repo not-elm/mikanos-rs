@@ -74,7 +74,9 @@ impl MemoryAllocatable for MikanOSPciMemoryAllocator {
         Some(AlignedAddress::new_uncheck(allocated_memory_base_addr))
     }
 
-    unsafe fn free(&mut self, _base_addr: usize) {}
+    unsafe fn free(&mut self, _base_addr: u64, _bytes: usize) {
+        todo!("not impl MemoryAllocatable::free")
+    }
 }
 
 unsafe fn step_next_bound_if_over(ptr: *mut u8, bytes: usize, bound: usize) -> *mut u8 {

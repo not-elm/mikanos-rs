@@ -6,6 +6,7 @@
 #![feature(maybe_uninit_slice)]
 #![feature(ptr_as_uninit)]
 #![feature(allocator_api)]
+#![allow(clippy::identity_op)]
 extern crate alloc;
 
 
@@ -23,4 +24,3 @@ pub(crate) fn flag_to_num(flag: bool) -> usize {
         0
     }
 }
-

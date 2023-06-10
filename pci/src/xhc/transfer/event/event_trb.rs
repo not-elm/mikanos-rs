@@ -18,7 +18,7 @@ pub enum EventTrb {
 }
 
 impl EventTrb {
-    pub unsafe fn new(trb: TrbRawData, cycle_bit: bool) -> Option<Self> {
+    pub fn new(trb: TrbRawData, cycle_bit: bool) -> Option<Self> {
         let raw_data_buff: [u32; 4] = trb.into();
 
         if read_cycle_bit(trb.raw()) != cycle_bit {

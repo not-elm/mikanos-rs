@@ -58,11 +58,14 @@ impl Debug for TrbRawData {
     }
 }
 
+
+#[allow(clippy::from_over_into)]
 impl Into<[u32; 4]> for TrbRawData {
     fn into(self) -> [u32; 4] {
         into_u32_array(self.0)
     }
 }
+
 
 impl From<[u32; 4]> for TrbRawData {
     fn from(value: [u32; 4]) -> Self {
@@ -70,11 +73,13 @@ impl From<[u32; 4]> for TrbRawData {
     }
 }
 
+
 fn into_u128(raw_data: [u32; 4]) -> u128 {
     let mask = |raw_data: u32, shift: u128| (raw_data as u128) << (32 * shift);
 
     mask(raw_data[0], 3) | mask(raw_data[1], 2) | mask(raw_data[2], 1) | mask(raw_data[3], 0)
 }
+
 
 fn into_u32_array(raw_data: u128) -> [u32; 4] {
     unsafe {
@@ -89,6 +94,7 @@ fn into_u32_array(raw_data: u128) -> [u32; 4] {
         ]
     }
 }
+
 
 #[cfg(test)]
 mod tests {

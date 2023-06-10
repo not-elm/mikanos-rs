@@ -34,7 +34,7 @@ impl AsciiChar {
             return None;
         }
 
-        return Some(unsafe { *raw });
+        Some(unsafe { *raw })
     }
 }
 

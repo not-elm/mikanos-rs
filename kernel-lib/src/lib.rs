@@ -6,6 +6,7 @@
 #![feature(result_option_inspect)]
 #![feature(slice_flatten)]
 #![cfg_attr(not(test), no_std)]
+#![allow(clippy::identity_op)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;

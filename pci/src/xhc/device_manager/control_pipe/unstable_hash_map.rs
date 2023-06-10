@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-
+#[derive(Default)]
 pub struct UnstableHashMap<Key, Value> {
     keys: Vec<Key>,
     values: Vec<Value>,
@@ -17,13 +17,19 @@ where
         }
     }
 
+
     pub fn get(&self, key: Key) -> Option<&Value> {
-        self.values.get(self.index(&key)?)
+        self.values
+            .get(self.index(&key)?)
     }
+
+
     pub fn get_mut(&mut self, key: Key) -> Option<&mut Value> {
         let i = self.index(&key)?;
         self.values.get_mut(i)
     }
+
+
     pub fn set(&mut self, key: Key, value: Value) {
         if let Some(i) = self.index(&key) {
             self.keys[i] = key;
@@ -34,27 +40,36 @@ where
         }
     }
 
+
     fn index(&self, key: &Key) -> Option<usize> {
-        self.keys.iter().position(|k| *k == *key)
+        self.keys
+            .iter()
+            .position(|k| *k == *key)
     }
 }
 
+
 #[cfg(test)]
 mod tests {
-    use crate::xhc::device_manager::control_pipe::unstable_hash_map::UnstableHashMap;
     use xhci::ring::trb::transfer::SetupStage;
+
+    use crate::xhc::device_manager::control_pipe::unstable_hash_map::UnstableHashMap;
+
     #[test]
     fn it_failed_when_empty() {
         let map: UnstableHashMap<i32, &str> = UnstableHashMap::new();
 
         assert!(map.get(3).is_none());
     }
+
     #[test]
     fn it_get() {
         let mut map: UnstableHashMap<i32, &str> = UnstableHashMap::new();
 
         map.set(3, "A");
-        assert!(map.get(3).is_some_and(|v| *v == "A"));
+        assert!(map
+            .get(3)
+            .is_some_and(|v| *v == "A"));
     }
 
     #[test]
@@ -63,7 +78,9 @@ mod tests {
 
         map.set(3, "A");
         map.set(3, "B");
-        assert!(map.get(3).is_some_and(|v| *v == "B"));
+        assert!(map
+            .get(3)
+            .is_some_and(|v| *v == "B"));
     }
 
     #[test]
@@ -74,6 +91,8 @@ mod tests {
         let setup = map.get_mut(3).unwrap();
         setup.set_cycle_bit();
 
-        assert!(map.get(3).is_some_and(|v| v.cycle_bit()));
+        assert!(map
+            .get(3)
+            .is_some_and(|v| v.cycle_bit()));
     }
 }
