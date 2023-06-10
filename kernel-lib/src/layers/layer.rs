@@ -5,12 +5,12 @@ use common_lib::transform::transform2d::Transformable2D;
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::kernel_error;
-use crate::layers::console::TextLayer;
 use crate::layers::count::CountLayer;
 use crate::layers::cursor::CursorLayer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::layer_updatable::LayerUpdatable;
 use crate::layers::shape::ShapeLayer;
+use crate::layers::text::TextLayer;
 use crate::layers::window::toolbar::ToolbarLayer;
 use crate::layers::window::WindowLayer;
 

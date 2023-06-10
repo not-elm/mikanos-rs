@@ -102,7 +102,6 @@ where
             .borrow_mut()
             .reset_port_at(connect_ports[0])?;
 
-
         for port_id in connect_ports
             .into_iter()
             .skip(1)
@@ -236,7 +235,7 @@ where
         let port_id = port_status.port_id();
         if self
             .device_manager
-            .address_port(port_id)
+            .is_address_port(port_id)
         {
             self.enable_slot(port_id)?;
         } else {

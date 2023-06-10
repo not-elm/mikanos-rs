@@ -9,12 +9,12 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
-use crate::layers::console::TextLayer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::{LayerFindable, MultipleLayer};
+use crate::layers::text::TextLayer;
 
-use super::console::console_colors::TextColors;
+use super::text::console_colors::TextColors;
 
 #[derive(Delegate)]
 pub struct CountLayer {

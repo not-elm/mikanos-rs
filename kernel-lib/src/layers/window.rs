@@ -28,12 +28,12 @@ pub struct WindowLayer {
 
 
 impl WindowLayer {
-    pub fn new(config: FrameBufferConfig, transform: Transform2D) -> Self {
+    pub fn new(config: FrameBufferConfig, transform: Transform2D, title: &str) -> Self {
         let mut multiple_layer = MultipleLayer::new(transform.clone());
 
         multiple_layer.new_layer(shadow_layer(config, &transform));
         multiple_layer.new_layer(window_background_layer(config, &transform));
-        multiple_layer.new_layer(toolbar_layer(config, &transform));
+        multiple_layer.new_layer(toolbar_layer(config, &transform, title));
 
         Self {
             layers: multiple_layer,
@@ -87,15 +87,15 @@ fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -
 }
 
 
-fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey {
+fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D, title: &str) -> LayerKey {
     let toolbar_transform = Transform2D::new(
-        Vector2D::new(3, 3),
-        Size::new(transform.size().width() - 6, TOOLBAR_HEIGHT),
+        Vector2D::new(1, 1),
+        Size::new(transform.size().width() - 3, TOOLBAR_HEIGHT),
     );
 
-    ToolbarLayer::new(config, toolbar_transform)
+    ToolbarLayer::new(config, toolbar_transform, title)
         .into_enum()
-        .into_layer_key("window toolbar")
+        .into_layer_key(title)
 }
 
 

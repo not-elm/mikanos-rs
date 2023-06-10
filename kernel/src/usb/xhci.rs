@@ -1,7 +1,7 @@
 use alloc::string::ToString;
 use core::fmt::Write;
 
-use kernel_lib::interrupt::asm::sti;
+use kernel_lib::interrupt::asm::cli;
 use kernel_lib::timer::apic::timeout::Timeout;
 use kernel_lib::timer::timer_manager::TimeOutManager;
 use pci::class_driver::keyboard;
@@ -16,31 +16,25 @@ use pci::xhc::XhcController;
 use crate::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
 use crate::interrupt::InterruptMessage;
 use crate::layers::{COUNT, KEYBOARD_TEXT, LAYERS};
-use crate::println;
 
 pub fn start_xhci_host_controller(
     mmio_base_addr: MemoryMappedAddr,
     mouse_subscriber: impl MouseSubscribable + 'static,
 ) -> anyhow::Result<()> {
-    sti();
-
     let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
     let mut timer_manager = new_time_manager();
     let queue_waiter = InterruptQueueWaiter::new();
+    let mut count = 0;
 
     queue_waiter.for_each(|message| match message {
         InterruptMessage::Xhci => {
             xhc_controller.process_event();
         }
         InterruptMessage::ApicTimer => {
-            if let Some(timeouts) = timer_manager.tick() {
-                timeouts
-                    .iter()
-                    .for_each(|timeout| {
-                        update_count(*timeout as u32);
-
-                        println!("Timeout = {}", timeout);
-                    });
+            if timer_manager.tick().is_some() {
+                update_count(count);
+                count += 1;
+                // timer_manager.push_timeout(Timeout::new(1, 1));
             }
         }
     });
@@ -52,10 +46,6 @@ pub fn start_xhci_host_controller(
 fn new_time_manager() -> TimeOutManager<usize> {
     let mut timer_manager = TimeOutManager::<usize>::default();
     timer_manager.push_timeout(Timeout::new(1, 1));
-    timer_manager.push_timeout(Timeout::new(3, 3));
-    timer_manager.push_timeout(Timeout::new(10, 10));
-    timer_manager.push_timeout(Timeout::new(30, 30));
-    timer_manager.push_timeout(Timeout::new(60, 60));
 
     timer_manager
 }

@@ -12,7 +12,7 @@ use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::mapper::PixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::buff_pixel_writer::BuffPixelWriter;
-use crate::layers::console::console_colors::TextColors;
+use crate::layers::text::console_colors::TextColors;
 
 pub struct ConsoleRow {
     text_buffs: Vec<u8>,
@@ -95,10 +95,6 @@ impl ConsoleRow {
 
 
     pub fn frame_buff_lines(&self) -> Option<Vec<&[u8]>> {
-        if self.current_text_len == 0 {
-            return None;
-        }
-
         let mut lines = Vec::with_capacity(self.font_unit.height());
         for y in 0..self.font_unit.height() {
             lines.push(self.frame_buff_line(y));
@@ -201,8 +197,8 @@ mod tests {
     use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
     use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::layers::console::console_colors::TextColors;
-    use crate::layers::console::console_row::{new_text_row_buff, ConsoleRow};
+    use crate::layers::text::console_colors::TextColors;
+    use crate::layers::text::console_row::{new_text_row_buff, ConsoleRow};
 
     fn padding_buff(
         padding: usize,

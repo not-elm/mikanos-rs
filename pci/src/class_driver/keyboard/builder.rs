@@ -3,9 +3,6 @@ use alloc::rc::Rc;
 use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::keyboard::subscribe::KeyboardSubscribable;
 
-#[cfg(test)]
-use crate::class_driver::keyboard::subscribe::KeyModifier;
-
 #[derive(Debug)]
 pub struct Builder {
     auto_upper: bool,

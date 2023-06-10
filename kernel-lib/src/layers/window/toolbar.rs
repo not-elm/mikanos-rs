@@ -7,14 +7,14 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::close_button::{CloseButtonLayer, CLOSE_BUTTON_HEIGHT, CLOSE_BUTTON_WIDTH};
-use crate::layers::console::console_colors::TextColors;
-use crate::layers::console::TextLayer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::MultipleLayer;
 use crate::layers::shape::shape_colors::ShapeColors;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
+use crate::layers::text::console_colors::TextColors;
+use crate::layers::text::TextLayer;
 
 #[derive(Delegate)]
 pub struct ToolbarLayer {
@@ -24,9 +24,9 @@ pub struct ToolbarLayer {
 
 
 impl ToolbarLayer {
-    pub fn new(config: FrameBufferConfig, transform: Transform2D) -> Self {
+    pub fn new(config: FrameBufferConfig, transform: Transform2D, title: &str) -> Self {
         Self {
-            layers: toolbar_layer(config, transform),
+            layers: toolbar_layer(config, transform, title),
         }
     }
 
@@ -37,11 +37,11 @@ impl ToolbarLayer {
 }
 
 
-fn toolbar_layer(config: FrameBufferConfig, transform: Transform2D) -> MultipleLayer {
+fn toolbar_layer(config: FrameBufferConfig, transform: Transform2D, title: &str) -> MultipleLayer {
     let mut layer = MultipleLayer::new(transform.clone());
 
     layer.new_layer(toolbar_background_layer(config, transform));
-    layer.new_layer(toolbar_title_layer(config));
+    layer.new_layer(toolbar_title_layer(config, title));
     layer.new_layer(toolbar_close_button(config, layer.transform_ref()));
 
     layer
@@ -61,7 +61,7 @@ fn toolbar_background_layer(config: FrameBufferConfig, transform: Transform2D) -
 }
 
 
-fn toolbar_title_layer(config: FrameBufferConfig) -> LayerKey {
+fn toolbar_title_layer(config: FrameBufferConfig, title: &str) -> LayerKey {
     let mut text = TextLayer::new(
         config,
         Vector2D::new(24, 4),
@@ -69,7 +69,7 @@ fn toolbar_title_layer(config: FrameBufferConfig) -> LayerKey {
         TextColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)),
     );
 
-    text.update_string("Hello Window")
+    text.update_string(title)
         .unwrap();
 
     text.into_enum()

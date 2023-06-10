@@ -4,9 +4,9 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
 use kernel_lib::error::KernelResult;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::layers::console::console_colors::TextColors;
-use kernel_lib::layers::console::TextLayer;
 use kernel_lib::layers::layer_key::LayerKey;
+use kernel_lib::layers::text::console_colors::TextColors;
+use kernel_lib::layers::text::TextLayer;
 use kernel_lib::layers::window::WindowLayer;
 
 use crate::layers::{KEYBOARD_TEXT, WINDOW_KEYBOARD};
@@ -16,7 +16,7 @@ pub(crate) fn window_keyboard(config: FrameBufferConfig) -> KernelResult<LayerKe
     let size = Size::new(170, 52);
 
     let transform = Transform2D::new(pos, size);
-    Ok(WindowLayer::new(config, transform)
+    Ok(WindowLayer::new(config, transform, "Text Box")
         .new_layer(keyboard_text_box(config))?
         .into_enum()
         .into_layer_key(WINDOW_KEYBOARD))

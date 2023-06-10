@@ -5,10 +5,10 @@ use common_lib::math::size::Size;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
-use crate::layers::console::console_colors::TextColors;
-use crate::layers::console::console_row::ConsoleRow;
+use crate::layers::text::console_colors::TextColors;
+use crate::layers::text::console_row::ConsoleRow;
 
-pub struct ConsoleFrame<Char> {
+pub struct TextFrame<Char> {
     rows: Vec<ConsoleRow>,
     colors: TextColors,
     text_frame_size: Size,
@@ -17,7 +17,7 @@ pub struct ConsoleFrame<Char> {
 }
 
 
-impl<Char: CharWritable> ConsoleFrame<Char> {
+impl<Char: CharWritable> TextFrame<Char> {
     pub fn new(
         colors: TextColors,
         char_writer: Char,
@@ -145,12 +145,12 @@ mod tests {
     use common_lib::math::size::Size;
 
     use crate::gop::char::ascii_char_writer::AscIICharWriter;
-    use crate::layers::console::console_colors::TextColors;
-    use crate::layers::console::console_frame::ConsoleFrame;
+    use crate::layers::text::console_colors::TextColors;
+    use crate::layers::text::console_frame::TextFrame;
 
     #[test]
     fn it_keeping_max_lines() {
-        let mut frame = ConsoleFrame::new(
+        let mut frame = TextFrame::new(
             TextColors::default(),
             AscIICharWriter::new(),
             Size::new(100, 3),
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn it_new_line() {
-        let mut frame = ConsoleFrame::new(
+        let mut frame = TextFrame::new(
             TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn it_frame_buffer_lines_2_rows() {
-        let mut frame = ConsoleFrame::new(
+        let mut frame = TextFrame::new(
             TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn it_resize_to_over() {
-        let mut frame = ConsoleFrame::new(
+        let mut frame = TextFrame::new(
             TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
@@ -234,7 +234,7 @@ mod tests {
 
     #[test]
     fn it_resize_to_small() {
-        let mut frame = ConsoleFrame::new(
+        let mut frame = TextFrame::new(
             TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),

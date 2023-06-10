@@ -27,7 +27,6 @@ impl Iterator for InterruptQueueWaiter {
             value = unsafe { INTERRUPT_QUEUE.dequeue() };
         }
 
-
         value
     }
 }

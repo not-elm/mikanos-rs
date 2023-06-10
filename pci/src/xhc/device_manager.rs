@@ -56,10 +56,11 @@ where
     }
 
 
-    pub fn address_port(&self, port: u8) -> bool {
+    pub fn is_address_port(&self, port: u8) -> bool {
         if let Some(addressing_port) = self.addressing_port_id {
             port == addressing_port
         } else {
+            //
             true
         }
     }

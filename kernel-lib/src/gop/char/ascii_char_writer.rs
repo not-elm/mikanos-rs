@@ -6,7 +6,7 @@ use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::font::get_font_from;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
-use crate::layers::console::console_colors::TextColors;
+use crate::layers::text::console_colors::TextColors;
 
 #[derive(Default)]
 pub struct AscIICharWriter {}

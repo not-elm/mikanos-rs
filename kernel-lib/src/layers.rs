@@ -13,7 +13,6 @@ use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 
 pub mod close_button;
-pub mod console;
 pub mod count;
 pub mod cursor;
 pub mod layer;
@@ -22,6 +21,7 @@ pub mod layer_updatable;
 pub mod multiple_layer;
 pub mod plain;
 pub mod shape;
+pub mod text;
 pub mod window;
 
 
