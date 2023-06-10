@@ -1,4 +1,5 @@
 use core::fmt::{Debug, Formatter};
+
 use modular_bitfield::bitfield;
 use modular_bitfield::prelude::B6;
 
@@ -16,11 +17,13 @@ pub struct TrbTemplate {
     pub trb_type: B6,
     pub control: u16,
 }
+
 impl TrbTemplate {
     pub fn from_addr(addr: u64) -> Self {
         unsafe { *(addr as *const Self) }
     }
 }
+
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct TrbRawData(u128);
@@ -78,7 +81,12 @@ fn into_u32_array(raw_data: u128) -> [u32; 4] {
         let raw_data = *(&raw_data as *const u128);
         let mask = |shift: u128| ((raw_data >> (32 * shift)) & 0xFFFF_FFFF) as u32;
 
-        return [mask(0), mask(1), mask(2), mask(3)];
+        [
+            mask(0),
+            mask(1),
+            mask(2),
+            mask(3),
+        ]
     }
 }
 

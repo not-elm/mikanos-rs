@@ -6,7 +6,6 @@ use kernel_lib::timer::apic::timeout::Timeout;
 use kernel_lib::timer::timer_manager::TimeOutManager;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
-use pci::class_driver::keyboard::subscribe::{KeyModifier, KeyboardSubscribable};
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
@@ -91,7 +90,9 @@ fn start_xhc_controller(
     )
     .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
 
-    xhc_controller.reset_port();
+    xhc_controller
+        .reset_port()
+        .map_err(|e| e.inner())?;
 
     Ok(xhc_controller)
 }
@@ -104,11 +105,7 @@ fn build_keyboard_driver() -> KeyboardDriver {
 }
 
 
-fn keyboard_subscribe(
-    _prev_key_modifiers: &[KeyModifier],
-    _key_modifiers: &[KeyModifier],
-    keycode: char,
-) {
+fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
     LAYERS
         .layers_mut()
         .lock()

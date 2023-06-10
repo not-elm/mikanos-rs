@@ -29,6 +29,12 @@ macro_rules! pci_bail {
 pub struct PciError(anyhow::Error);
 
 
+impl PciError {
+    pub fn inner(self) -> anyhow::Error {
+        self.0
+    }
+}
+
 impl From<anyhow::Error> for PciError {
     fn from(e: Error) -> Self {
         Self(e)

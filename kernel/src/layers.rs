@@ -3,7 +3,6 @@ use core::fmt::Write;
 
 use spin::Mutex;
 
-use crate::layers::window_keyboard::window_keyboard;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
@@ -20,6 +19,8 @@ use kernel_lib::layers::shape::shape_drawer::ShapeDrawer;
 use kernel_lib::layers::shape::ShapeLayer;
 use kernel_lib::layers::window::WindowLayer;
 use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
+
+use crate::layers::window_keyboard::window_keyboard;
 
 mod window_keyboard;
 
@@ -112,8 +113,6 @@ fn count_layer(
     config: FrameBufferConfig,
     window_transform: &Transform2D,
 ) -> KernelResult<LayerKey> {
-    const TOOLBAR_HEIGHT: usize = 24;
-
     let size = window_transform.size() - Size::new(20, 0);
     let pos = Vector2D::new(
         window_transform

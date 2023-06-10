@@ -6,7 +6,7 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::builder::Transform2DBuilder;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
-use crate::error::{KernelError, KernelResult, LayerReason};
+use crate::error::KernelResult;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::kernel_error;
 use crate::layers::layer::Layer;

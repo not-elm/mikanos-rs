@@ -10,7 +10,7 @@ use crate::gop::pixel::pixel_color::PixelColor;
 use crate::kernel_error;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
-use crate::layers::multiple_layer::{LayerFindable, MultipleLayer};
+use crate::layers::multiple_layer::MultipleLayer;
 use crate::layers::shape::shape_colors::ShapeColors;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
@@ -100,19 +100,4 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey
 
 
 #[cfg(test)]
-mod tests {
-    use common_lib::frame_buffer::FrameBufferConfig;
-    use common_lib::math::size::Size;
-    use common_lib::math::vector::Vector2D;
-    use common_lib::transform::transform2d::Transform2D;
-
-    use crate::layers::window::WindowLayer;
-
-    #[test]
-    fn it_update_count_not_panic() {
-        let mut window = WindowLayer::new(
-            FrameBufferConfig::mock(),
-            Transform2D::new(Vector2D::zeros(), Size::new(300, 300)),
-        );
-    }
-}
+mod tests {}

@@ -43,5 +43,5 @@ pub struct MockSubscriber;
 
 #[cfg(test)]
 impl KeyboardSubscribable for MockSubscriber {
-    fn subscribe(&self, _: &[KeyModifier], _: &[KeyModifier], _: &[char], _: &[char]) {}
+    fn subscribe(&self, _: u8, _: char) {}
 }
