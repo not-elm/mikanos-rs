@@ -5,14 +5,15 @@ use core::cell::RefCell;
 use xhci::context::EndpointType;
 use xhci::ring::trb::event::TransferEvent;
 
+use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::request_type::RequestType;
+use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
-use crate::xhc::device_manager::device::phase::{DATA_BUFF_SIZE, InitStatus, Phase};
+use crate::xhc::device_manager::device::phase::{InitStatus, Phase, DATA_BUFF_SIZE};
 use crate::xhc::device_manager::device::phase1::Phase1;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
@@ -30,16 +31,15 @@ mod phase4;
 pub struct Device<Doorbell, Memory> {
     slot_id: u8,
     phase: Box<dyn Phase<Doorbell, Memory>>,
-    doorbell: Rc<RefCell<Doorbell>>,
     slot: DeviceSlot<Memory, Doorbell>,
     device_descriptor_buff: [u8; DATA_BUFF_SIZE],
 }
 
 
-impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
-    where
-        Doorbell: DoorbellRegistersAccessible,
-        Memory: MemoryAllocatable,
+impl<Doorbell, Memory> Device<Doorbell, Memory>
+where
+    Doorbell: DoorbellRegistersAccessible + 'static,
+    Memory: MemoryAllocatable,
 {
     pub fn device_context_addr(&self) -> u64 {
         self.slot
@@ -111,10 +111,12 @@ impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
         &mut self,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
+        keyboard: KeyboardDriver,
     ) -> PciResult<InitStatus> {
         let (init_status, phase) = self
             .phase
-            .on_transfer_event_received(&mut self.slot, transfer_event, target_event)?;
+            .on_transfer_event_received(&mut self.slot, transfer_event, target_event, keyboard)?;
+
         if let Some(phase) = phase {
             self.phase = phase;
         }
@@ -176,7 +178,6 @@ impl<Doorbell: 'static, Memory> Device<Doorbell, Memory>
         Ok(Self {
             slot_id,
             phase,
-            doorbell: Rc::clone(doorbell),
             slot,
             device_descriptor_buff: [0; DATA_BUFF_SIZE],
         })

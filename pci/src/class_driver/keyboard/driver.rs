@@ -1,24 +1,22 @@
 use alloc::vec::Vec;
 
-use crate::class_driver::ClassDriverOperate;
 use crate::class_driver::keyboard::keycode::Keycode;
-use crate::class_driver::keyboard::subscribe::{KeyboardSubscribable, KeyModifier};
+use crate::class_driver::keyboard::subscribe::{BoxedKeyboardSubscriber, KeyModifier};
+use crate::class_driver::ClassDriverOperate;
 use crate::error::PciResult;
 
-pub struct KeyboardDriver<F> {
+#[derive(Clone)]
+pub struct KeyboardDriver {
     data_buff: [u8; 8],
     auto_upper: bool,
     modifiers: Vec<KeyModifier>,
     keycodes: Vec<char>,
-    subscribe: F,
+    subscribe: BoxedKeyboardSubscriber,
 }
 
 
-impl<F> KeyboardDriver<F>
-    where
-        F: KeyboardSubscribable,
-{
-    pub(crate) fn new(auto_upper: bool, subscribe: F) -> KeyboardDriver<F> {
+impl KeyboardDriver {
+    pub(crate) fn new(auto_upper: bool, subscribe: BoxedKeyboardSubscriber) -> KeyboardDriver {
         Self {
             data_buff: [0; 8],
             auto_upper,
@@ -44,10 +42,7 @@ impl<F> KeyboardDriver<F>
 }
 
 
-impl<F> ClassDriverOperate for KeyboardDriver<F>
-    where
-        F: KeyboardSubscribable,
-{
+impl ClassDriverOperate for KeyboardDriver {
     fn on_data_received(&mut self) -> PciResult {
         let prev_modifiers = self.modifiers.clone();
 
@@ -82,8 +77,7 @@ mod tests {
 
     #[test]
     fn it_keycodes() {
-        let mut keyboard = Builder::new()
-            .mock();
+        let mut keyboard = Builder::new().mock();
 
         keyboard.data_buff = [0, 0, 0x04, 0x2F, 0, 0, 0, 0];
         assert_eq!(keyboard.keycodes().len(), 2);

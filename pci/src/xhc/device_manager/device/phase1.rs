@@ -2,11 +2,12 @@ use alloc::boxed::Box;
 
 use xhci::ring::trb::event::TransferEvent;
 
+use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::control_pipe::request::Request;
+use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase};
 use crate::xhc::device_manager::device::phase2::Phase2;
@@ -29,15 +30,16 @@ impl Phase1 {
 
 
 impl<Doorbell, Memory> Phase<Doorbell, Memory> for Phase1
-    where
-        Memory: MemoryAllocatable,
-        Doorbell: DoorbellRegistersAccessible + 'static,
+where
+    Memory: MemoryAllocatable,
+    Doorbell: DoorbellRegistersAccessible + 'static,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
+        _keyboard: KeyboardDriver,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         const CONFIGURATION_TYPE: u16 = 2;
 

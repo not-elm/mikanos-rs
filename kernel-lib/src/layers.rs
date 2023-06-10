@@ -8,12 +8,13 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
+use crate::kernel_error;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 
 pub mod close_button;
 pub mod console;
-mod count;
+pub mod count;
 pub mod cursor;
 pub mod layer;
 pub mod layer_key;
@@ -155,22 +156,18 @@ impl Layers {
 
 
     fn layer_ref(&self, key: &str) -> KernelResult<&Layer> {
-        Ok(self
-            .layers
+        self.layers
             .iter()
-            .find(|layer| layer.key() == key)
-            .ok_or(KernelError::FailedOperateLayer(LayerReason::NotExistsKey))?
-            .layer_ref())
+            .find_map(|layer| layer.find_by_key(key))
+            .ok_or(kernel_error!("Not exists key = {}", key))
     }
 
 
     fn layer_mut(&mut self, key: &str) -> KernelResult<&mut Layer> {
-        Ok(self
-            .layers
+        self.layers
             .iter_mut()
-            .find(|layer| layer.key() == key)
-            .ok_or(KernelError::FailedOperateLayer(LayerReason::NotExistsKey))?
-            .layer_mut())
+            .find_map(|layer| layer.find_by_key_mut(key))
+            .ok_or(kernel_error!("Not exists key = {}", key))
     }
 }
 

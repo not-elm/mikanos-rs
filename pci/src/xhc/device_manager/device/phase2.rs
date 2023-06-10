@@ -3,16 +3,17 @@ use alloc::vec::Vec;
 
 use xhci::ring::trb::event::TransferEvent;
 
+use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
 use crate::xhc::device_manager::control_pipe::request::Request;
-use crate::xhc::device_manager::descriptor::Descriptor;
+use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
 use crate::xhc::device_manager::descriptor::descriptor_sequence::DescriptorSequence;
 use crate::xhc::device_manager::descriptor::hid::HidDeviceDescriptors;
 use crate::xhc::device_manager::descriptor::structs::configuration_descriptor::ConfigurationDescriptor;
 use crate::xhc::device_manager::descriptor::structs::interface_descriptor::InterfaceDescriptor;
+use crate::xhc::device_manager::descriptor::Descriptor;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase};
 use crate::xhc::device_manager::device::phase3::Phase3;
@@ -34,15 +35,16 @@ impl Phase2 {
 
 
 impl<Doorbell, Memory> Phase<Doorbell, Memory> for Phase2
-    where
-        Memory: MemoryAllocatable,
-        Doorbell: DoorbellRegistersAccessible + 'static,
+where
+    Memory: MemoryAllocatable,
+    Doorbell: DoorbellRegistersAccessible + 'static,
 {
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
+        _keyboard: KeyboardDriver,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         let data_stage = target_event.data_stage()?;
 
@@ -109,7 +111,7 @@ fn filter_mouse_or_keyboard((_, interface): (usize, &InterfaceDescriptor)) -> bo
 fn map_hid_descriptors(
     index: usize,
     interface: InterfaceDescriptor,
-    descriptors: &Vec<Descriptor>,
+    descriptors: &[Descriptor],
 ) -> Option<HidDeviceDescriptors> {
     let endpoint = descriptors
         .iter()

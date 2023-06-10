@@ -23,6 +23,9 @@ pub struct MultipleLayer {
 
 #[delegate]
 pub trait LayerFindable {
+    fn find_by_key(&self, key: &str) -> Option<&Layer>;
+
+
     fn find_by_key_mut(&mut self, key: &str) -> Option<&mut Layer>;
 }
 
@@ -55,6 +58,13 @@ impl MultipleLayer {
 
 
 impl LayerFindable for MultipleLayer {
+    fn find_by_key(&self, key: &str) -> Option<&Layer> {
+        self.layers
+        .iter()
+        .find_map(|layer|layer.find_by_key(key))
+    }
+
+
     fn find_by_key_mut(&mut self, key: &str) -> Option<&mut Layer> {
         self.layers
             .iter_mut()

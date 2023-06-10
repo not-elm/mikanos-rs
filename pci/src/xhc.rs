@@ -5,6 +5,7 @@ use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent}
 
 use transfer::event::event_ring::EventRing;
 
+use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
@@ -32,6 +33,7 @@ pub struct XhcController<Register, Memory> {
     ports: Ports,
     device_manager: DeviceManager<Register, Memory>,
     allocator: Rc<RefCell<Memory>>,
+    keyboard: KeyboardDriver,
 }
 
 
@@ -44,6 +46,7 @@ where
         registers: Register,
         mut allocator: Memory,
         mouse_driver_factory: MouseDriverFactory,
+        keyboard: KeyboardDriver,
     ) -> PciResult<Self> {
         let mut registers = Rc::new(RefCell::new(registers));
 
@@ -80,6 +83,7 @@ where
             device_manager,
             allocator: Rc::new(RefCell::new(allocator)),
             ports: Ports::default(),
+            keyboard,
         })
     }
 
@@ -172,7 +176,7 @@ where
 
         let is_init = self
             .device_manager
-            .process_transfer_event(slot_id, transfer_event, target_event)?;
+            .process_transfer_event(slot_id, transfer_event, target_event, self.keyboard.clone())?;
 
         if is_init {
             self.configure_endpoint(slot_id)?;

@@ -1,3 +1,5 @@
+use alloc::rc::Rc;
+
 #[derive(Debug, Copy, Clone)]
 pub enum KeyModifier {
     LeftCtrl,
@@ -9,6 +11,9 @@ pub enum KeyModifier {
     RightAlt,
     RightGui,
 }
+
+
+pub(crate) type BoxedKeyboardSubscriber = Rc<dyn KeyboardSubscribable>;
 
 
 pub trait KeyboardSubscribable {
@@ -23,8 +28,8 @@ pub trait KeyboardSubscribable {
 
 
 impl<F> KeyboardSubscribable for F
-    where
-        F: Fn(&[KeyModifier], &[KeyModifier], &[char], &[char]),
+where
+    F: Fn(&[KeyModifier], &[KeyModifier], &[char], &[char]),
 {
     fn subscribe(
         &self,

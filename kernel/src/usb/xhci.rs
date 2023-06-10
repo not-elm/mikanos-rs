@@ -1,6 +1,9 @@
 use kernel_lib::interrupt::asm::sti;
 use kernel_lib::timer::apic::timeout::Timeout;
 use kernel_lib::timer::timer_manager::TimeOutManager;
+use pci::class_driver::keyboard;
+use pci::class_driver::keyboard::driver::KeyboardDriver;
+use pci::class_driver::keyboard::subscribe::{KeyModifier, KeyboardSubscribable};
 use pci::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use pci::class_driver::mouse::mouse_subscribable::MouseSubscribable;
 use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
@@ -10,8 +13,9 @@ use pci::xhc::XhcController;
 
 use crate::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
 use crate::interrupt::InterruptMessage;
-use crate::layers::{LAYERS, WINDOW_LAYER_KEY};
+use crate::layers::{LAYERS, WINDOW_COUNT, WINDOW_LAYER_KEY};
 use crate::println;
+
 
 pub fn start_xhci_host_controller(
     mmio_base_addr: MemoryMappedAddr,
@@ -32,6 +36,8 @@ pub fn start_xhci_host_controller(
                 timeouts
                     .iter()
                     .for_each(|timeout| {
+                        update_count(*timeout as u32);
+
                         println!("Timeout = {}", timeout);
                     });
             }
@@ -59,10 +65,8 @@ fn update_count(count: u32) {
         .layers_mut()
         .lock()
         .borrow_mut()
-        .update_layer(WINDOW_LAYER_KEY, |layer| {
-            let window = layer
-                .require_window()
-                .unwrap();
+        .update_layer(WINDOW_COUNT, |layer| {
+            let window = layer.require_count().unwrap();
             window.write_count(count as usize);
         })
         .unwrap();
@@ -77,10 +81,32 @@ fn start_xhc_controller(
     let allocator = MikanOSPciMemoryAllocator::new();
     let mouse_driver_factory = MouseDriverFactory::subscriber(mouse_subscriber);
 
-    let mut xhc_controller = XhcController::new(registers, allocator, mouse_driver_factory)
-        .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
+    let mut xhc_controller = XhcController::new(
+        registers,
+        allocator,
+        mouse_driver_factory,
+        build_keyboard_driver(),
+    )
+    .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
 
     xhc_controller.reset_port();
 
     Ok(xhc_controller)
+}
+
+
+fn build_keyboard_driver() -> KeyboardDriver {
+    keyboard::builder::Builder::new()
+        .auto_upper_if_shift()
+        .boxed_build(keyboard_subscribe)
+}
+
+
+fn keyboard_subscribe(
+    _prev_key_modifiers: &[KeyModifier],
+    _key_modifiers: &[KeyModifier],
+    _prev_keycodes: &[char],
+    _keycodes: &[char],
+) {
+    println!("{:?}", _keycodes);
 }

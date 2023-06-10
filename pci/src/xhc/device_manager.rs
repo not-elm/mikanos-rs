@@ -5,6 +5,7 @@ use xhci::ring::trb::event::TransferEvent;
 
 use device::device_map::DeviceMap;
 
+use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::pci_error;
@@ -108,9 +109,11 @@ where
         slot_id: u8,
         transfer_event: TransferEvent,
         target_event: TargetEvent,
+        keyboard: KeyboardDriver,
     ) -> PciResult<bool> {
-        let deive = self.device_mut_at(slot_id)?;
-        let init_status = deive.on_transfer_event_received(transfer_event, target_event)?;
+        let device = self.device_mut_at(slot_id)?;
+        let init_status =
+            device.on_transfer_event_received(transfer_event, target_event, keyboard)?;
 
         Ok(init_status.is_initialised())
     }

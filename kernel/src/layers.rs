@@ -11,6 +11,7 @@ use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
 use kernel_lib::layers::console::console_colors::ConsoleColors;
 use kernel_lib::layers::console::TextLayer;
+use kernel_lib::layers::count::CountLayer;
 use kernel_lib::layers::cursor::CursorLayer;
 use kernel_lib::layers::layer_key::LayerKey;
 use kernel_lib::layers::shape::shape_colors::ShapeColors;
@@ -26,11 +27,17 @@ pub struct GlobalLayers(OnceCell<Mutex<RefCell<Layers>>>);
 
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
 
+
 pub const WINDOW_LAYER_KEY: &str = "WINDOW";
+
 
 pub const MOUSE_LAYER_KEY: &str = "MOUSE_CURSOR";
 
+
 pub const CONSOLE_LAYER_KEY: &str = "CONSOLE";
+
+
+pub const WINDOW_COUNT: &str = "WINDOW COUNT";
 
 
 impl GlobalLayers {
@@ -65,7 +72,7 @@ pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
 
     add_background_layer(frame_buffer_config, &mut layers);
     add_console_layer(frame_buffer_config, &mut layers);
-    add_window_layer(frame_buffer_config, &mut layers);
+    add_time_count_window_layer(frame_buffer_config, &mut layers)?;
     add_mouse_layer(frame_buffer_config, &mut layers);
 
     layers.draw_all_layer()
@@ -88,15 +95,47 @@ fn add_background_layer(frame_buffer_config: FrameBufferConfig, layers: &mut Ref
 }
 
 
-fn add_window_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
+fn add_time_count_window_layer(
+    config: FrameBufferConfig,
+    layers: &mut RefMut<Layers>,
+) -> KernelResult<()> {
+    let transform = Transform2D::new(Vector2D::new(300, 100), Size::new(160, 52));
     layers.new_layer(
-        WindowLayer::new(
-            config,
-            Transform2D::new(Vector2D::new(300, 100), Size::new(160, 52)),
-        )
-        .into_enum()
-        .into_layer_key(WINDOW_LAYER_KEY),
+        WindowLayer::new(config, transform.clone())
+            .new_layer(count_layer(config, &transform)?)
+            .into_enum()
+            .into_layer_key(WINDOW_LAYER_KEY),
     );
+
+
+    Ok(())
+}
+
+
+fn count_layer(
+    config: FrameBufferConfig,
+    window_transform: &Transform2D,
+) -> KernelResult<LayerKey> {
+    const TOOLBAR_HEIGHT: usize = 24;
+
+    let size = window_transform.size() - Size::new(20, 0);
+    let pos = Vector2D::new(
+        window_transform
+            .size()
+            .width()
+            / 2
+            - 32,
+        TOOLBAR_HEIGHT + 10,
+    );
+
+    let count = CountLayer::new(
+        config,
+        Transform2D::new(pos, size.unwrap_or(window_transform.size())),
+    )?;
+
+    Ok(count
+        .into_enum()
+        .into_layer_key(WINDOW_COUNT))
 }
 
 

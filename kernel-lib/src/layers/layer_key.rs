@@ -1,4 +1,5 @@
 use alloc::string::String;
+
 use auto_delegate::Delegate;
 
 use common_lib::math::rectangle::Rectangle;
@@ -8,7 +9,8 @@ use crate::error::KernelResult;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
-use crate::layers::multiple_layer::LayerFindable;
+
+use super::multiple_layer::LayerFindable;
 
 #[derive(Delegate)]
 pub struct LayerKey {
@@ -29,6 +31,19 @@ impl LayerKey {
 
     pub fn key(&self) -> &str {
         self.key.as_str()
+    }
+
+
+    pub fn find_by_key(&self, key: &str) -> Option<&Layer> {
+        if self.key() == key {
+            return Some(&self.layer);
+        }
+
+        match &self.layer {
+            Layer::Multiple(multi) => multi.find_by_key(key),
+            Layer::Window(window) => window.find_by_key(key),
+            _ => None,
+        }
     }
 
 

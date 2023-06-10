@@ -1,5 +1,10 @@
+use alloc::rc::Rc;
+
 use crate::class_driver::keyboard::driver::KeyboardDriver;
-use crate::class_driver::keyboard::subscribe::{KeyboardSubscribable, KeyModifier};
+use crate::class_driver::keyboard::subscribe::KeyboardSubscribable;
+
+#[cfg(test)]
+use crate::class_driver::keyboard::subscribe::KeyModifier;
 
 #[derive(Debug)]
 pub struct Builder {
@@ -19,17 +24,17 @@ impl Builder {
     }
 
 
-    pub fn build<F>(self, subscribe: F) -> KeyboardDriver<F>
-        where
-            F: KeyboardSubscribable,
+    pub fn boxed_build<F>(self, subscribe: F) -> KeyboardDriver
+    where
+        F: KeyboardSubscribable + 'static,
     {
-        KeyboardDriver::new(self.auto_upper, subscribe)
+        KeyboardDriver::new(self.auto_upper, Rc::new(subscribe))
     }
 
 
     #[cfg(test)]
-    pub(crate) fn mock(self) -> KeyboardDriver<MockSubscriber> {
-        self.build(MockSubscriber)
+    pub(crate) fn mock(self) -> KeyboardDriver {
+        self.boxed_build(MockSubscriber)
     }
 }
 

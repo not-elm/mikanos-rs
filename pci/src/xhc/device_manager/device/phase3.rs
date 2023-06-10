@@ -4,6 +4,7 @@ use alloc::vec::Vec;
 use xhci::ring::trb::event::TransferEvent;
 
 use crate::class_driver::interrupt_in::InterruptIn;
+use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::mouse::mouse_driver_factory::MouseDriverFactory;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
@@ -18,8 +19,10 @@ use super::phase4::Phase4;
 
 pub struct Phase3 {
     mouse_driver_factory: MouseDriverFactory,
+
     hid_device_descriptor_vec: Vec<HidDeviceDescriptors>,
 }
+
 
 impl Phase3 {
     pub fn new(
@@ -35,6 +38,7 @@ impl Phase3 {
     fn interrupters<Memory, Doorbell>(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
+        keyboard: KeyboardDriver,
     ) -> Vec<InterruptIn<Doorbell>>
     where
         Memory: MemoryAllocatable,
@@ -43,7 +47,8 @@ impl Phase3 {
         self.hid_device_descriptor_vec
             .iter()
             .filter_map(|hid| {
-                let class_driver = hid.class_driver(&self.mouse_driver_factory)?;
+                let class_driver =
+                    hid.class_driver(&self.mouse_driver_factory, keyboard.clone())?;
                 let transfer_ring = slot
                     .try_alloc_transfer_ring(32)
                     .ok()?;
@@ -70,6 +75,7 @@ where
         slot: &mut DeviceSlot<Memory, Doorbell>,
         _transfer_event: TransferEvent,
         _target_event: TargetEvent,
+        keyboard: KeyboardDriver,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
         slot.input_context_mut()
             .clear_control();
@@ -82,7 +88,7 @@ where
         slot.input_context_mut()
             .slot_mut()
             .set_context_entries(31);
-        let interrupters = self.interrupters(slot);
+        let interrupters = self.interrupters(slot, keyboard);
 
         interrupters
             .iter()
