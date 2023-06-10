@@ -17,7 +17,7 @@ use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
 
-use self::console_colors::ConsoleColors;
+use self::console_colors::TextColors;
 use self::console_frame::ConsoleFrame;
 
 pub mod console_colors;
@@ -38,18 +38,18 @@ impl TextLayer {
     pub fn new(
         config: FrameBufferConfig,
         pos: Vector2D<usize>,
-        font_frame_size: Size,
-        colors: ConsoleColors,
+        text_frame_size: Size,
+        colors: TextColors,
     ) -> Self {
         let ascii = AscIICharWriter::new();
         let font_unit = ascii.font_unit();
 
-        let transform = Transform2D::new(pos, font_unit * font_frame_size);
+        let transform = Transform2D::new(pos, font_unit * text_frame_size);
 
 
         Self {
             transform,
-            console_frame: ConsoleFrame::new(colors, ascii, font_frame_size, config.pixel_format),
+            console_frame: ConsoleFrame::new(colors, ascii, text_frame_size, config.pixel_format),
             config,
         }
     }
@@ -127,7 +127,7 @@ mod tests {
     use common_lib::transform::transform2d::Transformable2D;
 
     use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
-    use crate::layers::console::console_colors::ConsoleColors;
+    use crate::layers::console::console_colors::TextColors;
     use crate::layers::console::TextLayer;
     use crate::layers::layer_updatable::LayerUpdatable;
 
@@ -137,7 +137,7 @@ mod tests {
             FrameBufferConfig::mock(),
             Vector2D::zeros(),
             Size::new(10, 10),
-            ConsoleColors::default(),
+            TextColors::default(),
         );
 
         let size = console.rect().size();
@@ -156,7 +156,7 @@ mod tests {
             FrameBufferConfig::mock(),
             Vector2D::zeros(),
             Size::new(10, 10),
-            ConsoleColors::default(),
+            TextColors::default(),
         );
         let mut back_buff = ShadowFrameBuffer::new(FrameBufferConfig::mock());
 

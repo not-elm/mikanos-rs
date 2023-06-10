@@ -6,7 +6,7 @@ use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::font::get_font_from;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
-use crate::layers::console::console_colors::ConsoleColors;
+use crate::layers::console::console_colors::TextColors;
 
 #[derive(Default)]
 pub struct AscIICharWriter {}
@@ -23,7 +23,7 @@ impl CharWritable for AscIICharWriter {
         dist_buff: &mut [u8],
         c: char,
         pos: Vector2D<usize>,
-        colors: &ConsoleColors,
+        colors: &TextColors,
         pixel_writer: &mut impl PixelWritable,
     ) -> KernelResult {
         if c == '\n' {

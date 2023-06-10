@@ -3,7 +3,7 @@ use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
-use crate::layers::console::console_colors::ConsoleColors;
+use crate::layers::console::console_colors::TextColors;
 
 pub trait CharWritable {
     /// write char on the display using a frame buffer
@@ -12,7 +12,7 @@ pub trait CharWritable {
         dist_buff: &mut [u8],
         c: char,
         pos: Vector2D<usize>,
-        colors: &ConsoleColors,
+        colors: &TextColors,
         pixel_writer: &mut impl PixelWritable,
     ) -> KernelResult;
 

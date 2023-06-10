@@ -7,7 +7,7 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::close_button::{CloseButtonLayer, CLOSE_BUTTON_HEIGHT, CLOSE_BUTTON_WIDTH};
-use crate::layers::console::console_colors::ConsoleColors;
+use crate::layers::console::console_colors::TextColors;
 use crate::layers::console::TextLayer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
@@ -66,7 +66,7 @@ fn toolbar_title_layer(config: FrameBufferConfig) -> LayerKey {
         config,
         Vector2D::new(24, 4),
         Size::new(12, 1),
-        ConsoleColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)),
+        TextColors::default().change_background(PixelColor::new(0x00, 0x00, 0x84)),
     );
 
     text.update_string("Hello Window")

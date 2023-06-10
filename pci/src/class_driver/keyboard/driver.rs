@@ -1,4 +1,5 @@
 use alloc::vec::Vec;
+use kernel_lib::serial_println;
 
 use crate::class_driver::keyboard::keycode::Keycode;
 use crate::class_driver::keyboard::subscribe::{BoxedKeyboardSubscriber, KeyModifier};
@@ -27,6 +28,15 @@ impl KeyboardDriver {
     }
 
 
+    fn update_new_input_keys(&mut self, prev_keys: &Vec<char>) {
+        self.keycodes = self
+            .keycodes()
+            .into_iter()
+            .filter(|c| !prev_keys.contains(c))
+            .collect();
+    }
+
+
     fn keycodes(&self) -> Vec<char> {
         self.data_buff[2..]
             .iter()
@@ -47,7 +57,8 @@ impl ClassDriverOperate for KeyboardDriver {
         let prev_modifiers = self.modifiers.clone();
 
         let prev_keys = self.keycodes.clone();
-        self.keycodes = self.keycodes();
+        self.update_new_input_keys(&prev_keys);
+        serial_println!("prev= {:?}, current = {:?}", prev_keys, self.keycodes);
 
         self.subscribe.subscribe(
             prev_modifiers.as_slice(),

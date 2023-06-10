@@ -1,3 +1,6 @@
+use alloc::string::String;
+use core::fmt::Write;
+
 use kernel_lib::interrupt::asm::sti;
 use kernel_lib::timer::apic::timeout::Timeout;
 use kernel_lib::timer::timer_manager::TimeOutManager;
@@ -13,9 +16,8 @@ use pci::xhc::XhcController;
 
 use crate::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
 use crate::interrupt::InterruptMessage;
-use crate::layers::{LAYERS, WINDOW_COUNT, WINDOW_LAYER_KEY};
+use crate::layers::{COUNT, KEYBOARD_TEXT, LAYERS};
 use crate::println;
-
 
 pub fn start_xhci_host_controller(
     mmio_base_addr: MemoryMappedAddr,
@@ -65,7 +67,7 @@ fn update_count(count: u32) {
         .layers_mut()
         .lock()
         .borrow_mut()
-        .update_layer(WINDOW_COUNT, |layer| {
+        .update_layer(COUNT, |layer| {
             let window = layer.require_count().unwrap();
             window.write_count(count as usize);
         })
@@ -106,7 +108,20 @@ fn keyboard_subscribe(
     _prev_key_modifiers: &[KeyModifier],
     _key_modifiers: &[KeyModifier],
     _prev_keycodes: &[char],
-    _keycodes: &[char],
+    keycodes: &[char],
 ) {
-    println!("{:?}", _keycodes);
+    LAYERS
+        .layers_mut()
+        .lock()
+        .borrow_mut()
+        .update_layer(KEYBOARD_TEXT, |layer| {
+            let inputs: String = keycodes.iter().collect();
+
+            layer
+                .require_text()
+                .unwrap()
+                .write_str(inputs.as_str())
+                .unwrap();
+        })
+        .unwrap()
 }

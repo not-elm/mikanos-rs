@@ -1,8 +1,10 @@
 use auto_delegate::Delegate;
+use core::fmt::{Display, Formatter};
 
 use common_lib::transform::transform2d::Transformable2D;
 
 use crate::error::{KernelError, KernelResult, LayerReason};
+use crate::kernel_error;
 use crate::layers::console::TextLayer;
 use crate::layers::count::CountLayer;
 use crate::layers::cursor::CursorLayer;
@@ -28,7 +30,20 @@ pub enum Layer {
     Toolbar(ToolbarLayer),
 }
 
-
+impl Display for Layer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Shape(_) => f.write_str("Shape"),
+            Self::Text(_) => f.write_str("Text"),
+            Self::Cursor(_) => f.write_str("Cursor"),
+            Self::CloseButton(_) => f.write_str("CloseButton"),
+            Self::Count(_) => f.write_str("Count"),
+            Self::Multiple(_) => f.write_str("Multiple"),
+            Self::Window(_) => f.write_str("Window"),
+            _ => Ok(()),
+        }
+    }
+}
 impl Layer {
     pub fn require_cursor(&mut self) -> KernelResult<&mut CursorLayer> {
         match self {
@@ -57,7 +72,10 @@ impl Layer {
     pub fn require_count(&mut self) -> KernelResult<&mut CountLayer> {
         match self {
             Self::Count(count) => Ok(count),
-            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+            _ => Err(kernel_error!(
+                "Illegal Layer expected Count but was {}",
+                &self
+            )),
         }
     }
 

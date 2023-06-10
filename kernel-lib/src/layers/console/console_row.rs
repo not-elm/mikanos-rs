@@ -12,7 +12,7 @@ use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::mapper::PixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::buff_pixel_writer::BuffPixelWriter;
-use crate::layers::console::console_colors::ConsoleColors;
+use crate::layers::console::console_colors::TextColors;
 
 pub struct ConsoleRow {
     text_buffs: Vec<u8>,
@@ -60,7 +60,7 @@ impl ConsoleRow {
     pub fn write_char(
         &mut self,
         c: char,
-        colors: &ConsoleColors,
+        colors: &TextColors,
         char_writer: &mut impl CharWritable,
     ) -> KernelResult<bool> {
         if self.max_text_len <= self.current_text_len
@@ -201,7 +201,7 @@ mod tests {
     use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
     use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::layers::console::console_colors::ConsoleColors;
+    use crate::layers::console::console_colors::TextColors;
     use crate::layers::console::console_row::{new_text_row_buff, ConsoleRow};
 
     fn padding_buff(
@@ -234,7 +234,7 @@ mod tests {
 
         row.write_char(
             'h',
-            &ConsoleColors::default().change_foreground(PixelColor::white()),
+            &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
         .unwrap();
@@ -257,14 +257,14 @@ mod tests {
         assert!(!row
             .write_char(
                 'h',
-                &ConsoleColors::default().change_foreground(PixelColor::white()),
+                &TextColors::default().change_foreground(PixelColor::white()),
                 &mut writer,
             )
             .unwrap());
         assert!(!row
             .write_char(
                 'h',
-                &ConsoleColors::default().change_foreground(PixelColor::white()),
+                &TextColors::default().change_foreground(PixelColor::white()),
                 &mut writer,
             )
             .unwrap());
@@ -277,19 +277,19 @@ mod tests {
         let mut row = ConsoleRow::new(PixelColor::black(), writer.font_unit(), 5, PixelFormat::Rgb);
         row.write_char(
             'h',
-            &ConsoleColors::default().change_foreground(PixelColor::white()),
+            &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
         .unwrap();
         row.write_char(
             'h',
-            &ConsoleColors::default().change_foreground(PixelColor::white()),
+            &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
         .unwrap();
         row.write_char(
             'h',
-            &ConsoleColors::default().change_foreground(PixelColor::white()),
+            &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
         .unwrap();
@@ -300,7 +300,7 @@ mod tests {
         assert!(row
             .write_char(
                 'h',
-                &ConsoleColors::default().change_foreground(PixelColor::white()),
+                &TextColors::default().change_foreground(PixelColor::white()),
                 &mut writer,
             )
             .unwrap())

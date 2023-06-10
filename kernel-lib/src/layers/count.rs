@@ -14,7 +14,7 @@ use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::{LayerFindable, MultipleLayer};
 
-use super::console::console_colors::ConsoleColors;
+use super::console::console_colors::TextColors;
 
 #[derive(Delegate)]
 pub struct CountLayer {
@@ -64,7 +64,7 @@ fn text_layer(config: FrameBufferConfig, _root_transform: &Transform2D) -> Kerne
         config,
         pos,
         Size::new(10, 1),
-        ConsoleColors::default()
+        TextColors::default()
             .change_foreground(PixelColor::black())
             .change_background(PixelColor::window_background()),
     );

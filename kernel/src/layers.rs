@@ -1,15 +1,16 @@
-use core::cell::{OnceCell, RefCell, RefMut};
+use core::cell::{OnceCell, RefCell};
 use core::fmt::Write;
 
 use spin::Mutex;
 
+use crate::layers::window_keyboard::window_keyboard;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::gop::console::DISPLAY_BACKGROUND_COLOR;
-use kernel_lib::layers::console::console_colors::ConsoleColors;
+use kernel_lib::layers::console::console_colors::TextColors;
 use kernel_lib::layers::console::TextLayer;
 use kernel_lib::layers::count::CountLayer;
 use kernel_lib::layers::cursor::CursorLayer;
@@ -20,6 +21,8 @@ use kernel_lib::layers::shape::ShapeLayer;
 use kernel_lib::layers::window::WindowLayer;
 use kernel_lib::layers::{frame_buffer_layer_transform, Layers};
 
+mod window_keyboard;
+
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
 pub struct GlobalLayers(OnceCell<Mutex<RefCell<Layers>>>);
@@ -28,16 +31,18 @@ pub struct GlobalLayers(OnceCell<Mutex<RefCell<Layers>>>);
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
 
 
-pub const WINDOW_LAYER_KEY: &str = "WINDOW";
+pub const WINDOW_COUNT: &str = "WINDOW COUNT";
+pub const COUNT: &str = "COUNT";
+
+
+pub const WINDOW_KEYBOARD: &str = "WINDOW KEYBOARD";
+pub const KEYBOARD_TEXT: &str = "WINDOW TEXT";
 
 
 pub const MOUSE_LAYER_KEY: &str = "MOUSE_CURSOR";
 
 
 pub const CONSOLE_LAYER_KEY: &str = "CONSOLE";
-
-
-pub const WINDOW_COUNT: &str = "WINDOW COUNT";
 
 
 impl GlobalLayers {
@@ -63,52 +68,43 @@ impl GlobalLayers {
 unsafe impl Sync for GlobalLayers {}
 
 
-pub fn init_layers(frame_buffer_config: FrameBufferConfig) -> KernelResult {
-    LAYERS.init(frame_buffer_config)?;
+pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
+    LAYERS.init(config)?;
 
     let biding = LAYERS.layers_mut();
     let layers = biding.lock();
     let mut layers = layers.borrow_mut();
 
-    add_background_layer(frame_buffer_config, &mut layers);
-    add_console_layer(frame_buffer_config, &mut layers);
-    add_time_count_window_layer(frame_buffer_config, &mut layers)?;
-    add_mouse_layer(frame_buffer_config, &mut layers);
+    layers.new_layer(screen_background(config));
+    layers.new_layer(console(config));
+    layers.new_layer(time_count_window(config)?);
+    layers.new_layer(window_keyboard(config));
+    layers.new_layer(mouse(config));
 
     layers.draw_all_layer()
 }
 
 
-fn add_background_layer(frame_buffer_config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
-    let transform = frame_buffer_layer_transform(frame_buffer_config);
-    let shape_drawer = ShapeDrawer::new(
-        frame_buffer_config,
-        ShapeColors::default().change_foreground(DISPLAY_BACKGROUND_COLOR),
-    );
+fn screen_background(config: FrameBufferConfig) -> LayerKey {
+    let transform = frame_buffer_layer_transform(config);
+    let colors = ShapeColors::default().change_foreground(DISPLAY_BACKGROUND_COLOR);
+    let shape_drawer = ShapeDrawer::new(config, colors);
 
-
-    layers.new_layer(
-        ShapeLayer::new(shape_drawer, transform)
-            .into_enum()
-            .into_layer_key(BACKGROUND_LAYER_KEY),
-    );
+    ShapeLayer::new(shape_drawer, transform)
+        .into_enum()
+        .into_layer_key(BACKGROUND_LAYER_KEY)
 }
 
 
-fn add_time_count_window_layer(
-    config: FrameBufferConfig,
-    layers: &mut RefMut<Layers>,
-) -> KernelResult<()> {
+fn time_count_window(config: FrameBufferConfig) -> KernelResult<LayerKey> {
     let transform = Transform2D::new(Vector2D::new(300, 100), Size::new(160, 52));
-    layers.new_layer(
-        WindowLayer::new(config, transform.clone())
-            .new_layer(count_layer(config, &transform)?)
-            .into_enum()
-            .into_layer_key(WINDOW_LAYER_KEY),
-    );
 
+    let window = WindowLayer::new(config, transform.clone())
+        .new_layer(count_layer(config, &transform)?)
+        .into_enum()
+        .into_layer_key(WINDOW_COUNT);
 
-    Ok(())
+    Ok(window)
 }
 
 
@@ -135,32 +131,27 @@ fn count_layer(
 
     Ok(count
         .into_enum()
-        .into_layer_key(WINDOW_COUNT))
+        .into_layer_key(COUNT))
 }
 
 
-fn add_console_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
-    layers.new_layer(
-        TextLayer::new(
-            config,
-            Vector2D::zeros(),
-            Size::new(50, 10),
-            ConsoleColors::default(),
-        )
-        .into_enum()
-        .into_layer_key(CONSOLE_LAYER_KEY),
-    );
+fn console(config: FrameBufferConfig) -> LayerKey {
+    TextLayer::new(
+        config,
+        Vector2D::zeros(),
+        Size::new(50, 10),
+        TextColors::default(),
+    )
+    .into_enum()
+    .into_layer_key(CONSOLE_LAYER_KEY)
 }
 
 
-fn add_mouse_layer(config: FrameBufferConfig, layers: &mut RefMut<Layers>) {
-    let cursor_layer = LayerKey::new(
+fn mouse(config: FrameBufferConfig) -> LayerKey {
+    LayerKey::new(
         MOUSE_LAYER_KEY,
         CursorLayer::new_use_default(config).into_enum(),
-    );
-
-
-    layers.new_layer(cursor_layer);
+    )
 }
 
 

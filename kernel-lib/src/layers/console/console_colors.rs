@@ -2,12 +2,12 @@ use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 
 #[derive(Debug, Clone)]
-pub struct ConsoleColors {
+pub struct TextColors {
     foreground: PixelColor,
     background: PixelColor,
 }
 
-impl ConsoleColors {
+impl TextColors {
     pub const fn new(foreground: PixelColor, background: PixelColor) -> Self {
         Self {
             foreground,
@@ -35,7 +35,7 @@ impl ConsoleColors {
     }
 }
 
-impl Default for ConsoleColors {
+impl Default for TextColors {
     fn default() -> Self {
         Self::new(PixelColor::yellow(), DISPLAY_BACKGROUND_COLOR)
     }

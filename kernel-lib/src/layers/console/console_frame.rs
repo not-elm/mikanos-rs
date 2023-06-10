@@ -5,12 +5,12 @@ use common_lib::math::size::Size;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
-use crate::layers::console::console_colors::ConsoleColors;
+use crate::layers::console::console_colors::TextColors;
 use crate::layers::console::console_row::ConsoleRow;
 
 pub struct ConsoleFrame<Char> {
     rows: Vec<ConsoleRow>,
-    colors: ConsoleColors,
+    colors: TextColors,
     text_frame_size: Size,
     pixel_format: PixelFormat,
     char_writer: Char,
@@ -19,7 +19,7 @@ pub struct ConsoleFrame<Char> {
 
 impl<Char: CharWritable> ConsoleFrame<Char> {
     pub fn new(
-        colors: ConsoleColors,
+        colors: TextColors,
         char_writer: Char,
         text_frame_size: Size,
         pixel_format: PixelFormat,
@@ -145,13 +145,13 @@ mod tests {
     use common_lib::math::size::Size;
 
     use crate::gop::char::ascii_char_writer::AscIICharWriter;
-    use crate::layers::console::console_colors::ConsoleColors;
+    use crate::layers::console::console_colors::TextColors;
     use crate::layers::console::console_frame::ConsoleFrame;
 
     #[test]
     fn it_keeping_max_lines() {
         let mut frame = ConsoleFrame::new(
-            ConsoleColors::default(),
+            TextColors::default(),
             AscIICharWriter::new(),
             Size::new(100, 3),
             PixelFormat::Rgb,
@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn it_new_line() {
         let mut frame = ConsoleFrame::new(
-            ConsoleColors::default(),
+            TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
             PixelFormat::Rgb,
@@ -189,7 +189,7 @@ mod tests {
     #[test]
     fn it_frame_buffer_lines_2_rows() {
         let mut frame = ConsoleFrame::new(
-            ConsoleColors::default(),
+            TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
             PixelFormat::Rgb,
@@ -198,19 +198,14 @@ mod tests {
             .append_string("Hello")
             .unwrap();
 
-        assert_eq!(
-            frame
-                .frame_buff_lines()
-                .len(),
-            2
-        );
+        assert_eq!(frame.frame_buff_lines().len(), 2);
     }
 
 
     #[test]
     fn it_resize_to_over() {
         let mut frame = ConsoleFrame::new(
-            ConsoleColors::default(),
+            TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
             PixelFormat::Rgb,
@@ -240,7 +235,7 @@ mod tests {
     #[test]
     fn it_resize_to_small() {
         let mut frame = ConsoleFrame::new(
-            ConsoleColors::default(),
+            TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
             PixelFormat::Rgb,
