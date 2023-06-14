@@ -1,9 +1,9 @@
 pub fn array_ne<T: PartialEq>(x1: &[T], x2: &[T]) -> bool {
-    !eq_array(x1, x2)
+    !array_eq(x1, x2)
 }
 
 
-pub fn eq_array<T: PartialEq>(x1: &[T], x2: &[T]) -> bool {
+pub fn array_eq<T: PartialEq>(x1: &[T], x2: &[T]) -> bool {
     if x1.len() != x2.len() {
         return false;
     }
@@ -16,13 +16,13 @@ pub fn eq_array<T: PartialEq>(x1: &[T], x2: &[T]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::array::{array_ne, eq_array};
+    use crate::array::{array_eq, array_ne};
 
     #[test]
     fn it_equal_array() {
         let x1 = [1, 2, 3];
         let x2 = [1, 2, 3];
-        assert!(eq_array(&x1, &x2));
+        assert!(array_eq(&x1, &x2));
     }
 
 

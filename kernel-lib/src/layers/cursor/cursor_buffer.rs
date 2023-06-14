@@ -137,7 +137,7 @@ impl CursorBuffer {
         window_rect.with_in_pos(&cursor_pos)
     }
 
-    
+
     #[cfg(test)]
     fn is_not_drawable(&self, layer_rect: Rectangle<usize>, cursor_pos: Vector2D<usize>) -> bool {
         !self.is_drawable(layer_rect, cursor_pos)
@@ -156,12 +156,12 @@ impl Default for CursorBuffer {
 mod tests {
     use alloc::vec::Vec;
 
-    use common_lib::array::eq_array;
+    use common_lib::array::array_eq;
     use common_lib::math::rectangle::Rectangle;
     use common_lib::math::vector::Vector2D;
 
     use crate::layers::cursor::cursor_buffer::{
-        CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH, CursorBuffer,
+        CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
     };
 
     #[test]
@@ -177,7 +177,7 @@ mod tests {
         CURSOR_SHAPE
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(eq_array(e, a)));
+            .for_each(|(e, a)| assert!(array_eq(e, a)));
     }
 
 
@@ -196,7 +196,7 @@ mod tests {
         CURSOR_SHAPE_X_SCALE2
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(eq_array(e, a)));
+            .for_each(|(e, a)| assert!(array_eq(e, a)));
     }
 
 
@@ -215,7 +215,7 @@ mod tests {
         CURSOR_SHAPE_Y_SCALE2
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(eq_array(e, a)));
+            .for_each(|(e, a)| assert!(array_eq(e, a)));
     }
 
 
@@ -233,7 +233,7 @@ mod tests {
         CURSOR_SHAPE_SCALE2
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(eq_array(e, a)));
+            .for_each(|(e, a)| assert!(array_eq(e, a)));
     }
 
 
@@ -251,7 +251,7 @@ mod tests {
         CURSOR_SHAPE_SCALE10
             .into_iter()
             .zip(buff)
-            .for_each(|(e, a)| assert!(eq_array(e, a)));
+            .for_each(|(e, a)| assert!(array_eq(e, a)));
     }
 
 

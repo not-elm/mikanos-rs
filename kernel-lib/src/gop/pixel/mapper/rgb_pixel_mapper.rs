@@ -40,7 +40,7 @@ impl PixelMapper for RgbPixelMapper {
 
 #[cfg(test)]
 mod tests {
-    use common_lib::array::eq_array;
+    use common_lib::array::array_eq;
 
     use crate::gop::pixel::mapper::rgb_pixel_mapper::RgbPixelMapper;
     use crate::gop::pixel::mapper::PixelMapper;
@@ -50,6 +50,6 @@ mod tests {
     fn it_correct_buff() {
         let mut con = RgbPixelMapper::new();
         let buff = con.convert_to_buff(&PixelColor::blue());
-        assert!(eq_array(buff, &[0, 0, 0xFF, 0]));
+        assert!(array_eq(buff, &[0, 0, 0xFF, 0]));
     }
 }

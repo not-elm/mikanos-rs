@@ -52,7 +52,7 @@ impl PixelWritable for BuffPixelWriter {
 mod tests {
     use alloc::vec;
 
-    use common_lib::array::eq_array;
+    use common_lib::array::array_eq;
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::size::Size;
     use common_lib::math::vector::Vector2D;
@@ -78,7 +78,7 @@ mod tests {
         let mut expect = vec![0; 100 * 100];
         expect[0..4].copy_from_slice(&[0xFF, 0xFF, 0xFF, 0x00]);
 
-        assert!(eq_array(buff.as_slice(), expect.as_slice()))
+        assert!(array_eq(buff.as_slice(), expect.as_slice()))
     }
 
 
@@ -98,6 +98,6 @@ mod tests {
         }
 
 
-        assert!(eq_array(&buff[800..804], &[0xFF, 0xFF, 0xFF, 0x00]));
+        assert!(array_eq(&buff[800..804], &[0xFF, 0xFF, 0xFF, 0x00]));
     }
 }

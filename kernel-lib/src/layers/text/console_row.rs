@@ -65,9 +65,9 @@ impl ConsoleRow {
     ) -> KernelResult<bool> {
         if self.max_text_len <= self.current_text_len
             || self
-            .texts
-            .last()
-            .is_some_and(|c| *c == '\n')
+                .texts
+                .last()
+                .is_some_and(|c| *c == '\n')
         {
             return Ok(true);
         }
@@ -188,7 +188,7 @@ mod tests {
     use alloc::vec;
     use alloc::vec::Vec;
 
-    use common_lib::array::eq_array;
+    use common_lib::array::array_eq;
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::size::Size;
 
@@ -198,7 +198,7 @@ mod tests {
     use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::layers::text::console_colors::TextColors;
-    use crate::layers::text::console_row::{ConsoleRow, new_text_row_buff};
+    use crate::layers::text::console_row::{new_text_row_buff, ConsoleRow};
 
     fn padding_buff(
         padding: usize,
@@ -211,8 +211,8 @@ mod tests {
             *EnumPixelMapper::new(pixel_format).convert_to_buff(background);
             padding * font_unit.width() * 4
         ]
-            .flatten()
-            .to_vec();
+        .flatten()
+        .to_vec();
 
         buf.extend_from_slice(text_buff);
         buf.resize(text_buff.len(), 0x00);
@@ -230,7 +230,7 @@ mod tests {
             &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(row.buff_width(), writer.font_unit().width() * 4);
         assert!(row
@@ -273,19 +273,19 @@ mod tests {
             &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
         row.write_char(
             'h',
             &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
         row.write_char(
             'h',
             &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
 
         row.resize_text_len(2);
         assert_eq!(row.current_text_len, 2);
@@ -308,7 +308,7 @@ mod tests {
         assert_eq!(row.len(), 96 * 16);
         assert!(row
             .chunks(4)
-            .all(|pixel_buff| eq_array(pixel_buff, &[0xFF, 0xFF, 0x00, 0x00])));
+            .all(|pixel_buff| array_eq(pixel_buff, &[0xFF, 0xFF, 0x00, 0x00])));
     }
 
 
@@ -320,7 +320,7 @@ mod tests {
         assert_eq!(row.len(), 96 * 16);
         assert!(row
             .chunks(4)
-            .all(|pixel_buff| eq_array(pixel_buff, &[0x00, 0xFF, 0xFF, 0x00])));
+            .all(|pixel_buff| array_eq(pixel_buff, &[0x00, 0xFF, 0xFF, 0x00])));
     }
 
 
@@ -356,7 +356,7 @@ mod tests {
 
 
         const PADDING_LEN: usize = 8;
-        assert!(eq_array(
+        assert!(array_eq(
             vec![[0xFF, 0xFF, 0x00, 0x00]; PADDING_LEN / 4]
                 .flatten()
                 .as_ref(),

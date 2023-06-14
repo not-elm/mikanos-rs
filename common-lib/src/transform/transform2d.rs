@@ -23,7 +23,7 @@ pub trait Transformable2D {
     fn transform_ref(&self) -> &Transform2D;
 
 
-    fn feed_transform(&mut self, transform: &Transform2D) {
+    fn store_transform(&mut self, transform: &Transform2D) {
         self.move_to(transform.pos());
         self.resize(transform.size());
     }

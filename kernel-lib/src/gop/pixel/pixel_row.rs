@@ -92,7 +92,7 @@ mod tests {
     use alloc::vec;
     use alloc::vec::Vec;
 
-    use common_lib::array::eq_array;
+    use common_lib::array::array_eq;
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::vector::Vector2D;
 
@@ -141,6 +141,6 @@ mod tests {
 
         assert_eq!(row.pixels_len_per_row(), expect.len());
         let row_pixels_buff = row.pixels_buff();
-        assert!(eq_array(row_pixels_buff, &expect));
+        assert!(array_eq(row_pixels_buff, &expect));
     }
 }

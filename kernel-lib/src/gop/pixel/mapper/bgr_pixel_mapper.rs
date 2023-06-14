@@ -39,7 +39,7 @@ impl PixelMapper for BgrPixelMapper {
 
 #[cfg(test)]
 mod tests {
-    use common_lib::array::eq_array;
+    use common_lib::array::array_eq;
 
     use crate::gop::pixel::mapper::bgr_pixel_mapper::BgrPixelMapper;
     use crate::gop::pixel::mapper::PixelMapper;
@@ -49,6 +49,6 @@ mod tests {
     fn it_correct_bgr_buff() {
         let mut con = BgrPixelMapper::new();
         let buff = con.convert_to_buff(&PixelColor::blue());
-        assert!(eq_array(buff, &[0xFF, 0, 0, 0]));
+        assert!(array_eq(buff, &[0xFF, 0, 0, 0]));
     }
 }
