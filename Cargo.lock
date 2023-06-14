@@ -16,31 +16,11 @@ checksum = "9c7d0618f0e0b7e8ff11427422b64564d5fb0be1940354bfe2e0529b18a9d9b8"
 
 [[package]]
 name = "auto-delegate"
-version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf3c976ff5d97340ea6d76009f892dbdb6892fca1d115cefb26f4ed417a7b626"
-dependencies = [
- "auto-delegate-macros 0.0.5",
-]
-
-[[package]]
-name = "auto-delegate"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88ae1a999cc5c44dfbf24eb6ea1bd294885b9d58b2e71b9f3144295b12fa7f9a"
 dependencies = [
- "auto-delegate-macros 0.0.6",
-]
-
-[[package]]
-name = "auto-delegate-macros"
-version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ed86868a398ba5c30ec06f76ab046ba90d77775189d57cfcc92c9769f6100df"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.16",
+ "auto-delegate-macros",
 ]
 
 [[package]]
@@ -107,14 +87,14 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "common-lib"
 version = "0.1.0"
 dependencies = [
- "auto-delegate 0.0.5",
+ "auto-delegate",
 ]
 
 [[package]]
 name = "derive-getters"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0122f262bf9c9a367829da84f808d9fb128c10ef283bbe7b0922a77cf07b2747"
+checksum = "7a2c35ab6e03642397cdda1dd58abbc05d418aef8e36297f336d5aba060fe8df"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -150,13 +130,14 @@ name = "kernel-lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "auto-delegate 0.0.5",
+ "auto-delegate",
  "cc",
  "common-lib",
  "derive-getters",
  "lazy_static",
  "modular-bitfield",
  "once",
+ "paste",
  "spin 0.9.5",
  "uart_16550",
  "uefi",
@@ -450,7 +431,7 @@ name = "volatile-bits"
 version = "0.1.0"
 source = "git+https://github.com/elm-register/volatile-bits?branch=master#115a2cfe418787afdc9f428a5b18162f270fb7d8"
 dependencies = [
- "auto-delegate 0.0.6",
+ "auto-delegate",
  "volatile-bits-macros",
 ]
 

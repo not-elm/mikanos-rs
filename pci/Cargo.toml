@@ -11,5 +11,4 @@ modular-bitfield = { workspace = true }
 common-lib = { path = "../common-lib" }
 volatile-bits = { workspace = true }
 anyhow = { workspace = true }
-
 kernel-lib = { path = "../kernel-lib" }

@@ -26,7 +26,6 @@ mkfs.fat        \
   -F 32         \
   ${img}
 
-
 echo "path to kernel.elf=$kernel"
 # 2. EFIファイルシステムをディスクイメージ内にコピーします。
 sudo rm -r -f

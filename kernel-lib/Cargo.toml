@@ -13,6 +13,7 @@ common-lib = { path = "../common-lib" }
 once = "0.3.4"
 spin = "0.9.5"
 uart_16550 = "0.2.0"
+paste = { workspace = true }
 auto-delegate = { workspace = true }
 anyhow = { workspace = true }
 derive-getters = { workspace = true }
