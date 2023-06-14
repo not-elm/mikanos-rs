@@ -1,15 +1,25 @@
+use core::arch::asm;
+
 macro_rules! read_register {
-    ($register: ident) => {
+    ($register: ident, $out: ident) => {
         paste::paste!{
             #[inline(always)]
             pub fn [<read_ $register>]() -> u64 {
                 let r: u64;
                 unsafe {
-                    core::arch::asm!(concat!("mov rax, ", stringify!($register)), out("rax") r, options(nostack, nomem, preserves_flags));
+                    core::arch::asm!(
+                        concat!("mov ", stringify!($out), ", ", stringify!($register)),
+                        out($out) r,
+                        options(nostack, nomem, preserves_flags)
+                    );
                 }
                 r
             }
         }
+    };
+
+    ($register: ident) => {
+        read_register!($register, rax);
     };
 }
 
@@ -30,11 +40,15 @@ read_register!(r12);
 read_register!(r13);
 read_register!(r14);
 read_register!(r15);
+read_register!(cr3);
+read_register!(cs, ax);
 
 
 #[inline(always)]
 pub fn read_rsp_next() -> u64 {
     let r: u64;
+
+
     unsafe {
         core::arch::asm!(
         "mov rax, [rsp+8]",
@@ -45,10 +59,27 @@ pub fn read_rsp_next() -> u64 {
     r
 }
 
+
+#[inline(always)]
+pub fn read_rflags() -> u64 {
+    let mut flags: u64;
+
+    unsafe {
+        asm!(
+        "pushfq",
+        "pop {}",
+        out(reg) flags,
+        options(nomem, preserves_flags));
+    }
+    flags
+}
+
+
 #[cfg(test)]
 mod tests {
     use crate::register::read::{
-        read_rax, read_rbp, read_rbx, read_rcx, read_rdi, read_rsi, read_rsp, read_rsp_next,
+        read_rax, read_rbp, read_rbx, read_rcx, read_rdi, read_rflags, read_rsi, read_rsp,
+        read_rsp_next,
     };
 
     #[test]
@@ -97,6 +128,13 @@ mod tests {
     fn it_read_rsp_next() {
         read_rsp_next();
     }
+
+
+    #[test]
+    fn it_read_rflags() {
+        read_rflags();
+    }
+
 
     macro_rules! test_r {
         ($no: literal) => {

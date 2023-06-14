@@ -6,6 +6,7 @@ use crate::qemu::{exit_qemu, QemuExitCode};
 use crate::serial_println;
 
 mod msi;
+mod register;
 
 
 pub trait Testable {

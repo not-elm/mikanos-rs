@@ -14,7 +14,8 @@ if [ "$QEMU_STATE" = "debug" ]; then
     -S \
     -m 8G \
     -device isa-debug-exit,iobase=0xf4,iosize=0x04
-elif [ "$QEMU_STATE" = "test" ]; then
+elif [ "$QEMU_STATE" = "test" ];
+then
   qemu-system-x86_64 \
     -bios OVMF.fd \
     -drive if=ide,index=0,media=disk,format=raw,file='disk.img' \
