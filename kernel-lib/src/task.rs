@@ -1,5 +1,29 @@
 use core::arch::asm;
 
+#[derive(Debug, Copy, Clone)]
+#[repr(align(16))]
+pub struct FxSaveArea([u8; 512]);
+
+
+impl FxSaveArea {
+    pub fn buff(&self) -> &[u8] {
+        &self.0
+    }
+
+
+    pub fn ptr_mut(&mut self) -> *mut u8 {
+        self.0.as_mut_ptr()
+    }
+}
+
+
+impl Default for FxSaveArea {
+    fn default() -> Self {
+        Self([0; 512])
+    }
+}
+
+
 #[derive(Debug, Default)]
 pub struct TaskContext {
     pub rax: u64,
@@ -24,7 +48,8 @@ pub struct TaskContext {
     pub cs: u64,
     pub ss: u64,
     pub fs: u64,
-    pub gs: u64
+    pub gs: u64,
+    fx_save_area: FxSaveArea,
 }
 
 
@@ -37,6 +62,24 @@ macro_rules! feed_register {
                     asm!(
                         concat!("mov rax, ", stringify!($register)),
                         out("rax") self.$register,
+                        options(nostack, nomem, preserves_flags)
+                    );
+                }
+            }
+        }
+    };
+}
+
+
+macro_rules! feed_register_32bits {
+    ($register: ident) => {
+        paste::paste! {
+            #[inline(always)]
+            fn [<feed_ $register>](&mut self) {
+                unsafe {
+                    asm!(
+                        concat!("mov ax, ", stringify!($register)),
+                        out("ax") self.$register,
                         options(nostack, nomem, preserves_flags)
                     );
                 }
@@ -68,6 +111,10 @@ impl TaskContext {
         self.feed_cr3();
         self.feed_rip();
         self.feed_flags();
+        self.feed_cs();
+        self.feed_ss();
+        self.feed_fs();
+        self.feed_gs();
     }
 
 
@@ -99,6 +146,17 @@ impl TaskContext {
     }
 
 
+    #[inline(always)]
+    pub fn feed_fx_save_area(&mut self) {
+        unsafe {
+            asm!(
+            "fxsave [{}]",
+            in(reg) self.fx_save_area.ptr_mut(),
+            options(nostack, nomem, preserves_flags));
+        }
+    }
+
+
     feed_register!(rax);
     feed_register!(rbx);
     feed_register!(rcx);
@@ -115,6 +173,10 @@ impl TaskContext {
     feed_register!(r14);
     feed_register!(r15);
     feed_register!(cr3);
+    feed_register_32bits!(cs);
+    feed_register_32bits!(ss);
+    feed_register_32bits!(fs);
+    feed_register_32bits!(gs);
 }
 
 
@@ -122,7 +184,7 @@ impl TaskContext {
 mod tests {
     use core::arch::asm;
 
-    use crate::register::read::{read_rflags, read_rsp_next};
+    use crate::register::read::{read_cs, read_fs, read_gs, read_rflags, read_rsp_next, read_ss};
     use crate::task::TaskContext;
 
     macro_rules! test_feed {
@@ -131,8 +193,9 @@ mod tests {
                 #[test]
                 fn [<it_feed_ $register>]() {
                     let mut t = TaskContext::default();
+                    let v = $crate::register::read::[<read_ $register>]();
                     t.[<feed_ $register>]();
-                    assert_eq!(t.$register, $crate::register::read::[<read_ $register>]());
+                    assert_eq!(t.$register, v);
                 }
             }
         };
@@ -171,6 +234,56 @@ mod tests {
         let flags = read_rflags();
         t.feed_flags();
         assert_eq!(t.flags, flags);
+    }
+
+
+    #[test]
+    fn it_feed_cs() {
+        let mut t = TaskContext::default();
+        let cs = read_cs();
+        t.feed_cs();
+        assert_eq!(t.cs, cs);
+    }
+
+
+    #[test]
+    fn it_feed_ss() {
+        let mut t = TaskContext::default();
+        let ss = read_ss();
+        t.feed_ss();
+        assert_eq!(t.ss, ss);
+    }
+
+
+    #[test]
+    fn it_feed_fs() {
+        let mut t = TaskContext::default();
+        let fs = read_fs();
+        t.feed_fs();
+        assert_eq!(t.fs, fs);
+    }
+
+
+    #[test]
+    fn it_feed_gs() {
+        let mut t = TaskContext::default();
+        let gs = read_gs();
+        t.feed_gs();
+        assert_eq!(t.gs, gs);
+    }
+
+
+    #[test]
+    fn it_feed_fx_save_area() {
+        let mut t = TaskContext::default();
+
+        t.feed_fx_save_area();
+        assert!(
+            !(t.fx_save_area
+                .buff()
+                .iter()
+                .all(|b| *b == 0))
+        );
     }
 
 

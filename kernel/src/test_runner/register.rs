@@ -1,4 +1,8 @@
-use kernel_lib::register::read::{read_cr3, read_r10, read_r11, read_r12, read_r13, read_r14, read_r15, read_r8, read_r9, read_rax, read_rbp, read_rbx, read_rcx, read_rdi, read_rdx, read_rflags, read_rsi, read_rsp_next};
+use kernel_lib::register::read::{
+    read_cr3, read_r10, read_r11, read_r12, read_r13, read_r14, read_r15, read_r8, read_r9,
+    read_rax, read_rbp, read_rbx, read_rcx, read_rdi, read_rdx, read_rflags, read_rsi,
+    read_rsp_next,
+};
 use kernel_lib::register::write::write_rax;
 use kernel_lib::task::TaskContext;
 

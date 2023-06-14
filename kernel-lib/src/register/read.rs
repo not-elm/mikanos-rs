@@ -1,15 +1,15 @@
 use core::arch::asm;
 
 macro_rules! read_register {
-    ($register: ident, $out: ident) => {
-        paste::paste!{
+    ($register: ident) => {
+        paste::paste! {
             #[inline(always)]
             pub fn [<read_ $register>]() -> u64 {
                 let r: u64;
                 unsafe {
                     core::arch::asm!(
-                        concat!("mov ", stringify!($out), ", ", stringify!($register)),
-                        out($out) r,
+                        concat!("mov rax, ", stringify!($register)),
+                        out("rax") r,
                         options(nostack, nomem, preserves_flags)
                     );
                 }
@@ -17,9 +17,25 @@ macro_rules! read_register {
             }
         }
     };
+}
 
+
+macro_rules! read_register_32bits {
     ($register: ident) => {
-        read_register!($register, rax);
+        paste::paste! {
+            #[inline(always)]
+            pub fn [<read_ $register>]() -> u64 {
+                let r: u64;
+                unsafe {
+                    core::arch::asm!(
+                        concat!("mov ax, ", stringify!($register)),
+                        out("ax") r,
+                        options(nostack, nomem, preserves_flags)
+                    );
+                }
+                r
+            }
+        }
     };
 }
 
@@ -41,7 +57,10 @@ read_register!(r13);
 read_register!(r14);
 read_register!(r15);
 read_register!(cr3);
-read_register!(cs, ax);
+read_register_32bits!(cs);
+read_register_32bits!(ss);
+read_register_32bits!(fs);
+read_register_32bits!(gs);
 
 
 #[inline(always)]
@@ -78,8 +97,8 @@ pub fn read_rflags() -> u64 {
 #[cfg(test)]
 mod tests {
     use crate::register::read::{
-        read_rax, read_rbp, read_rbx, read_rcx, read_rdi, read_rflags, read_rsi, read_rsp,
-        read_rsp_next,
+        read_cs, read_fs, read_gs, read_rax, read_rbp, read_rbx, read_rcx, read_rdi, read_rflags,
+        read_rsi, read_rsp, read_rsp_next, read_ss,
     };
 
     #[test]
@@ -133,6 +152,30 @@ mod tests {
     #[test]
     fn it_read_rflags() {
         read_rflags();
+    }
+
+
+    #[test]
+    fn it_read_cs() {
+        read_cs();
+    }
+
+
+    #[test]
+    fn it_read_ss() {
+        read_ss();
+    }
+
+
+    #[test]
+    fn it_read_fs() {
+        read_fs();
+    }
+
+
+    #[test]
+    fn it_read_gs() {
+        read_gs();
     }
 
 
