@@ -38,14 +38,26 @@ impl FxSaveArea {
 
 
 impl Default for FxSaveArea {
+    #[inline(always)]
     fn default() -> Self {
         Self([0; 512])
     }
 }
 
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
+#[repr(packed(16))]
 pub struct TaskContext {
+    pub cr3: u64,
+    pub rip: u64,
+    pub flags: u64,
+    _reserved1: u64,
+
+    pub cs: u64,
+    pub ss: u64,
+    pub fs: u64,
+    pub gs: u64,
+
     pub rax: u64,
     pub rbx: u64,
     pub rcx: u64,
@@ -54,6 +66,7 @@ pub struct TaskContext {
     pub rsi: u64,
     pub rsp: u64,
     pub rbp: u64,
+
     pub r8: u64,
     pub r9: u64,
     pub r10: u64,
@@ -62,14 +75,8 @@ pub struct TaskContext {
     pub r13: u64,
     pub r14: u64,
     pub r15: u64,
-    pub cr3: u64,
-    pub rip: u64,
-    pub flags: u64,
-    pub cs: u64,
-    pub ss: u64,
-    pub fs: u64,
-    pub gs: u64,
-    pub fx_save_area: FxSaveArea,
+
+    pub fx_save_area: [u8; 512],
 }
 
 
@@ -82,7 +89,7 @@ macro_rules! store_register {
                     asm!(
                         concat!("mov rax, ", stringify!($register)),
                         out("rax") self.$register,
-                        options(nostack, nomem, preserves_flags)
+                        options(nostack,  preserves_flags)
                     );
                 }
             }
@@ -98,9 +105,9 @@ macro_rules! store_register_32bits {
             fn [<store_ $register>](&mut self) {
                 unsafe {
                     asm!(
-                        concat!("mov ax, ", stringify!($register)),
-                        out("ax") self.$register,
-                        options(nostack, nomem, preserves_flags)
+                        concat!("mov rax, ", stringify!($register)),
+                        out("rax") self.$register,
+                        options(nostack,  preserves_flags)
                     );
                 }
             }
@@ -131,6 +138,7 @@ impl TaskContext {
             rbx: 0,
             rcx: 0,
             rdx: 0,
+            _reserved1: 0,
             rdi: 0,
             rsi: 0,
             rsp: 0,
@@ -150,12 +158,96 @@ impl TaskContext {
             ss: 0,
             fs: 0,
             gs: 0,
-            fx_save_area: FxSaveArea::new(),
+            fx_save_area: [0; 512],
         }
     }
 
 
+
     pub fn switch_to(&mut self, next_task: &TaskContext) {
+        unsafe {
+            asm!(
+            "mov [rsi + 0x40], rax
+    mov [rsi + 0x48], rbx
+    mov [rsi + 0x50], rcx
+    mov [rsi + 0x58], rdx
+    mov [rsi + 0x60], rdi
+    mov [rsi + 0x68], rsi
+
+    lea rax, [rsp + 8]
+    mov [rsi + 0x70], rax
+    mov [rsi + 0x78], rbp
+
+    mov [rsi + 0x80], r8
+    mov [rsi + 0x88], r9
+    mov [rsi + 0x90], r10
+    mov [rsi + 0x98], r11
+    mov [rsi + 0xa0], r12
+    mov [rsi + 0xa8], r13
+    mov [rsi + 0xb0], r14
+    mov [rsi + 0xb8], r15
+
+    mov rax, cr3
+    mov [rsi + 0x00], rax
+    mov rax, [rsp]
+    mov [rsi + 0x08], rax
+    pushfq
+    pop qword PTR [rsi + 0x10]
+
+    mov ax, cs
+    mov [rsi + 0x20], rax
+    mov bx, ss
+    mov [rsi + 0x28], rbx
+    mov cx, fs
+    mov [rsi + 0x30], rcx
+    mov dx, gs
+    mov [rsi + 0x38], rdx
+
+    fxsave [rsi + 0xc0]
+
+
+    push qword PTR [rdi + 0x28]
+    push qword PTR [rdi + 0x70]
+    push qword PTR [rdi + 0x10]
+    push qword PTR [rdi + 0x20]
+    push qword PTR [rdi + 0x08]
+
+
+    fxrstor [rdi + 0xc0]
+
+    mov rax, [rdi + 0x00]
+    mov cr3, rax
+    mov rax, [rdi + 0x30]
+    mov fs, ax
+    mov rax, [rdi + 0x38]
+    mov gs, ax
+
+    mov rax, [rdi + 0x40]
+    mov rbx, [rdi + 0x48]
+    mov rcx, [rdi + 0x50]
+    mov rdx, [rdi + 0x58]
+    mov rsi, [rdi + 0x68]
+    mov rbp, [rdi + 0x78]
+    mov r8,  [rdi + 0x80]
+    mov r9,  [rdi + 0x88]
+    mov r10, [rdi + 0x90]
+    mov r11, [rdi + 0x98]
+    mov r12, [rdi + 0xa0]
+    mov r13, [rdi + 0xa8]
+    mov r14, [rdi + 0xb0]
+    mov r15, [rdi + 0xb8]
+
+    mov rdi, [rdi + 0x60]
+
+    iretq",
+
+            )
+        }
+
+    }
+
+
+    fn a(&mut self, next_task: &TaskContext) {
         self.store_registers();
         next_task.restore_registers();
     }
@@ -164,6 +256,7 @@ impl TaskContext {
     #[inline(always)]
     pub fn store_registers(&mut self) {
         self.store_rax();
+        self.store_rip();
         self.store_rbx();
         self.store_rcx();
         self.store_rdx();
@@ -180,7 +273,6 @@ impl TaskContext {
         self.store_r14();
         self.store_r15();
         self.store_cr3();
-        self.store_rip();
         self.store_flags();
         self.store_cs();
         self.store_ss();
@@ -221,13 +313,13 @@ impl TaskContext {
             "push {2}",
             "push {3}",
             "push {4}",
-            "fxrstor [{5}]",
+            "fxrstor64 [{prev_fx}]",
             in(reg) self.ss,
             in(reg) self.rsp,
             in(reg) self.flags,
             in(reg) self.cs,
             in(reg) self.rip,
-            in(reg) self.fx_save_area.as_ptr() as u64,
+            prev_fx = in(reg) self.fx_save_area.as_ptr(),
             )
         }
     }
@@ -237,7 +329,7 @@ impl TaskContext {
     fn store_rsp(&mut self) {
         unsafe {
             asm!(
-            "lea rax, [rsp+8]", out("rax") self.rsp, options(nostack, nomem, preserves_flags));
+            "lea rax, [rsp+8]", out("rax") self.rsp, options(nostack, preserves_flags));
         }
     }
 
@@ -245,7 +337,7 @@ impl TaskContext {
     #[inline(always)]
     fn store_rip(&mut self) {
         unsafe {
-            asm!("mov rax, [rsp]", out("rax") self.rip, options(nostack, nomem, preserves_flags));
+            asm!("mov rax, [rsp]", out("rax") self.rip, options(nostack, preserves_flags));
         }
     }
 
@@ -256,8 +348,8 @@ impl TaskContext {
             asm!(
             "pushfq",
             "pop {}",
-            out(reg) self.flags,
-            options(nomem, preserves_flags));
+            out(reg) self.flags
+            )
         }
     }
 
@@ -266,9 +358,9 @@ impl TaskContext {
     fn store_fx_save_area(&mut self) {
         unsafe {
             asm!(
-            "fxsave [rax]",
-            in("rax") self.fx_save_area.as_mut_ptr(),
-            options(nostack, nomem, preserves_flags));
+            "fxsave64 [{f}]",
+            f = in(reg) self.fx_save_area.as_mut_ptr(),
+            );
         }
     }
 

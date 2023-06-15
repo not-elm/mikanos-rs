@@ -18,15 +18,17 @@ use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
+use kernel_lib::register::read::read_cr3;
 use kernel_lib::serial_println;
+use kernel_lib::task::TaskContext;
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
+use crate::usb::{enable_msi, serial_bus_usb_devices};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
-use crate::usb::{enable_msi, serial_bus_usb_devices};
 
 mod allocate;
 mod apic;
@@ -39,6 +41,49 @@ mod qemu;
 #[cfg(test)]
 mod test_runner;
 mod usb;
+
+
+static mut TASK_A_CTX: TaskContext = TaskContext::new();
+static mut TASK_B_CTX: TaskContext = TaskContext::new();
+
+#[allow(clippy::fn_to_numeric_cast)]
+fn it_switch() {
+    unsafe {
+        let task_b_stack: [u64; 1024] = [0; 1024];
+
+        let task_b_stack_end = task_b_stack
+            .as_ptr_range()
+            .end as u64;
+
+
+        extern "C" fn task(id: u32, data: u32) {
+            serial_println!("1. Start Task B id = {} data = {}", id, data);
+
+            unsafe {
+                TASK_B_CTX.switch_to(&TASK_A_CTX)
+            };
+        }
+
+        TASK_B_CTX.rip = task as u64;
+        TASK_B_CTX.rdi = 1;
+        TASK_B_CTX.rsi = 42;
+
+        TASK_B_CTX.cr3 = read_cr3();
+        TASK_B_CTX.flags = 0x202;
+        TASK_B_CTX.cs = 1 << 3;
+        TASK_B_CTX.ss = 2 << 3;
+        TASK_B_CTX.rsp = (task_b_stack_end & !0xf) - 8;
+        TASK_B_CTX
+            .fx_save_area
+            .as_mut_ptr()
+            .add(24)
+            .cast::<u32>()
+            .write_volatile(0x1F80);
+
+        TASK_A_CTX.switch_to(&TASK_B_CTX);
+        serial_println!("2. Back to Task A");
+    }
+}
 
 
 
@@ -60,6 +105,7 @@ pub extern "sysv64" fn kernel_main(
     init_alloc(memory_map.clone()).unwrap();
 
     init_layers(*frame_buffer_config).unwrap();
+    it_switch();
 
     apic::start_timer(*rsdp).unwrap();
 

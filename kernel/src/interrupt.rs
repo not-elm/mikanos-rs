@@ -1,10 +1,12 @@
+use x86_64::registers::read_rip;
 use x86_64::structures::idt::{InterruptStackFrame, PageFaultErrorCode};
 
 use kernel_lib::error::KernelResult;
 use kernel_lib::interrupt::gate_type::GateType;
+use kernel_lib::interrupt::IDT;
 use kernel_lib::interrupt::interrupt_descriptor_attribute::InterruptDescriptorAttribute;
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
-use kernel_lib::interrupt::IDT;
+use kernel_lib::serial_println;
 
 use crate::interrupt::overflow::interrupt_overflow;
 use crate::interrupt::timer::interrupt_timer_handler;
@@ -52,5 +54,7 @@ extern "x86-interrupt" fn page_fault_handler(
     println!("Accessed Address: {:?}", Cr2::read());
     println!("Error Code: {:?}", error_code);
     println!("{:#?}", stack_frame);
+    serial_println!("{:?}", stack_frame);
+    serial_println!("rip = {:?}", read_rip());
     common_lib::assembly::hlt_forever();
 }
