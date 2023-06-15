@@ -42,9 +42,10 @@ mod qemu;
 mod test_runner;
 mod usb;
 
-
-static mut TASK_A_CTX: TaskContext = TaskContext::new();
-static mut TASK_B_CTX: TaskContext = TaskContext::new();
+#[repr(align(16))]
+pub struct A(TaskContext);
+static mut TASK_A_CTX: A = A(TaskContext::new());
+static mut TASK_B_CTX:  A = A(TaskContext::new());
 
 #[allow(clippy::fn_to_numeric_cast)]
 fn it_switch() {
@@ -56,31 +57,32 @@ fn it_switch() {
             .end as u64;
 
 
-        extern "C" fn task(id: u32, data: u32) {
+        unsafe extern "sysv64" fn task(id: u32, data: u32) {
             serial_println!("1. Start Task B id = {} data = {}", id, data);
 
             unsafe {
-                TASK_B_CTX.switch_to(&TASK_A_CTX)
+                TASK_B_CTX.0.switch_to(&TASK_A_CTX.0)
             };
         }
 
-        TASK_B_CTX.rip = task as u64;
-        TASK_B_CTX.rdi = 1;
-        TASK_B_CTX.rsi = 42;
+        TASK_B_CTX.0.rip = task as u64;
+        TASK_B_CTX.0.rdi = 1;
+        TASK_B_CTX.0.rsi = 42;
 
-        TASK_B_CTX.cr3 = read_cr3();
-        TASK_B_CTX.flags = 0x202;
-        TASK_B_CTX.cs = 1 << 3;
-        TASK_B_CTX.ss = 2 << 3;
-        TASK_B_CTX.rsp = (task_b_stack_end & !0xf) - 8;
+        TASK_B_CTX.0.cr3 = read_cr3();
+        TASK_B_CTX.0.flags = 0x202;
+        TASK_B_CTX.0.cs = 1 << 3;
+        TASK_B_CTX.0.ss = 2 << 3;
+        TASK_B_CTX.0.rsp = (task_b_stack_end & !0xf) - 8;
         TASK_B_CTX
+            .0
             .fx_save_area
             .as_mut_ptr()
             .add(24)
             .cast::<u32>()
             .write_volatile(0x1F80);
 
-        TASK_A_CTX.switch_to(&TASK_B_CTX);
+        TASK_A_CTX.0.switch_to(&TASK_B_CTX.0);
         serial_println!("2. Back to Task A");
     }
 }
