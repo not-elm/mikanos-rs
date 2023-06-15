@@ -17,7 +17,7 @@ lazy_static = { version = "1.4.0", features = ["spin_no_std"] }
 linked_list_allocator = "0.10.4"
 pic8259 = "0.10.1"
 anyhow = { workspace = true }
-
+paste = { workspace = true }
 
 
 [build-dependencies]

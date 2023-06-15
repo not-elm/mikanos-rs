@@ -7,8 +7,26 @@ pub struct FxSaveArea([u8; 512]);
 
 impl FxSaveArea {
     #[inline(always)]
+    pub const fn new() -> Self {
+        Self([0; 512])
+    }
+
+
+    #[inline(always)]
     pub fn buff(&self) -> &[u8] {
         &self.0
+    }
+
+
+    #[inline(always)]
+    pub fn buff_mut(&mut self) -> &mut [u8] {
+        &mut self.0
+    }
+
+
+    #[inline(always)]
+    pub const fn as_ptr(&self) -> *const u8 {
+        self.0.as_ptr()
     }
 
 
@@ -91,7 +109,58 @@ macro_rules! store_register_32bits {
 }
 
 
+macro_rules! restore_register {
+    ($register: ident) => {
+        paste::paste! {
+            #[inline(always)]
+            pub fn [<restore_ $register>](&self) {
+                unsafe {
+                    $crate::register::write::[<write_ $register>](self.$register);
+                }
+            }
+        }
+    };
+}
+
+
 impl TaskContext {
+    #[inline(always)]
+    pub const fn new() -> Self {
+        Self {
+            rax: 0,
+            rbx: 0,
+            rcx: 0,
+            rdx: 0,
+            rdi: 0,
+            rsi: 0,
+            rsp: 0,
+            rbp: 0,
+            r8: 0,
+            r9: 0,
+            r10: 0,
+            r11: 0,
+            r12: 0,
+            r13: 0,
+            r14: 0,
+            r15: 0,
+            cr3: 0,
+            rip: 0,
+            flags: 0,
+            cs: 0,
+            ss: 0,
+            fs: 0,
+            gs: 0,
+            fx_save_area: FxSaveArea::new(),
+        }
+    }
+
+
+    pub fn switch_to(&mut self, next_task: &TaskContext) {
+        self.store_registers();
+        next_task.restore_registers();
+    }
+
+
     #[inline(always)]
     pub fn store_registers(&mut self) {
         self.store_rax();
@@ -122,9 +191,53 @@ impl TaskContext {
 
 
     #[inline(always)]
+    pub fn restore_registers(&self) {
+        self.fxrstor();
+        self.restore_rax();
+        self.restore_rbx();
+        self.restore_rcx();
+        self.restore_rdx();
+        self.restore_rsi();
+        self.restore_rbp();
+        self.restore_r8();
+        self.restore_r9();
+        self.restore_r10();
+        self.restore_r11();
+        self.restore_r12();
+        self.restore_r13();
+        self.restore_r14();
+        self.restore_r15();
+        self.restore_rdi();
+        unsafe { asm!("iretq") };
+    }
+
+
+    #[inline(always)]
+    fn fxrstor(&self) {
+        unsafe {
+            asm!(
+            "push {0}",
+            "push {1}",
+            "push {2}",
+            "push {3}",
+            "push {4}",
+            "fxrstor [{5}]",
+            in(reg) self.ss,
+            in(reg) self.rsp,
+            in(reg) self.flags,
+            in(reg) self.cs,
+            in(reg) self.rip,
+            in(reg) self.fx_save_area.as_ptr() as u64,
+            )
+        }
+    }
+
+
+    #[inline(always)]
     fn store_rsp(&mut self) {
         unsafe {
-            asm!("mov rax, [rsp+8]", out("rax") self.rsp, options(nostack, nomem, preserves_flags));
+            asm!(
+            "lea rax, [rsp+8]", out("rax") self.rsp, options(nostack, nomem, preserves_flags));
         }
     }
 
@@ -180,6 +293,23 @@ impl TaskContext {
     store_register_32bits!(ss);
     store_register_32bits!(fs);
     store_register_32bits!(gs);
+
+
+    restore_register!(rax);
+    restore_register!(rbx);
+    restore_register!(rcx);
+    restore_register!(rdx);
+    restore_register!(rsi);
+    restore_register!(rbp);
+    restore_register!(r8);
+    restore_register!(r9);
+    restore_register!(r10);
+    restore_register!(r11);
+    restore_register!(r12);
+    restore_register!(r13);
+    restore_register!(r14);
+    restore_register!(r15);
+    restore_register!(rdi);
 }
 
 

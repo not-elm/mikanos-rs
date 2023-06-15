@@ -1,5 +1,6 @@
 use core::arch::asm;
 
+
 macro_rules! read_register {
     ($register: ident) => {
         paste::paste! {
@@ -70,7 +71,7 @@ pub fn read_rsp_next() -> u64 {
 
     unsafe {
         core::arch::asm!(
-        "mov rax, [rsp+8]",
+        "lea rax, [rsp+8]",
         out("rax") r,
         options(nostack, nomem, preserves_flags)
         );
