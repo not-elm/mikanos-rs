@@ -14,6 +14,7 @@ extern crate alloc;
 
 use core::ffi::c_void;
 use core::panic::PanicInfo;
+use core::sync::atomic::{AtomicBool, Ordering};
 
 use spin::RwLock;
 use uefi::table::boot::MemoryMapIter;
@@ -47,29 +48,40 @@ mod usb;
 
 static mut TASK_A_CTX: AlignedTaskContext = AlignedTaskContext::uninit();
 static mut TASK_B_CTX: AlignedTaskContext = AlignedTaskContext::uninit();
+static TASK_FLAG: AtomicBool = AtomicBool::new(true);
 
+pub fn switch() {
+    unsafe {
+        let running_a = TASK_FLAG.load(Ordering::Relaxed);
+        TASK_FLAG.store(!running_a, Ordering::Relaxed);
+        serial_println!("running A = {}", running_a);
+        if running_a {
+            TASK_A_CTX.switch_to(&TASK_B_CTX);
+        } else {
+            TASK_B_CTX.switch_to(&TASK_A_CTX);
+        }
+    }
+}
 
 #[allow(clippy::fn_to_numeric_cast)]
-fn it_switch() {
+fn init_task() {
     unsafe {
-        // let task_b_stack: [u64; 1024] = [0; 1024];
-        // let task_b_stack_end = task_b_stack
-        //     .as_ptr_range()
-        //     .end as u64;
-        //
-        // unsafe extern "sysv64" fn task(id: u64, data: u64) {
-        //     serial_println!("1. Start Task B id = {} data = {}", id, data);
-        //     TASK_B_CTX
-        //
-        //         .switch_to(&TASK_A_CTX);
-        // }
-        //
-        // TASK_B_CTX
-        //
-        //     .update(task as u64, (task_b_stack_end & !0xF) - 8);
-        //
-        // TASK_A_CTX.switch_to(&TASK_B_CTX);
-        // serial_println!("2. Back to Task A");
+        let task_b_stack: [u64; 1024] = [0; 1024];
+        let task_b_stack_end = task_b_stack
+            .as_ptr_range()
+            .end as u64;
+
+        unsafe extern "sysv64" fn task(id: u64, data: u64) {
+            let mut count = 0;
+
+            loop {
+                serial_println!("1. Start Task B id = {} data = {}", id, data);
+                println!("Task B count = {}", count);
+                count += 1;
+            }
+        }
+
+        TASK_B_CTX.update(task as u64, (task_b_stack_end & !0xF) - 8);
     }
 }
 
@@ -85,6 +97,8 @@ pub extern "sysv64" fn kernel_main(
 ) {
     init_gdt();
 
+    init_task();
+
     init_idt().unwrap();
 
     init_paging_table();
@@ -92,7 +106,7 @@ pub extern "sysv64" fn kernel_main(
     init_alloc(memory_map.clone()).unwrap();
 
     init_layers(*frame_buffer_config).unwrap();
-    it_switch();
+
 
     apic::start_timer(*rsdp).unwrap();
 

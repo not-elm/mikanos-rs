@@ -23,7 +23,6 @@ fn it_switch_task_context() {
         TASK_B_CTX
             .update(task as u64, (task_b_stack_end & !0xF) - 8);
 
-
         TASK_A_CTX
             .switch_to(&TASK_B_CTX);
         serial_println!("2. Back to Task A");
