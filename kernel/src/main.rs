@@ -12,26 +12,27 @@
 extern crate alloc;
 
 
+use alloc::vec;
+use alloc::vec::Vec;
 use core::ffi::c_void;
 use core::panic::PanicInfo;
 use core::sync::atomic::{AtomicBool, Ordering};
 
-use spin::RwLock;
 use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::register::read::read_cr3;
+use kernel_lib::interrupt::asm::{cli, sti_and_hlt};
 use kernel_lib::serial_println;
 use kernel_lib::task::AlignedTaskContext;
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
-use crate::layers::init_layers;
+use crate::layers::{init_layers, COUNT, LAYERS};
 use crate::paging::init_paging_table;
-use crate::usb::{enable_msi, serial_bus_usb_devices};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
+use crate::usb::{enable_msi, serial_bus_usb_devices};
 
 mod allocate;
 mod apic;
@@ -54,7 +55,7 @@ pub fn switch() {
     unsafe {
         let running_a = TASK_FLAG.load(Ordering::Relaxed);
         TASK_FLAG.store(!running_a, Ordering::Relaxed);
-        serial_println!("running A = {}", running_a);
+
         if running_a {
             TASK_A_CTX.switch_to(&TASK_B_CTX);
         } else {
@@ -63,23 +64,42 @@ pub fn switch() {
     }
 }
 
+
+static mut TASK_B_STACK: Vec<u64> = Vec::new();
+
+unsafe extern "sysv64" fn task(_id: u64, _data: u64) {
+    let mut count = 0usize;
+    loop {
+        cli();
+        count = count
+            .checked_add(1)
+            .unwrap_or(0);
+        update_count(count);
+        sti_and_hlt();
+    }
+}
+
+
+fn update_count(count: usize) {
+    LAYERS
+        .layers_mut()
+        .lock()
+        .borrow_mut()
+        .update_layer(COUNT, |layer| {
+            let window = layer.require_count().unwrap();
+            window.write_count(count as usize);
+        })
+        .unwrap();
+}
+
+
 #[allow(clippy::fn_to_numeric_cast)]
 fn init_task() {
     unsafe {
-        let task_b_stack: [u64; 1024] = [0; 1024];
-        let task_b_stack_end = task_b_stack
+        TASK_B_STACK = vec![0; 1024];
+        let task_b_stack_end = TASK_B_STACK
             .as_ptr_range()
             .end as u64;
-
-        unsafe extern "sysv64" fn task(id: u64, data: u64) {
-            let mut count = 0;
-
-            loop {
-                serial_println!("1. Start Task B id = {} data = {}", id, data);
-                println!("Task B count = {}", count);
-                count += 1;
-            }
-        }
 
         TASK_B_CTX.update(task as u64, (task_b_stack_end & !0xF) - 8);
     }
@@ -97,8 +117,6 @@ pub extern "sysv64" fn kernel_main(
 ) {
     init_gdt();
 
-    init_task();
-
     init_idt().unwrap();
 
     init_paging_table();
@@ -107,8 +125,8 @@ pub extern "sysv64" fn kernel_main(
 
     init_layers(*frame_buffer_config).unwrap();
 
-
     apic::start_timer(*rsdp).unwrap();
+
 
     #[cfg(test)]
     test_main();

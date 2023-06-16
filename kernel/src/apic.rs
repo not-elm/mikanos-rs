@@ -11,7 +11,7 @@ pub fn start_timer(rsdp: Option<*const c_void>) -> KernelResult<()> {
     let mut apic_timer = LocalApicTimer::new();
 
     apic_timer.start(u32::MAX, LocalApicTimerDivide::By1);
-    fadt.wait_milli_for(1000);
+    fadt.wait_milli_for(100);
     let elapsed = apic_timer.elapsed();
     apic_timer.stop();
 

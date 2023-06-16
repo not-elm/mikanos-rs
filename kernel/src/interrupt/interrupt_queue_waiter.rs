@@ -1,21 +1,14 @@
 use common_lib::queue::queueing::Queueing;
 use kernel_lib::interrupt::asm::{cli, sti_and_hlt};
 
-use crate::interrupt::InterruptMessage;
 use crate::interrupt::mouse::INTERRUPT_QUEUE;
+use crate::interrupt::InterruptMessage;
 
 pub struct InterruptQueueWaiter;
 
 impl InterruptQueueWaiter {
     pub fn new() -> Self {
         Self {}
-    }
-
-
-    pub fn wait_tick_for(self, tick: usize) {
-        let _ = self
-            .filter(|message| matches!(InterruptMessage::ApicTimer, message))
-            .take(tick);
     }
 }
 

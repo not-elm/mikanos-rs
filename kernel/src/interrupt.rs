@@ -1,28 +1,24 @@
-use x86_64::registers::read_rip;
-use x86_64::structures::idt::{InterruptStackFrame, PageFaultErrorCode};
-
 use kernel_lib::error::KernelResult;
 use kernel_lib::interrupt::gate_type::GateType;
-use kernel_lib::interrupt::IDT;
 use kernel_lib::interrupt::interrupt_descriptor_attribute::InterruptDescriptorAttribute;
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
-use kernel_lib::serial_println;
+use kernel_lib::interrupt::IDT;
 
 use crate::interrupt::overflow::interrupt_overflow;
+use crate::interrupt::page_fault::page_fault_handler;
 use crate::interrupt::timer::interrupt_timer_handler;
-use crate::println;
 
 use self::mouse::interrupt_mouse_handler;
 
 pub mod interrupt_queue_waiter;
 pub mod mouse;
 mod overflow;
-mod timer;
+mod page_fault;
+pub mod timer;
 
 #[derive(Debug)]
 pub enum InterruptMessage {
     Xhci,
-    ApicTimer,
 }
 
 
@@ -41,20 +37,4 @@ pub fn init_idt() -> KernelResult {
     }
 
     Ok(())
-}
-
-
-extern "x86-interrupt" fn page_fault_handler(
-    stack_frame: InterruptStackFrame,
-    error_code: PageFaultErrorCode,
-) {
-    use x86_64::registers::control::Cr2;
-
-    println!("EXCEPTION: PAGE FAULT");
-    println!("Accessed Address: {:?}", Cr2::read());
-    println!("Error Code: {:?}", error_code);
-    println!("{:#?}", stack_frame);
-    serial_println!("{:?}", stack_frame);
-    serial_println!("rip = {:?}", read_rip());
-    common_lib::assembly::hlt_forever();
 }
