@@ -12,11 +12,14 @@ macro_rules! kernel_entry_point {
         struct KernelStack([u8; 1024 * 1024]);
 
         impl KernelStack {
+            #[inline(always)]
             const fn new() -> Self {
                 Self([0; 1024 * 1024])
             }
-            pub fn end_addr(&self) -> usize {
-                self.0.as_ptr().addr() + self.0.len()
+
+            #[inline(always)]
+            pub fn end_addr(&self) -> u64 {
+                self.0.as_ptr() as u64 + 1024 * 1024
             }
         }
 

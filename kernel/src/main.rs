@@ -44,8 +44,14 @@ mod usb;
 
 #[repr(align(16))]
 pub struct A(TaskContext);
+
 static mut TASK_A_CTX: A = A(TaskContext::new());
-static mut TASK_B_CTX:  A = A(TaskContext::new());
+static mut TASK_B_CTX: A = A(TaskContext::new());
+
+
+extern "C" {
+    fn SwitchContext(next: u64, current: u64);
+}
 
 #[allow(clippy::fn_to_numeric_cast)]
 fn it_switch() {
@@ -60,9 +66,7 @@ fn it_switch() {
         unsafe extern "sysv64" fn task(id: u32, data: u32) {
             serial_println!("1. Start Task B id = {} data = {}", id, data);
 
-            unsafe {
-                TASK_B_CTX.0.switch_to(&TASK_A_CTX.0)
-            };
+            SwitchContext(((&mut TASK_A_CTX.0) as *mut TaskContext) as u64, ((&mut TASK_B_CTX.0) as *mut TaskContext) as u64);
         }
 
         TASK_B_CTX.0.rip = task as u64;
@@ -82,7 +86,9 @@ fn it_switch() {
             .cast::<u32>()
             .write_volatile(0x1F80);
 
-        TASK_A_CTX.0.switch_to(&TASK_B_CTX.0);
+        SwitchContext(((&mut TASK_B_CTX.0) as *mut TaskContext) as u64, ((&mut TASK_A_CTX.0) as *mut TaskContext) as u64);
+
+        // TASK_A_CTX.0.switch_to(&TASK_B_CTX.0);
         serial_println!("2. Back to Task A");
     }
 }

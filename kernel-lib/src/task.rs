@@ -167,8 +167,8 @@ impl TaskContext {
         unsafe {
             asm!("call {inner}",
             inner = sym inner,
-            in("rdi") self,
-            in("rsi") next_task
+            in("rdi") next_task,
+            in("rsi") self
             )
         }
     }
