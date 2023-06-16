@@ -8,19 +8,21 @@
 #![feature(alloc_error_handler)]
 #![feature(abi_x86_interrupt)]
 #![feature(result_option_inspect)]
+
 extern crate alloc;
 
 
 use core::ffi::c_void;
 use core::panic::PanicInfo;
 
+use spin::RwLock;
 use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
 use kernel_lib::register::read::read_cr3;
 use kernel_lib::serial_println;
-use kernel_lib::task::TaskContext;
+use kernel_lib::task::AlignedTaskContext;
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
@@ -42,57 +44,34 @@ mod qemu;
 mod test_runner;
 mod usb;
 
-#[repr(align(16))]
-pub struct A(TaskContext);
 
-static mut TASK_A_CTX: A = A(TaskContext::new());
-static mut TASK_B_CTX: A = A(TaskContext::new());
+static mut TASK_A_CTX: AlignedTaskContext = AlignedTaskContext::uninit();
+static mut TASK_B_CTX: AlignedTaskContext = AlignedTaskContext::uninit();
 
-
-extern "C" {
-    fn SwitchContext(next: u64, current: u64);
-}
 
 #[allow(clippy::fn_to_numeric_cast)]
 fn it_switch() {
     unsafe {
-        let task_b_stack: [u64; 1024] = [0; 1024];
-
-        let task_b_stack_end = task_b_stack
-            .as_ptr_range()
-            .end as u64;
-
-
-        unsafe extern "sysv64" fn task(id: u32, data: u32) {
-            serial_println!("1. Start Task B id = {} data = {}", id, data);
-
-            SwitchContext(((&mut TASK_A_CTX.0) as *mut TaskContext) as u64, ((&mut TASK_B_CTX.0) as *mut TaskContext) as u64);
-        }
-
-        TASK_B_CTX.0.rip = task as u64;
-        TASK_B_CTX.0.rdi = 1;
-        TASK_B_CTX.0.rsi = 42;
-
-        TASK_B_CTX.0.cr3 = read_cr3();
-        TASK_B_CTX.0.flags = 0x202;
-        TASK_B_CTX.0.cs = 1 << 3;
-        TASK_B_CTX.0.ss = 2 << 3;
-        TASK_B_CTX.0.rsp = (task_b_stack_end & !0xf) - 8;
-        TASK_B_CTX
-            .0
-            .fx_save_area
-            .as_mut_ptr()
-            .add(24)
-            .cast::<u32>()
-            .write_volatile(0x1F80);
-
-        SwitchContext(((&mut TASK_B_CTX.0) as *mut TaskContext) as u64, ((&mut TASK_A_CTX.0) as *mut TaskContext) as u64);
-
-        // TASK_A_CTX.0.switch_to(&TASK_B_CTX.0);
-        serial_println!("2. Back to Task A");
+        // let task_b_stack: [u64; 1024] = [0; 1024];
+        // let task_b_stack_end = task_b_stack
+        //     .as_ptr_range()
+        //     .end as u64;
+        //
+        // unsafe extern "sysv64" fn task(id: u64, data: u64) {
+        //     serial_println!("1. Start Task B id = {} data = {}", id, data);
+        //     TASK_B_CTX
+        //
+        //         .switch_to(&TASK_A_CTX);
+        // }
+        //
+        // TASK_B_CTX
+        //
+        //     .update(task as u64, (task_b_stack_end & !0xF) - 8);
+        //
+        // TASK_A_CTX.switch_to(&TASK_B_CTX);
+        // serial_println!("2. Back to Task A");
     }
 }
-
 
 
 kernel_entry_point!();

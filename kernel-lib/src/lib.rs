@@ -5,9 +5,10 @@
 #![feature(sync_unsafe_cell)]
 #![feature(result_option_inspect)]
 #![feature(slice_flatten)]
+#![feature(naked_functions)]
 #![cfg_attr(not(test), no_std)]
 #![allow(clippy::identity_op)]
-
+#![feature(thread_local)]
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
