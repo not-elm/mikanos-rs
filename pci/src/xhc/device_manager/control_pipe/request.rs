@@ -42,15 +42,21 @@ impl Request {
         setup_data.set_length(0);
         Configuration(setup_data)
     }
-    pub fn set_protocol(request_type: RequestType) -> Self {
+
+
+    pub fn set_protocol(request_type: RequestType, interface_num: u16) -> Self {
         let mut setup = SetupStage::new();
 
+        setup.set_interrupt_on_completion();
+        setup.set_index(interface_num);
         setup.set_value(0);
         setup.set_request_type(request_type.raw());
         setup.set_request(11);
         setup.set_index(0);
         SetProtocol(setup)
     }
+
+
     pub fn setup_stage(&self) -> SetupStage {
         match self {
             GetDescriptor(setup) => *setup,

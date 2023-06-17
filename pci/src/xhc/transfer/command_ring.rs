@@ -14,8 +14,8 @@ pub struct CommandRing<T> {
 
 
 impl<T> CommandRing<T>
-    where
-        T: DoorbellRegistersAccessible,
+where
+    T: DoorbellRegistersAccessible,
 {
     pub fn new(ring_ptr_addr: u64, ring_size: usize, doorbell: &Rc<RefCell<T>>) -> Self {
         Self {
@@ -32,11 +32,7 @@ impl<T> CommandRing<T>
     }
 
 
-    pub fn push_configure_endpoint(
-        &mut self,
-        input_context_addr: u64,
-        slot_id: u8,
-    ) -> PciResult {
+    pub fn push_configure_endpoint(&mut self, input_context_addr: u64, slot_id: u8) -> PciResult {
         let mut configure_endpoint_trb = ConfigureEndpoint::new();
         configure_endpoint_trb.set_slot_id(slot_id);
         configure_endpoint_trb.set_input_context_pointer(input_context_addr);

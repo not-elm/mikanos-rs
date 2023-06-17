@@ -4,7 +4,7 @@
 name = "bootloader"
 version = "0.1.0"
 edition = "2021"
-#forced-target = "x86_64-unknown-uefi"
+#forced-target = "arch-unknown-uefi"
 
 
 [dependencies]

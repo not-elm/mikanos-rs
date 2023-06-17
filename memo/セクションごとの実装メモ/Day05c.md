@@ -20,7 +20,7 @@ cc::Build::new()
         .static_flag(true)
         .object("hankaku.o")
         .cpp_link_stdlib(None)
-        // .include("include/x86_64-linux-gnu/c++/11/bits/")
+        // .include("include/arch-linux-gnu/c++/11/bits/")
         .file("font.cpp")
         .compile("font");
 ```

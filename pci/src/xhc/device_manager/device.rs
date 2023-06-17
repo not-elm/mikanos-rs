@@ -9,9 +9,10 @@ use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::mouse::driver::MouseDriver;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
+use crate::xhc::device_manager::control_pipe::control_out::ControlOut;
 use crate::xhc::device_manager::control_pipe::request::Request;
 use crate::xhc::device_manager::control_pipe::request_type::RequestType;
-use crate::xhc::device_manager::control_pipe::ControlPipeTransfer;
+use crate::xhc::device_manager::control_pipe::{request, request_type, ControlPipeTransfer};
 use crate::xhc::device_manager::device::device_map::DeviceConfig;
 use crate::xhc::device_manager::device::device_slot::DeviceSlot;
 use crate::xhc::device_manager::device::phase::{InitStatus, Phase, DATA_BUFF_SIZE};
@@ -125,14 +126,22 @@ where
 
 
     pub fn on_endpoints_configured(&mut self) -> PciResult {
-        let request_type = RequestType::new()
-            .with_ty(1)
-            .with_recipient(1);
+        for num in self
+            .phase
+            .interface_nums()
+            .unwrap()
+        {
+            let request_type = RequestType::new()
+                .with_ty(1)
+                .with_recipient(1);
 
-        self.slot
-            .default_control_pipe_mut()
-            .control_out()
-            .no_data(Request::set_protocol(request_type))
+            self.slot
+                .default_control_pipe_mut()
+                .control_out()
+                .no_data(Request::set_protocol(request_type, num as u16))?;
+        }
+
+        Ok(())
     }
 
 

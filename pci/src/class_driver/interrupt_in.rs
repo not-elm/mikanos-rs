@@ -4,31 +4,31 @@ use core::cell::RefCell;
 
 use xhci::ring::trb::transfer::Normal;
 
-use kernel_lib::serial_println;
-
 use crate::class_driver::ClassDriverOperate;
 use crate::error::PciResult;
-use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
 use crate::xhc::device_manager::control_pipe::request::Request;
+use crate::xhc::device_manager::control_pipe::{ControlPipe, ControlPipeTransfer};
+use crate::xhc::device_manager::descriptor::structs::interface_descriptor::InterfaceDescriptor;
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::device_manager::endpoint_config::EndpointConfig;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
 
 pub struct InterruptIn<T>
-    where
-        T: DoorbellRegistersAccessible,
+where
+    T: DoorbellRegistersAccessible,
 {
     slot_id: u8,
     class_driver: Box<dyn ClassDriverOperate>,
     endpoint_config: EndpointConfig,
     transfer_ring: TransferRing,
+    interface: InterfaceDescriptor,
     doorbell: Rc<RefCell<T>>,
 }
 
 impl<T> InterruptIn<T>
-    where
-        T: DoorbellRegistersAccessible,
+where
+    T: DoorbellRegistersAccessible,
 {
     pub fn new(
         slot_id: u8,
@@ -36,27 +36,29 @@ impl<T> InterruptIn<T>
         endpoint_config: &EndpointConfig,
         transfer_ring: TransferRing,
         doorbell: &Rc<RefCell<T>>,
+        interface: InterfaceDescriptor,
     ) -> InterruptIn<T> {
         Self {
             slot_id,
             class_driver,
             endpoint_config: endpoint_config.clone(),
             transfer_ring,
+            interface,
             doorbell: Rc::clone(doorbell),
         }
     }
 }
 
 impl<T> InterruptIn<T>
-    where
-        T: DoorbellRegistersAccessible,
+where
+    T: DoorbellRegistersAccessible,
 {
     pub fn get_report<Doorbell>(
         &mut self,
         default_control_pipe: &mut ControlPipe<Doorbell>,
     ) -> PciResult
-        where
-            Doorbell: DoorbellRegistersAccessible,
+    where
+        Doorbell: DoorbellRegistersAccessible,
     {
         self.class_driver
             .on_data_received()?;
@@ -97,7 +99,6 @@ impl<T> InterruptIn<T>
 
         self.notify()?;
 
-        serial_println!("************************");
         Ok(())
     }
 
@@ -107,10 +108,17 @@ impl<T> InterruptIn<T>
     }
 
 
+    pub fn interface_ref(&self) -> &InterfaceDescriptor {
+        &self.interface
+    }
+
+
     pub fn transfer_ring_addr(&self) -> u64 {
         self.transfer_ring
             .base_address()
     }
+
+
     pub fn data_buff_addr(&self) -> u64 {
         self.class_driver
             .data_buff_addr()
@@ -125,7 +133,7 @@ impl<T> InterruptIn<T>
                     self.endpoint_config
                         .endpoint_id(),
                 )
-                    .as_u8(),
+                .as_u8(),
                 0,
             )
     }

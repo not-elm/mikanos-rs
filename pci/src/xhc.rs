@@ -125,11 +125,7 @@ where
 
 
     pub fn process_all_events(&mut self) {
-        while self
-            .process_event()
-            .map(|p| p.unwrap())
-            .is_some()
-        {}
+        while self.process_event().is_some() {}
     }
 
 

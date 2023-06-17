@@ -39,6 +39,11 @@ impl HidDeviceDescriptors {
     }
 
 
+    pub fn interface(&self) -> InterfaceDescriptor {
+        self.interface.clone()
+    }
+
+
     pub fn endpoint_config(&self) -> EndpointConfig {
         EndpointConfig::new(&self.endpoint)
     }

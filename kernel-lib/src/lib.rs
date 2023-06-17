@@ -15,6 +15,7 @@ extern crate alloc;
 pub mod acpi;
 pub mod allocator;
 pub mod apic;
+pub mod context;
 pub mod control_registers;
 pub mod error;
 pub mod gop;

@@ -23,6 +23,14 @@ impl InputContext {
             .set_configuration_value(config_value);
     }
 
+
+    pub fn set_interface_num(&mut self, interface_num: u8) {
+        self.0
+            .control_mut()
+            .set_interface_number(interface_num);
+    }
+
+
     pub fn copy_from_device_context(&mut self, device_context_slot: &dyn SlotHandler) {
         let device_slot_context = device_context_slot.as_ref();
         let input_slot_context = self
@@ -67,7 +75,7 @@ impl InputContext {
 
 
     pub fn input_context_addr(&self) -> u64 {
-        (&self.0 as *const Input32Byte) as u64
+        ((&self.0) as *const Input32Byte) as u64
     }
 }
 

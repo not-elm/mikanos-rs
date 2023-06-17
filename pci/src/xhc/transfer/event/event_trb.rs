@@ -21,6 +21,7 @@ impl EventTrb {
     pub fn new(trb: TrbRawData, cycle_bit: bool) -> Option<Self> {
         let raw_data_buff: [u32; 4] = trb.into();
 
+
         if read_cycle_bit(trb.raw()) != cycle_bit {
             return None;
         }
@@ -42,6 +43,19 @@ impl EventTrb {
         };
 
         Some(event_trb)
+    }
+
+
+    pub fn circle_bit(&self) -> Option<bool> {
+        match self {
+            Self::CommandCompletionEvent(e) => Some(e.cycle_bit()),
+            Self::PortStatusChangeEvent(e) => Some(e.cycle_bit()),
+            Self::TransferEvent {
+                transfer_event,
+                target_event: _,
+            } => Some(transfer_event.cycle_bit()),
+            Self::NotSupport { trb_type: _ } => None,
+        }
     }
 }
 

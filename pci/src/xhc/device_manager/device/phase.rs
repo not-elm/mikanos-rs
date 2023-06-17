@@ -1,4 +1,5 @@
 use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use xhci::ring::trb::event::TransferEvent;
 
@@ -43,4 +44,7 @@ where
         transfer_event: TransferEvent,
         target_event: TargetEvent,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)>;
+
+
+    fn interface_nums(&self) -> Option<Vec<u8>>;
 }

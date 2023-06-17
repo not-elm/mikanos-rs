@@ -1,8 +1,8 @@
 use crate::error::PciResult;
 use crate::pci_error;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
+use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
 
 #[derive(Debug, Copy, Clone)]
 pub struct TransferRing {
@@ -19,7 +19,7 @@ impl TransferRing {
         Self {
             ring_ptr_base_address,
             ring_ptr_address: ring_ptr_base_address,
-            ring_end_address: ring_ptr_base_address + trb_byte_size() * (ring_size - 1) as u64,
+            ring_end_address: ring_ptr_base_address + trb_byte_size() * (ring_size) as u64,
             ring_size,
             cycle_bit,
         }
@@ -80,14 +80,14 @@ impl TransferRing {
         self.ring_ptr_address
     }
 
-    
+
     pub fn is_end_address(&self, address: u64) -> bool {
         self.ring_end_address <= address
     }
 
 
     pub fn is_end_event_address(&self, address: u64) -> bool {
-        self.ring_end_address + trb_byte_size() <= address
+        self.ring_end_address <= address
     }
 
 

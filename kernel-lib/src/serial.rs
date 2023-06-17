@@ -15,6 +15,7 @@ fn new_serial_port() -> spin::Mutex<SerialPort> {
     spin::Mutex::new(serial_port)
 }
 
+
 #[doc(hidden)]
 pub fn _print(args: ::core::fmt::Arguments) {
     use core::fmt::Write;

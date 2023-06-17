@@ -1,3 +1,4 @@
+use kernel_lib::serial_println;
 use xhci::context::{EndpointHandler, EndpointType};
 
 use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::EndpointDescriptor;
@@ -66,7 +67,7 @@ impl EndpointConfig {
         tr_buff_addr: u64,
         endpoint_ctx: &mut dyn EndpointHandler,
     ) {
-        endpoint_ctx.set_endpoint_type(EndpointType::InterruptIn);
+        endpoint_ctx.set_endpoint_type(self.ep_type);
         endpoint_ctx.set_tr_dequeue_pointer(tr_buff_addr);
         endpoint_ctx.set_max_packet_size(self.max_packet_size);
         endpoint_ctx.set_interval(self.interval - 1);

@@ -1,6 +1,8 @@
 use alloc::string::ToString;
 use core::fmt::Write;
+use kernel_lib::serial_println;
 
+use crate::apic::TIMER_500_MILLI_INTERVAL;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 use pci::class_driver::mouse::driver::MouseDriver;
@@ -10,7 +12,6 @@ use pci::xhc::registers::external::{External, IdentityMapper};
 use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
-use crate::init_task;
 use crate::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
 use crate::interrupt::timer::TIMER;
 use crate::layers::{KEYBOARD_TEXT, LAYERS};
@@ -23,13 +24,13 @@ pub fn start_xhci_host_controller(
 
     let queue_waiter = InterruptQueueWaiter::new();
 
-    init_task();
-
     unsafe {
-        TIMER.set(2);
+        crate::task::init();
+        TIMER.set(TIMER_500_MILLI_INTERVAL);
     }
 
     queue_waiter.for_each(|_| {
+        serial_println!("process_event ");
         xhc_controller.process_event();
     });
 

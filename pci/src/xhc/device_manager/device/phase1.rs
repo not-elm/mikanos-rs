@@ -1,4 +1,5 @@
 use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 use xhci::ring::trb::event::TransferEvent;
 
@@ -56,5 +57,10 @@ where
                 self.keyboard.clone(),
             ))),
         ))
+    }
+
+
+    fn interface_nums(&self) -> Option<Vec<u8>> {
+        None
     }
 }

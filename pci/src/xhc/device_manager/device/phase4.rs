@@ -45,4 +45,14 @@ where
 
         Ok((InitStatus::not(), None))
     }
+
+
+    fn interface_nums(&self) -> Option<Vec<u8>> {
+        Some(
+            self.interrupters
+                .iter()
+                .map(|i| i.interface_ref().interface_id)
+                .collect(),
+        )
+    }
 }

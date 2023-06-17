@@ -1,8 +1,9 @@
-use crate::interrupt::idt_descriptor::IdtDescriptor;
 use core::arch::asm;
 
+use crate::interrupt::idt_descriptor::IdtDescriptor;
+
 /// 割り込みを有効化します。
-#[inline]
+#[inline(always)]
 pub fn sti() {
     unsafe {
         asm!("sti", options(nomem, nostack));
@@ -11,7 +12,7 @@ pub fn sti() {
 
 
 /// 割り込みを有効化し、CPUを休止させます。
-#[inline]
+#[inline(always)]
 pub fn sti_and_hlt() {
     unsafe {
         asm!("sti; hlt", options(nomem, nostack));
@@ -20,7 +21,7 @@ pub fn sti_and_hlt() {
 
 
 /// 割り込みを無効化します。
-#[inline]
+#[inline(always)]
 pub fn cli() {
     unsafe {
         asm!("cli", options(nomem, nostack));
@@ -29,7 +30,7 @@ pub fn cli() {
 
 
 /// Interrupt Descriptor Tableをロードします。
-#[inline]
+#[inline(always)]
 pub fn load_idt(idt_descriptor: &IdtDescriptor) {
     unsafe {
         asm!("lidt [{}]", in(reg) idt_descriptor, options(readonly, nostack, preserves_flags));

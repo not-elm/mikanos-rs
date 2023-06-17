@@ -3,8 +3,10 @@ use x86_64::structures::idt::InterruptStackFrame;
 use common_lib::queue::queueing::Queueing;
 use common_lib::queue::vector_queue::VectorQueue;
 use kernel_lib::apic::LocalApicRegisters;
+use kernel_lib::serial_println;
 
 use crate::interrupt::InterruptMessage;
+use crate::println;
 
 pub static mut INTERRUPT_QUEUE: VectorQueue<InterruptMessage> = VectorQueue::new();
 

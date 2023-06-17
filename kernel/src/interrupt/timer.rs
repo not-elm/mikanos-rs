@@ -2,6 +2,8 @@ use x86_64::structures::idt::InterruptStackFrame;
 
 use kernel_lib::apic::LocalApicRegisters;
 
+use crate::task::TASK_MANAGER;
+
 pub struct Timer {
     interval: Option<usize>,
     tick: usize,
@@ -47,7 +49,10 @@ pub extern "x86-interrupt" fn interrupt_timer_handler(_stack_frame: InterruptSta
     LocalApicRegisters::default()
         .end_of_interrupt()
         .notify();
+
     if is_interval {
-        crate::switch();
+        unsafe {
+            TASK_MANAGER.switch_task();
+        }
     }
 }

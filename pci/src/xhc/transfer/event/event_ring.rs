@@ -33,6 +33,14 @@ where
     }
 
 
+    pub fn has_front(&self) -> bool {
+        self.read_event_trb()
+            .and_then(|event| event.circle_bit())
+            .map(|circle_bit| circle_bit == self.transfer_ring.cycle_bit())
+            .unwrap_or(false)
+    }
+
+
     pub fn read_event_trb(&self) -> Option<EventTrb> {
         let event_ring_dequeue_pointer_addr = self.read_dequeue_pointer_addr();
 
@@ -52,6 +60,7 @@ where
         {
             self.transfer_ring
                 .toggle_cycle_bit();
+
             self.write_dequeue_pointer(self.segment_base_addr)
         } else {
             self.write_dequeue_pointer(next_addr)

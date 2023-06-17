@@ -59,6 +59,7 @@ impl Phase3 {
                     &hid.endpoint_config(),
                     transfer_ring,
                     slot.doorbell(),
+                    hid.interface(),
                 ))
             })
             .collect()
@@ -98,7 +99,14 @@ where
 
                 slot.input_context_mut()
                     .set_enable_endpoint(dci);
-
+                slot.input_context_mut()
+                    .set_enable_slot_context();
+                slot.input_context_mut()
+                    .set_interface_num(
+                        interrupt
+                            .interface_ref()
+                            .interface_number,
+                    );
                 let endpoint_ctx = slot
                     .input_context_mut()
                     .endpoint_mut_at(dci.value());
@@ -110,5 +118,10 @@ where
             InitStatus::initialized(),
             Some(Box::new(Phase4::new(interrupters))),
         ))
+    }
+
+
+    fn interface_nums(&self) -> Option<Vec<u8>> {
+        None
     }
 }

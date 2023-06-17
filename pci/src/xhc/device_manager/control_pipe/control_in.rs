@@ -4,10 +4,10 @@ use core::cell::RefCell;
 use xhci::ring::trb::transfer::{Direction, StatusStage, TransferType};
 
 use crate::error::PciResult;
-use crate::xhc::device_manager::control_pipe::{
-    ControlPipeTransfer, make_data_stage, make_setup_stage,
-};
 use crate::xhc::device_manager::control_pipe::request::Request;
+use crate::xhc::device_manager::control_pipe::{
+    make_data_stage, make_setup_stage, ControlPipeTransfer,
+};
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
 use crate::xhc::transfer::transfer_ring::TransferRing;
@@ -21,8 +21,8 @@ pub struct ControlIn<T> {
 
 
 impl<T> ControlIn<T>
-    where
-        T: DoorbellRegistersAccessible,
+where
+    T: DoorbellRegistersAccessible,
 {
     pub fn new(
         slot_id: u8,
@@ -58,8 +58,8 @@ impl<T> ControlIn<T>
 }
 
 impl<T> ControlPipeTransfer for ControlIn<T>
-    where
-        T: DoorbellRegistersAccessible,
+where
+    T: DoorbellRegistersAccessible,
 {
     fn no_data(&mut self, request: Request) -> PciResult {
         let setup_stage = make_setup_stage(request.setup_stage(), TransferType::No);
