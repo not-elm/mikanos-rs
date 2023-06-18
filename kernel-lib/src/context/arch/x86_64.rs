@@ -213,8 +213,12 @@ impl ContextValue {
 }
 
 
-macro_rules! restore_task {
-    () => {
+/// next = rdi
+/// current = rsi
+#[allow(unused)]
+#[naked]
+unsafe extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &ContextValue) {
+    asm!(
         "
         mov [rsi + 0x40], rax
         mov [rsi + 0x48], rbx
@@ -252,17 +256,7 @@ macro_rules! restore_task {
         mov dx, gs
         mov [rsi + 0x38], rdx
         fxsave64 [rsi + 0xc0]
-        "
-    };
-}
-/// next = rdi
-/// current = rsi
-#[allow(unused)]
-#[naked]
-unsafe extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &ContextValue) {
-    asm!(
-        restore_task!(),
-        "
+
         // SS
         push QWORD PTR [rdi + 0x28]
         // RSP
