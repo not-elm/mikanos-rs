@@ -127,7 +127,6 @@ pub extern "sysv64" fn kernel_main(
 
     apic::start_timer(*rsdp).unwrap();
 
-
     #[cfg(test)]
     test_main();
     serial_println!("Hello Serial Port!");

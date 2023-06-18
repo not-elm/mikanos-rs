@@ -25,11 +25,7 @@ impl TaskContext {
     }
 
 
-    pub unsafe fn update(
-        &self,
-        rip: u64,
-        rsp: u64,
-    ) {
+    pub unsafe fn update(&self, rip: u64, rsp: u64) {
         let mut context = self.0.write();
         context.update(rip, rsp);
     }
@@ -38,7 +34,8 @@ impl TaskContext {
     // #[inline(always)]
     // pub fn switch_to(&self, next: &TaskContext) {
     //     let prev = RwLockWriteGuard::leak() as *mut AlignedTaskContext;
-    //     let next = RwLockWriteGuard::leak(next.0.write()) as *mut AlignedTaskContext;
+    //     let next = RwLockWriteGuard::leak(next.0.write()) as *mut
+    // AlignedTaskContext;
     //
     //     unsafe {
     //         asm!(
@@ -78,11 +75,7 @@ impl AlignedTaskContext {
     }
 
 
-    pub unsafe fn update(
-        &mut self,
-        rip: u64,
-        rsp: u64,
-    ) {
+    pub unsafe fn update(&mut self, rip: u64, rsp: u64) {
         self.set_rip(rip);
         self.set_rdi(1);
         self.set_rsi(42);
@@ -225,9 +218,15 @@ impl TaskContextValue {
 }
 
 
-
-macro_rules! restore_task {
-    () => {
+/// next = rdi
+/// current = rsi
+#[allow(unused)]
+#[naked]
+unsafe extern "sysv64" fn asm_switch_context(
+    _next: &mut TaskContextValue,
+    _current: &mut TaskContextValue,
+) {
+    asm!(
         "
         mov [rsi + 0x40], rax
         mov [rsi + 0x48], rbx
@@ -264,28 +263,15 @@ macro_rules! restore_task {
         mov [rsi + 0x30], rcx
         mov dx, gs
         mov [rsi + 0x38], rdx
+        fxsave64 [rsi + 0xc0]
 
-        "
-    };
-}
-/// next = rdi
-/// current = rsi
-#[allow(unused)]
-#[naked]
-unsafe extern "sysv64" fn asm_switch_context(
-    _next: &mut TaskContextValue,
-    _current: &mut TaskContextValue,
-) {
-    asm!(
-        "fxsave64 [rsi + 0xc0]",
-        "fxrstor64 [rdi + 0xc0]",
-        restore_task!(),
-        "
         push QWORD PTR [rdi + 0x28]
         push QWORD PTR [rdi + 0x70]
         push QWORD PTR [rdi + 0x10]
         push QWORD PTR [rdi + 0x20]
         push QWORD PTR [rdi + 0x08]
+
+        fxrstor64 [rdi + 0xc0]
 
         mov rax, [rdi + 0x00]
         mov cr3, rax
@@ -308,7 +294,7 @@ unsafe extern "sysv64" fn asm_switch_context(
         mov r13, [rdi + 0xa8]
         mov r14, [rdi + 0xb0]
         mov r15, [rdi + 0xb8]
-
+        
         mov rdi, [rdi + 0x60]
 
         iretq

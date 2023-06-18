@@ -26,7 +26,7 @@ pub fn start_xhci_host_controller(
     init_task();
 
     unsafe {
-        TIMER.set(2);
+        TIMER.set(100);
     }
 
     queue_waiter.for_each(|_| {
