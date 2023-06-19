@@ -134,47 +134,59 @@ impl Context {
 #[derive(Debug)]
 #[repr(C, packed)]
 struct ContextValue {
-    pub cr3: u64,
     // 0x00
-    pub rip: u64,
+    pub cr3: u64,
     // 0x08
-    pub flags: u64,
+    pub rip: u64,
     // 0x10
-    _reserved1: u64, // 0x18
+    pub flags: u64,
+    // 0x18
+    _reserved1: u64,
 
-    pub cs: u64,
     // 0x20
-    pub ss: u64,
+    pub cs: u64,
     // 0x28
-    pub fs: u64,
+    pub ss: u64,
     // 0x30
-    pub gs: u64, // 0x38
+    pub fs: u64,
+    // 0x38
+    pub gs: u64,
 
-    pub rax: u64,
     // 0x40
-    pub rbx: u64,
+    pub rax: u64,
     // 0x48
-    pub rcx: u64,
+    pub rbx: u64,
     // 0x50
-    pub rdx: u64,
+    pub rcx: u64,
     // 0x58
-    pub rdi: u64,
+    pub rdx: u64,
     // 0x60
-    pub rsi: u64,
+    pub rdi: u64,
     // 0x68
-    pub rsp: u64,
+    pub rsi: u64,
     // 0x70
-    pub rbp: u64, // 0x78
+    pub rsp: u64,
+    // 0x78
+    pub rbp: u64,
 
+    // 0x80
     pub r8: u64,
+    // 0x88
     pub r9: u64,
+    // 0x90
     pub r10: u64,
+    // 0x98
     pub r11: u64,
+    // 0xA0
     pub r12: u64,
+    // 0xA8
     pub r13: u64,
+    // 0xB0
     pub r14: u64,
+    // 0xB8
     pub r15: u64,
 
+    // 0xC0
     pub fx_save_area: [u8; 512],
 }
 
