@@ -11,6 +11,15 @@ pub fn sti() {
 }
 
 
+
+#[inline(always)]
+pub fn sti_and_nop() {
+    unsafe {
+        asm!("sti; nop", options(nomem, nostack));
+    }
+}
+
+
 /// 割り込みを有効化し、CPUを休止させます。
 #[inline(always)]
 pub fn sti_and_hlt() {

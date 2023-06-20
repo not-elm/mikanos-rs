@@ -2,7 +2,7 @@
 
 QEMU_STATE=$1
 
-if [ "$QEMU_STATE" = "debug" ]; then
+if [ "$QEMU_STATE" = "debug" ];then
   qemu-system-x86_64 \
     -bios OVMF.fd \
     -drive if=ide,index=0,media=disk,format=raw,file='disk.img' \

@@ -1,8 +1,8 @@
 use alloc::string::ToString;
 use core::fmt::Write;
-use kernel_lib::serial_println;
 
-use crate::apic::TIMER_500_MILLI_INTERVAL;
+use kernel_lib::serial_println;
+use kernel_lib::task::TaskManager;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 use pci::class_driver::mouse::driver::MouseDriver;
@@ -12,9 +12,11 @@ use pci::xhc::registers::external::{External, IdentityMapper};
 use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
+use crate::apic::TIMER_500_MILLI_INTERVAL;
 use crate::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
 use crate::interrupt::timer::TIMER;
 use crate::layers::{KEYBOARD_TEXT, LAYERS};
+use crate::task::TASK_MANAGER;
 
 pub fn start_xhci_host_controller(
     mmio_base_addr: MemoryMappedAddr,
@@ -51,7 +53,7 @@ fn start_xhc_controller(
         MouseDriver::new(mouse_subscriber),
         build_keyboard_driver(),
     )
-    .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
+        .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
 
     xhc_controller
         .reset_port()
@@ -80,5 +82,13 @@ fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
                 .write_str(keycode.to_string().as_str())
                 .unwrap();
         })
-        .unwrap()
+        .unwrap();
+
+    unsafe {
+        if keycode == 's' {
+            TASK_MANAGER.sleep_at(1).unwrap();
+        } else if keycode == 'w' {
+            TASK_MANAGER.wakeup_at(1).unwrap();
+        }
+    }
 }

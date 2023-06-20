@@ -1,6 +1,5 @@
 use x86_64::structures::idt::{InterruptStackFrame, PageFaultErrorCode};
 
-use crate::task::TASK_MANAGER;
 use kernel_lib::interrupt::asm::cli;
 use kernel_lib::serial_println;
 
@@ -15,6 +14,6 @@ pub extern "x86-interrupt" fn page_fault_handler(
     serial_println!("Error Code: {:?}", error_code);
 
     serial_println!("{:?}", stack_frame);
-    serial_println!("{:?}", unsafe { TASK_MANAGER.tasks() });
+
     common_lib::assembly::hlt_forever();
 }

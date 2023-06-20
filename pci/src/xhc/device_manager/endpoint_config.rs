@@ -1,4 +1,3 @@
-use kernel_lib::serial_println;
 use xhci::context::{EndpointHandler, EndpointType};
 
 use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::EndpointDescriptor;

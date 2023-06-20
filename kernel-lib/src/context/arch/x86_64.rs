@@ -1,6 +1,6 @@
 use core::arch::asm;
 
-use crate::register::read::read_cr3;
+use crate::control_registers::read_cr3;
 
 // #[derive(Debug)]
 // #[repr(transparent)]
@@ -49,7 +49,7 @@ use crate::register::read::read_cr3;
 // }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(C, align(16))]
 pub struct Context(ContextValue);
 
@@ -96,12 +96,7 @@ impl Context {
     #[inline(always)]
     pub fn switch_to(&self, next_task: &Context) {
         unsafe {
-            asm!(
-            "call {inner}",
-            inner = sym asm_switch_context,
-            in("rdi") &next_task.0,
-            in("rsi") &self.0,
-            )
+            asm_switch_context(&next_task.0, &self.0);
         }
     }
 
@@ -131,7 +126,7 @@ impl Context {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[repr(C, packed)]
 struct ContextValue {
     // 0x00
@@ -231,7 +226,7 @@ impl ContextValue {
 #[naked]
 unsafe extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &ContextValue) {
     asm!(
-        "
+    "
         mov [rsi + 0x40], rax
         mov [rsi + 0x48], rbx
         mov [rsi + 0x50], rcx
@@ -308,6 +303,6 @@ unsafe extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &Co
 
         iretq
         ",
-        options(noreturn)
+    options(noreturn)
     )
 }

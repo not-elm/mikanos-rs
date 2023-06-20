@@ -1,8 +1,12 @@
+use alloc::collections::VecDeque;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::cell::OnceCell;
 
 use crate::context::arch::x86_64::Context;
+use crate::error::{KernelError, KernelResult};
+use crate::interrupt::asm::cli;
+use crate::kernel_error;
 
 pub struct CellTaskManger(OnceCell<TaskManager>);
 
@@ -27,16 +31,29 @@ impl CellTaskManger {
     }
 
 
-    #[inline(always)]
     pub fn switch_task(&mut self) {
         if let Some(manager) = self.0.get_mut() {
             manager.switch_task();
         }
     }
 
+    #[inline(always)]
+    pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
+        self.get_mut()?
+            .sleep_at(task_id)
+    }
 
-    pub fn tasks(&self) -> &[Task] {
-        &self.0.get().unwrap().tasks
+
+    pub fn wakeup_at(&mut self, task_id: u64) -> KernelResult {
+        self.get_mut()?
+            .wakeup_at(task_id)
+    }
+
+
+    fn get_mut(&mut self) -> KernelResult<&mut TaskManager> {
+        self.0
+            .get_mut()
+            .ok_or(kernel_error!("Uninitialized CellTaskManager"))
     }
 }
 
@@ -46,60 +63,151 @@ unsafe impl Sync for CellTaskManger {}
 
 #[derive(Default, Debug)]
 pub struct TaskManager {
-    tasks: Vec<Task>,
-    running_idx: usize,
+    available_tasks: VecDeque<Task>,
+    sleep_tasks: VecDeque<Task>,
 }
 
 
 impl TaskManager {
     #[inline(always)]
     pub fn new() -> Self {
+        let mut available_tasks = VecDeque::new();
+        available_tasks.push_back(Task::new(0));
         Self {
-            tasks: vec![Task::new(0)],
-            running_idx: 0,
+            available_tasks,
+            sleep_tasks: VecDeque::new(),
         }
     }
 
 
     pub fn new_task(&mut self) -> &mut Task {
-        self.tasks
-            .push(self.create_task());
+        self.available_tasks
+            .push_back(self.create_task());
 
-        self.tasks.last_mut().unwrap()
+        self.available_tasks
+            .back_mut()
+            .unwrap()
+    }
+
+
+    pub fn wakeup_at(&mut self, task_id: u64) -> KernelResult {
+        let task = self.remove_sleep_task_at(task_id)?;
+        self.available_tasks
+            .push_back(task);
+
+        Ok(())
+    }
+
+    #[inline(always)]
+    pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
+        if self.front_available()?.id == task_id {
+            let task = self
+                .available_tasks
+                .pop_front()
+                .unwrap();
+            self.sleep(task);
+        } else {
+            let task = self.remove_available_task_at(task_id)?;
+            self.sleep(task);
+        }
+
+        Ok(())
+    }
+
+
+    fn sleep(&mut self, task: Task) {
+        self.sleep_tasks
+            .push_back(task);
+        self.sleep_tasks.back()
+            .unwrap()
+            .switch_to(
+                self
+                    .available_tasks
+                    .front()
+                    .unwrap()
+            )
+    }
+
+
+    pub fn switch_task(&mut self) {
+        if self.available_tasks.len() < 2 {
+            return;
+        }
+
+        let running_task = self
+            .available_tasks
+            .pop_front()
+            .unwrap();
+
+        self.available_tasks
+            .push_back(running_task);
+
+        let next_task = self
+            .available_tasks
+            .front()
+            .unwrap();
+
+        let running_task = self
+            .available_tasks
+            .back()
+            .unwrap();
+        running_task.switch_to(next_task);
+    }
+
+
+    fn remove_sleep_task_at(&mut self, task_id: u64) -> KernelResult<Task> {
+        let task_index = self
+            .sleep_tasks
+            .iter()
+            .position(|t| t.id == task_id)
+            .ok_or(error_not_found_task(task_id))?;
+
+        if self.sleep_tasks.len() <= task_index {
+            Err(error_not_found_task(task_id))
+        } else {
+            Ok(self
+                .sleep_tasks
+                .remove(task_index)
+                .ok_or(error_not_found_task(task_id))?)
+        }
+    }
+
+
+    fn remove_available_task_at(&mut self, task_id: u64) -> KernelResult<Task> {
+        let task_index = self
+            .available_tasks
+            .iter()
+            .position(|t| t.id == task_id)
+            .ok_or(error_not_found_task(task_id))?;
+
+        if self.available_tasks.len() <= task_index {
+            Err(error_not_found_task(task_id))
+        } else {
+            Ok(self
+                .available_tasks
+                .remove(task_index)
+                .ok_or(error_not_found_task(task_id))?)
+        }
+    }
+
+
+    fn front_available(&self) -> KernelResult<&Task> {
+        self.available_tasks
+            .front()
+            .ok_or(kernel_error!("Available Tasks is Empty"))
     }
 
 
     #[inline]
     fn create_task(&self) -> Task {
-        Task::new(self.tasks.len() as u64)
+        Task::new(self.available_tasks.len() as u64)
     }
+}
 
 
-    #[inline(always)]
-    pub fn switch_task(&mut self) {
-        if self.tasks.len() < 2 {
-            return;
-        }
-        let current_idx = self.running_idx;
-        let next_idx = (current_idx + 1) % self.tasks.len();
-        self.running_idx = next_idx;
-        let current_ctx = self
-            .tasks
-            .get(current_idx)
-            .unwrap();
-
-        let next_ctx = self
-            .tasks
-            .get(next_idx)
-            .unwrap();
-
-        current_ctx.switch_to(next_ctx);
-    }
-
-
-    pub fn tasks(&mut self) -> &mut Vec<Task> {
-        &mut self.tasks
-    }
+#[inline]
+fn error_not_found_task(task_id: u64) -> KernelError {
+    kernel_error!("Not found Task: specified id = {task_id}")
 }
 
 
@@ -133,6 +241,11 @@ impl Task {
         let rsp = (task_end & !0xF) - 8;
         self.context
             .init_context(rip, self.id, rsi, rsp);
+    }
+
+
+    pub fn cloned_context(&self) -> Context {
+        self.context.clone()
     }
 }
 

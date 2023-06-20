@@ -8,10 +8,10 @@ use crate::interrupt::overflow::interrupt_overflow;
 use crate::interrupt::page_fault::page_fault_handler;
 use crate::interrupt::timer::interrupt_timer_handler;
 
-use self::mouse::interrupt_mouse_handler;
+use self::xhci::interrupt_xhci_handler;
 
 pub mod interrupt_queue_waiter;
-pub mod mouse;
+pub mod xhci;
 mod overflow;
 mod page_fault;
 pub mod timer;
@@ -31,7 +31,7 @@ pub fn init_idt() -> KernelResult {
         IDT[InterruptVector::Overflow].set_handler(interrupt_overflow, type_attribute)?;
         IDT[InterruptVector::PageFault]
             .set_page_fault_handler(page_fault_handler, type_attribute)?;
-        IDT[InterruptVector::Xhci].set_handler(interrupt_mouse_handler, type_attribute)?;
+        IDT[InterruptVector::Xhci].set_handler(interrupt_xhci_handler, type_attribute)?;
         IDT[InterruptVector::ApicTimer].set_handler(interrupt_timer_handler, type_attribute)?;
         IDT.load();
     }
