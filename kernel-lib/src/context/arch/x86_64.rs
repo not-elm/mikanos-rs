@@ -51,7 +51,7 @@ use crate::control_registers::read_cr3;
 
 #[derive(Debug, Clone)]
 #[repr(C, align(16))]
-pub struct Context(ContextValue);
+pub struct Context(pub ContextValue);
 
 macro_rules! property {
     ($v: ident) => {
@@ -128,7 +128,7 @@ impl Context {
 
 #[derive(Debug, Clone)]
 #[repr(C, packed)]
-struct ContextValue {
+pub struct ContextValue {
     // 0x00
     pub cr3: u64,
     // 0x08
@@ -224,9 +224,10 @@ impl ContextValue {
 /// current = rsi
 #[allow(unused)]
 #[naked]
-unsafe extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &ContextValue) {
-    asm!(
-    "
+pub extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &ContextValue) {
+    unsafe {
+        asm!(
+        "
         mov [rsi + 0x40], rax
         mov [rsi + 0x48], rbx
         mov [rsi + 0x50], rcx
@@ -274,9 +275,9 @@ unsafe extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &Co
         push QWORD PTR [rdi + 0x20]
         // RIP
         push QWORD PTR [rdi + 0x08]
-        
+
         fxrstor64 [rdi + 0xc0]
-        
+
         mov rax, [rdi + 0x00]
         mov cr3, rax
         mov rax, [rdi + 0x30]
@@ -303,6 +304,7 @@ unsafe extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &Co
 
         iretq
         ",
-    options(noreturn)
-    )
+        options(noreturn)
+        )
+    }
 }

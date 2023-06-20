@@ -15,7 +15,9 @@ trait FunAddr {
 
 
 unsafe fn addr(f: extern "sysv64" fn(u64, u64)) -> u64 {
-    f as *const () as u64
+    let address = f as *const () as u64;
+    serial_println!("fn addr = 0x{:X}", address);
+    address
 }
 
 pub unsafe fn init() {
@@ -29,9 +31,9 @@ pub unsafe fn init() {
         .new_task()
         .init_context(addr(idle), 0x30);
 
-    // TASK_MANAGER
-    //     .new_task()
-    //     .init_context(addr(idle), 0x50);
+    TASK_MANAGER
+        .new_task()
+        .init_context(addr(idle), 0x50);
 }
 
 

@@ -1,9 +1,10 @@
+use alloc::boxed::Box;
 use alloc::collections::VecDeque;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::cell::OnceCell;
 
-use crate::context::arch::x86_64::Context;
+use crate::context::arch::x86_64::{asm_switch_context, Context};
 use crate::error::{KernelError, KernelResult};
 use crate::interrupt::asm::cli;
 use crate::kernel_error;
@@ -151,7 +152,7 @@ impl TaskManager {
             .available_tasks
             .back()
             .unwrap();
-        running_task.switch_to(next_task);
+        asm_switch_context(&next_task.context.0, &running_task.context.0);
     }
 
 
@@ -215,7 +216,7 @@ fn error_not_found_task(task_id: u64) -> KernelError {
 pub struct Task {
     id: u64,
     context: Context,
-    stack: Vec<u64>,
+    stack: Box<[u8]>,
 }
 
 
@@ -224,7 +225,7 @@ impl Task {
         Self {
             id,
             context: Context::uninit(),
-            stack: vec![0; 4096 / 8],
+            stack: vec![0; 65_536].into_boxed_slice(),
         }
     }
 

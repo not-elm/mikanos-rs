@@ -9,8 +9,12 @@
 #![cfg_attr(not(test), no_std)]
 #![allow(clippy::identity_op)]
 #![feature(thread_local)]
+#![feature(asm_const)]
+
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
+
 
 pub mod acpi;
 pub mod allocator;
