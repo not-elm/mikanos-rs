@@ -1,8 +1,8 @@
 use common_lib::queue::queueing::Queueing;
-use kernel_lib::interrupt::asm::{cli, sti_and_hlt};
+use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
 
-use crate::interrupt::xhci::INTERRUPT_QUEUE;
 use crate::interrupt::InterruptMessage;
+use crate::interrupt::xhci::INTERRUPT_QUEUE;
 
 pub struct InterruptQueueWaiter;
 
@@ -26,7 +26,7 @@ impl Iterator for InterruptQueueWaiter {
             cli();
             value = unsafe { INTERRUPT_QUEUE.dequeue() };
         }
-
+        sti();
         value
     }
 }

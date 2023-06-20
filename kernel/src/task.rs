@@ -43,7 +43,7 @@ extern "sysv64" fn window_count_task(id: u64, data: u64) {
     let mut count = 0;
     loop {
         count += 1;
-        cli();
+
         update_count(count);
         sti_and_hlt();
     }

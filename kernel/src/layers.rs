@@ -80,18 +80,18 @@ pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
 
 #[doc(hidden)]
 pub fn _print(args: core::fmt::Arguments) {
-    LAYERS
-        .layers_mut()
-        .lock()
-        .borrow_mut()
-        .update_layer(CONSOLE_LAYER_KEY, |layer| {
-            layer
-                .require_text()
-                .unwrap()
-                .write_fmt(args)
-                .unwrap();
-        })
-        .unwrap();
+    if let Some(layers) = LAYERS.layers_mut().try_lock() {
+        layers
+            .borrow_mut()
+            .update_layer(CONSOLE_LAYER_KEY, |layer| {
+                layer
+                    .require_text()
+                    .unwrap()
+                    .write_fmt(args)
+                    .unwrap();
+            })
+            .unwrap();
+    }
 }
 
 

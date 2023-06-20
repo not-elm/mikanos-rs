@@ -20,10 +20,11 @@ fn new_serial_port() -> spin::Mutex<SerialPort> {
 pub fn _print(args: ::core::fmt::Arguments) {
     use core::fmt::Write;
 
-    SERIAL
-        .lock()
-        .write_fmt(args)
-        .expect("Printing to serial failed");
+    if let Some(mut serial) = SERIAL.try_lock() {
+        serial
+            .write_fmt(args)
+            .expect("Printing to serial failed");
+    }
 }
 
 
