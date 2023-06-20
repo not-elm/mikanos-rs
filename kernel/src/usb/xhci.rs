@@ -1,6 +1,7 @@
 use alloc::string::ToString;
 use core::fmt::Write;
 
+use kernel_lib::interrupt::asm::sti;
 use kernel_lib::serial_println;
 use kernel_lib::task::TaskManager;
 use pci::class_driver::keyboard;

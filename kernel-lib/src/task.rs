@@ -1,13 +1,11 @@
 use alloc::boxed::Box;
 use alloc::collections::VecDeque;
 use alloc::vec;
-use alloc::vec::Vec;
 use core::cell::OnceCell;
 
+use crate::{kernel_error, serial_println};
 use crate::context::arch::x86_64::{asm_switch_context, Context};
 use crate::error::{KernelError, KernelResult};
-use crate::interrupt::asm::cli;
-use crate::kernel_error;
 
 pub struct CellTaskManger(OnceCell<TaskManager>);
 
@@ -99,17 +97,26 @@ impl TaskManager {
         Ok(())
     }
 
-    #[inline(always)]
+
     pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
         if self.front_available()?.id == task_id {
+            serial_println!("Running id = {}", task_id);
             let task = self
                 .available_tasks
                 .pop_front()
                 .unwrap();
             self.sleep(task);
         } else {
+            serial_println!("Not Running id = {}", task_id);
+
             let task = self.remove_available_task_at(task_id)?;
-            self.sleep(task);
+            self.sleep_tasks.push_back(task);
+
+            let running = self.available_tasks.pop_front().unwrap();
+            self.available_tasks.push_back(running);
+            let running = self.available_tasks.back().unwrap();
+            let next = self.available_tasks.front().unwrap();
+            running.switch_to(next);
         }
 
         Ok(())

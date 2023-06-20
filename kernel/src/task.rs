@@ -1,5 +1,3 @@
-use x86_64::instructions::hlt;
-
 use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
 use kernel_lib::serial_println;
 use kernel_lib::task::CellTaskManger;
@@ -68,9 +66,8 @@ fn update_count(count: usize) {
 extern "sysv64" fn idle(id: u64, data: u64) {
     cli();
     serial_println!("Idle id = {} data = 0x{:X}", id, data);
-    sti();
 
     loop {
-        hlt();
+        sti_and_hlt();
     }
 }
