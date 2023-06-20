@@ -1,7 +1,6 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use kernel_lib::apic::LocalApicRegisters;
-use kernel_lib::interrupt::asm::{cli, sti_and_nop};
 
 use crate::task::TASK_MANAGER;
 

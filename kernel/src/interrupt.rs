@@ -11,15 +11,10 @@ use crate::interrupt::timer::interrupt_timer_handler;
 use self::xhci::interrupt_xhci_handler;
 
 pub mod interrupt_queue_waiter;
-pub mod xhci;
 mod overflow;
 mod page_fault;
 pub mod timer;
-
-#[derive(Debug)]
-pub enum InterruptMessage {
-    Xhci,
-}
+pub mod xhci;
 
 
 pub fn init_idt() -> KernelResult {

@@ -1,9 +1,7 @@
 use alloc::string::ToString;
 use core::fmt::Write;
 
-use kernel_lib::interrupt::asm::sti;
 use kernel_lib::serial_println;
-use kernel_lib::task::TaskManager;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 use pci::class_driver::mouse::driver::MouseDriver;
@@ -54,7 +52,7 @@ fn start_xhc_controller(
         MouseDriver::new(mouse_subscriber),
         build_keyboard_driver(),
     )
-        .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
+    .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
 
     xhc_controller
         .reset_port()
@@ -87,9 +85,13 @@ fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
 
     unsafe {
         if keycode == 's' {
-            TASK_MANAGER.sleep_at(1).unwrap();
+            TASK_MANAGER
+                .sleep_at(1)
+                .unwrap();
         } else if keycode == 'w' {
-            TASK_MANAGER.wakeup_at(1).unwrap();
+            TASK_MANAGER
+                .wakeup_at(1)
+                .unwrap();
         }
     }
 }

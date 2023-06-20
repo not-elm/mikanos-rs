@@ -24,7 +24,7 @@ pub unsafe fn init() {
     TASK_MANAGER
         .new_task()
         .init_context(addr(window_count_task), 0x30);
-    //
+
     TASK_MANAGER
         .new_task()
         .init_context(addr(idle), 0x30);
