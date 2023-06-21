@@ -1,6 +1,7 @@
 use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
 use kernel_lib::serial_println;
 use kernel_lib::task::CellTaskManger;
+use kernel_lib::task::priority_level::PriorityLevel;
 
 use crate::layers::{COUNT, LAYERS};
 
@@ -22,15 +23,18 @@ pub unsafe fn init() {
     TASK_MANAGER.init().unwrap();
 
     TASK_MANAGER
-        .new_task()
+        .new_task(PriorityLevel::new(2))
+        .write()
         .init_context(addr(window_count_task), 0x30);
 
     TASK_MANAGER
-        .new_task()
+        .new_task(PriorityLevel::default())
+        .write()
         .init_context(addr(idle), 0x30);
 
     TASK_MANAGER
-        .new_task()
+        .new_task(PriorityLevel::default())
+        .write()
         .init_context(addr(idle), 0x50);
 }
 

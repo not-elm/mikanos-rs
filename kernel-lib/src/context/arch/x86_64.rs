@@ -49,7 +49,7 @@ use crate::control_registers::read_cr3;
 // }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[repr(C, align(16))]
 pub struct Context(pub ContextValue);
 
@@ -95,9 +95,7 @@ impl Context {
 
     #[inline(always)]
     pub fn switch_to(&self, next_task: &Context) {
-        unsafe {
-            asm_switch_context(&next_task.0, &self.0);
-        }
+        asm_switch_context(&next_task.0, &self.0);
     }
 
     property!(cr3);
@@ -126,7 +124,7 @@ impl Context {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[repr(C, packed)]
 pub struct ContextValue {
     // 0x00

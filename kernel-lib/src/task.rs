@@ -1,12 +1,24 @@
 use alloc::boxed::Box;
 use alloc::collections::VecDeque;
+use alloc::sync::Arc;
 use alloc::vec;
 use core::cell::OnceCell;
 
-use crate::context::arch::x86_64::{asm_switch_context, Context};
-use crate::error::{KernelError, KernelResult};
+use spin::RwLock;
+
+use crate::{kernel_bail, kernel_error};
+use crate::context::arch::x86_64::Context;
+use crate::error::KernelResult;
 use crate::interrupt::interrupt_message::TaskMessage;
-use crate::{kernel_bail, kernel_error, serial_println};
+use crate::task::list::TaskList;
+use crate::task::priority_level::PriorityLevel;
+use crate::task::status::Status;
+
+pub mod priority_level;
+mod list;
+mod status;
+mod switch;
+
 
 pub struct CellTaskManger(OnceCell<TaskManager>);
 
@@ -30,11 +42,11 @@ impl CellTaskManger {
     }
 
 
-    pub fn new_task(&mut self) -> &mut Task {
+    pub fn new_task(&mut self, priority_level: PriorityLevel) -> Arc<RwLock<Task>> {
         self.0
             .get_mut()
             .unwrap()
-            .new_task()
+            .new_task(priority_level)
     }
 
 
@@ -80,259 +92,98 @@ unsafe impl Sync for CellTaskManger {}
 
 #[derive(Default, Debug)]
 pub struct TaskManager {
-    available_tasks: VecDeque<Task>,
-    sleep_tasks: VecDeque<Task>,
+    tasks: TaskList,
 }
 
 
 impl TaskManager {
     #[inline(always)]
     pub fn new() -> Self {
-        let mut available_tasks = VecDeque::new();
-        available_tasks.push_back(Task::new(0));
+        let mut tasks = TaskList::new();
+        tasks.push(Task::new(0, PriorityLevel::new(3)));
         Self {
-            available_tasks,
-            sleep_tasks: VecDeque::new(),
+            tasks
         }
     }
 
 
     pub fn send_message_at(&mut self, task_id: u64, message: TaskMessage) -> KernelResult {
-        if self.try_send_message_to_sleep(task_id, &message) {
-            return Ok(());
-        }
+        self.tasks
+            .find(task_id)?
+            .write()
+            .send_message(message);
 
-        if self.try_send_message_to_available(task_id, message) {
-            return Ok(());
-        }
-
-        Err(error_not_found_task(task_id))
+        Ok(())
     }
 
 
     pub fn receive_message_at(&mut self, task_id: u64) -> Option<TaskMessage> {
-        if let Some(task) = self.try_receive_message_from_sleeps(task_id) {
-            return Some(task);
-        }
-
-        self.try_receive_message_from_available_task(task_id)
+        self.tasks
+            .find(task_id)
+            .ok()?
+            .write()
+            .receive_message()
     }
 
 
-    fn try_receive_message_from_available_task(&mut self, task_id: u64) -> Option<TaskMessage> {
-        self.find_from_available_tasks(task_id)
-            .and_then(|task| task.receive_message())
-    }
+    pub fn new_task(&mut self, priority_level: PriorityLevel) -> Arc<RwLock<Task>> {
+        let task = self.create_task(priority_level);
+        self.tasks
+            .push_boxed(Arc::clone(&task));
 
-
-    fn find_from_available_tasks(&mut self, task_id: u64) -> Option<&mut Task> {
-        self.available_tasks
-            .iter_mut()
-            .find(|task| task.id == task_id)
-    }
-
-
-    fn try_receive_message_from_sleeps(&mut self, task_id: u64) -> Option<TaskMessage> {
-        self.find_from_sleep_tasks(task_id)
-            .and_then(|task| task.receive_message())
-    }
-
-
-    fn find_from_sleep_tasks(&mut self, task_id: u64) -> Option<&mut Task> {
-        self.sleep_tasks
-            .iter_mut()
-            .find(|task| task.id == task_id)
-    }
-
-
-    pub fn new_task(&mut self) -> &mut Task {
-        self.available_tasks
-            .push_back(self.create_task());
-
-        self.available_tasks
-            .back_mut()
-            .unwrap()
+        task
     }
 
 
     pub fn wakeup_at(&mut self, task_id: u64) -> KernelResult {
-        let task = self.remove_sleep_task_at(task_id)?;
-        self.available_tasks
-            .push_back(task);
-
-        Ok(())
+        self.tasks
+            .wakeup_at(task_id)
     }
 
 
     pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
-        if self.front_available()?.id == task_id {
-            serial_println!("Running id = {}", task_id);
-            let task = self
-                .available_tasks
-                .pop_front()
-                .unwrap();
-            self.sleep(task);
-        } else {
-            serial_println!("Not Running id = {}", task_id);
+        self.tasks
+            .sleep_at(task_id)
+    }
 
-            let task = self.remove_available_task_at(task_id)?;
-            self.sleep_tasks
-                .push_back(task);
 
-            let running = self
-                .available_tasks
-                .pop_front()
-                .unwrap();
-            self.available_tasks
-                .push_back(running);
-            let running = self
-                .available_tasks
-                .back()
-                .unwrap();
-            let next = self
-                .available_tasks
-                .front()
-                .unwrap();
-            running.switch_to(next);
-        }
+    pub fn switch_task(&mut self) -> KernelResult {
+        self
+            .tasks
+            .next_switch_command()?
+            .switch_and_pending();
 
         Ok(())
     }
 
 
-    fn sleep(&mut self, task: Task) {
-        self.sleep_tasks
-            .push_back(task);
-        self.sleep_tasks
-            .back()
-            .unwrap()
-            .switch_to(
-                self.available_tasks
-                    .front()
-                    .unwrap(),
-            )
-    }
-
-
-    pub fn switch_task(&mut self) {
-        if self.available_tasks.len() < 2 {
-            return;
-        }
-
-        let running_task = self
-            .available_tasks
-            .pop_front()
-            .unwrap();
-
-        self.available_tasks
-            .push_back(running_task);
-
-        let next_task = self
-            .available_tasks
-            .front()
-            .unwrap();
-
-        let running_task = self
-            .available_tasks
-            .back()
-            .unwrap();
-
-        asm_switch_context(&next_task.context.0, &running_task.context.0);
-    }
-
-
-    fn try_send_message_to_available(&mut self, task_id: u64, message: TaskMessage) -> bool {
-        self.available_tasks
-            .iter_mut()
-            .find(|task| task.id == task_id)
-            .map(|task| task.send_message(message))
-            .map(|_| true)
-            .unwrap_or(false)
-    }
-
-
-    fn try_send_message_to_sleep(&mut self, task_id: u64, message: &TaskMessage) -> bool {
-        self.sleep_tasks
-            .iter_mut()
-            .find(|task| task.id == task_id)
-            .map(|task| task.send_message(message.clone()))
-            .map(|_| true)
-            .unwrap_or(false)
-    }
-
-
-    fn remove_sleep_task_at(&mut self, task_id: u64) -> KernelResult<Task> {
-        let task_index = self
-            .sleep_tasks
-            .iter()
-            .position(|t| t.id == task_id)
-            .ok_or(error_not_found_task(task_id))?;
-
-        if self.sleep_tasks.len() <= task_index {
-            Err(error_not_found_task(task_id))
-        } else {
-            Ok(self
-                .sleep_tasks
-                .remove(task_index)
-                .ok_or(error_not_found_task(task_id))?)
-        }
-    }
-
-
-    fn remove_available_task_at(&mut self, task_id: u64) -> KernelResult<Task> {
-        let task_index = self
-            .available_tasks
-            .iter()
-            .position(|t| t.id == task_id)
-            .ok_or(error_not_found_task(task_id))?;
-
-        if self.available_tasks.len() <= task_index {
-            Err(error_not_found_task(task_id))
-        } else {
-            Ok(self
-                .available_tasks
-                .remove(task_index)
-                .ok_or(error_not_found_task(task_id))?)
-        }
-    }
-
-
-    fn front_available(&self) -> KernelResult<&Task> {
-        self.available_tasks
-            .front()
-            .ok_or(kernel_error!("Available Tasks is Empty"))
-    }
-
-
     #[inline]
-    fn create_task(&self) -> Task {
-        Task::new(self.available_tasks.len() as u64)
+    fn create_task(&self, priority_level: PriorityLevel) -> Arc<RwLock<Task>> {
+        Arc::new(RwLock::new(Task::new(self.tasks.len() as u64, priority_level)))
     }
-}
-
-
-#[inline]
-fn error_not_found_task(task_id: u64) -> KernelError {
-    kernel_error!("Not found Task: specified id = {task_id}")
 }
 
 
 #[derive(Debug)]
 pub struct Task {
     id: u64,
+    priority_level: PriorityLevel,
     context: Context,
     stack: Box<[u8]>,
     messages: VecDeque<TaskMessage>,
+    status: Status,
 }
 
 
 impl Task {
-    pub fn new(id: u64) -> Self {
+    pub fn new(id: u64, priority_level: PriorityLevel) -> Self {
         Self {
             id,
+            priority_level,
             context: Context::uninit(),
             stack: vec![0; 65_536].into_boxed_slice(),
             messages: VecDeque::new(),
+            status: Status::Pending,
         }
     }
 
@@ -360,11 +211,6 @@ impl Task {
     pub fn send_message(&mut self, message: TaskMessage) {
         self.messages
             .push_back(message);
-    }
-
-
-    pub fn cloned_context(&self) -> Context {
-        self.context.clone()
     }
 }
 

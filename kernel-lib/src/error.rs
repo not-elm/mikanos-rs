@@ -44,7 +44,7 @@ macro_rules! kernel_bail {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum LayerReason {
     FailedInitialize,
     NotExistsKey,
@@ -53,7 +53,7 @@ pub enum LayerReason {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum AllocateReason {
     InitializeGlobalAllocator,
     OverFrame {
