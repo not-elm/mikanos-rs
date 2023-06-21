@@ -42,7 +42,7 @@ impl CellTaskManger {
     }
 
 
-    pub fn new_task(&mut self, priority_level: PriorityLevel) -> Arc<RwLock<Task>> {
+    pub fn new_task(&mut self, priority_level: PriorityLevel) -> &mut Task {
         self.0
             .get_mut()
             .unwrap()
@@ -109,8 +109,8 @@ impl TaskManager {
 
     pub fn send_message_at(&mut self, task_id: u64, message: TaskMessage) -> KernelResult {
         self.tasks
-            .find(task_id)?
-            .write()
+            .find_mut(task_id)?
+
             .send_message(message);
 
         Ok(())
@@ -119,19 +119,21 @@ impl TaskManager {
 
     pub fn receive_message_at(&mut self, task_id: u64) -> Option<TaskMessage> {
         self.tasks
-            .find(task_id)
+            .find_mut(task_id)
             .ok()?
-            .write()
             .receive_message()
     }
 
 
-    pub fn new_task(&mut self, priority_level: PriorityLevel) -> Arc<RwLock<Task>> {
+    pub fn new_task(&mut self, priority_level: PriorityLevel) -> &mut Task {
         let task = self.create_task(priority_level);
+        let id = task.id;
         self.tasks
-            .push_boxed(Arc::clone(&task));
+            .push(task);
 
-        task
+        self.tasks
+            .find_mut(id)
+            .unwrap()
     }
 
 
@@ -158,8 +160,8 @@ impl TaskManager {
 
 
     #[inline]
-    fn create_task(&self, priority_level: PriorityLevel) -> Arc<RwLock<Task>> {
-        Arc::new(RwLock::new(Task::new(self.tasks.len() as u64, priority_level)))
+    fn create_task(&self, priority_level: PriorityLevel) -> Task {
+        Task::new(self.tasks.len() as u64, priority_level)
     }
 }
 
