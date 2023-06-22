@@ -1,6 +1,8 @@
 use lazy_static::lazy_static;
 use uart_16550::SerialPort;
 
+use crate::interrupt::asm::{cli, sti};
+
 lazy_static! {
     pub static ref SERIAL: spin::Mutex<SerialPort> = new_serial_port();
 }

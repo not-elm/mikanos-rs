@@ -5,6 +5,7 @@ use spin::Mutex;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
+use kernel_lib::interrupt::interrupt_message::TaskMessage;
 use kernel_lib::layers::Layers;
 
 use crate::layers::console::console;
@@ -12,6 +13,7 @@ use crate::layers::mouse::mouse;
 use crate::layers::screen::screen_background;
 use crate::layers::time_count::time_count_window;
 use crate::layers::window_keyboard::window_keyboard;
+use crate::task::TASK_MANAGER;
 
 mod console;
 mod mouse;

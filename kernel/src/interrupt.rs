@@ -10,7 +10,6 @@ use crate::interrupt::timer::interrupt_timer_handler;
 
 use self::xhci::interrupt_xhci_handler;
 
-pub mod interrupt_queue_waiter;
 mod overflow;
 mod page_fault;
 pub mod timer;

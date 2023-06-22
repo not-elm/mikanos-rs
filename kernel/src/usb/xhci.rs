@@ -1,6 +1,8 @@
 use alloc::string::ToString;
 use core::fmt::Write;
 
+use kernel_lib::interrupt::asm::{cli, sti};
+use kernel_lib::interrupt::interrupt_message::TaskMessage;
 use kernel_lib::serial_println;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
@@ -12,10 +14,11 @@ use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
 use crate::apic::TIMER_500_MILLI_INTERVAL;
-use crate::interrupt::interrupt_queue_waiter::InterruptQueueWaiter;
 use crate::interrupt::timer::TIMER;
-use crate::layers::{KEYBOARD_TEXT, LAYERS};
-use crate::task::TASK_MANAGER;
+use crate::layers::LAYERS;
+use crate::println;
+use crate::task::task_message_iter::TaskMessageIter;
+use crate::usb::keyboard::build_keyboard_driver;
 
 pub fn start_xhci_host_controller(
     mmio_base_addr: MemoryMappedAddr,
@@ -23,19 +26,41 @@ pub fn start_xhci_host_controller(
 ) -> anyhow::Result<()> {
     let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
 
-    let queue_waiter = InterruptQueueWaiter::new();
+    let messages = TaskMessageIter::new(0);
 
     unsafe {
         crate::task::init();
         TIMER.set(TIMER_500_MILLI_INTERVAL);
     }
 
-    queue_waiter.for_each(|_| {
-        serial_println!("process_event ");
-        xhc_controller.process_event();
+    messages.for_each(|message| {
+        match message {
+            TaskMessage::Xhci => {
+                xhc_controller.process_event();
+            }
+
+            TaskMessage::Count { layer_key, count } => {
+                update_count(count, &layer_key);
+            }
+
+            _ => {}
+        }
     });
 
     Ok(())
+}
+
+
+fn update_count(count: usize, key: &str) {
+    LAYERS
+        .layers_mut()
+        .lock()
+        .borrow_mut()
+        .update_layer(key, |layer| {
+            let window = layer.require_count().unwrap();
+            window.write_count(count);
+        })
+        .unwrap();
 }
 
 
@@ -52,7 +77,7 @@ fn start_xhc_controller(
         MouseDriver::new(mouse_subscriber),
         build_keyboard_driver(),
     )
-    .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
+        .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
 
     xhc_controller
         .reset_port()
@@ -62,36 +87,4 @@ fn start_xhc_controller(
 }
 
 
-fn build_keyboard_driver() -> KeyboardDriver {
-    keyboard::builder::Builder::new()
-        .auto_upper_if_shift()
-        .boxed_build(keyboard_subscribe)
-}
 
-
-fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
-    LAYERS
-        .layers_mut()
-        .lock()
-        .borrow_mut()
-        .update_layer(KEYBOARD_TEXT, |layer| {
-            layer
-                .require_text()
-                .unwrap()
-                .write_str(keycode.to_string().as_str())
-                .unwrap();
-        })
-        .unwrap();
-
-    unsafe {
-        if keycode == 's' {
-            TASK_MANAGER
-                .sleep_at(1)
-                .unwrap();
-        } else if keycode == 'w' {
-            TASK_MANAGER
-                .wakeup_at(1)
-                .unwrap();
-        }
-    }
-}

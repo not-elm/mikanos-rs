@@ -2,6 +2,7 @@ use x86_64::structures::idt::InterruptStackFrame;
 
 use kernel_lib::apic::LocalApicRegisters;
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
+use kernel_lib::serial_println;
 
 use crate::task::TASK_MANAGER;
 

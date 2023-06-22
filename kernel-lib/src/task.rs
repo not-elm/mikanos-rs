@@ -1,10 +1,7 @@
 use alloc::boxed::Box;
 use alloc::collections::VecDeque;
-use alloc::sync::Arc;
 use alloc::vec;
-use core::cell::OnceCell;
-
-use spin::RwLock;
+use core::cell::{Cell, OnceCell};
 
 use crate::{kernel_bail, kernel_error};
 use crate::context::arch::x86_64::Context;
@@ -52,7 +49,7 @@ impl CellTaskManger {
 
     pub fn switch_task(&mut self) {
         if let Some(manager) = self.0.get_mut() {
-            manager.switch_task();
+            manager.switch_task().unwrap();
         }
     }
 
@@ -66,7 +63,6 @@ impl CellTaskManger {
     }
 
 
-    #[inline(always)]
     pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
         self.get_mut()?
             .sleep_at(task_id)
@@ -100,7 +96,7 @@ impl TaskManager {
     #[inline(always)]
     pub fn new() -> Self {
         let mut tasks = TaskList::new();
-        tasks.push(Task::new(0, PriorityLevel::new(3)));
+        tasks.push(Task::new_main());
         Self {
             tasks
         }
@@ -108,10 +104,13 @@ impl TaskManager {
 
 
     pub fn send_message_at(&mut self, task_id: u64, message: TaskMessage) -> KernelResult {
-        self.tasks
-            .find_mut(task_id)?
+        let task = self.tasks.find_mut(task_id)?;
 
-            .send_message(message);
+        if task.status.get().is_sleep() {
+            task.status.set(Status::Pending);
+        }
+
+        task.send_message(message);
 
         Ok(())
     }
@@ -120,7 +119,7 @@ impl TaskManager {
     pub fn receive_message_at(&mut self, task_id: u64) -> Option<TaskMessage> {
         self.tasks
             .find_mut(task_id)
-            .ok()?
+            .unwrap()
             .receive_message()
     }
 
@@ -173,11 +172,23 @@ pub struct Task {
     context: Context,
     stack: Box<[u8]>,
     messages: VecDeque<TaskMessage>,
-    status: Status,
+    status: Cell<Status>,
 }
 
 
 impl Task {
+    pub fn new_main() -> Self {
+        Self {
+            id: 0,
+            priority_level: PriorityLevel::new(2),
+            context: Context::uninit(),
+            stack: vec![0; 65_536].into_boxed_slice(),
+            messages: VecDeque::new(),
+            status: Cell::new(Status::Running),
+        }
+    }
+
+
     pub fn new(id: u64, priority_level: PriorityLevel) -> Self {
         Self {
             id,
@@ -185,7 +196,7 @@ impl Task {
             context: Context::uninit(),
             stack: vec![0; 65_536].into_boxed_slice(),
             messages: VecDeque::new(),
-            status: Status::Pending,
+            status: Cell::new(Status::Pending),
         }
     }
 

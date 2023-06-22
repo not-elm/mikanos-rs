@@ -1,7 +1,5 @@
-use alloc::sync::Arc;
-
-use spin::RwLock;
-
+use crate::interrupt::asm::{cli, sti};
+use crate::serial_println;
 use crate::task::status::Status;
 use crate::task::status::Status::Running;
 use crate::task::Task;
@@ -51,11 +49,13 @@ impl<'t> SwitchCommand<'t> {
 
 
     fn switch(&self, status: Status) {
-        self.running.status = status;
-        self.next.status = Running;
-
+        cli();
+        self.running.status.set(status);
+        self.next.status.set(Running);
+        sti();
+        
         self
             .running
-            .switch_to(&self.next)
+            .switch_to(self.next)
     }
 }

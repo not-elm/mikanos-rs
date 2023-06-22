@@ -20,7 +20,7 @@ impl Fadt {
         const FREQ: u32 = 3579545;
 
         let start = self.read_count();
-        let end = start + FREQ * (milli / 1000);
+        let end = start + FREQ * milli / 1000;
         let end = if self.is_count_32_bits() {
             end
         } else {

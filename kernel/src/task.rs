@@ -1,9 +1,16 @@
+use alloc::string::ToString;
+
 use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
+use kernel_lib::interrupt::interrupt_message::TaskMessage;
 use kernel_lib::serial_println;
 use kernel_lib::task::CellTaskManger;
 use kernel_lib::task::priority_level::PriorityLevel;
 
-use crate::layers::{COUNT, LAYERS};
+use crate::layers::COUNT;
+use crate::task::idle::idle;
+
+mod idle;
+pub mod task_message_iter;
 
 pub static mut TASK_MANAGER: CellTaskManger = CellTaskManger::uninit();
 
@@ -15,7 +22,7 @@ trait FunAddr {
 
 unsafe fn addr(f: extern "sysv64" fn(u64, u64)) -> u64 {
     let address = f as *const () as u64;
-    serial_println!("fn addr = 0x{:X}", address);
+
     address
 }
 
@@ -23,55 +30,32 @@ pub unsafe fn init() {
     TASK_MANAGER.init().unwrap();
 
     TASK_MANAGER
-        .new_task(PriorityLevel::new(2))
-        .write()
+        .new_task(PriorityLevel::new(1))
         .init_context(addr(window_count_task), 0x30);
 
     TASK_MANAGER
-        .new_task(PriorityLevel::default())
-        .write()
-        .init_context(addr(idle), 0x30);
-
-    TASK_MANAGER
-        .new_task(PriorityLevel::default())
-        .write()
-        .init_context(addr(idle), 0x50);
+        .new_task(PriorityLevel::new(0))
+        .init_context(addr(idle), 0x00);
 }
 
 
-extern "sysv64" fn window_count_task(id: u64, data: u64) {
-    cli();
-    serial_println!("window_count_task = {} data = 0x{:X}", id, data);
-    sti();
-
+extern "sysv64" fn window_count_task(_id: u64, _data: u64) {
     let mut count = 0;
     loop {
+        cli();
         count += 1;
 
-        update_count(count);
+        unsafe {
+            TASK_MANAGER
+                .send_message_at(0, TaskMessage::count(COUNT.to_string(), count))
+                .unwrap();
+        }
+
         sti_and_hlt();
     }
 }
 
 
-fn update_count(count: usize) {
-    LAYERS
-        .layers_mut()
-        .lock()
-        .borrow_mut()
-        .update_layer(COUNT, |layer| {
-            let window = layer.require_count().unwrap();
-            window.write_count(count);
-        })
-        .unwrap();
-}
 
 
-extern "sysv64" fn idle(id: u64, data: u64) {
-    cli();
-    serial_println!("Idle id = {} data = 0x{:X}", id, data);
 
-    loop {
-        sti_and_hlt();
-    }
-}

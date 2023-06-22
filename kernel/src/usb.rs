@@ -15,6 +15,7 @@ use pci::pci_device_searcher::PciDeviceSearcher;
 
 pub mod mouse;
 pub mod xhci;
+mod keyboard;
 
 pub fn enable_msi(general_header: GeneralHeader) -> PciResult {
     let io = RealIoMemoryAccessor::new();

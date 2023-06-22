@@ -1,10 +1,10 @@
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Status {
-    Running,
+    Sleep,
 
     Pending,
 
-    Sleep,
+    Running,
 }
 
 
