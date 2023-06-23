@@ -2,8 +2,7 @@ use core::arch::asm;
 
 use common_lib::nums::FlagConvertible;
 
-mod interrupt_enable;
-
+#[derive(Debug, Clone)]
 pub struct RFlags {
     raw: u64,
 }
@@ -19,7 +18,13 @@ impl RFlags {
 
     #[inline(always)]
     pub fn are_enable_interrupt(&self) -> bool {
-        ((self.raw >> 8) & 1).is_true()
+        ((self.raw >> 9) & 1).is_true()
+    }
+
+
+    #[inline(always)]
+    pub fn are_enable_disabled(&self) -> bool {
+        !self.are_enable_interrupt()
     }
 }
 

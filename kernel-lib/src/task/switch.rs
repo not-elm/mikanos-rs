@@ -1,4 +1,3 @@
-use crate::serial_println;
 use crate::task::status::Status;
 use crate::task::status::Status::Running;
 use crate::task::Task;
@@ -48,12 +47,6 @@ impl<'t> SwitchCommand<'t> {
 
 
     fn switch(&self, status: Status) {
-        serial_println!("switch command: execute running = {} {:?}  next = {} {:?}",
-               self.running.id,
-               self.running.status(),
-               self.next.id,
-               self.next.status());
-
         self.running.store_status(status);
         self.next.store_status(Running);
 

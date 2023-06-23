@@ -24,8 +24,6 @@ pub fn start_xhci_host_controller(
     let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
 
     let messages = TaskMessageIter::new(0);
-
-
     messages.for_each(|message| {
         match message {
             TaskMessage::Xhci => {

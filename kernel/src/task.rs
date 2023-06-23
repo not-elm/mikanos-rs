@@ -2,7 +2,7 @@ use alloc::string::ToString;
 use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering::Relaxed;
 
-use kernel_lib::interrupt::asm::{cli, sti_and_hlt};
+use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
 use kernel_lib::task::GlobalTaskManger;
 use kernel_lib::task::priority_level::PriorityLevel;
@@ -41,16 +41,14 @@ extern "sysv64" fn window_count_task(_id: u64, _data: u64) {
     loop {
         cli();
 
-        let next_count = COUNT.load(Relaxed) + 1;
-        COUNT.store(next_count, Relaxed);
+        let next_count = COUNT.fetch_add(1, Relaxed);
 
         let _ = unsafe {
             TASK_MANAGER
                 .send_message_at(0, TaskMessage::count(COUNT_LAYER_KEY.to_string(), next_count))
         };
 
-
-        sti_and_hlt();
+        sti();
     }
 }
 

@@ -1,3 +1,5 @@
+mod rflags;
+
 use kernel_lib::register::read::read_cr3;
 
 #[test_case]

@@ -6,6 +6,7 @@ use spin::{Mutex, MutexGuard};
 use common_lib::frame_buffer::FrameBufferConfig;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::layers::Layers;
+use kernel_lib::sync::preemptive_mutex::PreemptiveMutex;
 
 use crate::layers::console::console;
 use crate::layers::mouse::mouse;
@@ -21,7 +22,7 @@ mod window_keyboard;
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
-pub struct GlobalLayers(OnceCell<Mutex<Layers>>);
+pub struct GlobalLayers(OnceCell<PreemptiveMutex<Layers>>);
 
 
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
@@ -47,18 +48,13 @@ impl GlobalLayers {
         let layers = Layers::new(frame_buffer_config);
 
         self.0
-            .set(Mutex::new(layers))
+            .set(PreemptiveMutex::new(layers))
             .map_err(|_| KernelError::FailedOperateLayer(LayerReason::FailedInitialize))
     }
 
 
     pub fn lock(&self) -> MutexGuard<Layers> {
         self.0.get().unwrap().lock()
-    }
-
-
-    pub fn try_lock(&self) -> Option<MutexGuard<Layers>> {
-        self.0.get().unwrap().try_lock()
     }
 }
 

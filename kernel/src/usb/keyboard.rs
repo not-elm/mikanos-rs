@@ -15,17 +15,16 @@ pub fn build_keyboard_driver() -> KeyboardDriver {
 
 
 fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
-    if let Some(mut layers) = LAYERS.try_lock() {
-        layers
-            .update_layer(KEYBOARD_TEXT, |layer| {
-                layer
-                    .require_text()
-                    .unwrap()
-                    .write_str(keycode.to_string().as_str())
-                    .unwrap();
-            })
-            .unwrap();
-    }
+    LAYERS
+        .lock()
+        .update_layer(KEYBOARD_TEXT, |layer| {
+            layer
+                .require_text()
+                .unwrap()
+                .write_str(keycode.to_string().as_str())
+                .unwrap();
+        })
+        .unwrap();
 
     unsafe { operate_count_task_if_need(keycode) };
 }

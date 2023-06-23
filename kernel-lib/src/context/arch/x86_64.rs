@@ -1,5 +1,4 @@
 use core::arch::asm;
-use core::mem;
 
 use crate::control_registers::read_cr3;
 
@@ -128,7 +127,7 @@ macro_rules! property {
 impl Context {
     #[inline(always)]
     pub const fn uninit() -> Self {
-        Self{
+        Self {
             cr3: 0,
             rip: 0,
             flags: 0,

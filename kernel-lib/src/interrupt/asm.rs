@@ -1,6 +1,23 @@
 use core::arch::asm;
 
 use crate::interrupt::idt_descriptor::IdtDescriptor;
+use crate::register::rflags::RFlags;
+
+#[inline(always)]
+pub fn with_free<F, Output>(f: F) -> Output
+    where F: FnOnce() -> Output {
+    let enable = RFlags::read().are_enable_interrupt();
+
+    cli();
+    let ret = f();
+
+    if enable {
+        sti();
+    }
+
+    ret
+}
+
 
 /// 割り込みを有効化します。
 #[inline(always)]
@@ -9,7 +26,6 @@ pub fn sti() {
         asm!("sti", options(nomem, nostack));
     }
 }
-
 
 
 #[inline(always)]

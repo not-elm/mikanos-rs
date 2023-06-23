@@ -87,8 +87,7 @@ fn update_cursor_layer(
     button: Option<MouseButton>,
 ) -> anyhow::Result<()> {
     LAYERS
-        .try_lock()
-        .ok_or(anyhow::anyhow!("Failed Lock Layers"))?
+        .lock()
         .update_layer(MOUSE_LAYER_KEY, |layer| {
             let color: PixelColor = cursor_color(button);
             if let Ok(cursor) = layer.require_cursor() {
