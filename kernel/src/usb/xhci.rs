@@ -24,18 +24,16 @@ pub fn start_xhci_host_controller(
     let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
 
     let messages = TaskMessageIter::new(0);
-    messages.for_each(|message| {
-        match message {
-            TaskMessage::Xhci => {
-                xhc_controller.process_event();
-            }
-
-            TaskMessage::Count { layer_key, count } => {
-                update_count(count, &layer_key);
-            }
-
-            _ => {}
+    messages.for_each(|message| match message {
+        TaskMessage::Xhci => {
+            xhc_controller.process_event();
         }
+
+        TaskMessage::Count { layer_key, count } => {
+            update_count(count, &layer_key);
+        }
+
+        _ => {}
     });
 
     Ok(())
@@ -66,7 +64,7 @@ fn start_xhc_controller(
         MouseDriver::new(mouse_subscriber),
         build_keyboard_driver(),
     )
-        .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
+    .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
 
     xhc_controller
         .reset_port()
@@ -74,6 +72,3 @@ fn start_xhc_controller(
 
     Ok(xhc_controller)
 }
-
-
-

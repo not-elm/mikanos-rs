@@ -4,11 +4,11 @@ use linked_list_allocator::LockedHeap;
 use uefi::table::boot::MemoryMapIter;
 
 use common_lib::math::Align;
-use kernel_lib::allocator::MAX_MEMORY_SIZE;
 use kernel_lib::allocator::memory_map::frame_iter::FrameIter;
-use kernel_lib::error::{KernelError, KernelResult};
+use kernel_lib::allocator::MAX_MEMORY_SIZE;
 use kernel_lib::error::AllocateReason::InitializeGlobalAllocator;
-use kernel_lib::sync::preemptive_mutex::PreemptiveMutex;
+use kernel_lib::error::{KernelError, KernelResult};
+use kernel_lib::interrupt;
 
 //
 // #[global_allocator]
@@ -39,38 +39,35 @@ pub fn init_alloc(memory_map: MemoryMapIter<'static>) -> KernelResult {
             .next()
             .unwrap();
 
-        HEAP
-            .0
-            .lock()
-            .lock()
-            .init(frame.base_phys_addr().raw().align_up(64).unwrap() as *mut u8, MAX_MEMORY_SIZE);
+        HEAP.0.lock().init(
+            frame
+                .base_phys_addr()
+                .raw()
+                .align_up(64)
+                .unwrap() as *mut u8,
+            MAX_MEMORY_SIZE,
+        );
     }
 
     Ok(())
 }
 
 
-struct GlobalAllocator(PreemptiveMutex<LockedHeap>);
+struct GlobalAllocator(LockedHeap);
 
 impl GlobalAllocator {
     pub const fn uninit() -> Self {
-        Self(PreemptiveMutex::new(LockedHeap::empty()))
+        Self(LockedHeap::empty())
     }
 }
 
 
 unsafe impl GlobalAlloc for GlobalAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        self
-            .0
-            .lock()
-            .alloc(layout)
+        interrupt::asm::with_free(|| self.0.alloc(layout))
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        self
-            .0
-            .lock()
-            .dealloc(ptr, layout)
+        interrupt::asm::with_free(|| self.0.dealloc(ptr, layout))
     }
 }

@@ -9,7 +9,7 @@ pub extern "x86-interrupt" fn interrupt_xhci_handler(_stack_frame: InterruptStac
     unsafe {
         let _ = TASK_MANAGER.send_message_at(0, TaskMessage::Xhci);
     }
-    
+
     LocalApicRegisters::default()
         .end_of_interrupt()
         .notify();
