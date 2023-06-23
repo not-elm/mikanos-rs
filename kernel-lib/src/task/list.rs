@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 
-use crate::{kernel_error, serial_println};
-use crate::error::{KernelError, KernelResult, TaskReason};
+use crate::error::{KernelError, KernelResult};
+use crate::kernel_error;
 use crate::task::status::Status;
 use crate::task::status::Status::Pending;
 use crate::task::switch::SwitchCommand;
@@ -104,7 +104,7 @@ impl TaskList {
     fn running_task_ref(&self) -> KernelResult<&Task> {
         self.tasks
             .iter()
-            .find(|task| task.status.get().is_running())
+            .find(|task| task.status().is_running())
             .ok_or(kernel_error!("No Task Running"))
     }
 
@@ -121,7 +121,9 @@ impl TaskList {
     fn sort_by_priority(&mut self) {
         self
             .tasks
-            .sort_by(|t1, t2| t2.priority_level.cmp(&t1.priority_level)
+            .sort_by(|t1, t2| t2
+                .priority_level
+                .cmp(&t1.priority_level)
                 .then_with(|| t1.status().cmp(&t2.status()))
             );
     }
@@ -172,7 +174,7 @@ mod tests {
         q.push(Task::new(0, PriorityLevel::new(3)));
         q.push(Task::new(1, PriorityLevel::new(1)));
         q.push(Task::new(2, PriorityLevel::new(2)));
-        q.tasks[1].status.set(Running);
+        q.tasks[1].store_status(Running);
 
         let command = q.next_switch_command().unwrap();
         assert_eq!(command.running_id(), 1);
@@ -187,14 +189,14 @@ mod tests {
         q.push(Task::new(1, PriorityLevel::new(0)));
         q.push(Task::new(3, PriorityLevel::new(3)));
 
-        q.tasks[0].status.set(Sleep);
-        q.tasks[2].status.set(Sleep);
+        q.tasks[0].store_status(Sleep);
+        q.tasks[2].store_status(Sleep);
 
         q.wakeup_at(0).unwrap();
         q.wakeup_at(3).unwrap();
 
-        assert_eq!(q.tasks[0].status.get(), Status::Pending);
-        assert_eq!(q.tasks[2].status.get(), Status::Pending);
+        assert_eq!(q.tasks[0].status(), Status::Pending);
+        assert_eq!(q.tasks[2].status(), Status::Pending);
     }
 
 
@@ -206,8 +208,8 @@ mod tests {
         q.push(Task::new(3, PriorityLevel::new(2)));
         q.push(Task::new(2, PriorityLevel::new(3)));
 
-        q.tasks[0].status.set(Running);
-        q.tasks[2].status.set(Status::Pending);
+        q.tasks[0].store_status(Running);
+        q.tasks[2].store_status(Status::Pending);
 
         {
             let sleep_id0 = q.sleep_or_create_switch_command_if_running(0).unwrap();
@@ -222,8 +224,8 @@ mod tests {
             assert!(sleep_id3.is_none());
         }
 
-        assert_eq!(q.find_ref(0).unwrap().status.get(), Running);
-        assert_eq!(q.find_ref(3).unwrap().status.get(), Sleep);
+        assert_eq!(q.find_ref(0).unwrap().status(), Running);
+        assert_eq!(q.find_ref(3).unwrap().status(), Sleep);
     }
 
 

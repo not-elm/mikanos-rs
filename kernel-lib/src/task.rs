@@ -4,15 +4,14 @@ use alloc::vec;
 use core::cell::OnceCell;
 use core::sync::atomic::{AtomicU8, Ordering};
 
-use spin::{Mutex, MutexGuard};
-
-use crate::{kernel_bail, kernel_error};
 use crate::context::arch::x86_64::Context;
-use crate::error::{KernelError, KernelResult, TaskReason};
+use crate::error::KernelResult;
 use crate::interrupt::interrupt_message::TaskMessage;
+use crate::kernel_error;
 use crate::task::list::TaskList;
 use crate::task::priority_level::PriorityLevel;
 use crate::task::status::Status;
+use crate::task::status::Status::{Pending, Running, Sleep};
 
 pub mod priority_level;
 mod list;
@@ -20,10 +19,10 @@ mod status;
 mod switch;
 
 
-pub struct CellTaskManger(OnceCell<TaskManager>);
+pub struct GlobalTaskManger(OnceCell<TaskManager>);
 
 
-impl CellTaskManger {
+impl GlobalTaskManger {
     #[inline(always)]
     pub const fn uninit() -> Self {
         Self(OnceCell::new())
@@ -93,7 +92,7 @@ impl CellTaskManger {
 }
 
 
-unsafe impl Sync for CellTaskManger {}
+unsafe impl Sync for GlobalTaskManger {}
 
 
 #[derive(Default, Debug)]
@@ -117,7 +116,7 @@ impl TaskManager {
         let task = self.tasks.find_mut(task_id)?;
 
         if task.status().is_sleep() {
-            task.store_status(Status::Pending);
+            task.store_status(Pending);
         }
 
         task.send_message(message);
@@ -190,11 +189,11 @@ impl Task {
     pub fn new_main() -> Self {
         Self {
             id: 0,
-            priority_level: PriorityLevel::new(2),
+            priority_level: PriorityLevel::new(1),
             context: Context::uninit(),
             stack: vec![0; 65_536].into_boxed_slice(),
             messages: VecDeque::new(),
-            status: AtomicU8::new(2),
+            status: AtomicU8::new(Running as u8),
         }
     }
 
@@ -206,7 +205,7 @@ impl Task {
             context: Context::uninit(),
             stack: vec![0; 65_536].into_boxed_slice(),
             messages: VecDeque::new(),
-            status: AtomicU8::new(1),
+            status: AtomicU8::new(Pending as u8),
         }
     }
 
@@ -220,9 +219,9 @@ impl Task {
     #[inline(always)]
     pub fn status(&self) -> Status {
         match self.status.load(Ordering::Relaxed) {
-            0 => Status::Sleep,
-            1 => Status::Pending,
-            2 => Status::Running,
+            0 => Sleep,
+            1 => Pending,
+            2 => Running,
             _ => panic!("Invalid Status")
         }
     }

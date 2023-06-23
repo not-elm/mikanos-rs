@@ -4,7 +4,7 @@ use core::sync::atomic::Ordering::Relaxed;
 
 use kernel_lib::interrupt::asm::{cli, sti_and_hlt};
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
-use kernel_lib::task::CellTaskManger;
+use kernel_lib::task::GlobalTaskManger;
 use kernel_lib::task::priority_level::PriorityLevel;
 
 use crate::layers::COUNT_LAYER_KEY;
@@ -13,7 +13,7 @@ use crate::task::idle::idle;
 mod idle;
 pub mod task_message_iter;
 
-pub static mut TASK_MANAGER: CellTaskManger = CellTaskManger::uninit();
+pub static mut TASK_MANAGER: GlobalTaskManger = GlobalTaskManger::uninit();
 
 
 trait FunAddr {

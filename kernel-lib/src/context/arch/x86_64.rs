@@ -1,4 +1,5 @@
 use core::arch::asm;
+use core::mem;
 
 use crate::control_registers::read_cr3;
 
@@ -51,83 +52,7 @@ use crate::control_registers::read_cr3;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[repr(C, align(16))]
-pub struct Context(pub ContextValue);
-
-macro_rules! property {
-    ($v: ident) => {
-        paste::paste! {
-            pub fn $v(&self) -> u64{
-                self.0.$v
-            }
-
-            pub fn [<set_$v>](&mut self, $v: u64){
-                self.0.$v = $v;
-            }
-        }
-    };
-}
-
-
-impl Context {
-    #[inline(always)]
-    pub const fn uninit() -> Self {
-        Self(ContextValue::uninit())
-    }
-
-
-    pub unsafe fn init_context(&mut self, rip: u64, rdi: u64, rsi: u64, rsp: u64) {
-        self.set_rip(rip);
-        self.set_rdi(rdi);
-        self.set_rsi(rsi);
-        self.set_cr3(read_cr3());
-        self.set_flags(0x202);
-        self.set_cs(1 << 3);
-        self.set_ss(2 << 3);
-        self.set_rsp(rsp);
-        self.0
-            .fx_save_area
-            .as_mut_ptr()
-            .add(24)
-            .cast::<u32>()
-            .write_volatile(0x1F80);
-    }
-
-
-    #[inline(always)]
-    pub fn switch_to(&self, next_task: &Context) {
-        asm_switch_context(&next_task.0, &self.0);
-    }
-
-    
-    property!(cr3);
-    property!(rip);
-    property!(flags);
-    property!(cs);
-    property!(ss);
-    property!(fs);
-    property!(gs);
-    property!(rax);
-    property!(rbx);
-    property!(rcx);
-    property!(rdx);
-    property!(rdi);
-    property!(rsi);
-    property!(rsp);
-    property!(rbp);
-    property!(r8);
-    property!(r9);
-    property!(r10);
-    property!(r11);
-    property!(r12);
-    property!(r13);
-    property!(r14);
-    property!(r15);
-}
-
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-#[repr(C, packed)]
-pub struct ContextValue {
+pub struct Context {
     // 0x00
     pub cr3: u64,
     // 0x08
@@ -185,15 +110,37 @@ pub struct ContextValue {
 }
 
 
-impl ContextValue {
+macro_rules! property {
+    ($v: ident) => {
+        paste::paste! {
+            pub fn $v(&self) -> u64{
+                self.$v
+            }
+
+            pub fn [<set_$v>](&mut self, $v: u64){
+                self.$v = $v;
+            }
+        }
+    };
+}
+
+
+impl Context {
     #[inline(always)]
     pub const fn uninit() -> Self {
-        Self {
+        Self{
+            cr3: 0,
+            rip: 0,
+            flags: 0,
+            _reserved1: 0,
+            cs: 0,
+            ss: 0,
+            fs: 0,
+            gs: 0,
             rax: 0,
             rbx: 0,
             rcx: 0,
             rdx: 0,
-            _reserved1: 0,
             rdi: 0,
             rsi: 0,
             rsp: 0,
@@ -206,16 +153,58 @@ impl ContextValue {
             r13: 0,
             r14: 0,
             r15: 0,
-            cr3: 0,
-            rip: 0,
-            flags: 0,
-            cs: 0,
-            ss: 0,
-            fs: 0,
-            gs: 0,
             fx_save_area: [0; 512],
         }
     }
+
+
+    pub unsafe fn init_context(&mut self, rip: u64, rdi: u64, rsi: u64, rsp: u64) {
+        self.set_rip(rip);
+        self.set_rdi(rdi);
+        self.set_rsi(rsi);
+        self.set_cr3(read_cr3());
+        self.set_flags(0x202);
+        self.set_cs(1 << 3);
+        self.set_ss(2 << 3);
+        self.set_rsp(rsp);
+        self
+            .fx_save_area
+            .as_mut_ptr()
+            .add(24)
+            .cast::<u32>()
+            .write_volatile(0x1F80);
+    }
+
+
+    #[inline(always)]
+    pub fn switch_to(&self, next_task: &Context) {
+        asm_switch_context(&next_task, self);
+    }
+
+
+    property!(cr3);
+    property!(rip);
+    property!(flags);
+    property!(cs);
+    property!(ss);
+    property!(fs);
+    property!(gs);
+    property!(rax);
+    property!(rbx);
+    property!(rcx);
+    property!(rdx);
+    property!(rdi);
+    property!(rsi);
+    property!(rsp);
+    property!(rbp);
+    property!(r8);
+    property!(r9);
+    property!(r10);
+    property!(r11);
+    property!(r12);
+    property!(r13);
+    property!(r14);
+    property!(r15);
 }
 
 
@@ -223,7 +212,7 @@ impl ContextValue {
 /// current = rsi
 #[allow(unused)]
 #[naked]
-pub extern "sysv64" fn asm_switch_context(_next: &ContextValue, _current: &ContextValue) {
+pub extern "sysv64" fn asm_switch_context(_next: &Context, _current: &Context) {
     unsafe {
         asm!(
         "
