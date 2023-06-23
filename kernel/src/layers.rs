@@ -1,11 +1,10 @@
-use core::cell::{OnceCell, RefCell};
+use core::cell::OnceCell;
 use core::fmt::Write;
 
-use spin::Mutex;
+use spin::{Mutex, MutexGuard};
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
-use kernel_lib::interrupt::interrupt_message::TaskMessage;
 use kernel_lib::layers::Layers;
 
 use crate::layers::console::console;
@@ -13,7 +12,6 @@ use crate::layers::mouse::mouse;
 use crate::layers::screen::screen_background;
 use crate::layers::time_count::time_count_window;
 use crate::layers::window_keyboard::window_keyboard;
-use crate::task::TASK_MANAGER;
 
 mod console;
 mod mouse;
@@ -23,13 +21,13 @@ mod window_keyboard;
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
 
-pub struct GlobalLayers(OnceCell<Mutex<RefCell<Layers>>>);
+pub struct GlobalLayers(OnceCell<Mutex<Layers>>);
 
 
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
 
 pub const WINDOW_COUNT: &str = "WINDOW COUNT";
-pub const COUNT: &str = "COUNT";
+pub const COUNT_LAYER_KEY: &str = "COUNT";
 
 
 pub const WINDOW_KEYBOARD: &str = "WINDOW KEYBOARD";
@@ -49,13 +47,18 @@ impl GlobalLayers {
         let layers = Layers::new(frame_buffer_config);
 
         self.0
-            .set(Mutex::new(RefCell::new(layers)))
+            .set(Mutex::new(layers))
             .map_err(|_| KernelError::FailedOperateLayer(LayerReason::FailedInitialize))
     }
 
 
-    pub fn layers_mut(&self) -> &Mutex<RefCell<Layers>> {
-        self.0.get().unwrap()
+    pub fn lock(&self) -> MutexGuard<Layers> {
+        self.0.get().unwrap().lock()
+    }
+
+
+    pub fn try_lock(&self) -> Option<MutexGuard<Layers>> {
+        self.0.get().unwrap().try_lock()
     }
 }
 
@@ -66,9 +69,7 @@ unsafe impl Sync for GlobalLayers {}
 pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
     LAYERS.init(config)?;
 
-    let biding = LAYERS.layers_mut();
-    let layers = biding.lock();
-    let mut layers = layers.borrow_mut();
+    let mut layers = LAYERS.lock();
 
     layers.new_layer(screen_background(config));
     layers.new_layer(console(config));
@@ -82,18 +83,16 @@ pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
 
 #[doc(hidden)]
 pub fn _print(args: core::fmt::Arguments) {
-    if let Some(layers) = LAYERS.layers_mut().try_lock() {
-        layers
-            .borrow_mut()
-            .update_layer(CONSOLE_LAYER_KEY, |layer| {
-                layer
-                    .require_text()
-                    .unwrap()
-                    .write_fmt(args)
-                    .unwrap();
-            })
-            .unwrap();
-    }
+    LAYERS
+        .lock()
+        .update_layer(CONSOLE_LAYER_KEY, |layer| {
+            layer
+                .require_text()
+                .unwrap()
+                .write_fmt(args)
+                .unwrap();
+        })
+        .unwrap();
 }
 
 

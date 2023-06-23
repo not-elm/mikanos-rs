@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 
-use crate::kernel_error;
-use crate::error::{KernelError, KernelResult};
+use crate::{kernel_error, serial_println};
+use crate::error::{KernelError, KernelResult, TaskReason};
 use crate::task::status::Status;
 use crate::task::status::Status::Pending;
 use crate::task::switch::SwitchCommand;
@@ -35,7 +35,7 @@ impl TaskList {
 
     pub fn wakeup_at(&mut self, task_id: u64) -> KernelResult {
         let task = self.find_where_sleeps(task_id)?;
-        task.status.set(Pending);
+        task.store_status(Pending);
 
         Ok(())
     }
@@ -62,7 +62,7 @@ impl TaskList {
 
         let task = self.sleep_and_check_running(task_id)?;
 
-        if task.status.get().is_running() {
+        if task.status().is_running() {
             let next = self.next_run_task_ref()?;
 
             Ok(Some(SwitchCommand::new(task, next)))
@@ -75,10 +75,10 @@ impl TaskList {
     fn sleep_and_check_running(&self, task_id: u64) -> KernelResult<&Task> {
         let task = self.find_ref(task_id)?;
 
-        if task.status.get().is_running() {
+        if task.status().is_running() {
             Ok(task)
         } else {
-            task.status.set(Status::Sleep);
+            task.store_status(Status::Sleep);
 
             Ok(task)
         }
@@ -112,7 +112,7 @@ impl TaskList {
     fn find_where_sleeps(&mut self, task_id: u64) -> KernelResult<&mut Task> {
         self.tasks
             .iter_mut()
-            .filter(|task| task.status.get().is_sleep())
+            .filter(|task| task.status().is_sleep())
             .find(|task| task.id == task_id)
             .ok_or(kernel_error!("Not found specified sleep the Task! id =  {task_id}"))
     }
@@ -122,7 +122,7 @@ impl TaskList {
         self
             .tasks
             .sort_by(|t1, t2| t2.priority_level.cmp(&t1.priority_level)
-                .then_with(|| t1.status.cmp(&t2.status))
+                .then_with(|| t1.status().cmp(&t2.status()))
             );
     }
 
@@ -131,7 +131,7 @@ impl TaskList {
         self
             .tasks
             .iter()
-            .find(|task| task.status.get().is_pending())
+            .find(|task| task.status().is_pending())
             .ok_or(kernel_error!("Couldn't find a task to run next"))
     }
 }

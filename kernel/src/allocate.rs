@@ -1,7 +1,7 @@
 use linked_list_allocator::LockedHeap;
 use uefi::table::boot::MemoryMapIter;
-use common_lib::math::Align;
 
+use common_lib::math::Align;
 use kernel_lib::allocator::MAX_MEMORY_SIZE;
 use kernel_lib::allocator::memory_map::frame_iter::FrameIter;
 use kernel_lib::error::{KernelError, KernelResult};
@@ -25,7 +25,7 @@ use kernel_lib::error::AllocateReason::InitializeGlobalAllocator;
 
 // static mut MEMORY_POOL: [u8; MAX_MEMORY_SIZE] = [0; MAX_MEMORY_SIZE];
 #[global_allocator]
-static mut HEAP: LockedHeap = LockedHeap::empty();
+static HEAP: LockedHeap = LockedHeap::empty();
 
 pub fn init_alloc(memory_map: MemoryMapIter<'static>) -> KernelResult {
     unsafe {
@@ -36,9 +36,12 @@ pub fn init_alloc(memory_map: MemoryMapIter<'static>) -> KernelResult {
             .next()
             .unwrap();
 
-        HEAP.lock()
+        HEAP
+            .lock()
             .init(frame.base_phys_addr().raw().align_up(64).unwrap() as *mut u8, MAX_MEMORY_SIZE);
     }
 
     Ok(())
 }
+
+

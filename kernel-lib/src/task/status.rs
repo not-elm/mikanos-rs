@@ -1,10 +1,11 @@
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[repr(u8)]
 pub enum Status {
-    Sleep,
+    Sleep = 0,
 
-    Pending,
+    Pending = 1,
 
-    Running,
+    Running = 2,
 }
 
 

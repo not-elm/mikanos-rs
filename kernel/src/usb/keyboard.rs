@@ -15,28 +15,34 @@ pub fn build_keyboard_driver() -> KeyboardDriver {
 
 
 fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
-    LAYERS
-        .layers_mut()
-        .lock()
-        .borrow_mut()
-        .update_layer(KEYBOARD_TEXT, |layer| {
-            layer
-                .require_text()
-                .unwrap()
-                .write_str(keycode.to_string().as_str())
-                .unwrap();
-        })
-        .unwrap();
+    if let Some(mut layers) = LAYERS.try_lock() {
+        layers
+            .update_layer(KEYBOARD_TEXT, |layer| {
+                layer
+                    .require_text()
+                    .unwrap()
+                    .write_str(keycode.to_string().as_str())
+                    .unwrap();
+            })
+            .unwrap();
+    }
 
-    unsafe {
-        // if keycode == 's' {
-        //     TASK_MANAGER
-        //         .sleep_at(1)
-        //         .unwrap();
-        // } else if keycode == 'w' {
-        //     TASK_MANAGER
-        //         .wakeup_at(1)
-        //         .unwrap();
-        // }
+    unsafe { operate_count_task_if_need(keycode) };
+}
+
+
+unsafe fn operate_count_task_if_need(keycode: char) {
+    match keycode {
+        's' =>
+            TASK_MANAGER
+                .sleep_at(1)
+                .unwrap(),
+
+        'w' =>
+            TASK_MANAGER
+                .wakeup_at(1)
+                .unwrap(),
+
+        _ => {}
     }
 }

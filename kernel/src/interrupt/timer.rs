@@ -1,13 +1,16 @@
+use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::Ordering::Relaxed;
+
+use spin::Mutex;
 use x86_64::structures::idt::InterruptStackFrame;
 
 use kernel_lib::apic::LocalApicRegisters;
-use kernel_lib::serial_println;
 
 use crate::task::TASK_MANAGER;
 
 pub struct Timer {
-    interval: Option<usize>,
-    tick: usize,
+    interval: Mutex<Option<usize>>,
+    tick: AtomicUsize,
 }
 
 
@@ -15,22 +18,23 @@ impl Timer {
     #[inline(always)]
     pub const fn new() -> Self {
         Self {
-            interval: None,
-            tick: 0,
+            interval: Mutex::new(None),
+            tick: AtomicUsize::new(0),
         }
     }
 
 
-    pub fn set(&mut self, interval: usize) {
-        self.interval = Some(interval);
+    pub fn set(&self, interval: usize) {
+        *self.interval.lock() = Some(interval);
     }
 
 
-    pub fn tick(&mut self) -> bool {
-        if let Some(interval) = self.interval {
-            self.tick += 1;
-            if interval <= self.tick {
-                self.tick = 0;
+    pub fn tick(&self) -> bool {
+        if let Some(interval) = *self.interval.lock() {
+            let next_tick = self.tick.load(Relaxed) + 1;
+            self.tick.store(next_tick, Relaxed);
+            if interval <= next_tick {
+                self.tick.store(0, Relaxed);
                 return true;
             }
 
@@ -42,10 +46,10 @@ impl Timer {
 }
 
 
-pub static mut TIMER: Timer = Timer::new();
+pub static TIMER: Timer = Timer::new();
 
 pub extern "x86-interrupt" fn interrupt_timer_handler(_stack_frame: InterruptStackFrame) {
-    let is_interval = unsafe { TIMER.tick() };
+    let is_interval = TIMER.tick();
 
     LocalApicRegisters::default()
         .end_of_interrupt()

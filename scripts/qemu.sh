@@ -9,7 +9,7 @@ if [ "$QEMU_STATE" = "debug" ];then
     -device nec-usb-xhci,id=xhci \
     -device usb-mouse \
     -device usb-kbd \
-    -serial stdio \
+    -serial mon:stdio \
     -s \
     -S \
     -m 8G \

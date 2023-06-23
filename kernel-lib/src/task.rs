@@ -1,11 +1,14 @@
 use alloc::boxed::Box;
 use alloc::collections::VecDeque;
 use alloc::vec;
-use core::cell::{Cell, OnceCell};
+use core::cell::OnceCell;
+use core::sync::atomic::{AtomicU8, Ordering};
+
+use spin::{Mutex, MutexGuard};
 
 use crate::{kernel_bail, kernel_error};
 use crate::context::arch::x86_64::Context;
-use crate::error::KernelResult;
+use crate::error::{KernelError, KernelResult, TaskReason};
 use crate::interrupt::interrupt_message::TaskMessage;
 use crate::task::list::TaskList;
 use crate::task::priority_level::PriorityLevel;
@@ -32,18 +35,19 @@ impl CellTaskManger {
     }
 
 
-    pub fn receive_message_at(&mut self, task_id: u64) -> Option<TaskMessage> {
-        self.0
-            .get_mut()?
-            .receive_message_at(task_id)
-    }
-
-
-    pub fn new_task(&mut self, priority_level: PriorityLevel) -> &mut Task {
-        self.0
-            .get_mut()
-            .unwrap()
-            .new_task(priority_level)
+    pub fn new_task(
+        &mut self,
+        priority_level: PriorityLevel,
+        rip: u64,
+        rsi: u64,
+    ) {
+        unsafe {
+            self.0
+                .get_mut()
+                .unwrap()
+                .new_task(priority_level)
+                .init_context(rip, rsi);
+        }
     }
 
 
@@ -55,30 +59,36 @@ impl CellTaskManger {
 
 
     pub fn send_message_at(&mut self, task_id: u64, message: TaskMessage) -> KernelResult {
-        if let Some(task_manager) = self.0.get_mut() {
-            return task_manager.send_message_at(task_id, message);
-        }
+        self.lock()?
+            .send_message_at(task_id, message)
+    }
 
-        kernel_bail!("Not Initialized Task Manager!")
+
+    pub fn receive_message_at(&mut self, task_id: u64) -> Option<TaskMessage> {
+        self.lock()
+            .ok()?
+            .receive_message_at(task_id)
     }
 
 
     pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
-        self.get_mut()?
+        self
+            .lock()?
             .sleep_at(task_id)
     }
 
 
     pub fn wakeup_at(&mut self, task_id: u64) -> KernelResult {
-        self.get_mut()?
+        self
+            .lock()?
             .wakeup_at(task_id)
     }
 
 
-    fn get_mut(&mut self) -> KernelResult<&mut TaskManager> {
+    fn lock(&mut self) -> KernelResult<&mut TaskManager> {
         self.0
             .get_mut()
-            .ok_or(kernel_error!("Uninitialized CellTaskManager"))
+            .ok_or(kernel_error!("Not Initialized Task Manager"))
     }
 }
 
@@ -106,8 +116,8 @@ impl TaskManager {
     pub fn send_message_at(&mut self, task_id: u64, message: TaskMessage) -> KernelResult {
         let task = self.tasks.find_mut(task_id)?;
 
-        if task.status.get().is_sleep() {
-            task.status.set(Status::Pending);
+        if task.status().is_sleep() {
+            task.store_status(Status::Pending);
         }
 
         task.send_message(message);
@@ -172,7 +182,7 @@ pub struct Task {
     context: Context,
     stack: Box<[u8]>,
     messages: VecDeque<TaskMessage>,
-    status: Cell<Status>,
+    status: AtomicU8,
 }
 
 
@@ -184,7 +194,7 @@ impl Task {
             context: Context::uninit(),
             stack: vec![0; 65_536].into_boxed_slice(),
             messages: VecDeque::new(),
-            status: Cell::new(Status::Running),
+            status: AtomicU8::new(2),
         }
     }
 
@@ -196,10 +206,26 @@ impl Task {
             context: Context::uninit(),
             stack: vec![0; 65_536].into_boxed_slice(),
             messages: VecDeque::new(),
-            status: Cell::new(Status::Pending),
+            status: AtomicU8::new(1),
         }
     }
 
+
+    #[inline(always)]
+    pub fn store_status(&self, status: Status) {
+        self.status.store(status as u8, Ordering::Relaxed);
+    }
+
+
+    #[inline(always)]
+    pub fn status(&self) -> Status {
+        match self.status.load(Ordering::Relaxed) {
+            0 => Status::Sleep,
+            1 => Status::Pending,
+            2 => Status::Running,
+            _ => panic!("Invalid Status")
+        }
+    }
 
     #[inline(always)]
     pub fn switch_to(&self, next: &Task) {

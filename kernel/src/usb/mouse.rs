@@ -4,8 +4,8 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::layers::cursor::cursor_colors::CursorColors;
-use pci::class_driver::mouse::subscribable::MouseSubscribable;
 use pci::class_driver::mouse::MouseButton;
+use pci::class_driver::mouse::subscribable::MouseSubscribable;
 
 use crate::layers::{LAYERS, MOUSE_LAYER_KEY};
 
@@ -51,20 +51,17 @@ fn update_draggable_layer(
         if let Some(window_key) =
             draggable_layer_key(&prev_cursor).or(draggable_layer_key(&current_cursor))
         {
-            let layers = LAYERS.layers_mut().lock();
+            let mut layers = LAYERS.lock();
 
             layers
-                .borrow_mut()
                 .bring_to_front(window_key.as_str())
                 .map_err(|e| anyhow::anyhow!("{e:?}"))?;
 
             layers
-                .borrow_mut()
                 .bring_to_front(MOUSE_LAYER_KEY)
                 .map_err(|e| anyhow::anyhow!("{e:?}"))?;
 
             layers
-                .borrow_mut()
                 .update_layer(window_key.as_str(), |layer| {
                     layer
                         .move_to_relative(relative)
@@ -79,9 +76,7 @@ fn update_draggable_layer(
 
 fn draggable_layer_key(current_cursor: &Vector2D<usize>) -> Option<String> {
     LAYERS
-        .layers_mut()
         .lock()
-        .borrow()
         .find_window_layer_by_pos(current_cursor)
         .map(String::from)
 }
@@ -91,11 +86,9 @@ fn update_cursor_layer(
     current_cursor: Vector2D<usize>,
     button: Option<MouseButton>,
 ) -> anyhow::Result<()> {
-    let layers = LAYERS.layers_mut();
-    let lock = layers.lock();
-
-    let mut layer = lock.borrow_mut();
-    layer
+    LAYERS
+        .try_lock()
+        .ok_or(anyhow::anyhow!("Failed Lock Layers"))?
         .update_layer(MOUSE_LAYER_KEY, |layer| {
             let color: PixelColor = cursor_color(button);
             if let Ok(cursor) = layer.require_cursor() {

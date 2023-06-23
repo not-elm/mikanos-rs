@@ -1,12 +1,13 @@
 use alloc::string::ToString;
+use core::sync::atomic::AtomicUsize;
+use core::sync::atomic::Ordering::Relaxed;
 
-use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
+use kernel_lib::interrupt::asm::{cli, sti_and_hlt};
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
-use kernel_lib::serial_println;
 use kernel_lib::task::CellTaskManger;
 use kernel_lib::task::priority_level::PriorityLevel;
 
-use crate::layers::COUNT;
+use crate::layers::COUNT_LAYER_KEY;
 use crate::task::idle::idle;
 
 mod idle;
@@ -21,35 +22,33 @@ trait FunAddr {
 
 
 unsafe fn addr(f: extern "sysv64" fn(u64, u64)) -> u64 {
-    let address = f as *const () as u64;
-
-    address
+    f as *const () as u64
 }
 
 pub unsafe fn init() {
     TASK_MANAGER.init().unwrap();
 
     TASK_MANAGER
-        .new_task(PriorityLevel::new(1))
-        .init_context(addr(window_count_task), 0x30);
+        .new_task(PriorityLevel::new(1), addr(window_count_task), 0x30);
 
     TASK_MANAGER
-        .new_task(PriorityLevel::new(0))
-        .init_context(addr(idle), 0x00);
+        .new_task(PriorityLevel::new(0), addr(idle), 0x00);
 }
 
 
 extern "sysv64" fn window_count_task(_id: u64, _data: u64) {
-    let mut count = 0;
+    static COUNT: AtomicUsize = AtomicUsize::new(0);
     loop {
         cli();
-        count += 1;
 
-        unsafe {
+        let next_count = COUNT.load(Relaxed) + 1;
+        COUNT.store(next_count, Relaxed);
+
+        let _ = unsafe {
             TASK_MANAGER
-                .send_message_at(0, TaskMessage::count(COUNT.to_string(), count))
-                .unwrap();
-        }
+                .send_message_at(0, TaskMessage::count(COUNT_LAYER_KEY.to_string(), next_count))
+        };
+
 
         sti_and_hlt();
     }

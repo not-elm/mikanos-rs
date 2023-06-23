@@ -7,7 +7,7 @@ use kernel_lib::layers::count::CountLayer;
 use kernel_lib::layers::layer_key::LayerKey;
 use kernel_lib::layers::window::WindowLayer;
 
-use crate::layers::{COUNT, WINDOW_COUNT};
+use crate::layers::{COUNT_LAYER_KEY, WINDOW_COUNT};
 
 pub(crate) fn time_count_window(config: FrameBufferConfig) -> KernelResult<LayerKey> {
     let transform = Transform2D::new(Vector2D::new(300, 100), Size::new(160, 52));
@@ -42,5 +42,5 @@ fn count_layer(
 
     Ok(count
         .into_enum()
-        .into_layer_key(COUNT))
+        .into_layer_key(COUNT_LAYER_KEY))
 }

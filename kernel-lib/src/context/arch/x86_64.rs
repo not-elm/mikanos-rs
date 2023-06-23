@@ -98,6 +98,7 @@ impl Context {
         asm_switch_context(&next_task.0, &self.0);
     }
 
+    
     property!(cr3);
     property!(rip);
     property!(flags);

@@ -49,11 +49,15 @@ impl<'t> SwitchCommand<'t> {
 
 
     fn switch(&self, status: Status) {
-        cli();
-        self.running.status.set(status);
-        self.next.status.set(Running);
-        sti();
-        
+           serial_println!("switch command: execute running = {} {:?}  next = {} {:?}",
+               self.running.id,
+               self.running.status(),
+               self.next.id,
+               self.next.status());
+
+        self.running.store_status(status);
+        self.next.store_status(Running);
+
         self
             .running
             .switch_to(self.next)

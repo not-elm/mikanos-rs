@@ -1,11 +1,4 @@
-use alloc::string::ToString;
-use core::fmt::Write;
-
-use kernel_lib::interrupt::asm::{cli, sti};
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
-use kernel_lib::serial_println;
-use pci::class_driver::keyboard;
-use pci::class_driver::keyboard::driver::KeyboardDriver;
 use pci::class_driver::mouse::driver::MouseDriver;
 use pci::class_driver::mouse::subscribable::MouseSubscribable;
 use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
@@ -16,7 +9,6 @@ use pci::xhc::XhcController;
 use crate::apic::TIMER_500_MILLI_INTERVAL;
 use crate::interrupt::timer::TIMER;
 use crate::layers::LAYERS;
-use crate::println;
 use crate::task::task_message_iter::TaskMessageIter;
 use crate::usb::keyboard::build_keyboard_driver;
 
@@ -24,14 +16,15 @@ pub fn start_xhci_host_controller(
     mmio_base_addr: MemoryMappedAddr,
     mouse_subscriber: impl MouseSubscribable + 'static,
 ) -> anyhow::Result<()> {
-    let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
-
-    let messages = TaskMessageIter::new(0);
-
     unsafe {
         crate::task::init();
         TIMER.set(TIMER_500_MILLI_INTERVAL);
     }
+
+    let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
+
+    let messages = TaskMessageIter::new(0);
+
 
     messages.for_each(|message| {
         match message {
@@ -53,9 +46,7 @@ pub fn start_xhci_host_controller(
 
 fn update_count(count: usize, key: &str) {
     LAYERS
-        .layers_mut()
         .lock()
-        .borrow_mut()
         .update_layer(key, |layer| {
             let window = layer.require_count().unwrap();
             window.write_count(count);
