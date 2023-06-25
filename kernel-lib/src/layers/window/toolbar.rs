@@ -10,7 +10,6 @@ use crate::layers::close_button::{CloseButtonLayer, CLOSE_BUTTON_HEIGHT, CLOSE_B
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::MultipleLayer;
-use crate::layers::shape::shape_colors::ShapeColors;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
 use crate::layers::text::console_colors::TextColors;
@@ -50,10 +49,7 @@ fn toolbar_layer(config: FrameBufferConfig, transform: Transform2D, title: &str)
 
 fn toolbar_background_layer(config: FrameBufferConfig, transform: Transform2D) -> LayerKey {
     ShapeLayer::new(
-        ShapeDrawer::new(
-            config,
-            ShapeColors::new(PixelColor::new(0x00, 0x00, 0x84), None),
-        ),
+        ShapeDrawer::new(config, PixelColor::new(0x00, 0x00, 0x84)),
         transform,
     )
     .into_enum()

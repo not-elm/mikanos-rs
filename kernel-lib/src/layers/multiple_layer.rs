@@ -143,7 +143,7 @@ mod tests {
 
     use crate::layers::layer::Layer;
     use crate::layers::multiple_layer::MultipleLayer;
-    use crate::layers::shape::shape_colors::ShapeColors;
+    use crate::layers::shape::shape_colors::ShapeColor;
     use crate::layers::shape::shape_drawer::ShapeDrawer;
     use crate::layers::shape::ShapeLayer;
 
@@ -156,7 +156,7 @@ mod tests {
 
         layer.new_layer(
             Layer::Shape(ShapeLayer::new(
-                ShapeDrawer::new(FrameBufferConfig::mock(), ShapeColors::default()),
+                ShapeDrawer::new(FrameBufferConfig::mock(), ShapeColor::default()),
                 Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
             ))
             .into_layer_key(""),

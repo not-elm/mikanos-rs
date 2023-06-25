@@ -8,7 +8,6 @@ use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_row::PixelRow;
 use crate::gop::pixel::Pixel;
-use crate::layers::shape::shape_colors::ShapeColors;
 
 pub struct PixelFrame<'buff> {
     pixels: Box<dyn Iterator<Item = Pixel> + 'buff>,
@@ -35,11 +34,11 @@ impl<'buff> PixelFrame<'buff> {
     }
 
 
-    pub fn rect(rect: Rectangle<usize>, colors: ShapeColors, converter: EnumPixelMapper) -> Self {
+    pub fn rect(rect: Rectangle<usize>, color: PixelColor, converter: EnumPixelMapper) -> Self {
         let rect_iter = rect.points();
 
         Self::new(
-            rect_iter.map(move |p| Pixel::new(Some(colors.foreground()), p)),
+            rect_iter.map(move |p| Pixel::new(Some(color), p)),
             converter,
             Some(DISPLAY_BACKGROUND_COLOR),
         )

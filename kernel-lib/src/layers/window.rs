@@ -11,7 +11,6 @@ use crate::kernel_error;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::MultipleLayer;
-use crate::layers::shape::shape_colors::ShapeColors;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
 use crate::layers::window::toolbar::ToolbarLayer;
@@ -60,10 +59,7 @@ impl WindowLayer {
 
 fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey {
     ShapeLayer::new(
-        ShapeDrawer::new(
-            config,
-            ShapeColors::default().change_foreground(PixelColor::black()),
-        ),
+        ShapeDrawer::new(config, PixelColor::black()),
         Transform2D::new(Vector2D::zeros(), transform.size()),
     )
     .into_enum()
@@ -73,10 +69,7 @@ fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey 
 
 fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey {
     ShapeLayer::new(
-        ShapeDrawer::new(
-            config,
-            ShapeColors::default().change_foreground(PixelColor::window_background()),
-        ),
+        ShapeDrawer::new(config, PixelColor::window_background()),
         Transform2D::new(
             Vector2D::zeros(),
             Size::new(transform.size().width() - 1, transform.size().height() - 1),

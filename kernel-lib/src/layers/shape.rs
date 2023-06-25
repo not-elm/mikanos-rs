@@ -9,7 +9,6 @@ use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 
-pub mod shape_colors;
 pub mod shape_drawer;
 
 
