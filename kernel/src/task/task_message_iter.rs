@@ -1,4 +1,5 @@
-use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt, sti_and_nop};
+use common_lib::assembly::hlt;
+use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
 
 use crate::task::TASK_MANAGER;
@@ -35,7 +36,7 @@ impl Iterator for TaskMessageIter {
             value = unsafe { TASK_MANAGER.receive_message_at(self.task_id) };
         }
 
-        sti_and_nop();
+        sti();
         value
     }
 }

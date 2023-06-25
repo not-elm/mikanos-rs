@@ -1,11 +1,11 @@
 use alloc::string::ToString;
 use core::fmt::Write;
 
+use crate::interrupt::timer::TASK_MANAGER;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 
 use crate::layers::{KEYBOARD_TEXT, LAYERS};
-use crate::task::TASK_MANAGER;
 
 pub fn build_keyboard_driver() -> KeyboardDriver {
     keyboard::builder::Builder::new()
@@ -32,15 +32,13 @@ fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
 
 unsafe fn operate_count_task_if_need(keycode: char) {
     match keycode {
-        's' =>
-            TASK_MANAGER
-                .sleep_at(1)
-                .unwrap(),
+        's' => TASK_MANAGER
+            .sleep_at(1)
+            .unwrap(),
 
-        'w' =>
-            TASK_MANAGER
-                .wakeup_at(1)
-                .unwrap(),
+        'w' => TASK_MANAGER
+            .wakeup_at(1)
+            .unwrap(),
 
         _ => {}
     }

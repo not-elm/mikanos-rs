@@ -34,12 +34,22 @@ where
 
 
     pub fn has_front(&self) -> bool {
-        self.read_event_trb()
-            .and_then(|event| event.circle_bit())
-            .map(|circle_bit| circle_bit == self.transfer_ring.cycle_bit())
-            .unwrap_or(false)
+        let circle_bit = self
+            .read_event_trb()
+            .map_or(false, |trb| trb.circle_bit().unwrap());
+
+        circle_bit == self.transfer_ring.cycle_bit()
     }
 
+
+    pub fn read_(&self) -> Option<EventTrb> {
+        let event_ring_dequeue_pointer_addr = self.read_dequeue_pointer_addr() + trb_byte_size();
+
+        let trb_raw_data =
+            TrbRawData::new_unchecked(unsafe { *(event_ring_dequeue_pointer_addr as *mut u128) });
+
+        EventTrb::new(trb_raw_data, self.transfer_ring.cycle_bit())
+    }
 
     pub fn read_event_trb(&self) -> Option<EventTrb> {
         let event_ring_dequeue_pointer_addr = self.read_dequeue_pointer_addr();

@@ -3,12 +3,12 @@ use core::ffi::c_void;
 use kernel_lib::acpi;
 use kernel_lib::apic::device_config::LocalApicTimerDivide;
 use kernel_lib::error::KernelResult;
-use kernel_lib::timer::apic::ApicTimer;
 use kernel_lib::timer::apic::local_apic_timer::LocalApicTimer;
+use kernel_lib::timer::apic::ApicTimer;
 
 pub const TIMER_FREQ: u32 = 100;
 
-pub const TIMER_500_MILLI_INTERVAL: usize = 5;
+pub const TIMER_100_MILLI_INTERVAL: usize = 1;
 
 
 pub fn start_timer(rsdp: Option<*const c_void>, timer_freq_milli: u32) -> KernelResult<()> {

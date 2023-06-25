@@ -1,8 +1,10 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
+use core::fmt::Debug;
 
 use xhci::ring::trb::event::{CommandCompletion, PortStatusChange, TransferEvent};
 
+use kernel_lib::serial_println;
 use transfer::event::event_ring::EventRing;
 
 use crate::class_driver::keyboard::driver::KeyboardDriver;
@@ -38,7 +40,7 @@ pub struct XhcController<Register, Memory> {
 
 impl<Register, Memory> XhcController<Register, Memory>
 where
-    Register: XhcRegisters + 'static,
+    Register: XhcRegisters + 'static + Debug,
     Memory: MemoryAllocatable,
 {
     pub fn new(
@@ -125,7 +127,19 @@ where
 
 
     pub fn process_all_events(&mut self) {
-        while self.process_event().is_some() {}
+        while self.event_ring.has_front() {
+            serial_println!("{:?}", self.registers.borrow());
+            self.process_event();
+        }
+
+        self.registers
+            .borrow_mut()
+            .set_counter_at(0, 100);
+        self.registers
+            .borrow_mut()
+            .write_interrupter_pending_at(0, true);
+
+        serial_println!("{:?}", self.registers.borrow());
     }
 
 
@@ -142,6 +156,8 @@ where
 
 
     fn on_event(&mut self, event_trb: EventTrb) -> PciResult {
+        serial_println!("{:?}", event_trb);
+
         match event_trb {
             EventTrb::TransferEvent {
                 transfer_event,

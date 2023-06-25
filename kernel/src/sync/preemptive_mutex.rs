@@ -1,8 +1,7 @@
 use spin::{Mutex, MutexGuard};
 
-use common_lib::assembly::hlt;
-
-use crate::interrupt;
+use crate::interrupt::timer::TASK_MANAGER;
+use kernel_lib::interrupt;
 
 #[repr(transparent)]
 pub struct PreemptiveMutex<T: ?Sized>(Mutex<T>);
@@ -19,7 +18,9 @@ impl<T> PreemptiveMutex<T> {
             if let Some(resource) = interrupt::asm::with_free(|| self.0.try_lock()) {
                 return resource;
             }
-            hlt();
+            unsafe {
+                TASK_MANAGER.switch().unwrap();
+            }
         }
     }
 }

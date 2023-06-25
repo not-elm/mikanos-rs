@@ -3,6 +3,8 @@ use alloc::vec::Vec;
 
 use xhci::ring::trb::event::TransferEvent;
 
+use kernel_lib::serial_println;
+
 use crate::class_driver::interrupt_in::InterruptIn;
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
@@ -16,6 +18,7 @@ where
     Doorbell: DoorbellRegistersAccessible,
 {
     interrupters: Vec<InterruptIn<Doorbell>>,
+    initialized: bool,
 }
 
 impl<D> Phase4<D>
@@ -23,7 +26,11 @@ where
     D: DoorbellRegistersAccessible,
 {
     pub const fn new(interrupters: Vec<InterruptIn<D>>) -> Self {
-        Self { interrupters }
+        Self {
+            interrupters,
+
+            initialized: false,
+        }
     }
 }
 
@@ -36,11 +43,15 @@ where
     fn on_transfer_event_received(
         &mut self,
         slot: &mut DeviceSlot<Memory, Doorbell>,
-        _transfer_event: TransferEvent,
-        _target_event: TargetEvent,
+        transfer_event: TransferEvent,
+        target_event: TargetEvent,
     ) -> PciResult<(InitStatus, Option<Box<dyn Phase<Doorbell, Memory>>>)> {
+        serial_println!("PHASE 4");
+
         for interrupt in self.interrupters.iter_mut() {
-            interrupt.get_report(slot.default_control_pipe_mut())?;
+            interrupt
+                .interrupter_in(transfer_event.endpoint_id())
+                .unwrap();
         }
 
         Ok((InitStatus::not(), None))

@@ -7,6 +7,12 @@ use crate::xhc::transfer::event::event_ring::EventRing;
 use crate::xhc::transfer::event::event_ring_segment_table::EventRingSegmentTable;
 
 pub trait InterrupterSetRegisterAccessible {
+    fn set_interrupt_pending_at(&mut self, index: usize);
+
+
+    fn set_counter_at(&mut self, index: usize, count: u16);
+
+
     fn write_event_ring_dequeue_pointer_at(
         &mut self,
         index: usize,
@@ -33,11 +39,7 @@ pub trait InterrupterSetRegisterAccessible {
     fn write_event_ring_segment_table_size(&mut self, index: usize, size: u16) -> PciResult;
 
 
-    fn update_dequeue_pointer_at(
-        &mut self,
-        index: usize,
-        dequeue_pointer_addr: u64,
-    ) -> PciResult {
+    fn update_dequeue_pointer_at(&mut self, index: usize, dequeue_pointer_addr: u64) -> PciResult {
         self.write_interrupter_pending_at(index, true)?;
         self.write_event_ring_dequeue_pointer_at(index, dequeue_pointer_addr)?;
         Ok(())
@@ -50,8 +52,8 @@ pub(crate) fn setup_event_ring<T>(
     event_ring_segment_size: usize,
     allocator: &mut impl MemoryAllocatable,
 ) -> PciResult<(EventRingSegmentTable, EventRing<T>)>
-    where
-        T: InterrupterSetRegisterAccessible,
+where
+    T: InterrupterSetRegisterAccessible,
 {
     let event_ring_segment_table_addr =
         allocator.try_allocate_trb_ring(event_ring_segment_table_size as usize)?;
@@ -70,7 +72,7 @@ pub(crate) fn setup_event_ring<T>(
         event_ring_segment_addr,
         event_ring_segment_size,
     )
-        .unwrap();
+    .unwrap();
 
     registers
         .borrow_mut()

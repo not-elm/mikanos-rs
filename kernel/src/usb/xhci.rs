@@ -6,8 +6,6 @@ use pci::xhc::registers::external::{External, IdentityMapper};
 use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
-use crate::apic::TIMER_500_MILLI_INTERVAL;
-use crate::interrupt::timer::TIMER;
 use crate::layers::LAYERS;
 use crate::task::task_message_iter::TaskMessageIter;
 use crate::usb::keyboard::build_keyboard_driver;
@@ -18,7 +16,7 @@ pub fn start_xhci_host_controller(
 ) -> anyhow::Result<()> {
     unsafe {
         crate::task::init();
-        TIMER.set(TIMER_500_MILLI_INTERVAL);
+        // TASK_MANAGER.set_interval(TIMER_100_MILLI_INTERVAL);
     }
 
     let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
@@ -26,7 +24,7 @@ pub fn start_xhci_host_controller(
     let messages = TaskMessageIter::new(0);
     messages.for_each(|message| match message {
         TaskMessage::Xhci => {
-            xhc_controller.process_event();
+            xhc_controller.process_all_events();
         }
 
         TaskMessage::Count { layer_key, count } => {

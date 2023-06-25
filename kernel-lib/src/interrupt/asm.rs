@@ -5,7 +5,9 @@ use crate::register::rflags::RFlags;
 
 #[inline(always)]
 pub fn with_free<F, Output>(f: F) -> Output
-    where F: FnOnce() -> Output {
+where
+    F: FnOnce() -> Output,
+{
     let enable = RFlags::read().are_enable_interrupt();
 
     cli();

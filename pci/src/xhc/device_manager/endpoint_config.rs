@@ -1,3 +1,4 @@
+use xhci::context::EndpointType::InterruptIn;
 use xhci::context::{EndpointHandler, EndpointType};
 
 use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::EndpointDescriptor;
@@ -29,7 +30,7 @@ impl EndpointConfig {
 
         Self {
             ep_id: EndpointId::from_endpoint_num(ep_num, dir_in),
-            ep_type: to_endpoint_type(transfer_type),
+            ep_type: to_endpoint_type(transfer_type, dir_in),
             max_packet_size: endpoint.max_packet_size(),
             interval: endpoint.interval(),
         }
@@ -66,7 +67,7 @@ impl EndpointConfig {
         tr_buff_addr: u64,
         endpoint_ctx: &mut dyn EndpointHandler,
     ) {
-        endpoint_ctx.set_endpoint_type(self.ep_type);
+        endpoint_ctx.set_endpoint_type(InterruptIn);
         endpoint_ctx.set_tr_dequeue_pointer(tr_buff_addr);
         endpoint_ctx.set_max_packet_size(self.max_packet_size);
         endpoint_ctx.set_interval(self.interval - 1);
@@ -79,16 +80,21 @@ impl EndpointConfig {
 }
 
 
-fn to_endpoint_type(v: u8) -> EndpointType {
+fn to_endpoint_type(v: u8, dir_in: bool) -> EndpointType {
     match v {
         0 => EndpointType::NotValid,
         1 => EndpointType::IsochOut,
         2 => EndpointType::BulkOut,
-        3 => EndpointType::InterruptOut,
+        3 => {
+            if dir_in {
+                EndpointType::InterruptIn
+            } else {
+                EndpointType::InterruptOut
+            }
+        }
         4 => EndpointType::Control,
         5 => EndpointType::IsochIn,
         6 => EndpointType::BulkIn,
-        7 => EndpointType::InterruptIn,
         _ => EndpointType::NotValid,
     }
 }

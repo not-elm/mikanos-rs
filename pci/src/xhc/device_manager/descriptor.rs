@@ -17,6 +17,7 @@ pub enum Descriptor {
     NotSupport,
 }
 
+
 impl Descriptor {
     pub fn interface(&self) -> Option<&InterfaceDescriptor> {
         if let Self::Interface(interface) = self {

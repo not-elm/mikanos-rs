@@ -11,4 +11,5 @@ pub struct ConfigurationDescriptor {
     pub max_power: u8,
 }
 
+
 pub(crate) const CONFIGURATION_DESCRIPTOR_TYPE: u8 = 2;

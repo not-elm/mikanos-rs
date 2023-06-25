@@ -3,10 +3,10 @@ use core::fmt::Write;
 
 use spin::{Mutex, MutexGuard};
 
+use crate::sync::preemptive_mutex::PreemptiveMutex;
 use common_lib::frame_buffer::FrameBufferConfig;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::layers::Layers;
-use kernel_lib::sync::preemptive_mutex::PreemptiveMutex;
 
 use crate::layers::console::console;
 use crate::layers::mouse::mouse;

@@ -1,3 +1,5 @@
+use alloc::vec;
+
 use xhci::context::{EndpointHandler, Input32Byte, InputHandler, SlotHandler};
 
 use crate::xhc::device_manager::device_context_index::DeviceContextIndex;
@@ -13,7 +15,9 @@ impl InputContext {
 
 
     pub fn clear_control(&mut self) {
-        self.0 = InputContext::new().0;
+        let raw = self.0.control_mut().as_mut();
+        raw.copy_from_slice(&vec![0; raw.len()]);
+        // self.0.control_mut().clear_add_context_flag();
     }
 
 
@@ -38,13 +42,8 @@ impl InputContext {
             .device_mut()
             .slot_mut()
             .as_mut();
-        unsafe {
-            core::ptr::copy(
-                device_slot_context.as_ptr(),
-                input_slot_context.as_mut_ptr(),
-                device_slot_context.len(),
-            );
-        }
+
+        input_slot_context.copy_from_slice(device_slot_context);
     }
 
 

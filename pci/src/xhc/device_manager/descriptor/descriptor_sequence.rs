@@ -6,7 +6,9 @@ use crate::xhc::device_manager::descriptor::structs::configuration_descriptor::{
 use crate::xhc::device_manager::descriptor::structs::endpoint_descriptor::{
     EndpointDescriptor, ENDPOINT_DESCRIPTOR_TYPE,
 };
-use crate::xhc::device_manager::descriptor::structs::hid_descriptor::{HidDescriptor, HID_DESCRIPTOR_TYPE};
+use crate::xhc::device_manager::descriptor::structs::hid_descriptor::{
+    HidDescriptor, HID_DESCRIPTOR_TYPE,
+};
 use crate::xhc::device_manager::descriptor::structs::interface_descriptor::{
     InterfaceDescriptor, INTERFACE_DESCRIPTOR_TYPE,
 };
@@ -36,13 +38,17 @@ impl Iterator for DescriptorSequence {
             return None;
         }
 
-        let ptr = unsafe { self.descriptor_ptr.add(self.index) };
+        let ptr = unsafe {
+            self.descriptor_ptr
+                .add(self.index)
+        };
         let (descriptor_size, descriptor) = unsafe { convert_to_descriptor(ptr) };
         self.index += descriptor_size;
 
         Some(descriptor)
     }
 }
+
 
 unsafe fn convert_to_descriptor(ptr: *mut u8) -> (usize, Descriptor) {
     let descriptor_type = *ptr.add(1);

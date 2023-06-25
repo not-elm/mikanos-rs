@@ -11,14 +11,8 @@ pub struct SwitchCommand<'t> {
 
 impl<'t> SwitchCommand<'t> {
     #[inline(always)]
-    pub fn new(
-        running: &'t Task,
-        next: &'t Task,
-    ) -> SwitchCommand<'t> {
-        Self {
-            running,
-            next,
-        }
+    pub fn new(running: &'t Task, next: &'t Task) -> SwitchCommand<'t> {
+        Self { running, next }
     }
 
 
@@ -46,12 +40,22 @@ impl<'t> SwitchCommand<'t> {
     }
 
 
-    fn switch(&self, status: Status) {
-        self.running.store_status(status);
-        self.next.store_status(Running);
+    pub fn switch_if_need(&self, status: Status) {
+        if self.next.priority_level < self.running.priority_level {
+            return;
+        }
 
-        self
-            .running
+        self.switch(status);
+    }
+
+
+    fn switch(&self, status: Status) {
+        self.running
+            .store_status(status);
+        self.next
+            .store_status(Running);
+
+        self.running
             .switch_to(self.next)
     }
 }

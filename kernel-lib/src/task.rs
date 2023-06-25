@@ -13,8 +13,8 @@ use crate::task::priority_level::PriorityLevel;
 use crate::task::status::Status;
 use crate::task::status::Status::{Pending, Running, Sleep};
 
-pub mod priority_level;
 mod list;
+pub mod priority_level;
 mod status;
 mod switch;
 
@@ -34,12 +34,7 @@ impl GlobalTaskManger {
     }
 
 
-    pub fn new_task(
-        &mut self,
-        priority_level: PriorityLevel,
-        rip: u64,
-        rsi: u64,
-    ) {
+    pub fn new_task(&mut self, priority_level: PriorityLevel, rip: u64, rsi: u64) {
         unsafe {
             self.0
                 .get_mut()
@@ -71,15 +66,12 @@ impl GlobalTaskManger {
 
 
     pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
-        self
-            .lock()?
-            .sleep_at(task_id)
+        self.lock()?.sleep_at(task_id)
     }
 
 
     pub fn wakeup_at(&mut self, task_id: u64) -> KernelResult {
-        self
-            .lock()?
+        self.lock()?
             .wakeup_at(task_id)
     }
 
@@ -106,9 +98,7 @@ impl TaskManager {
     pub fn new() -> Self {
         let mut tasks = TaskList::new();
         tasks.push(Task::new_main());
-        Self {
-            tasks
-        }
+        Self { tasks }
     }
 
 
@@ -136,8 +126,7 @@ impl TaskManager {
     pub fn new_task(&mut self, priority_level: PriorityLevel) -> &mut Task {
         let task = self.create_task(priority_level);
         let id = task.id;
-        self.tasks
-            .push(task);
+        self.tasks.push(task);
 
         self.tasks
             .find_mut(id)
@@ -146,22 +135,19 @@ impl TaskManager {
 
 
     pub fn wakeup_at(&mut self, task_id: u64) -> KernelResult {
-        self.tasks
-            .wakeup_at(task_id)
+        self.tasks.wakeup_at(task_id)
     }
 
 
     pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
-        self.tasks
-            .sleep_at(task_id)
+        self.tasks.sleep_at(task_id)
     }
 
 
     pub fn switch_task(&mut self) -> KernelResult {
-        self
-            .tasks
+        self.tasks
             .next_switch_command()?
-            .switch_and_pending();
+            .switch_if_need(Status::Pending);
 
         Ok(())
     }
@@ -189,7 +175,7 @@ impl Task {
     pub fn new_main() -> Self {
         Self {
             id: 0,
-            priority_level: PriorityLevel::new(1),
+            priority_level: PriorityLevel::new(3),
             context: Context::uninit(),
             stack: vec![0; 65_536].into_boxed_slice(),
             messages: VecDeque::new(),
@@ -212,17 +198,21 @@ impl Task {
 
     #[inline(always)]
     pub fn store_status(&self, status: Status) {
-        self.status.store(status as u8, Ordering::Relaxed);
+        self.status
+            .store(status as u8, Ordering::Relaxed);
     }
 
 
     #[inline(always)]
     pub fn status(&self) -> Status {
-        match self.status.load(Ordering::Relaxed) {
+        match self
+            .status
+            .load(Ordering::Relaxed)
+        {
             0 => Sleep,
             1 => Pending,
             2 => Running,
-            _ => panic!("Invalid Status")
+            _ => panic!("Invalid Status"),
         }
     }
 

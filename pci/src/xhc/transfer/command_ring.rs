@@ -2,6 +2,7 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 
 use xhci::ring::trb::command::ConfigureEndpoint;
+use xhci::ring::trb::Type::{ResetDevice, ResetEndpoint};
 
 use crate::error::PciResult;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
@@ -31,6 +32,16 @@ where
         self.notify()
     }
 
+
+    pub fn push_reset_endpoint(&mut self, slot_id: u8, endpoint_id: u8) -> PciResult {
+        let mut reset_endpoint = xhci::ring::trb::command::ResetEndpoint::new();
+        reset_endpoint.set_endpoint_id(endpoint_id);
+        reset_endpoint.set_slot_id(slot_id);
+
+        self.transfer_ring
+            .push(reset_endpoint.into_raw())?;
+        self.notify()
+    }
 
     pub fn push_configure_endpoint(&mut self, input_context_addr: u64, slot_id: u8) -> PciResult {
         let mut configure_endpoint_trb = ConfigureEndpoint::new();

@@ -38,7 +38,8 @@ where
         }
     }
 
-    fn notify(&mut self) -> PciResult {
+
+    pub fn notify(&mut self) -> PciResult {
         self.doorbell
             .borrow_mut()
             .notify_at(

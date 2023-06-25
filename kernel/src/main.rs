@@ -17,10 +17,10 @@ use core::panic::PanicInfo;
 
 use uefi::table::boot::MemoryMapIter;
 
+use crate::apic::TIMER_FREQ;
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
 use kernel_lib::serial_println;
-use crate::apic::TIMER_FREQ;
 
 use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
@@ -38,6 +38,7 @@ mod interrupt;
 mod layers;
 mod paging;
 mod qemu;
+pub mod sync;
 mod task;
 #[cfg(test)]
 mod test_runner;
@@ -63,7 +64,7 @@ pub extern "sysv64" fn kernel_main(
 
     init_layers(*frame_buffer_config).unwrap();
 
-    apic::start_timer(*rsdp, TIMER_FREQ).unwrap();
+    // apic::start_timer(*rsdp, TIMER_FREQ).unwrap();
 
     #[cfg(test)]
     test_main();

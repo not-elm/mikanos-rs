@@ -31,9 +31,8 @@ pub mod paging;
 pub mod register;
 pub mod segmentation;
 pub mod serial;
-pub mod timer;
 pub mod task;
-pub mod sync;
+pub mod timer;
 
 pub mod volatile_bits {
     pub use volatile_bits::*;

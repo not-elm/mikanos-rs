@@ -16,6 +16,8 @@ impl Request {
     pub fn get_descriptor(desc_type: u16, desc_index: u16, len: u16) -> Self {
         GetDescriptor(get_descriptor(desc_type, desc_index, len))
     }
+
+
     pub fn get_report(report_len: u16, interface_number: u16) -> Self {
         let mut setup_data = SetupStage::new();
         const GET_REPORT: u8 = 1;
@@ -33,6 +35,8 @@ impl Request {
         setup_data.set_transfer_type(TransferType::In);
         GetReport(setup_data)
     }
+
+
     pub fn configuration(config_value: u16) -> Self {
         let mut setup_data = SetupStage::new();
         const CONFIGURATION: u8 = 9;
@@ -52,7 +56,8 @@ impl Request {
         setup.set_value(0);
         setup.set_request_type(request_type.raw());
         setup.set_request(11);
-        setup.set_index(0);
+        setup.set_length(0);
+
         SetProtocol(setup)
     }
 

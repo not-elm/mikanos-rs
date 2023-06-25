@@ -63,7 +63,6 @@ where
             .filter_map(|(index, interface)| map_hid_descriptors(index, interface, &descriptors))
             .collect();
 
-
         slot.input_context_mut()
             .set_config(conf_desc.configuration_value);
 

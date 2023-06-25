@@ -1,3 +1,5 @@
+use core::fmt::{Debug, Formatter};
+
 use crate::error::PciResult;
 use crate::xhc::registers::external::External;
 use crate::xhc::registers::traits::interrupter::InterrupterSetRegisterAccessible;
@@ -88,5 +90,74 @@ where
             .update_volatile(|e| e.set(size));
 
         Ok(())
+    }
+
+
+    fn set_counter_at(&mut self, index: usize, count: u16) {
+        self.0
+            .interrupter_register_set
+            .interrupter_mut(index)
+            .imod
+            .update_volatile(|imod| {
+                imod.set_interrupt_moderation_counter(count);
+            });
+    }
+
+
+    fn set_interrupt_pending_at(&mut self, index: usize) {
+        self.0
+            .interrupter_register_set
+            .interrupter_mut(index)
+            .iman
+            .update_volatile(|iman| {
+                iman.clear_interrupt_pending();
+            });
+    }
+}
+
+
+impl<M> Debug for External<M>
+where
+    M: xhci::accessor::Mapper + Clone,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        let busy = self
+            .0
+            .interrupter_register_set
+            .interrupter(0)
+            .erdp
+            .read_volatile()
+            .event_handler_busy();
+
+        let enable = self
+            .0
+            .interrupter_register_set
+            .interrupter(0)
+            .iman
+            .read_volatile()
+            .interrupt_enable();
+
+        let pending = self
+            .0
+            .interrupter_register_set
+            .interrupter(0)
+            .iman
+            .read_volatile()
+            .interrupt_pending();
+
+        let counter = self
+            .0
+            .interrupter_register_set
+            .interrupter(0)
+            .imod
+            .read_volatile()
+            .interrupt_moderation_counter();
+
+        f.debug_struct("External")
+            .field("event_handler_busy", &busy)
+            .field("interrupt_enable", &enable)
+            .field("interrupt_pending", &pending)
+            .field("interrupt_counter", &counter)
+            .finish()
     }
 }

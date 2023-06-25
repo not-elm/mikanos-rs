@@ -52,7 +52,6 @@ impl Phase3 {
                 let transfer_ring = slot
                     .try_alloc_transfer_ring(32)
                     .ok()?;
-
                 Some(InterruptIn::new(
                     slot.id(),
                     class_driver,
@@ -65,6 +64,7 @@ impl Phase3 {
             .collect()
     }
 }
+
 
 impl<Doorbell, Memory> Phase<Doorbell, Memory> for Phase3
 where
@@ -88,25 +88,17 @@ where
         slot.input_context_mut()
             .slot_mut()
             .set_context_entries(31);
-        let interrupters = self.interrupters(slot);
 
+        let interrupters = self.interrupters(slot);
         interrupters
             .iter()
             .for_each(|interrupt| {
                 let config = interrupt.endpoint_config();
-
                 let dci = DeviceContextIndex::from_endpoint_id(config.endpoint_id());
 
                 slot.input_context_mut()
                     .set_enable_endpoint(dci);
-                slot.input_context_mut()
-                    .set_enable_slot_context();
-                slot.input_context_mut()
-                    .set_interface_num(
-                        interrupt
-                            .interface_ref()
-                            .interface_number,
-                    );
+
                 let endpoint_ctx = slot
                     .input_context_mut()
                     .endpoint_mut_at(dci.value());

@@ -15,9 +15,7 @@ pub struct TaskList {
 
 impl TaskList {
     pub fn new() -> Self {
-        Self {
-            tasks: Vec::new()
-        }
+        Self { tasks: Vec::new() }
     }
 
 
@@ -44,7 +42,10 @@ impl TaskList {
     pub fn next_switch_command(&mut self) -> KernelResult<SwitchCommand> {
         self.sort_by_priority();
 
-        Ok(SwitchCommand::new(self.running_task_ref()?, self.next_run_task_ref()?))
+        Ok(SwitchCommand::new(
+            self.running_task_ref()?,
+            self.next_run_task_ref()?,
+        ))
     }
 
 
@@ -57,7 +58,10 @@ impl TaskList {
     }
 
 
-    fn sleep_or_create_switch_command_if_running(&mut self, task_id: u64) -> KernelResult<Option<SwitchCommand>> {
+    fn sleep_or_create_switch_command_if_running(
+        &mut self,
+        task_id: u64,
+    ) -> KernelResult<Option<SwitchCommand>> {
         self.sort_by_priority();
 
         let task = self.sleep_and_check_running(task_id)?;
@@ -114,24 +118,23 @@ impl TaskList {
             .iter_mut()
             .filter(|task| task.status().is_sleep())
             .find(|task| task.id == task_id)
-            .ok_or(kernel_error!("Not found specified sleep the Task! id =  {task_id}"))
+            .ok_or(kernel_error!(
+                "Not found specified sleep the Task! id =  {task_id}"
+            ))
     }
 
 
     fn sort_by_priority(&mut self) {
-        self
-            .tasks
-            .sort_by(|t1, t2| t2
-                .priority_level
+        self.tasks.sort_by(|t1, t2| {
+            t2.priority_level
                 .cmp(&t1.priority_level)
                 .then_with(|| t1.status().cmp(&t2.status()))
-            );
+        });
     }
 
 
     fn next_run_task_ref(&self) -> KernelResult<&Task> {
-        self
-            .tasks
+        self.tasks
             .iter()
             .find(|task| task.status().is_pending())
             .ok_or(kernel_error!("Couldn't find a task to run next"))
@@ -176,7 +179,9 @@ mod tests {
         q.push(Task::new(2, PriorityLevel::new(2)));
         q.tasks[1].store_status(Running);
 
-        let command = q.next_switch_command().unwrap();
+        let command = q
+            .next_switch_command()
+            .unwrap();
         assert_eq!(command.running_id(), 1);
         assert_eq!(command.next_id(), 0);
     }
@@ -212,7 +217,9 @@ mod tests {
         q.tasks[2].store_status(Status::Pending);
 
         {
-            let sleep_id0 = q.sleep_or_create_switch_command_if_running(0).unwrap();
+            let sleep_id0 = q
+                .sleep_or_create_switch_command_if_running(0)
+                .unwrap();
             let sleep_id0 = sleep_id0.unwrap();
 
             assert_eq!(sleep_id0.running_id(), 0);
@@ -220,12 +227,24 @@ mod tests {
         }
 
         {
-            let sleep_id3 = q.sleep_or_create_switch_command_if_running(3).unwrap();
+            let sleep_id3 = q
+                .sleep_or_create_switch_command_if_running(3)
+                .unwrap();
             assert!(sleep_id3.is_none());
         }
 
-        assert_eq!(q.find_ref(0).unwrap().status(), Running);
-        assert_eq!(q.find_ref(3).unwrap().status(), Sleep);
+        assert_eq!(
+            q.find_ref(0)
+                .unwrap()
+                .status(),
+            Running
+        );
+        assert_eq!(
+            q.find_ref(3)
+                .unwrap()
+                .status(),
+            Sleep
+        );
     }
 
 
@@ -247,7 +266,11 @@ mod tests {
         macro_rules! assert_task {
             ($index: literal, $id: literal, $level: literal) => {
                 assert_eq!(q.tasks[$index].id, $id, "id");
-                assert_eq!(q.tasks[$index].priority_level, PriorityLevel::new($level), "level");
+                assert_eq!(
+                    q.tasks[$index].priority_level,
+                    PriorityLevel::new($level),
+                    "level"
+                );
             };
         }
         assert_task!(0, 1, 3);
