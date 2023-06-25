@@ -2,6 +2,7 @@ use core::cmp::min;
 
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 use kernel_lib::io::io_memory_accessible::IoMemoryAccessible;
+use kernel_lib::serial_println;
 
 use crate::configuration_space::ConfigurationSpace;
 use crate::configuration_space::msi::msi_capability_register::access::control::ControlAccessor;
@@ -21,8 +22,8 @@ pub mod structs;
 
 #[derive(Clone)]
 pub struct MsiCapabilityRegister<Io>
-    where
-        Io: IoMemoryAccessible,
+where
+    Io: IoMemoryAccessible,
 {
     control: ControlAccessor,
     message_address: MessageAddressAccessor,
@@ -34,8 +35,8 @@ pub struct MsiCapabilityRegister<Io>
 
 
 impl<Io> MsiCapabilityRegister<Io>
-    where
-        Io: IoMemoryAccessible,
+where
+    Io: IoMemoryAccessible,
 {
     pub fn new(
         msi_cap_addr: u8,
@@ -94,7 +95,7 @@ impl<Io> MsiCapabilityRegister<Io>
                 control.set_msi_enable();
 
                 let capable = control.multiple_msg_capable();
-                control.set_multiple_msg_enable(min(capable, multiple_msg_enable));
+                control.set_multiple_msg_enable(capable);
             },
         )?;
 

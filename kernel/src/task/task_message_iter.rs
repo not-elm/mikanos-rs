@@ -1,6 +1,7 @@
 use common_lib::assembly::hlt;
 use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
+use kernel_lib::serial_println;
 
 use crate::task::TASK_MANAGER;
 
@@ -25,14 +26,14 @@ impl Iterator for TaskMessageIter {
         let mut value = unsafe { TASK_MANAGER.receive_message_at(self.task_id) };
 
         while value.is_none() {
-            // unsafe {
-            //     TASK_MANAGER
-            //         .sleep_at(self.task_id)
-            //         .unwrap()
-            // };
-            sti_and_hlt();
+            unsafe {
+                TASK_MANAGER
+                    .sleep_at(self.task_id)
+                    .unwrap()
+            };
 
             cli();
+
             value = unsafe { TASK_MANAGER.receive_message_at(self.task_id) };
         }
 

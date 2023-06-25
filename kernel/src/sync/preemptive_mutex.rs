@@ -15,7 +15,7 @@ impl<T> PreemptiveMutex<T> {
 
     pub fn lock(&self) -> MutexGuard<T> {
         loop {
-            if let Some(resource) = interrupt::asm::with_free(|| self.0.try_lock()) {
+            if let Some(resource) = interrupt::asm::without_interrupt(|| self.0.try_lock()) {
                 return resource;
             }
             unsafe {

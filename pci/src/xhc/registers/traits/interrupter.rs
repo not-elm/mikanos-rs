@@ -7,7 +7,10 @@ use crate::xhc::transfer::event::event_ring::EventRing;
 use crate::xhc::transfer::event::event_ring_segment_table::EventRingSegmentTable;
 
 pub trait InterrupterSetRegisterAccessible {
-    fn set_interrupt_pending_at(&mut self, index: usize);
+    fn clear_interrupt_pending_at(&mut self, index: usize);
+
+
+    fn clear_event_handler_busy_at(&mut self, index: usize);
 
 
     fn set_counter_at(&mut self, index: usize, count: u16);
@@ -78,9 +81,9 @@ where
         .borrow_mut()
         .write_event_ring_segment_table_pointer_at(0, event_ring_segment_table_addr)?;
 
-    registers
-        .borrow_mut()
-        .write_interrupter_pending_at(0, true)?;
+    // registers
+    //     .borrow_mut()
+    //     .write_interrupter_pending_at(0, true)?;
 
     registers
         .borrow_mut()

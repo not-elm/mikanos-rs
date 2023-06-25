@@ -4,7 +4,7 @@ use crate::interrupt::idt_descriptor::IdtDescriptor;
 use crate::register::rflags::RFlags;
 
 #[inline(always)]
-pub fn with_free<F, Output>(f: F) -> Output
+pub fn without_interrupt<F, Output>(f: F) -> Output
 where
     F: FnOnce() -> Output,
 {

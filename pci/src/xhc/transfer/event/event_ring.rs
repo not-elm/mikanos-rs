@@ -34,11 +34,14 @@ where
 
 
     pub fn has_front(&self) -> bool {
-        let circle_bit = self
+        if let Some(circle_bit) = self
             .read_event_trb()
-            .map_or(false, |trb| trb.circle_bit().unwrap());
-
-        circle_bit == self.transfer_ring.cycle_bit()
+            .and_then(|trb| trb.circle_bit())
+        {
+            circle_bit == self.transfer_ring.cycle_bit()
+        } else {
+            false
+        }
     }
 
 

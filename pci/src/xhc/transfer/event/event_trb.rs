@@ -23,8 +23,6 @@ impl EventTrb {
     pub fn new(trb: TrbRawData, cycle_bit: bool) -> Option<Self> {
         let raw_data_buff: [u32; 4] = trb.into();
 
-        serial_println!("{:?}", raw_data_buff);
-
         if read_cycle_bit(trb.raw()) != cycle_bit {
             return None;
         }

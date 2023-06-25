@@ -7,11 +7,11 @@ use core::sync::atomic::{AtomicU8, Ordering};
 use crate::context::arch::x86_64::Context;
 use crate::error::KernelResult;
 use crate::interrupt::interrupt_message::TaskMessage;
-use crate::kernel_error;
 use crate::task::list::TaskList;
 use crate::task::priority_level::PriorityLevel;
 use crate::task::status::Status;
 use crate::task::status::Status::{Pending, Running, Sleep};
+use crate::{interrupt, kernel_error};
 
 mod list;
 pub mod priority_level;
@@ -147,7 +147,16 @@ impl TaskManager {
     pub fn switch_task(&mut self) -> KernelResult {
         self.tasks
             .next_switch_command()?
-            .switch_if_need(Status::Pending);
+            .switch_if_need(Pending);
+
+        Ok(())
+    }
+
+
+    pub fn switch_ignore_priority(&mut self) -> KernelResult {
+        self.tasks
+            .next_switch_command()?
+            .switch_and_pending();
 
         Ok(())
     }
@@ -198,8 +207,10 @@ impl Task {
 
     #[inline(always)]
     pub fn store_status(&self, status: Status) {
-        self.status
-            .store(status as u8, Ordering::Relaxed);
+        interrupt::asm::without_interrupt(|| {
+            self.status
+                .store(status as u8, Ordering::Relaxed);
+        });
     }
 
 

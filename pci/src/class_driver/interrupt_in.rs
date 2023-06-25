@@ -74,7 +74,7 @@ where
     }
 
 
-    pub fn interrupter_in(&mut self, endpoint_id: u8) -> PciResult {
+    pub fn interrupter_in(&mut self) -> PciResult {
         self.class_driver
             .on_data_received()?;
 

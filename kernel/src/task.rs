@@ -4,10 +4,11 @@ use core::sync::atomic::Ordering::Relaxed;
 
 use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
+use kernel_lib::serial_println;
 use kernel_lib::task::priority_level::PriorityLevel;
 
 use crate::interrupt::timer::TASK_MANAGER;
-use crate::layers::COUNT_LAYER_KEY;
+use crate::layers::{COUNT_LAYER_KEY, LAYERS};
 use crate::task::idle::idle;
 
 mod idle;
@@ -33,18 +34,21 @@ pub unsafe fn init() {
 
 
 extern "sysv64" fn window_count_task(_id: u64, _data: u64) {
-    static COUNT: AtomicUsize = AtomicUsize::new(0);
+    let mut count: usize = 0;
     loop {
-        let next_count = COUNT.fetch_add(1, Relaxed);
-
+        count += 1;
         cli();
-        let _ = unsafe {
-            TASK_MANAGER.send_message_at(
-                0,
-                TaskMessage::count(COUNT_LAYER_KEY.to_string(), next_count),
-            )
-        };
-
+        unsafe {
+            TASK_MANAGER
+                .send_message_at(
+                    0,
+                    TaskMessage::Count {
+                        count,
+                        layer_key: COUNT_LAYER_KEY.to_string(),
+                    },
+                )
+                .unwrap();
+        }
         sti_and_hlt();
     }
 }

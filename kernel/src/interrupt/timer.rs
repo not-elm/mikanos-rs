@@ -87,10 +87,12 @@ impl PreemptiveTaskManager {
 
 
     pub fn send_message_at(&mut self, task_id: u64, message: TaskMessage) -> KernelResult {
-        self.task_manager
-            .get_mut()
-            .unwrap()
-            .send_message_at(task_id, message)
+        interrupt::asm::without_interrupt(|| {
+            self.task_manager
+                .get_mut()
+                .unwrap()
+                .send_message_at(task_id, message)
+        })
     }
 
 
@@ -142,13 +144,13 @@ impl PreemptiveTaskManager {
 
     #[inline(always)]
     pub fn switch(&mut self) -> KernelResult {
-        interrupt::asm::with_free(|| {
+        interrupt::asm::without_interrupt(|| {
             self.timer.reset();
 
             self.task_manager
                 .get_mut()
                 .unwrap()
-                .switch_task()
+                .switch_ignore_priority()
         })
     }
 }

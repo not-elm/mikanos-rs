@@ -6,6 +6,8 @@ use pci::xhc::registers::external::{External, IdentityMapper};
 use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
+use crate::apic::TIMER_200_MILLI_INTERVAL;
+use crate::interrupt::timer::TASK_MANAGER;
 use crate::layers::LAYERS;
 use crate::task::task_message_iter::TaskMessageIter;
 use crate::usb::keyboard::build_keyboard_driver;
@@ -16,7 +18,7 @@ pub fn start_xhci_host_controller(
 ) -> anyhow::Result<()> {
     unsafe {
         crate::task::init();
-        // TASK_MANAGER.set_interval(TIMER_100_MILLI_INTERVAL);
+        TASK_MANAGER.set_interval(TIMER_200_MILLI_INTERVAL);
     }
 
     let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
@@ -27,7 +29,7 @@ pub fn start_xhci_host_controller(
             xhc_controller.process_all_events();
         }
 
-        TaskMessage::Count { layer_key, count } => {
+        TaskMessage::Count { count, layer_key } => {
             update_count(count, &layer_key);
         }
 
@@ -35,17 +37,6 @@ pub fn start_xhci_host_controller(
     });
 
     Ok(())
-}
-
-
-fn update_count(count: usize, key: &str) {
-    LAYERS
-        .lock()
-        .update_layer(key, |layer| {
-            let window = layer.require_count().unwrap();
-            window.write_count(count);
-        })
-        .unwrap();
 }
 
 
@@ -69,4 +60,16 @@ fn start_xhc_controller(
         .map_err(|e| e.inner())?;
 
     Ok(xhc_controller)
+}
+
+
+#[inline(always)]
+fn update_count(count: usize, key: &str) {
+    LAYERS
+        .lock()
+        .update_layer(key, |layer| {
+            let window = layer.require_count().unwrap();
+            window.write_count(count);
+        })
+        .unwrap();
 }

@@ -26,7 +26,7 @@ fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
         })
         .unwrap();
 
-    unsafe { operate_count_task_if_need(keycode) };
+    // unsafe { operate_count_task_if_need(keycode) };
 }
 
 

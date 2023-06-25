@@ -1,5 +1,7 @@
 use core::fmt::{Debug, Formatter};
 
+use kernel_lib::serial_println;
+
 use crate::error::PciResult;
 use crate::xhc::registers::external::External;
 use crate::xhc::registers::traits::interrupter::InterrupterSetRegisterAccessible;
@@ -19,7 +21,20 @@ where
             .erdp
             .update_volatile(|erdp| erdp.set_event_ring_dequeue_pointer(event_ring_segment_addr));
 
+        self.clear_event_handler_busy_at(index);
+
         Ok(())
+    }
+
+
+    fn clear_event_handler_busy_at(&mut self, index: usize) {
+        self.0
+            .interrupter_register_set
+            .interrupter_mut(index)
+            .erdp
+            .update_volatile(|erdp| {
+                erdp.clear_event_handler_busy();
+            });
     }
 
 
@@ -104,7 +119,7 @@ where
     }
 
 
-    fn set_interrupt_pending_at(&mut self, index: usize) {
+    fn clear_interrupt_pending_at(&mut self, index: usize) {
         self.0
             .interrupter_register_set
             .interrupter_mut(index)
@@ -152,12 +167,19 @@ where
             .imod
             .read_volatile()
             .interrupt_moderation_counter();
+        let event_interrupt = self
+            .0
+            .operational
+            .usbsts
+            .read_volatile()
+            .event_interrupt();
 
         f.debug_struct("External")
             .field("event_handler_busy", &busy)
             .field("interrupt_enable", &enable)
             .field("interrupt_pending", &pending)
             .field("interrupt_counter", &counter)
+            .field("event_interrupt", &event_interrupt)
             .finish()
     }
 }

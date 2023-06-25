@@ -64,10 +64,10 @@ impl GlobalAllocator {
 
 unsafe impl GlobalAlloc for GlobalAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        interrupt::asm::with_free(|| self.0.alloc(layout))
+        interrupt::asm::without_interrupt(|| self.0.alloc(layout))
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        interrupt::asm::with_free(|| self.0.dealloc(ptr, layout))
+        interrupt::asm::without_interrupt(|| self.0.dealloc(ptr, layout))
     }
 }

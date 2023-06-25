@@ -22,7 +22,7 @@ fn new_serial_port() -> spin::Mutex<SerialPort> {
 pub fn _print(args: ::core::fmt::Arguments) {
     use core::fmt::Write;
 
-    interrupt::asm::with_free(|| {
+    interrupt::asm::without_interrupt(|| {
         SERIAL
             .lock()
             .write_fmt(args)

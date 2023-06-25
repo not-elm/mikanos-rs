@@ -8,7 +8,7 @@ use kernel_lib::timer::apic::ApicTimer;
 
 pub const TIMER_FREQ: u32 = 100;
 
-pub const TIMER_100_MILLI_INTERVAL: usize = 1;
+pub const TIMER_200_MILLI_INTERVAL: usize = 2;
 
 
 pub fn start_timer(rsdp: Option<*const c_void>, timer_freq_milli: u32) -> KernelResult<()> {
@@ -20,9 +20,9 @@ pub fn start_timer(rsdp: Option<*const c_void>, timer_freq_milli: u32) -> Kernel
     let elapsed = apic_timer.elapsed();
     apic_timer.stop();
 
-    let local_apic_timer_freq = elapsed;
+    let local_apic_timer_freq = elapsed * 10;
 
-    let initial_count = local_apic_timer_freq;
+    let initial_count = local_apic_timer_freq / TIMER_FREQ;
 
     apic_timer.start(initial_count, LocalApicTimerDivide::By1);
 
