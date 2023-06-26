@@ -28,13 +28,6 @@ impl InputContext {
     }
 
 
-    pub fn set_interface_num(&mut self, interface_num: u8) {
-        self.0
-            .control_mut()
-            .set_interface_number(interface_num);
-    }
-
-
     pub fn copy_from_device_context(&mut self, device_context_slot: &dyn SlotHandler) {
         let device_slot_context = device_context_slot.as_ref();
         let input_slot_context = self

@@ -1,11 +1,11 @@
 use alloc::vec::Vec;
 
+use crate::kernel_error;
 use crate::error::{KernelError, KernelResult};
 use crate::task::status::Status;
 use crate::task::status::Status::Pending;
 use crate::task::switch::SwitchCommand;
 use crate::task::Task;
-use crate::{kernel_error, serial_println};
 
 #[derive(Default, Debug)]
 pub struct TaskList {

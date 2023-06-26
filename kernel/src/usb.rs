@@ -32,7 +32,6 @@ pub fn enable_msi(general_header: GeneralHeader) -> PciResult {
             TriggerMode::Level,
             InterruptVector::Xhci,
             DeliveryMode::Fixed,
-            0,
         )?;
     }
 

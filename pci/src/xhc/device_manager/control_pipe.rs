@@ -1,8 +1,7 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use kernel_lib::serial_println;
-use xhci::ring::trb::transfer::{DataStage, Direction, Normal, SetupStage, TransferType};
+use xhci::ring::trb::transfer::{DataStage, Direction, SetupStage, TransferType};
 
 use crate::error::PciResult;
 use crate::xhc::device_manager::control_pipe::control_in::ControlIn;
@@ -26,8 +25,8 @@ pub struct ControlPipe<T> {
 
 
 impl<T> ControlPipe<T>
-where
-    T: DoorbellRegistersAccessible,
+    where
+        T: DoorbellRegistersAccessible,
 {
     pub fn new(
         slot_id: u8,
@@ -43,17 +42,6 @@ where
             control_in,
             control_out,
         })
-    }
-
-
-    pub fn push(&mut self) {
-        let mut normal = Normal::new();
-        normal.set_interrupt_on_completion();
-        normal.set_interrupt_on_short_packet();
-        self.transfer_ring
-            .borrow_mut()
-            .push(normal.into_raw());
-        self.control_in.notify();
     }
 
 

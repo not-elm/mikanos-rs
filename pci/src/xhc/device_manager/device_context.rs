@@ -10,14 +10,11 @@ impl DeviceContext {
     }
 
 
-    pub fn slot_mut(&mut self) -> &mut dyn SlotHandler {
-        self.0.slot_mut()
-    }
-
-
     pub fn new() -> Self {
         Self(Device32Byte::default())
     }
+
+    
     pub fn device_context_addr(&self) -> u64 {
         (&self.0 as *const Device32Byte) as u64
     }

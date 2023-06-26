@@ -7,13 +7,18 @@ use kernel_lib::layers::count::CountLayer;
 use kernel_lib::layers::layer_key::LayerKey;
 use kernel_lib::layers::window::WindowLayer;
 
-use crate::layers::{COUNT_LAYER_KEY, WINDOW_COUNT};
+use crate::layers::WINDOW_COUNT;
 
-pub(crate) fn time_count_window(config: FrameBufferConfig) -> KernelResult<LayerKey> {
-    let transform = Transform2D::new(Vector2D::new(300, 100), Size::new(160, 52));
+pub(crate) fn time_count_window(
+    config: FrameBufferConfig,
+    title: &str,
+    pos: Vector2D<usize>,
+    layer_key: &str,
+) -> KernelResult<LayerKey> {
+    let transform = Transform2D::new(pos, Size::new(160, 52));
 
-    let window = WindowLayer::new(config, transform.clone(), "Count")
-        .new_layer(count_layer(config, &transform)?)?
+    let window = WindowLayer::new(config, transform.clone(), title)
+        .new_layer(count_layer(config, &transform, layer_key)?)?
         .into_enum()
         .into_layer_key(WINDOW_COUNT);
 
@@ -24,6 +29,7 @@ pub(crate) fn time_count_window(config: FrameBufferConfig) -> KernelResult<Layer
 fn count_layer(
     config: FrameBufferConfig,
     window_transform: &Transform2D,
+    key: &str,
 ) -> KernelResult<LayerKey> {
     let size = window_transform.size() - Size::new(20, 0);
     let pos = Vector2D::new(
@@ -42,5 +48,5 @@ fn count_layer(
 
     Ok(count
         .into_enum()
-        .into_layer_key(COUNT_LAYER_KEY))
+        .into_layer_key(key))
 }

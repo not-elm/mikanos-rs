@@ -1,10 +1,10 @@
 use alloc::string::ToString;
 use core::fmt::Write;
 
-use crate::interrupt::timer::TASK_MANAGER;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 
+use crate::interrupt::timer::TASK_MANAGER;
 use crate::layers::{KEYBOARD_TEXT, LAYERS};
 
 pub fn build_keyboard_driver() -> KeyboardDriver {
@@ -26,7 +26,7 @@ fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
         })
         .unwrap();
 
-    // unsafe { operate_count_task_if_need(keycode) };
+    unsafe { operate_count_task_if_need(keycode) };
 }
 
 

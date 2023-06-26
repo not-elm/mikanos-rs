@@ -15,7 +15,7 @@ use kernel_lib::layers::window::WindowLayer;
 use crate::layers::{KEYBOARD_TEXT, WINDOW_KEYBOARD};
 
 pub(crate) fn window_keyboard(config: FrameBufferConfig) -> KernelResult<LayerKey> {
-    let pos = Vector2D::new(350, 200);
+    let pos = Vector2D::new(500, 200);
     let size = Size::new(180, 55);
 
     let transform = Transform2D::new(pos, size);

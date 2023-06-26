@@ -1,8 +1,5 @@
-use core::cmp::min;
-
 use kernel_lib::interrupt::interrupt_vector::InterruptVector;
 use kernel_lib::io::io_memory_accessible::IoMemoryAccessible;
-use kernel_lib::serial_println;
 
 use crate::configuration_space::ConfigurationSpace;
 use crate::configuration_space::msi::msi_capability_register::access::control::ControlAccessor;
@@ -22,8 +19,8 @@ pub mod structs;
 
 #[derive(Clone)]
 pub struct MsiCapabilityRegister<Io>
-where
-    Io: IoMemoryAccessible,
+    where
+        Io: IoMemoryAccessible,
 {
     control: ControlAccessor,
     message_address: MessageAddressAccessor,
@@ -35,8 +32,8 @@ where
 
 
 impl<Io> MsiCapabilityRegister<Io>
-where
-    Io: IoMemoryAccessible,
+    where
+        Io: IoMemoryAccessible,
 {
     pub fn new(
         msi_cap_addr: u8,
@@ -85,7 +82,6 @@ where
         trigger_mode: TriggerMode,
         vector: InterruptVector,
         delivery_mode: DeliveryMode,
-        multiple_msg_enable: u8,
     ) -> PciResult {
         self.control.update(
             &mut self.io,

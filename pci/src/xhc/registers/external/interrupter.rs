@@ -1,6 +1,6 @@
 use core::fmt::{Debug, Formatter};
 
-use kernel_lib::serial_println;
+
 
 use crate::error::PciResult;
 use crate::xhc::registers::external::External;

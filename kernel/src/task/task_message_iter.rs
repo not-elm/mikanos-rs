@@ -1,7 +1,5 @@
-use common_lib::assembly::hlt;
-use kernel_lib::interrupt::asm::{cli, sti, sti_and_hlt};
+use kernel_lib::interrupt::asm::{cli, sti};
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
-use kernel_lib::serial_println;
 
 use crate::task::TASK_MANAGER;
 

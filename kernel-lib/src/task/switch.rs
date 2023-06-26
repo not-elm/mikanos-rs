@@ -1,4 +1,3 @@
-use crate::serial_println;
 use crate::task::status::Status;
 use crate::task::status::Status::Running;
 use crate::task::Task;

@@ -2,7 +2,6 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 
 use xhci::ring::trb::command::ConfigureEndpoint;
-use xhci::ring::trb::Type::{ResetDevice, ResetEndpoint};
 
 use crate::error::PciResult;
 use crate::xhc::registers::traits::doorbell::DoorbellRegistersAccessible;
@@ -15,8 +14,8 @@ pub struct CommandRing<T> {
 
 
 impl<T> CommandRing<T>
-where
-    T: DoorbellRegistersAccessible,
+    where
+        T: DoorbellRegistersAccessible,
 {
     pub fn new(ring_ptr_addr: u64, ring_size: usize, doorbell: &Rc<RefCell<T>>) -> Self {
         Self {

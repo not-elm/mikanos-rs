@@ -1,8 +1,6 @@
 use xhci::ring::trb::event::TransferEvent;
 use xhci::ring::trb::transfer::{DataStage, StatusStage};
 
-use kernel_lib::serial_println;
-
 use crate::xhc::transfer::event::target_event::TargetEvent;
 use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
@@ -69,7 +67,7 @@ fn read_target_trb(transfer: TransferEvent) -> Option<TargetEvent> {
             xhci::ring::trb::transfer::Normal::try_from(
                 TrbRawData::new_unchecked(raw_data).into_u32_array(),
             )
-            .ok()?,
+                .ok()?,
         )),
         3 => Some(TargetEvent::DataStage(
             DataStage::try_from(TrbRawData::new_unchecked(raw_data).into_u32_array()).ok()?,

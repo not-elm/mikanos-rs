@@ -1,8 +1,8 @@
 use crate::error::PciResult;
 use crate::pci_error;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
-use crate::xhc::transfer::trb_raw_data::TrbRawData;
 use crate::xhc::transfer::{trb_buffer_from_address, trb_byte_size};
+use crate::xhc::transfer::trb_raw_data::TrbRawData;
 
 #[derive(Debug, Copy, Clone)]
 pub struct TransferRing {
@@ -117,25 +117,11 @@ impl TransferRing {
         }?;
 
         let dest_buff = trb_buffer_from_address(dest_deref);
-        let ptr = dest_deref as *mut u128;
-        let raw_data = ptr.cast::<u32>();
-        unsafe {
-            raw_data.write_volatile(src_buff[0]);
-            raw_data
-                .add(1)
-                .write_volatile(src_buff[1]);
-            raw_data
-                .add(2)
-                .write_volatile(src_buff[2]);
-            raw_data
-                .add(3)
-                .write_volatile((src_buff[3] & !0b1) | self.cycle_bit_as_u32());
-        }
-
-        // dest_buff[0] = src_buff[0];
-        // dest_buff[1] = src_buff[1];
-        // dest_buff[2] = src_buff[2];
-        // dest_buff[3] = (src_buff[3] & !0b1) | self.cycle_bit_as_u32();
+       
+        dest_buff[0] = src_buff[0];
+        dest_buff[1] = src_buff[1];
+        dest_buff[2] = src_buff[2];
+        dest_buff[3] = (src_buff[3] & !0b1) | self.cycle_bit_as_u32();
 
         Ok(())
     }

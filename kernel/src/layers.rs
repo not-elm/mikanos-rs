@@ -1,10 +1,10 @@
 use core::cell::OnceCell;
 use core::fmt::Write;
 
-use spin::{Mutex, MutexGuard};
+use spin::MutexGuard;
 
-use crate::sync::preemptive_mutex::PreemptiveMutex;
 use common_lib::frame_buffer::FrameBufferConfig;
+use common_lib::math::vector::Vector2D;
 use kernel_lib::error::{KernelError, KernelResult, LayerReason};
 use kernel_lib::layers::Layers;
 
@@ -13,6 +13,7 @@ use crate::layers::mouse::mouse;
 use crate::layers::screen::screen_background;
 use crate::layers::time_count::time_count_window;
 use crate::layers::window_keyboard::window_keyboard;
+use crate::sync::preemptive_mutex::PreemptiveMutex;
 
 mod console;
 mod mouse;
@@ -29,6 +30,7 @@ pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
 
 pub const WINDOW_COUNT: &str = "WINDOW COUNT";
 pub const COUNT_LAYER_KEY: &str = "COUNT";
+pub const COUNT_LAYER2_KEY: &str = "COUNT 2";
 
 
 pub const WINDOW_KEYBOARD: &str = "WINDOW KEYBOARD";
@@ -69,7 +71,8 @@ pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
 
     layers.new_layer(screen_background(config));
     layers.new_layer(console(config));
-    layers.new_layer(time_count_window(config)?);
+    layers.new_layer(time_count_window(config, "Count1", Vector2D::new(300, 100), COUNT_LAYER_KEY)?);
+    layers.new_layer(time_count_window(config, "Count2", Vector2D::new(300, 200), COUNT_LAYER2_KEY)?);
     layers.new_layer(window_keyboard(config)?);
     layers.new_layer(mouse(config));
 

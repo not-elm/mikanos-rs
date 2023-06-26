@@ -1,8 +1,6 @@
 use alloc::rc::Rc;
 use core::cell::RefCell;
 
-use xhci::context::EndpointType;
-
 use crate::error::PciResult;
 use crate::xhc::allocator::memory_allocatable::MemoryAllocatable;
 use crate::xhc::device_manager::control_pipe::ControlPipe;
@@ -25,9 +23,9 @@ pub struct DeviceSlot<Memory, Doorbell> {
 
 
 impl<Memory, Doorbell> DeviceSlot<Memory, Doorbell>
-where
-    Memory: MemoryAllocatable,
-    Doorbell: DoorbellRegistersAccessible,
+    where
+        Memory: MemoryAllocatable,
+        Doorbell: DoorbellRegistersAccessible,
 {
     pub fn new(
         slot_id: u8,
@@ -58,26 +56,6 @@ where
     }
 
 
-    pub fn init(&mut self) {
-        let tr_dequeue_addr = self
-            .default_control_pipe()
-            .transfer_ring_base_addr();
-        let control = self.input_context_mut();
-        let default_control_pipe = control.endpoint_mut_at(DeviceContextIndex::default().value());
-
-        default_control_pipe.set_endpoint_type(EndpointType::Control);
-        default_control_pipe.set_max_packet_size(64);
-        default_control_pipe.set_max_burst_size(0);
-        default_control_pipe.set_tr_dequeue_pointer(tr_dequeue_addr);
-        default_control_pipe.set_dequeue_cycle_state();
-        default_control_pipe.set_interval(0);
-        default_control_pipe.set_max_primary_streams(0);
-        default_control_pipe.set_mult(0);
-        default_control_pipe.set_error_count(3);
-        self.input_context
-            .set_enable_endpoint(DeviceContextIndex::default());
-    }
-
     pub fn id(&self) -> u8 {
         self.slot_id
     }
@@ -105,11 +83,6 @@ where
 
     pub fn device_context(&self) -> &DeviceContext {
         &self.device_context
-    }
-
-
-    pub fn device_context_mut(&mut self) -> &mut DeviceContext {
-        &mut self.device_context
     }
 
 
