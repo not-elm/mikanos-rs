@@ -40,6 +40,7 @@ pub struct Layers {
 
 
 impl Layers {
+    #[inline(always)]
     pub fn new(frame_buffer_config: FrameBufferConfig) -> Layers {
         Self {
             back_buffer: ShadowFrameBuffer::new(frame_buffer_config),
@@ -49,6 +50,7 @@ impl Layers {
     }
 
 
+    #[inline(always)]
     pub fn new_layer(&mut self, layer_key: LayerKey) {
         self.layers.push(layer_key);
     }
@@ -66,6 +68,7 @@ impl Layers {
     }
 
 
+    #[inline]
     pub fn find_window_layer_by_pos(&self, pos: &Vector2D<usize>) -> Option<&str> {
         self.layers
             .iter()
@@ -107,6 +110,7 @@ impl Layers {
     }
 
 
+    #[inline(always)]
     fn index_by_key(&self, key: &str) -> Option<usize> {
         self.layers
             .iter()
@@ -120,7 +124,6 @@ impl Layers {
         let draw_area = &self.layer_ref(key)?.rect();
 
         self.update_back_buffer_in_area(draw_area, Some(key), None)?;
-
         self.flush(&prev_area.union(draw_area))
     }
 
@@ -168,12 +171,14 @@ impl Layers {
     }
 
 
+    #[inline(always)]
     fn frame_rect(&self) -> Rectangle<usize> {
         self.frame_buffer_config
             .frame_rect()
     }
 
 
+    #[inline]
     fn layer_ref(&self, key: &str) -> KernelResult<&Layer> {
         self.layers
             .iter()
@@ -182,6 +187,7 @@ impl Layers {
     }
 
 
+    #[inline]
     fn layer_mut(&mut self, key: &str) -> KernelResult<&mut Layer> {
         self.layers
             .iter_mut()
@@ -191,6 +197,7 @@ impl Layers {
 }
 
 
+#[inline(always)]
 pub(crate) fn copy_frame_buff_in_area(
     src: &[u8],
     dist: &mut [u8],
@@ -198,7 +205,6 @@ pub(crate) fn copy_frame_buff_in_area(
     _area: &Rectangle<usize>,
 ) -> KernelResult {
     dist.copy_from_slice(src);
-
 
     Ok(())
 }

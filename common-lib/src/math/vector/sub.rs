@@ -2,16 +2,17 @@ use core::ops::Sub;
 
 use crate::math::vector::Vector2D;
 
-impl<Num: Copy + Sub<Output = Num>> Sub<Vector2D<Num>> for Vector2D<Num> {
+impl<Num: Copy + Sub<Output=Num>> Sub<Vector2D<Num>> for Vector2D<Num> {
     type Output = Vector2D<Num>;
 
+    #[inline(always)]
     fn sub(self, rhs: Vector2D<Num>) -> Self::Output {
         Vector2D::new(self.x - rhs.x, self.y - rhs.y)
     }
 }
 
 
-impl<Num: Copy + Sub<Output = Num>> Sub<Num> for Vector2D<Num> {
+impl<Num: Copy + Sub<Output=Num>> Sub<Num> for Vector2D<Num> {
     type Output = Vector2D<Num>;
 
     fn sub(self, rhs: Num) -> Self::Output {

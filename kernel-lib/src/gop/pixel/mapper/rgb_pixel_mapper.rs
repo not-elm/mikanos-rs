@@ -7,6 +7,7 @@ pub struct RgbPixelMapper;
 
 
 impl RgbPixelMapper {
+    #[inline(always)]
     pub const fn new() -> Self {
         Self
     }
@@ -14,6 +15,7 @@ impl RgbPixelMapper {
 
 
 impl Default for RgbPixelMapper {
+    #[inline(always)]
     fn default() -> Self {
         Self::new()
     }
@@ -21,10 +23,13 @@ impl Default for RgbPixelMapper {
 
 
 impl PixelMapper for RgbPixelMapper {
+    #[inline(always)]
     fn pixel_len(&self) -> usize {
         4
     }
 
+
+    #[inline(always)]
     fn convert_to_buff(&mut self, color: &PixelColor) -> [u8; 4] {
         [
             color.r(),

@@ -21,15 +21,19 @@ pub struct Pixel {
 
 
 impl Pixel {
+    #[inline(always)]
     pub const fn new(color: Option<PixelColor>, pos: Vector2D<usize>) -> Self {
         Self { color, pos }
     }
 
+
+    #[inline(always)]
     pub fn color(&self) -> Option<PixelColor> {
         self.color
     }
 
 
+    #[inline(always)]
     pub fn pos(&self) -> Vector2D<usize> {
         self.pos
     }
@@ -50,6 +54,7 @@ impl PartialEq for Pixel {
 }
 
 
+#[inline(always)]
 pub(crate) fn calc_pixel_pos_from_vec2d(
     frame_buffer_config: &FrameBufferConfig,
     pos: &Vector2D<usize>,

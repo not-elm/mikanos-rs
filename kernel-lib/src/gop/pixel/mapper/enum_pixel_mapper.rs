@@ -15,6 +15,7 @@ pub enum EnumPixelMapper {
 
 
 impl EnumPixelMapper {
+    #[inline(always)]
     pub const fn new(pixel_format: PixelFormat) -> Self {
         match pixel_format {
             PixelFormat::Rgb => Self::Rgb(RgbPixelMapper::new()),

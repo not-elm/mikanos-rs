@@ -14,31 +14,37 @@ pub struct Size(Vector2D<usize>);
 
 
 impl Size {
+    #[inline(always)]
     pub const fn new(width: usize, height: usize) -> Self {
         Self(Vector2D::new(width, height))
     }
 
 
+    #[inline(always)]
     pub const fn width(&self) -> usize {
         self.0.x()
     }
 
 
+    #[inline(always)]
     pub const fn height(&self) -> usize {
         self.0.y()
     }
 
 
+    #[inline(always)]
     pub fn as_vec2d(&self) -> Vector2D<usize> {
         Vector2D::new(self.width(), self.height())
     }
 
 
+    #[inline(always)]
     pub fn into_rect(self) -> Rectangle<usize> {
         Rectangle::from_size(self)
     }
 
 
+    #[inline(always)]
     pub fn points(&self) -> PointsWithInRectIter {
         PointsWithInRectIter::new(
             Vector2D::zeros(),
@@ -51,6 +57,8 @@ impl Size {
 impl Mul<usize> for Size {
     type Output = Size;
 
+
+    #[inline(always)]
     fn mul(self, rhs: usize) -> Self::Output {
         Size::new(self.width() * rhs, self.height() * rhs)
     }
@@ -58,6 +66,7 @@ impl Mul<usize> for Size {
 
 
 impl MulAssign<usize> for Size {
+    #[inline(always)]
     fn mul_assign(&mut self, rhs: usize) {
         *self = *self * rhs;
     }
@@ -67,6 +76,8 @@ impl MulAssign<usize> for Size {
 impl Div for Size {
     type Output = Size;
 
+
+    #[inline(always)]
     fn div(self, rhs: Self) -> Self::Output {
         Self::new(self.width() / rhs.width(), self.height() / rhs.height())
     }

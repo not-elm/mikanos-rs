@@ -22,6 +22,7 @@ impl Default for BgrPixelMapper {
 }
 
 impl PixelMapper for BgrPixelMapper {
+    #[inline(always)]
     fn pixel_len(&self) -> usize {
         4
     }

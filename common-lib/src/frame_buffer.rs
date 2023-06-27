@@ -12,6 +12,7 @@ pub struct FrameBufferConfig {
     pub pixel_format: PixelFormat,
 }
 
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum PixelFormat {
@@ -19,7 +20,9 @@ pub enum PixelFormat {
     Bgr,
 }
 
+
 impl FrameBufferConfig {
+    #[inline(always)]
     pub fn new(
         frame_buffer_base: u64,
         frame_buffer_size: usize,
@@ -39,26 +42,31 @@ impl FrameBufferConfig {
     }
 
 
+    #[inline(always)]
     pub fn frame_size(&self) -> Size {
         Size::new(self.horizontal_resolution, self.vertical_resolution)
     }
 
 
+    #[inline(always)]
     pub fn frame_rect(&self) -> Rectangle<usize> {
         Rectangle::from_size(self.frame_size())
     }
 
 
+    #[inline(always)]
     pub fn frame_buff_pixels(&self) -> usize {
         self.horizontal_resolution * self.vertical_resolution
     }
 
 
+    #[inline(always)]
     pub fn frame_buff_length(&self) -> usize {
         4 * self.frame_buff_pixels()
     }
 
 
+    #[inline(always)]
     pub fn mock() -> Self {
         Self {
             frame_buffer_base_addr: 0,
@@ -71,6 +79,7 @@ impl FrameBufferConfig {
     }
 
 
+    #[inline(always)]
     pub fn frame_buffer_base_ptr(&self) -> *mut u8 {
         self.frame_buffer_base_addr as *mut u8
     }

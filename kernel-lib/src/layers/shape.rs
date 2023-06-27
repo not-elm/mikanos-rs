@@ -22,11 +22,13 @@ pub struct ShapeLayer {
 
 
 impl ShapeLayer {
+    #[inline(always)]
     pub const fn new(drawer: ShapeDrawer, transform: Transform2D) -> Self {
         Self { drawer, transform }
     }
 
 
+    #[inline(always)]
     pub fn into_enum(self) -> Layer {
         Layer::Shape(self)
     }
@@ -34,6 +36,7 @@ impl ShapeLayer {
 
 
 impl LayerUpdatable for ShapeLayer {
+    #[inline(always)]
     fn update_back_buffer(
         &mut self,
         shadow_frame_buff: &mut ShadowFrameBuffer,

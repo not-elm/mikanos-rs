@@ -33,6 +33,7 @@ pub trait LayerFindable {
 
 
 impl MultipleLayer {
+    #[inline(always)]
     pub const fn new(transform: Transform2D) -> Self {
         Self {
             layers: Vec::new(),
@@ -48,11 +49,13 @@ impl MultipleLayer {
     }
 
 
+    #[inline(always)]
     pub fn layers_mut(&mut self) -> &mut Vec<LayerKey> {
         &mut self.layers
     }
 
 
+    #[inline(always)]
     pub fn into_enum(self) -> Layer {
         Layer::Multiple(self)
     }
@@ -60,6 +63,7 @@ impl MultipleLayer {
 
 
 impl LayerFindable for MultipleLayer {
+    #[inline]
     fn find_by_key(&self, key: &str) -> Option<&Layer> {
         self.layers
             .iter()
@@ -67,6 +71,7 @@ impl LayerFindable for MultipleLayer {
     }
 
 
+    #[inline]
     fn find_by_key_mut(&mut self, key: &str) -> Option<&mut Layer> {
         self.layers
             .iter_mut()
@@ -83,18 +88,26 @@ impl Transformable2D for MultipleLayer {
             .unwrap_or(());
     }
 
+
+    #[inline(always)]
     fn resize(&mut self, size: Size) {
         self.transform.resize(size)
     }
 
+
+    #[inline(always)]
     fn rect(&self) -> Rectangle<usize> {
         self.transform.rect()
     }
 
+
+    #[inline(always)]
     fn pos(&self) -> Vector2D<usize> {
         self.transform.pos()
     }
 
+
+    #[inline(always)]
     fn transform_ref(&self) -> &Transform2D {
         self.transform.transform_ref()
     }
@@ -110,7 +123,6 @@ impl Transformable2D for MultipleLayer {
                 layer.move_to_relative(pos)?;
             }
         }
-
 
         Ok(())
     }

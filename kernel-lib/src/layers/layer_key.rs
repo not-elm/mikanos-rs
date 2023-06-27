@@ -21,6 +21,7 @@ pub struct LayerKey {
 
 
 impl LayerKey {
+    #[inline(always)]
     pub fn new(key: &str, layer: Layer) -> Self {
         Self {
             key: String::from(key),
@@ -28,7 +29,8 @@ impl LayerKey {
         }
     }
 
-
+    
+    #[inline(always)]
     pub fn key(&self) -> &str {
         self.key.as_str()
     }
@@ -62,6 +64,7 @@ impl LayerKey {
 
 
 impl LayerKey {
+    #[inline(always)]
     pub fn update_back_buffer(&mut self, shadow_buff: &mut ShadowFrameBuffer) -> KernelResult {
         self.layer
             .update_back_buffer(shadow_buff, &self.layer.rect())
@@ -82,16 +85,19 @@ impl LayerKey {
     }
 
 
+    #[inline(always)]
     pub fn layer_ref(&self) -> &Layer {
         &self.layer
     }
 
 
+    #[inline(always)]
     pub fn layer_mut(&mut self) -> &mut Layer {
         &mut self.layer
     }
 
 
+    #[inline(always)]
     pub fn update_layer(&mut self, fun: impl Fn(&mut Layer)) {
         fun(&mut self.layer);
     }

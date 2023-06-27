@@ -20,6 +20,7 @@ pub struct FrameBufferPixelWriter {
 
 
 impl FrameBufferPixelWriter {
+    #[inline(always)]
     pub const fn new(config: FrameBufferConfig) -> Self {
         let mapper = EnumPixelMapper::new(config.pixel_format);
         Self { config, mapper }
@@ -41,7 +42,6 @@ impl FrameBufferPixelWriter {
         }
 
         let v = v1.as_slice();
-
         for y in draw_area.origin().y()..draw_area.end().y() {
             let i = calc_pixel_pos_from_vec2d(
                 shadow_buff.config_ref(),
@@ -57,6 +57,7 @@ impl FrameBufferPixelWriter {
 
 
 impl PixelWritable for FrameBufferPixelWriter {
+    #[inline(always)]
     unsafe fn write(
         &mut self,
         frame_buff: &mut [u8],

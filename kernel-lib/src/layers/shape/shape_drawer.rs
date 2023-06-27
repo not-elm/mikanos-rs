@@ -15,6 +15,7 @@ pub struct ShapeDrawer {
 
 
 impl ShapeDrawer {
+    #[inline(always)]
     pub const fn new(config: FrameBufferConfig, color: PixelColor) -> Self {
         Self {
             color,
@@ -25,6 +26,7 @@ impl ShapeDrawer {
 
 
 impl LayerUpdatable for ShapeDrawer {
+    #[inline(always)]
     fn update_back_buffer(
         &mut self,
         shadow_frame: &mut ShadowFrameBuffer,

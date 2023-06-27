@@ -16,16 +16,19 @@ pub struct Vector2D<T> {
 
 
 impl<T: Copy> Vector2D<T> {
+    #[inline(always)]
     pub const fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
 
 
+    #[inline(always)]
     pub const fn x(&self) -> T {
         self.x
     }
 
 
+    #[inline(always)]
     pub const fn y(&self) -> T {
         self.y
     }
@@ -33,15 +36,19 @@ impl<T: Copy> Vector2D<T> {
 
 
 impl<T: PartialOrd> Vector2D<T> {
+    #[inline(always)]
     pub fn is_over_x(&self, other: &Vector2D<T>) -> bool {
         self.x < other.x
     }
 
 
+    #[inline(always)]
     pub fn is_over_y(&self, other: &Vector2D<T>) -> bool {
         self.y < other.y
     }
 
+
+    #[inline(always)]
     pub fn is_over(&self, other: &Vector2D<T>) -> bool {
         self.is_over_x(other) || self.is_over_y(other)
     }
@@ -49,16 +56,19 @@ impl<T: PartialOrd> Vector2D<T> {
 
 
 impl Vector2D<usize> {
+    #[inline(always)]
     pub const fn unit() -> Self {
         Self::new(1, 1)
     }
 
 
+    #[inline(always)]
     pub const fn zeros() -> Vector2D<usize> {
         Self::new(0, 0)
     }
 
 
+    #[inline(always)]
     pub fn relative(&self, pos: Vector2D<usize>) -> Vector2D<isize> {
         let x = self.x() as isize - pos.x() as isize;
         let y = self.y() as isize - pos.y() as isize;
@@ -69,17 +79,20 @@ impl Vector2D<usize> {
 
 
 impl Default for Vector2D<usize> {
+    #[inline(always)]
     fn default() -> Self {
         Self::zeros()
     }
 }
 
 
+#[inline(always)]
 pub fn min_vector2d<T: Ord + Copy>(lhs: &Vector2D<T>, rhs: &Vector2D<T>) -> Vector2D<T> {
     Vector2D::new(min(lhs.x(), rhs.x()), min(lhs.y(), rhs.y()))
 }
 
 
+#[inline(always)]
 pub fn max_vector2d<T: Ord + Copy>(lhs: &Vector2D<T>, rhs: &Vector2D<T>) -> Vector2D<T> {
     Vector2D::new(max(lhs.x(), rhs.x()), max(lhs.y(), rhs.y()))
 }
