@@ -54,12 +54,21 @@ impl TextLayer {
     }
 
 
+    #[inline(always)]
     pub fn update_string(&mut self, str: &str) -> KernelResult {
         self.text_frame
             .update_string(str)
     }
 
 
+    #[inline(always)]
+    pub fn delete_last(&mut self) {
+        self.text_frame
+            .delete_last()
+    }
+
+
+    #[inline(always)]
     pub fn into_enum(self) -> Layer {
         Layer::Text(self)
     }
@@ -67,6 +76,7 @@ impl TextLayer {
 
 
 impl core::fmt::Write for TextLayer {
+    #[inline(always)]
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.text_frame
             .append_string(s)
@@ -103,7 +113,6 @@ impl LayerUpdatable for TextLayer {
 
             back_buff.raw_mut()[origin..end].copy_from_slice(&line[diff_x * 4..(diff_x * 4 + len)]);
         }
-
 
         Ok(())
     }

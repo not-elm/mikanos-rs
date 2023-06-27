@@ -1,6 +1,7 @@
 use alloc::string::ToString;
 use core::fmt::Write;
 
+use kernel_lib::serial_println;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 
@@ -15,18 +16,33 @@ pub fn build_keyboard_driver() -> KeyboardDriver {
 
 
 fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
+    serial_println!("key = {}", _modifier_bits);
+
+    update_text_box_keys(keycode);
+
+    unsafe { operate_count_task_if_need(keycode) };
+}
+
+
+fn update_text_box_keys(keycode: char) {
     LAYERS
         .lock()
         .update_layer(KEYBOARD_TEXT, |layer| {
-            layer
+            let text_layer = layer
                 .require_text()
-                .unwrap()
-                .write_str(keycode.to_string().as_str())
                 .unwrap();
+            match keycode {
+                '\x7F' => {
+                    text_layer.delete_last();
+                }
+                _ => {
+                    text_layer
+                        .write_str(keycode.to_string().as_str())
+                        .unwrap();
+                }
+            }
         })
         .unwrap();
-
-    unsafe { operate_count_task_if_need(keycode) };
 }
 
 

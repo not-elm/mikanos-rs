@@ -87,7 +87,7 @@ impl LayerUpdatable for CloseButtonLayer {
                 .iter()
                 .map(|c| color_from_close_button_char(char::from(*c)))
                 .flat_map(|color| {
-                    *self
+                    self
                         .pixel_mapper
                         .convert_to_buff(&color)
                 })

@@ -2,6 +2,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use common_lib::frame_buffer::PixelFormat;
+use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
@@ -19,6 +20,7 @@ pub struct ConsoleRow {
     font_unit: Size,
     texts: Vec<char>,
     max_text_len: usize,
+    background: PixelColor,
 }
 
 
@@ -34,6 +36,7 @@ impl ConsoleRow {
             max_text_len,
             font_unit,
             pixel_format,
+            background,
         )
     }
 
@@ -48,7 +51,7 @@ impl ConsoleRow {
         {
             return Ok(true);
         }
-        
+
         let pos = Vector2D::new(self.texts.len() * self.font_unit.width(), 0);
         char_writer.write(
             self.text_buffs.as_mut_slice(),
@@ -61,6 +64,18 @@ impl ConsoleRow {
         self.texts.push(c);
 
         Ok(false)
+    }
+
+
+    pub fn delete_last(
+        &mut self,
+    ) {
+        self.texts.pop();
+        let pos = Vector2D::new(self.texts.len() * self.font_unit.width(), 0);
+        let draw_area = Rectangle::from_pos_and_size(pos, self.font_unit);
+
+        self.buff_pixel_writer
+            .fill_rect(self.text_buffs.as_mut_slice(), draw_area, &self.background)
     }
 
 
@@ -105,6 +120,7 @@ impl ConsoleRow {
         max_text_len: usize,
         font_unit: Size,
         pixel_format: PixelFormat,
+        background: PixelColor,
     ) -> Self {
         let buff_size = text_buffer_size(max_text_len, &font_unit);
 
@@ -114,6 +130,7 @@ impl ConsoleRow {
             buff_pixel_writer: BuffPixelWriter::new(buff_size, pixel_format),
             max_text_len,
             texts: Vec::with_capacity(max_text_len),
+            background,
         }
     }
 }
@@ -138,7 +155,7 @@ fn new_text_row_buff(
     let mut pixel_mapper = EnumPixelMapper::new(pixel_format);
     let buff = pixel_mapper.convert_to_buff(background);
 
-    vec![*buff; max_text_len * font_unit.width() * font_unit.height()]
+    vec![buff; max_text_len * font_unit.width() * font_unit.height()]
         .flatten()
         .to_vec()
 }
@@ -255,8 +272,7 @@ mod tests {
         const PADDING_LEN: usize = 8;
         assert!(array_eq(
             vec![[0xFF, 0xFF, 0x00, 0x00]; PADDING_LEN / 4]
-                .flatten()
-                .as_ref(),
+                .flatten(),
             &buf[0..PADDING_LEN],
         ));
     }

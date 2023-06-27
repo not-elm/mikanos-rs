@@ -75,6 +75,14 @@ impl<Char: CharWritable> TextFrame<Char> {
     }
 
 
+    pub fn delete_last(&mut self) {
+        self.rows
+            .last_mut()
+            .unwrap()
+            .delete_last()
+    }
+
+
     fn new_line(&mut self) {
         if self.text_frame_size.height() <= self.rows.len() {
             self.scroll();
@@ -98,11 +106,13 @@ impl<Char: CharWritable> TextFrame<Char> {
     }
 
 
+    #[inline]
     fn add_row(&mut self) {
         self.rows.push(self.new_row())
     }
 
 
+    #[inline]
     fn new_row(&self) -> ConsoleRow {
         ConsoleRow::new(
             *self.colors.background(),

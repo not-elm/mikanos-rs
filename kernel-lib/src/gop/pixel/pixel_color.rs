@@ -7,11 +7,13 @@ pub struct PixelColor {
 }
 
 impl PixelColor {
+    #[inline(always)]
     pub const fn new(r: u8, g: u8, b: u8) -> Self {
         Self { r, g, b }
     }
 
 
+    #[inline(always)]
     pub const fn black() -> Self {
         Self {
             r: 0x00,
@@ -21,6 +23,7 @@ impl PixelColor {
     }
 
 
+    #[inline(always)]
     pub const fn white() -> Self {
         Self {
             r: 0xFF,
@@ -30,6 +33,7 @@ impl PixelColor {
     }
 
 
+    #[inline(always)]
     pub const fn yellow() -> Self {
         Self {
             r: 0xFF,
@@ -38,6 +42,8 @@ impl PixelColor {
         }
     }
 
+
+    #[inline(always)]
     pub const fn blue() -> Self {
         Self {
             r: 0x00,
@@ -47,22 +53,26 @@ impl PixelColor {
     }
 
 
+    #[inline(always)]
     pub const fn window_background() -> Self {
         Self::new(0xC6, 0xC6, 0xC6)
     }
 
 
-    pub fn r(&self) -> u8 {
+    #[inline(always)]
+    pub const fn r(&self) -> u8 {
         self.r
     }
 
 
-    pub fn g(&self) -> u8 {
+    #[inline(always)]
+    pub const fn g(&self) -> u8 {
         self.g
     }
 
 
-    pub fn b(&self) -> u8 {
+    #[inline(always)]
+    pub const fn b(&self) -> u8 {
         self.b
     }
 }

@@ -17,7 +17,7 @@ pub trait PixelMapper {
     fn pixel_len(&self) -> usize;
 
 
-    fn convert_to_buff(&mut self, color: &PixelColor) -> &[u8; 4];
+    fn convert_to_buff(&mut self, color: &PixelColor) -> [u8; 4];
 
 
     fn write_frame_buff(
@@ -29,7 +29,7 @@ pub trait PixelMapper {
     ) -> KernelResult {
         let origin = calc_pixel_pos_from_vec2d(config, pos)?;
         let end = origin + self.pixel_len();
-        frame_buff[origin..end].copy_from_slice(self.convert_to_buff(color));
+        frame_buff[origin..end].copy_from_slice(&self.convert_to_buff(color));
 
         Ok(())
     }

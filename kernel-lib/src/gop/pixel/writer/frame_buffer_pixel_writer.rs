@@ -35,7 +35,7 @@ impl FrameBufferPixelWriter {
         let mut v1: Vec<u8> = Vec::new();
         for _ in 0..draw_area.size().width() {
             v1.extend_from_slice(
-                self.mapper
+                &self.mapper
                     .convert_to_buff(color),
             );
         }

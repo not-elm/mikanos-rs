@@ -3,17 +3,19 @@ use crate::gop::pixel::pixel_color::PixelColor;
 
 #[derive(Debug, Clone)]
 #[repr(transparent)]
-pub struct BgrPixelMapper([u8; 4]);
+pub struct BgrPixelMapper;
 
 
 impl BgrPixelMapper {
+    #[inline(always)]
     pub const fn new() -> Self {
-        Self([0, 0, 0, 0])
+        Self
     }
 }
 
 
 impl Default for BgrPixelMapper {
+    #[inline(always)]
     fn default() -> Self {
         Self::new()
     }
@@ -24,15 +26,15 @@ impl PixelMapper for BgrPixelMapper {
         4
     }
 
-    fn convert_to_buff(&mut self, color: &PixelColor) -> &[u8; 4] {
-        self.0 = [
+
+    #[inline(always)]
+    fn convert_to_buff(&mut self, color: &PixelColor) -> [u8; 4] {
+        [
             color.b(),
             color.g(),
             color.r(),
             0,
-        ];
-
-        &self.0
+        ]
     }
 }
 
@@ -49,6 +51,6 @@ mod tests {
     fn it_correct_bgr_buff() {
         let mut con = BgrPixelMapper::new();
         let buff = con.convert_to_buff(&PixelColor::blue());
-        assert!(array_eq(buff, &[0xFF, 0, 0, 0]));
+        assert!(array_eq(&buff, &[0xFF, 0, 0, 0]));
     }
 }

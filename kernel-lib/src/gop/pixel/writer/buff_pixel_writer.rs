@@ -1,4 +1,8 @@
+use alloc::vec;
+use alloc::vec::Vec;
+
 use common_lib::frame_buffer::PixelFormat;
+use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
@@ -16,10 +20,26 @@ pub struct BuffPixelWriter {
 
 
 impl BuffPixelWriter {
+    #[inline(always)]
     pub const fn new(buff_size: Size, pixel_format: PixelFormat) -> Self {
         Self {
             buff_size,
             mapper: EnumPixelMapper::new(pixel_format),
+        }
+    }
+
+
+    pub fn fill_rect(&mut self, buff: &mut [u8], draw_area: Rectangle<usize>, color: &PixelColor) {
+        let background_buff: Vec<u8> = vec![self.mapper.convert_to_buff(color); draw_area.width()]
+            .into_iter()
+            .flatten()
+            .collect();
+
+        for y in draw_area.origin().y()..draw_area.end().y() {
+            let origin = self.mapper.pixel_len() * draw_area.origin().x() + (y * self.buff_size.width());
+            let end = self.mapper.pixel_len() * draw_area.width() + origin;
+
+            buff[origin..end].copy_from_slice(&background_buff);
         }
     }
 }
@@ -40,7 +60,7 @@ impl PixelWritable for BuffPixelWriter {
         }
 
         buff[origin..end].copy_from_slice(
-            self.mapper
+            &self.mapper
                 .convert_to_buff(color),
         );
         Ok(())

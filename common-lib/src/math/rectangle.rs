@@ -15,16 +15,19 @@ pub struct Rectangle<T: Copy> {
 
 
 impl<T: Copy> Rectangle<T> {
+    #[inline(always)]
     pub fn new(origin: Vector2D<T>, end: Vector2D<T>) -> Rectangle<T> {
         Self { origin, end }
     }
 
 
+    #[inline(always)]
     pub fn origin(&self) -> Vector2D<T> {
         self.origin
     }
 
 
+    #[inline(always)]
     pub fn end(&self) -> Vector2D<T> {
         self.end
     }
@@ -40,11 +43,13 @@ impl Rectangle<usize> {
     }
 
 
+    #[inline(always)]
     pub fn from_size(size: Size) -> Self {
         Self::from_pos_and_size(Vector2D::zeros(), size)
     }
 
 
+    #[inline(always)]
     pub fn size(&self) -> Size {
         Size::new(self.width(), self.height())
     }
@@ -83,7 +88,7 @@ impl Rectangle<usize> {
             self.end.x(),
             r.end.x(),
         ]
-        .into_iter();
+            .into_iter();
 
 
         let ys = [
@@ -92,7 +97,7 @@ impl Rectangle<usize> {
             self.end.y(),
             r.end.y(),
         ]
-        .into_iter();
+            .into_iter();
 
 
         let origin = Vector2D::new(xs.clone().min().unwrap(), ys.clone().min().unwrap());
@@ -149,7 +154,7 @@ impl Rectangle<usize> {
 }
 
 
-impl<Num: Copy + Add<Output = Num>> Add<Vector2D<Num>> for Rectangle<Num> {
+impl<Num: Copy + Add<Output=Num>> Add<Vector2D<Num>> for Rectangle<Num> {
     type Output = Rectangle<Num>;
 
     fn add(self, rhs: Vector2D<Num>) -> Self::Output {
