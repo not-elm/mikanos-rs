@@ -64,31 +64,37 @@ impl CursorBuffer {
     }
 
 
+    #[inline]
     pub fn no_scale() -> CursorBuffer {
         Self::new(Vector2D::unit())
     }
 
 
+    #[inline]
     pub fn size(&self) -> Size {
         Size::new(self.width(), self.height())
     }
 
 
+    #[inline]
     pub fn rect(&self) -> Rectangle<usize> {
         Rectangle::from_size(self.size())
     }
 
 
+    #[inline]
     pub fn height(&self) -> usize {
         self.0.len()
     }
 
 
+    #[inline]
     pub fn width(&self) -> usize {
         self.0[0].len()
     }
 
 
+    #[inline]
     pub fn cursor_pixels(
         &self,
         origin_pos: Vector2D<usize>,
@@ -146,6 +152,7 @@ impl CursorBuffer {
 
 
 impl Default for CursorBuffer {
+    #[inline]
     fn default() -> Self {
         Self::no_scale()
     }
@@ -161,7 +168,7 @@ mod tests {
     use common_lib::math::vector::Vector2D;
 
     use crate::layers::cursor::cursor_buffer::{
-        CursorBuffer, CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH,
+        CURSOR_HEIGHT, CURSOR_SHAPE, CURSOR_WIDTH, CursorBuffer,
     };
 
     #[test]

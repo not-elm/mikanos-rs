@@ -97,7 +97,8 @@ impl TextRow {
         Some(lines)
     }
 
-
+    
+    #[inline]
     pub fn frame_buff_line(&self, y: usize) -> &[u8] {
         let origin = y * self.max_buff_width();
         &self.text_buffs[origin..origin + self.max_buff_width()]
@@ -116,6 +117,7 @@ impl TextRow {
     }
 
 
+    #[inline]
     fn max_buff_width(&self) -> usize {
         self.max_text_len * font_buff_width(&self.font_unit)
     }
@@ -142,6 +144,7 @@ impl TextRow {
 }
 
 
+#[inline]
 fn font_buff_width(font_size: &Size) -> usize {
     4 * font_size.width()
 }

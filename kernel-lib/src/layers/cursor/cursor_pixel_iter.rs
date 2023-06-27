@@ -2,9 +2,9 @@ use alloc::vec::Vec;
 
 use common_lib::math::vector::Vector2D;
 
+use crate::gop::pixel::Pixel;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_iter::PixelIter;
-use crate::gop::pixel::Pixel;
 
 #[derive(Debug, Clone)]
 pub struct CursorPixelIter<'buff> {
@@ -22,6 +22,7 @@ impl<'buff> PixelIter for CursorPixelIter<'buff> {}
 
 
 impl<'buff> CursorPixelIter<'buff> {
+    #[inline]
     pub const fn new(
         buff: &'buff Vec<Vec<u8>>,
         origin_pos: Vector2D<usize>,
@@ -48,16 +49,16 @@ impl<'buff> Iterator for CursorPixelIter<'buff> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.buff.len() <= self.y
             || self
-                .end_pos
-                .is_some_and(|pos| pos.y() < self.y)
+            .end_pos
+            .is_some_and(|pos| pos.y() < self.y)
         {
             return None;
         }
 
         if self.buff[0].len() <= self.x
             || self
-                .end_pos
-                .is_some_and(|pos| pos.x() < self.x)
+            .end_pos
+            .is_some_and(|pos| pos.x() < self.x)
         {
             self.y += 1;
             self.x = 0;

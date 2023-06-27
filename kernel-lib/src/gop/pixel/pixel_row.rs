@@ -1,11 +1,12 @@
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use common_lib::math::vector::Vector2D;
 
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::mapper::PixelMapper;
-use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::Pixel;
+use crate::gop::pixel::pixel_color::PixelColor;
 
 /// フレームバッファの一行分のピクセルを表します。
 #[derive(Debug, Clone)]
@@ -17,6 +18,7 @@ pub struct PixelRow<Convert> {
 
 
 impl<Convert: PixelMapper> PixelRow<Convert> {
+    #[inline]
     pub fn new(
         row: Vec<Pixel>,
         mut converter: Convert,
@@ -35,30 +37,37 @@ impl<Convert: PixelMapper> PixelRow<Convert> {
     }
 
 
+    #[inline]
     pub fn origin_pos(&self) -> Vector2D<usize> {
         self.row[0].pos
     }
 
 
+    #[inline]
     pub fn end_pos(&self) -> Vector2D<usize> {
         self.row[self.row.len() - 1].pos
     }
 
 
+    #[inline]
     pub fn pixels_len_per_row(&self) -> usize {
         self.row.len() * self.converter.pixel_len()
     }
 
 
+    #[inline]
     pub fn pixels_len(&self) -> usize {
         self.row.len()
     }
 
-    pub fn pixels_buff(&self) -> &[u8] {
-        &self.pixels_buff
+
+    #[inline]
+    pub fn pixels_buff(self) -> Vec<u8> {
+        self.pixels_buff
     }
 
 
+    #[inline]
     pub fn pixels(&self) -> &Vec<Pixel> {
         &self.row
     }
@@ -98,10 +107,10 @@ mod tests {
 
     use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
     use crate::gop::pixel::mapper::rgb_pixel_mapper::RgbPixelMapper;
+    use crate::gop::pixel::Pixel;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::pixel_row::PixelRow;
-    use crate::gop::pixel::Pixel;
-    use crate::layers::cursor::cursor_buffer::{CursorBuffer, CURSOR_WIDTH};
+    use crate::layers::cursor::cursor_buffer::{CURSOR_WIDTH, CursorBuffer};
     use crate::layers::cursor::cursor_colors::CursorColors;
 
     #[test]

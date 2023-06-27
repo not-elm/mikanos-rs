@@ -3,8 +3,7 @@ use auto_delegate::Delegate;
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::transform2d::Transform2D;
-
+use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::KernelResult;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
@@ -62,7 +61,7 @@ impl LayerUpdatable for CursorLayer {
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         self.drawer
-            .update_back_buffer(shadow_frame_buff, draw_area)?;
+            .update_back_buffer(shadow_frame_buff, draw_area, self.transform.pos())?;
 
         Ok(())
     }

@@ -53,6 +53,12 @@ impl FrameBufferPixelWriter {
 
         Ok(())
     }
+
+
+    #[inline(always)]
+    pub fn config(&self) -> FrameBufferConfig{
+        self.config
+    }
 }
 
 

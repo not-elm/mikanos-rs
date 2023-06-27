@@ -1,3 +1,5 @@
+use alloc::borrow::Cow;
+use core::cell::Ref;
 use core::cmp::min;
 use core::fmt::Error;
 
@@ -98,31 +100,42 @@ impl LayerUpdatable for TextLayer {
         back_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
-        let origin = self.transform.pos();
-        let diff_y = abs(origin.y() as isize - draw_area.origin().y() as isize);
-        let diff_x = abs(origin.x() as isize - draw_area.origin().x() as isize);
-
-        for (y, line) in self
+        let src_buff = self
             .text_frame
             .frame_buff_lines()
             .into_iter()
-            .flatten()
-            .enumerate()
-            .skip_while(|(y, _)| diff_y != *y)
-            .take_while(|(y, _)| origin.y() + y <= draw_area.end().y())
-        {
-            let pos = self.pos() + Vector2D::new(diff_x, y);
+            .flatten();
 
-            let origin = calc_pixel_pos(&self.config, pos.x(), pos.y())?;
-            let len = min(line.len() - diff_x * 4, draw_area.size().width() * 4);
-
-            let end = origin + len;
-
-            back_buff.raw_mut()[origin..end].copy_from_slice(&line[diff_x * 4..(diff_x * 4 + len)]);
-        }
-
-        Ok(())
+        update(&self.config, back_buff, draw_area, self.pos(), src_buff)
     }
+}
+
+
+pub(crate) fn update<'a>(
+    config: &FrameBufferConfig,
+    back_buff: &mut ShadowFrameBuffer,
+    draw_area: &Rectangle<usize>,
+    origin: Vector2D<usize>,
+    src_buff: impl Iterator<Item=&'a [u8]>,
+) -> KernelResult {
+    let diff_y = abs(origin.y() as isize - draw_area.origin().y() as isize);
+    let diff_x = abs(origin.x() as isize - draw_area.origin().x() as isize);
+
+    for (y, line) in src_buff
+        .enumerate()
+        .skip_while(|(y, _)| diff_y != *y)
+        .take_while(|(y, _)| origin.y() + y <= draw_area.end().y())
+    {
+        let pos = origin + Vector2D::new(diff_x, y);
+
+        let origin = calc_pixel_pos(config, pos.x(), pos.y())?;
+        let len = min(line.len() - diff_x * 4, draw_area.size().width() * 4);
+        let end = origin + len;
+
+        back_buff.raw_mut()[origin..end].copy_from_slice(&line[diff_x * 4..(diff_x * 4 + len)]);
+    }
+
+    Ok(())
 }
 
 
