@@ -2,53 +2,6 @@ use core::arch::asm;
 
 use crate::control_registers::read_cr3;
 
-// #[derive(Debug)]
-// #[repr(transparent)]
-// // TODO: Support Context with Arch
-// pub struct TaskContext(RwLock<AlignedContext>);
-
-
-// #[thread_local]
-// static SWITCH_RESULT: Cell<Option<SwitchResult>> = Cell::new(None);
-//
-// pub struct SwitchResult {
-//     prev_lock: RwLock<AlignedTaskContext>,
-//     next_lock: RwLock<AlignedTaskContext>,
-// }
-
-
-// impl TaskContext {
-//     // #[inline(always)]
-//     // pub const fn uninit() -> Self {
-//     //     Self(RwLock::new(TaskContext::uninit()))
-//     // }
-//     //
-//     //
-//     // pub unsafe fn update(&self, rip: u64, rsp: u64) {
-//     //     let mut context = self.0.write();
-//     //     context.update(rip, rsp);
-//     // }
-//
-//
-//     // #[inline(always)]
-//     // pub fn switch_to(&self, next: &TaskContext) {
-//     //     let prev = RwLockWriteGuard::leak() as *mut AlignedTaskContext;
-//     //     let next = RwLockWriteGuard::leak(next.0.write()) as *mut
-//     // AlignedTaskContext;
-//     //
-//     //     unsafe {
-//     //         asm!(
-//     //             "call {inner}",
-//     //             inner = sym asm_switch_context,
-//     //             in("rdi") &mut ((*next).0),
-//     //             in("rsi") &mut ((*prev).0),
-//     //             clobber_abi("sysv64")
-//     //         )
-//     //     }
-//     // }
-// }
-
-
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[repr(C, align(16))]
 pub struct Context {

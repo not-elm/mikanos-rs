@@ -1,6 +1,5 @@
 use alloc::vec;
 use alloc::vec::Vec;
-use core::cmp::min;
 
 use common_lib::frame_buffer::PixelFormat;
 use common_lib::math::size::Size;
@@ -20,9 +19,6 @@ pub struct ConsoleRow {
     font_unit: Size,
     texts: Vec<char>,
     max_text_len: usize,
-    current_text_len: usize,
-    pixel_format: PixelFormat,
-    is_need_newline: bool,
 }
 
 
@@ -38,22 +34,7 @@ impl ConsoleRow {
             max_text_len,
             font_unit,
             pixel_format,
-            0,
         )
-    }
-
-
-    #[allow(unused)]
-    pub fn resize_text_len(&mut self, new_text_len: usize) {
-        self.text_buffs
-            .resize(text_buffer_length(new_text_len, &self.font_unit), 0);
-
-        self.current_text_len = min(new_text_len, self.current_text_len);
-        self.max_text_len = new_text_len;
-        self.buff_pixel_writer = BuffPixelWriter::new(
-            text_buffer_size(new_text_len, &self.font_unit),
-            self.pixel_format,
-        );
     }
 
 
@@ -63,19 +44,12 @@ impl ConsoleRow {
         colors: &TextColors,
         char_writer: &mut impl CharWritable,
     ) -> KernelResult<bool> {
-        if self.max_text_len <= self.current_text_len
-            || self
-                .texts
-                .last()
-                .is_some_and(|c| *c == '\n')
+        if self.need_new_line()
         {
             return Ok(true);
         }
-
-
-        self.texts.push(c);
-
-        let pos = Vector2D::new(self.current_text_len * self.font_unit.width(), 0);
+        
+        let pos = Vector2D::new(self.texts.len() * self.font_unit.width(), 0);
         char_writer.write(
             self.text_buffs.as_mut_slice(),
             c,
@@ -84,13 +58,18 @@ impl ConsoleRow {
             &mut self.buff_pixel_writer,
         )?;
 
-        self.current_text_len += 1;
+        self.texts.push(c);
+
         Ok(false)
     }
 
 
+    #[inline(always)]
     pub fn need_new_line(&self) -> bool {
-        self.is_need_newline
+        self.max_text_len <= self.texts.len() || self
+            .texts
+            .last()
+            .is_some_and(|c| *c == '\n')
     }
 
 
@@ -109,20 +88,10 @@ impl ConsoleRow {
         &self.text_buffs[origin..origin + self.max_buff_width()]
     }
 
-    #[cfg(test)]
-    pub(crate) fn current_text_len(&self) -> usize {
-        self.current_text_len
-    }
-
-
-    #[cfg(test)]
-    pub(crate) fn max_text_len(&self) -> usize {
-        self.max_text_len
-    }
 
     #[cfg(test)]
     fn buff_width(&self) -> usize {
-        self.current_text_len * font_buff_width(&self.font_unit)
+        self.texts.len() * font_buff_width(&self.font_unit)
     }
 
 
@@ -136,7 +105,6 @@ impl ConsoleRow {
         max_text_len: usize,
         font_unit: Size,
         pixel_format: PixelFormat,
-        current_text_len: usize,
     ) -> Self {
         let buff_size = text_buffer_size(max_text_len, &font_unit);
 
@@ -145,10 +113,7 @@ impl ConsoleRow {
             text_buffs,
             buff_pixel_writer: BuffPixelWriter::new(buff_size, pixel_format),
             max_text_len,
-            current_text_len,
             texts: Vec::with_capacity(max_text_len),
-            pixel_format,
-            is_need_newline: false,
         }
     }
 }
@@ -161,11 +126,6 @@ fn font_buff_width(font_size: &Size) -> usize {
 
 fn text_buffer_size(max_text_len: usize, font_unit: &Size) -> Size {
     Size::new(4 * max_text_len * font_unit.width(), font_unit.height())
-}
-
-
-fn text_buffer_length(max_text_len: usize, font_unit: &Size) -> usize {
-    4 * max_text_len * font_unit.width() * font_unit.height()
 }
 
 
@@ -198,7 +158,7 @@ mod tests {
     use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::layers::text::console_colors::TextColors;
-    use crate::layers::text::console_row::{new_text_row_buff, ConsoleRow};
+    use crate::layers::text::console_row::{ConsoleRow, new_text_row_buff};
 
     fn padding_buff(
         padding: usize,
@@ -207,12 +167,10 @@ mod tests {
         pixel_format: PixelFormat,
         text_buff: &[u8],
     ) -> Vec<u8> {
-        let mut buf = vec![
-            *EnumPixelMapper::new(pixel_format).convert_to_buff(background);
-            padding * font_unit.width() * 4
-        ]
-        .flatten()
-        .to_vec();
+        let v = *EnumPixelMapper::new(pixel_format).convert_to_buff(background);
+        let mut buf = vec![v; padding * font_unit.width() * 4]
+            .flatten()
+            .to_vec();
 
         buf.extend_from_slice(text_buff);
         buf.resize(text_buff.len(), 0x00);
@@ -230,73 +188,12 @@ mod tests {
             &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-        .unwrap();
+            .unwrap();
 
         assert_eq!(row.buff_width(), writer.font_unit().width() * 4);
         assert!(row
             .frame_buff_lines()
             .is_some_and(|lines| lines.len() == writer.font_unit().height()));
-    }
-
-
-    #[test]
-    fn it_over_size() {
-        let mut writer = AscIICharWriter::new();
-        let mut row = ConsoleRow::new(PixelColor::black(), writer.font_unit(), 1, PixelFormat::Rgb);
-
-        row.resize_text_len(2);
-        assert_eq!(row.current_text_len, 0);
-        assert_eq!(row.max_text_len, 2);
-        assert!(!row
-            .write_char(
-                'h',
-                &TextColors::default().change_foreground(PixelColor::white()),
-                &mut writer,
-            )
-            .unwrap());
-        assert!(!row
-            .write_char(
-                'h',
-                &TextColors::default().change_foreground(PixelColor::white()),
-                &mut writer,
-            )
-            .unwrap());
-    }
-
-
-    #[test]
-    fn it_small_size() {
-        let mut writer = AscIICharWriter::new();
-        let mut row = ConsoleRow::new(PixelColor::black(), writer.font_unit(), 5, PixelFormat::Rgb);
-        row.write_char(
-            'h',
-            &TextColors::default().change_foreground(PixelColor::white()),
-            &mut writer,
-        )
-        .unwrap();
-        row.write_char(
-            'h',
-            &TextColors::default().change_foreground(PixelColor::white()),
-            &mut writer,
-        )
-        .unwrap();
-        row.write_char(
-            'h',
-            &TextColors::default().change_foreground(PixelColor::white()),
-            &mut writer,
-        )
-        .unwrap();
-
-        row.resize_text_len(2);
-        assert_eq!(row.current_text_len, 2);
-        assert_eq!(row.max_text_len, 2);
-        assert!(row
-            .write_char(
-                'h',
-                &TextColors::default().change_foreground(PixelColor::white()),
-                &mut writer,
-            )
-            .unwrap())
     }
 
 

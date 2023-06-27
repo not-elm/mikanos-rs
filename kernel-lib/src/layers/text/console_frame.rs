@@ -75,31 +75,6 @@ impl<Char: CharWritable> TextFrame<Char> {
     }
 
 
-    #[allow(unused)]
-    pub fn resize_text_frame(&mut self, text_frame_size: Size) {
-        let prev = self.text_frame_size;
-        self.text_frame_size = text_frame_size;
-        if text_frame_size.height() < prev.height() {
-            self.rows
-                .resize_with(text_frame_size.height(), || {
-                    ConsoleRow::new(
-                        *self.colors.background(),
-                        self.char_writer.font_unit(),
-                        text_frame_size.width(),
-                        self.pixel_format,
-                    )
-                });
-        }
-        if text_frame_size.width() != prev.width() {
-            self.rows
-                .iter_mut()
-                .for_each(|row| {
-                    row.resize_text_len(text_frame_size.width());
-                });
-        }
-    }
-
-
     fn new_line(&mut self) {
         if self.text_frame_size.height() <= self.rows.len() {
             self.scroll();
@@ -199,70 +174,5 @@ mod tests {
             .unwrap();
 
         assert_eq!(frame.frame_buff_lines().len(), 2);
-    }
-
-
-    #[test]
-    fn it_resize_to_over() {
-        let mut frame = TextFrame::new(
-            TextColors::default(),
-            AscIICharWriter::new(),
-            Size::new(3, 3),
-            PixelFormat::Rgb,
-        );
-        frame.resize_text_frame(Size::new(5, 5));
-
-        assert_eq!(frame.rows.len(), 1);
-        assert_eq!(frame.text_frame_size, Size::new(5, 5));
-
-        frame
-            .append_string("hello")
-            .unwrap();
-        assert_eq!(frame.rows.len(), 1);
-
-        assert_eq!(frame.rows[0].current_text_len(), 5);
-        assert_eq!(frame.rows[0].max_text_len(), 5);
-
-        frame
-            .append_string("!")
-            .unwrap();
-        assert_eq!(frame.rows.len(), 2);
-        assert_eq!(frame.rows[1].current_text_len(), 1);
-        assert_eq!(frame.rows[1].max_text_len(), 5);
-    }
-
-
-    #[test]
-    fn it_resize_to_small() {
-        let mut frame = TextFrame::new(
-            TextColors::default(),
-            AscIICharWriter::new(),
-            Size::new(3, 3),
-            PixelFormat::Rgb,
-        );
-        frame
-            .append_string("1234")
-            .unwrap();
-        frame
-            .append_string("123")
-            .unwrap();
-        frame
-            .append_string("12")
-            .unwrap();
-
-        frame.resize_text_frame(Size::new(1, 1));
-
-        assert_eq!(frame.rows.len(), 1);
-        assert_eq!(frame.text_frame_size, Size::new(1, 1));
-
-        assert_eq!(frame.rows[0].current_text_len(), 1);
-        assert_eq!(frame.rows[0].max_text_len(), 1);
-
-        frame
-            .append_string("!")
-            .unwrap();
-        assert_eq!(frame.rows.len(), 1);
-        assert_eq!(frame.rows[0].current_text_len(), 1);
-        assert_eq!(frame.rows[0].max_text_len(), 1);
     }
 }
