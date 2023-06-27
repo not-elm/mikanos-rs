@@ -7,6 +7,7 @@ pub struct TextColors {
     background: PixelColor,
 }
 
+
 impl TextColors {
     pub const fn new(foreground: PixelColor, background: PixelColor) -> Self {
         Self {

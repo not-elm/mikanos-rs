@@ -59,6 +59,16 @@ impl MultipleLayer {
     pub fn into_enum(self) -> Layer {
         Layer::Multiple(self)
     }
+
+
+    /// # Panics
+    ///
+    /// Panics if the layer associated with the key does not exist.
+    #[inline]
+    pub fn force_find_by_key_mut(&mut self, key: &str) -> &mut Layer {
+        self.find_by_key_mut(key)
+            .unwrap()
+    }
 }
 
 

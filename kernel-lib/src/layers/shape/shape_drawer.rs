@@ -22,6 +22,12 @@ impl ShapeDrawer {
             pixel_writer: FrameBufferPixelWriter::new(config),
         }
     }
+
+
+    #[inline]
+    pub fn set_color(&mut self, color: PixelColor) {
+        self.color = color;
+    }
 }
 
 

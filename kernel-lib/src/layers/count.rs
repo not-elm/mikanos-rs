@@ -14,7 +14,7 @@ use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::{LayerFindable, MultipleLayer};
 use crate::layers::text::TextLayer;
 
-use super::text::console_colors::TextColors;
+use super::text::colors::TextColors;
 
 #[derive(Delegate)]
 pub struct CountLayer {

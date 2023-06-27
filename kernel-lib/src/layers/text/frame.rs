@@ -5,11 +5,11 @@ use common_lib::math::size::Size;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
-use crate::layers::text::console_colors::TextColors;
-use crate::layers::text::console_row::ConsoleRow;
+use crate::layers::text::colors::TextColors;
+use crate::layers::text::row::TextRow;
 
 pub struct TextFrame<Char> {
-    rows: Vec<ConsoleRow>,
+    rows: Vec<TextRow>,
     colors: TextColors,
     text_frame_size: Size,
     pixel_format: PixelFormat,
@@ -83,6 +83,24 @@ impl<Char: CharWritable> TextFrame<Char> {
     }
 
 
+    pub fn change_colors(&mut self, colors: TextColors) -> KernelResult {
+        self.colors = colors;
+        let mut rows = Vec::with_capacity(self.rows.len());
+
+        for i in 0..self.rows.len() {
+            let mut row = self.new_row();
+            for c in self.rows[i].texts() {
+                row.write_char(*c, &self.colors, &mut self.char_writer)?;
+            }
+            rows.push(row);
+        }
+
+        self.rows = rows;
+
+        Ok(())
+    }
+
+
     fn new_line(&mut self) {
         if self.text_frame_size.height() <= self.rows.len() {
             self.scroll();
@@ -113,8 +131,8 @@ impl<Char: CharWritable> TextFrame<Char> {
 
 
     #[inline]
-    fn new_row(&self) -> ConsoleRow {
-        ConsoleRow::new(
+    fn new_row(&self) -> TextRow {
+        TextRow::new(
             *self.colors.background(),
             self.char_writer.font_unit(),
             self.text_frame_size.width(),
@@ -130,8 +148,8 @@ mod tests {
     use common_lib::math::size::Size;
 
     use crate::gop::char::ascii_char_writer::AscIICharWriter;
-    use crate::layers::text::console_colors::TextColors;
-    use crate::layers::text::console_frame::TextFrame;
+    use crate::layers::text::colors::TextColors;
+    use crate::layers::text::frame::TextFrame;
 
     #[test]
     fn it_keeping_max_lines() {

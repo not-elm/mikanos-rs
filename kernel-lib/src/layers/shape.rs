@@ -4,6 +4,7 @@ use common_lib::math::rectangle::Rectangle;
 use common_lib::transform::transform2d::Transform2D;
 
 use crate::error::KernelResult;
+use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
@@ -25,6 +26,12 @@ impl ShapeLayer {
     #[inline(always)]
     pub const fn new(drawer: ShapeDrawer, transform: Transform2D) -> Self {
         Self { drawer, transform }
+    }
+
+
+    #[inline]
+    pub fn set_color(&mut self, color: PixelColor) {
+        self.drawer.set_color(color);
     }
 
 

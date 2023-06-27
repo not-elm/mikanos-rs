@@ -6,16 +6,18 @@ use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::font::get_font_from;
 use crate::gop::pixel::writer::pixel_writable::PixelWritable;
-use crate::layers::text::console_colors::TextColors;
+use crate::layers::text::colors::TextColors;
 
 #[derive(Default)]
 pub struct AscIICharWriter {}
+
 
 impl AscIICharWriter {
     pub fn new() -> Self {
         Self {}
     }
 }
+
 
 impl CharWritable for AscIICharWriter {
     fn write(

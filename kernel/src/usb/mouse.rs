@@ -14,8 +14,9 @@ pub struct MouseSubscriber;
 
 
 impl MouseSubscriber {
-    pub fn new() -> Self {
-        Self {}
+    #[inline(always)]
+    pub const fn new() -> Self {
+        Self
     }
 }
 
@@ -29,14 +30,14 @@ impl MouseSubscribable for MouseSubscriber {
         button: Option<MouseButton>,
     ) -> anyhow::Result<()> {
         update_cursor_layer(current_cursor, button)?;
-        update_draggable_layer(prev_cursor, current_cursor, prev_button, button)?;
+        update_window_layer(prev_cursor, current_cursor, prev_button, button)?;
 
         Ok(())
     }
 }
 
 
-fn update_draggable_layer(
+fn update_window_layer(
     prev_cursor: Vector2D<usize>,
     current_cursor: Vector2D<usize>,
     prev_button: Option<MouseButton>,
@@ -49,7 +50,7 @@ fn update_draggable_layer(
         let relative = current_cursor.relative(prev_cursor);
 
         if let Some(window_key) =
-            draggable_layer_key(&prev_cursor).or(draggable_layer_key(&current_cursor))
+            find_window_layer_key(&prev_cursor).or(find_window_layer_key(&current_cursor))
         {
             let mut layers = LAYERS.lock();
 
@@ -63,9 +64,10 @@ fn update_draggable_layer(
 
             layers
                 .update_layer(window_key.as_str(), |layer| {
-                    layer
-                        .move_to_relative(relative)
-                        .unwrap_or(());
+                    let window = layer.require_window().unwrap();
+
+                    window.activate();
+                    window.move_to_relative(relative).unwrap_or(());
                 })
                 .map_err(|e| anyhow::anyhow!("{e:?}"))?;
         }
@@ -74,7 +76,8 @@ fn update_draggable_layer(
 }
 
 
-fn draggable_layer_key(current_cursor: &Vector2D<usize>) -> Option<String> {
+#[inline(always)]
+fn find_window_layer_key(current_cursor: &Vector2D<usize>) -> Option<String> {
     LAYERS
         .lock()
         .find_window_layer_by_pos(current_cursor)
@@ -82,6 +85,7 @@ fn draggable_layer_key(current_cursor: &Vector2D<usize>) -> Option<String> {
 }
 
 
+#[inline]
 fn update_cursor_layer(
     current_cursor: Vector2D<usize>,
     button: Option<MouseButton>,
@@ -100,6 +104,7 @@ fn update_cursor_layer(
 }
 
 
+#[inline]
 fn cursor_color(button: Option<MouseButton>) -> PixelColor {
     button
         .map(|b| match b {

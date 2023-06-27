@@ -1,5 +1,6 @@
-use auto_delegate::Delegate;
 use core::fmt::{Display, Formatter};
+
+use auto_delegate::Delegate;
 
 use common_lib::transform::transform2d::Transformable2D;
 
@@ -44,7 +45,9 @@ impl Display for Layer {
         }
     }
 }
+
 impl Layer {
+    #[inline]
     pub fn require_cursor(&mut self) -> KernelResult<&mut CursorLayer> {
         match self {
             Self::Cursor(cursor) => Ok(cursor),
@@ -53,6 +56,7 @@ impl Layer {
     }
 
 
+    #[inline]
     pub fn require_text(&mut self) -> KernelResult<&mut TextLayer> {
         match self {
             Self::Text(text) => Ok(text),
@@ -61,6 +65,25 @@ impl Layer {
     }
 
 
+    #[inline]
+    pub fn require_toolbar(&mut self) -> KernelResult<&mut ToolbarLayer> {
+        match self {
+            Self::Toolbar(toolbar) => Ok(toolbar),
+            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+        }
+    }
+
+
+    #[inline]
+    pub fn require_shape(&mut self) -> KernelResult<&mut ShapeLayer> {
+        match self {
+            Self::Shape(shape) => Ok(shape),
+            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+        }
+    }
+
+
+    #[inline]
     pub fn require_window(&mut self) -> KernelResult<&mut WindowLayer> {
         match self {
             Self::Window(window) => Ok(window),
@@ -69,6 +92,7 @@ impl Layer {
     }
 
 
+    #[inline]
     pub fn require_count(&mut self) -> KernelResult<&mut CountLayer> {
         match self {
             Self::Count(count) => Ok(count),
@@ -80,11 +104,23 @@ impl Layer {
     }
 
 
+    #[inline]
     pub fn is_window(&self) -> bool {
         matches!(self, Self::Window(_))
     }
 
 
+    #[inline]
+    pub fn is_active_window(&self) -> bool {
+        if let Layer::Window(window) = self{
+            window.is_active()
+        }else{
+            false
+        }
+    }
+
+
+    #[inline]
     pub fn into_layer_key(self, key: &str) -> LayerKey {
         LayerKey::new(key, self)
     }

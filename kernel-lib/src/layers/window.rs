@@ -18,9 +18,13 @@ use crate::layers::window::toolbar::ToolbarLayer;
 pub(crate) mod toolbar;
 
 const TOOLBAR_HEIGHT: usize = 24;
+const TOOLBAR_LAYER_KEY: &str = "Window Toolbar";
+
 
 #[derive(Delegate)]
 pub struct WindowLayer {
+    active: bool,
+
     #[to(Transformable2D, LayerUpdatable, LayerFindable)]
     layers: MultipleLayer,
 }
@@ -35,6 +39,7 @@ impl WindowLayer {
         multiple_layer.new_layer(toolbar_layer(config, &transform, title));
 
         Self {
+            active: false,
             layers: multiple_layer,
         }
     }
@@ -49,11 +54,41 @@ impl WindowLayer {
 
         Ok(self)
     }
-    
+
+
+    pub fn activate(&mut self) {
+        self
+            .layers
+            .force_find_by_key_mut(TOOLBAR_LAYER_KEY)
+            .require_toolbar()
+            .unwrap()
+            .activate();
+
+        self.active = true;
+    }
+
+
+    pub fn deactivate(&mut self) {
+        self
+            .layers
+            .force_find_by_key_mut(TOOLBAR_LAYER_KEY)
+            .require_toolbar()
+            .unwrap()
+            .deactivate();
+
+        self.active = false;
+    }
+
 
     #[inline(always)]
     pub const fn into_enum(self) -> Layer {
         Layer::Window(self)
+    }
+
+
+    #[inline(always)]
+    pub const fn is_active(&self) -> bool {
+        self.active
     }
 }
 
@@ -89,7 +124,7 @@ fn toolbar_layer(config: FrameBufferConfig, transform: &Transform2D, title: &str
 
     ToolbarLayer::new(config, toolbar_transform, title)
         .into_enum()
-        .into_layer_key(title)
+        .into_layer_key(TOOLBAR_LAYER_KEY)
 }
 
 

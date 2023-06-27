@@ -8,7 +8,7 @@ use kernel_lib::layers::layer_key::LayerKey;
 use kernel_lib::layers::multiple_layer::MultipleLayer;
 use kernel_lib::layers::shape::shape_drawer::ShapeDrawer;
 use kernel_lib::layers::shape::ShapeLayer;
-use kernel_lib::layers::text::console_colors::TextColors;
+use kernel_lib::layers::text::colors::TextColors;
 use kernel_lib::layers::text::TextLayer;
 use kernel_lib::layers::window::WindowLayer;
 

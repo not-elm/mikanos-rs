@@ -12,9 +12,9 @@ use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
 use crate::gop::pixel::mapper::PixelMapper;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::writer::buff_pixel_writer::BuffPixelWriter;
-use crate::layers::text::console_colors::TextColors;
+use crate::layers::text::colors::TextColors;
 
-pub struct ConsoleRow {
+pub struct TextRow {
     text_buffs: Vec<u8>,
     buff_pixel_writer: BuffPixelWriter,
     font_unit: Size,
@@ -24,7 +24,7 @@ pub struct ConsoleRow {
 }
 
 
-impl ConsoleRow {
+impl TextRow {
     pub fn new(
         background: PixelColor,
         font_unit: Size,
@@ -104,6 +104,12 @@ impl ConsoleRow {
     }
 
 
+    #[inline]
+    pub fn texts(&self) -> &[char] {
+        self.texts.as_ref()
+    }
+
+
     #[cfg(test)]
     fn buff_width(&self) -> usize {
         self.texts.len() * font_buff_width(&self.font_unit)
@@ -174,8 +180,8 @@ mod tests {
     use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
     use crate::gop::pixel::mapper::PixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
-    use crate::layers::text::console_colors::TextColors;
-    use crate::layers::text::console_row::{ConsoleRow, new_text_row_buff};
+    use crate::layers::text::colors::TextColors;
+    use crate::layers::text::row::{new_text_row_buff, TextRow};
 
     fn padding_buff(
         padding: usize,
@@ -197,7 +203,7 @@ mod tests {
     #[test]
     fn it_write_char() {
         let mut writer = AscIICharWriter::new();
-        let mut row = ConsoleRow::new(PixelColor::black(), writer.font_unit(), 5, PixelFormat::Rgb);
+        let mut row = TextRow::new(PixelColor::black(), writer.font_unit(), 5, PixelFormat::Rgb);
 
 
         row.write_char(

@@ -18,12 +18,12 @@ use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
 
-use self::console_colors::TextColors;
-use self::console_frame::TextFrame;
+use self::colors::TextColors;
+use self::frame::TextFrame;
 
-pub mod console_colors;
-mod console_frame;
-mod console_row;
+pub mod colors;
+mod frame;
+mod row;
 
 
 #[derive(Delegate)]
@@ -65,6 +65,13 @@ impl TextLayer {
     pub fn delete_last(&mut self) {
         self.text_frame
             .delete_last()
+    }
+
+
+    #[inline(always)]
+    pub fn change_colors(&mut self, colors: TextColors) -> KernelResult {
+        self.text_frame
+            .change_colors(colors)
     }
 
 
@@ -129,7 +136,7 @@ mod tests {
 
     use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
     use crate::layers::layer_updatable::LayerUpdatable;
-    use crate::layers::text::console_colors::TextColors;
+    use crate::layers::text::colors::TextColors;
     use crate::layers::text::TextLayer;
 
     #[test]

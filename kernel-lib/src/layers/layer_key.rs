@@ -29,7 +29,7 @@ impl LayerKey {
         }
     }
 
-    
+
     #[inline(always)]
     pub fn key(&self) -> &str {
         self.key.as_str()
@@ -59,6 +59,12 @@ impl LayerKey {
             Layer::Window(window) => window.find_by_key_mut(key),
             _ => None,
         }
+    }
+
+
+    #[inline]
+    pub fn is_active_window(&self) -> bool {
+        self.layer.is_active_window()
     }
 }
 
@@ -102,3 +108,5 @@ impl LayerKey {
         fun(&mut self.layer);
     }
 }
+
+

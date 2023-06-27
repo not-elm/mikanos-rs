@@ -11,6 +11,7 @@ use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::kernel_error;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
+use crate::layers::window::WindowLayer;
 
 pub mod close_button;
 pub mod count;
@@ -115,6 +116,15 @@ impl Layers {
         self.layers
             .iter()
             .position(|layer| layer.key() == key)
+    }
+
+
+    #[inline]
+    pub fn find_active_window_layer_mut(&mut self) -> Option<&mut WindowLayer> {
+        self.layers
+            .iter_mut()
+            .find(|layer| layer.is_active_window())
+            .and_then(|layer| layer.layer_mut().require_window().ok())
     }
 
 

@@ -5,7 +5,7 @@ use kernel_lib::interrupt::interrupt_message::TaskMessage;
 use kernel_lib::task::priority_level::PriorityLevel;
 
 use crate::interrupt::timer::TASK_MANAGER;
-use crate::layers::{COUNT_LAYER2_KEY, COUNT_LAYER_KEY};
+use crate::layers::{COUNT_TEXT_LAYER2_KEY, COUNT_TEXT_LAYER_KEY};
 use crate::task::idle::idle;
 
 mod idle;
@@ -57,5 +57,5 @@ macro_rules! count_task {
 }
 
 
-count_task!(1, COUNT_LAYER_KEY);
-count_task!(2, COUNT_LAYER2_KEY);
+count_task!(1, COUNT_TEXT_LAYER_KEY);
+count_task!(2, COUNT_TEXT_LAYER2_KEY);

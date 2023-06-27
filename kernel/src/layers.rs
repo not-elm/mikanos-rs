@@ -27,17 +27,11 @@ pub struct GlobalLayers(OnceCell<PreemptiveMutex<Layers>>);
 
 
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
-
-pub const WINDOW_COUNT: &str = "WINDOW COUNT";
-pub const COUNT_LAYER_KEY: &str = "COUNT";
-pub const COUNT_LAYER2_KEY: &str = "COUNT 2";
-
-
+pub const COUNT_TEXT_LAYER_KEY: &str = "COUNT";
+pub const COUNT_TEXT_LAYER2_KEY: &str = "COUNT 2";
 pub const WINDOW_KEYBOARD: &str = "WINDOW KEYBOARD";
 pub const KEYBOARD_TEXT: &str = "WINDOW TEXT";
-
 pub const MOUSE_LAYER_KEY: &str = "MOUSE_CURSOR";
-
 pub const CONSOLE_LAYER_KEY: &str = "CONSOLE";
 
 
@@ -71,8 +65,8 @@ pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
 
     layers.new_layer(screen_background(config));
     layers.new_layer(console(config));
-    layers.new_layer(time_count_window(config, "Count1", Vector2D::new(300, 100), COUNT_LAYER_KEY)?);
-    layers.new_layer(time_count_window(config, "Count2", Vector2D::new(300, 200), COUNT_LAYER2_KEY)?);
+    layers.new_layer(time_count_window(config, "Count1", Vector2D::new(100, 100), COUNT_TEXT_LAYER_KEY, "Count Window 1")?);
+    layers.new_layer(time_count_window(config, "Count2", Vector2D::new(100, 200), COUNT_TEXT_LAYER2_KEY, "Count Window 2")?);
     layers.new_layer(window_keyboard(config)?);
     layers.new_layer(mouse(config));
 
