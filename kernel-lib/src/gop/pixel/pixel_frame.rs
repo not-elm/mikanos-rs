@@ -1,18 +1,12 @@
 use alloc::boxed::Box;
 use alloc::vec;
-use alloc::vec::Vec;
 
-use common_lib::math::rectangle::Rectangle;
-
-use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
-use crate::gop::pixel::Pixel;
-use crate::gop::pixel::pixel_color::PixelColor;
 use crate::gop::pixel::pixel_row::PixelRow;
+use crate::gop::pixel::Pixel;
 
 pub struct PixelFrame<'buff> {
-    pixels: Box<dyn Iterator<Item=Pixel> + 'buff>,
-    transparent: Option<PixelColor>,
+    pixels: Box<dyn Iterator<Item = Pixel> + 'buff>,
     converter: EnumPixelMapper,
     row_first: Option<Pixel>,
 }
@@ -20,35 +14,22 @@ pub struct PixelFrame<'buff> {
 
 impl<'buff> PixelFrame<'buff> {
     pub fn new(
-        mut pixels: impl Iterator<Item=Pixel> + 'buff,
+        mut pixels: impl Iterator<Item = Pixel> + 'buff,
         converter: EnumPixelMapper,
-        transparent: Option<PixelColor>,
     ) -> PixelFrame<'buff> {
         let row_first = pixels.next();
 
         Self {
             pixels: Box::new(pixels),
             converter,
-            transparent,
             row_first,
         }
-    }
-
-
-    pub fn rect(rect: Rectangle<usize>, color: PixelColor, converter: EnumPixelMapper) -> Self {
-        let rect_iter = rect.points();
-
-        Self::new(
-            rect_iter.map(move |p| Pixel::new(Some(color), p)),
-            converter,
-            Some(DISPLAY_BACKGROUND_COLOR),
-        )
     }
 }
 
 
 impl<'buff> Iterator for PixelFrame<'buff> {
-    type Item = Vec<u8>;
+    type Item = PixelRow<EnumPixelMapper>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let row_first = self.row_first?;
@@ -67,9 +48,9 @@ impl<'buff> Iterator for PixelFrame<'buff> {
                 break;
             }
         }
-        
-        let row = PixelRow::new(row, self.converter.clone(), self.transparent);
-        Some(row.pixels_buff())
+
+        let row = PixelRow::new(row, self.converter.clone());
+        Some(row)
     }
 }
 
@@ -82,8 +63,8 @@ mod tests {
     use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::pixel_frame::PixelFrame;
-    use crate::layers::cursor::cursor_buffer::{CURSOR_WIDTH, CursorBuffer};
-    use crate::layers::cursor::cursor_colors::CursorColors;
+    use crate::layers::cursor::buffer::{CursorBuffer, CURSOR_WIDTH};
+    use crate::layers::cursor::colors::CursorColors;
 
     #[test]
     fn it_correct_width() {
@@ -108,25 +89,4 @@ mod tests {
 
         assert!(row.is_some_and(|row| row.pixels_len() == CURSOR_WIDTH));
     }
-    //
-    //
-    // #[test]
-    // fn it_correct_height() {
-    //     let buff = CursorBuffer::default();
-    //     let pixels = buff.cursor_pixels(
-    //         Vector2D::zeros(),
-    //         None,
-    //         PixelColor::white(),
-    //         PixelColor::yellow(),
-    //     );
-    //
-    //     let pixel_frame = PixelFrame::new(
-    //         pixels,
-    //         EnumPixelMapper::new(PixelFormat::Bgr),
-    //         Some(PixelColor::black()),
-    //     );
-    //     let rows: Vec<PixelRow<EnumPixelMapper>> = pixel_frame.collect();
-    //
-    //     assert_eq!(rows.len(), CURSOR_HEIGHT);
-    // }
 }

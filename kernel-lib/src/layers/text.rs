@@ -65,8 +65,7 @@ impl TextLayer {
 
     #[inline(always)]
     pub fn delete_last(&mut self) {
-        self.text_frame
-            .delete_last()
+        self.text_frame.delete_last()
     }
 
 
@@ -116,7 +115,7 @@ pub(crate) fn update<'a>(
     back_buff: &mut ShadowFrameBuffer,
     draw_area: &Rectangle<usize>,
     origin: Vector2D<usize>,
-    src_buff: impl Iterator<Item=&'a [u8]>,
+    src_buff: impl Iterator<Item = &'a [u8]>,
 ) -> KernelResult {
     let diff_y = abs(origin.y() as isize - draw_area.origin().y() as isize);
     let diff_x = abs(origin.x() as isize - draw_area.origin().x() as isize);

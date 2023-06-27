@@ -3,9 +3,9 @@ use alloc::string::String;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
-use kernel_lib::layers::cursor::cursor_colors::CursorColors;
-use pci::class_driver::mouse::MouseButton;
+use kernel_lib::layers::cursor::colors::CursorColors;
 use pci::class_driver::mouse::subscribable::MouseSubscribable;
+use pci::class_driver::mouse::MouseButton;
 
 use crate::layers::{LAYERS, MOUSE_LAYER_KEY};
 
@@ -64,10 +64,14 @@ fn update_window_layer(
 
             layers
                 .update_layer(window_key.as_str(), |layer| {
-                    let window = layer.require_window().unwrap();
+                    let window = layer
+                        .require_window()
+                        .unwrap();
 
                     window.activate();
-                    window.move_to_relative(relative).unwrap_or(());
+                    window
+                        .move_to_relative(relative)
+                        .unwrap_or(());
                 })
                 .map_err(|e| anyhow::anyhow!("{e:?}"))?;
         }

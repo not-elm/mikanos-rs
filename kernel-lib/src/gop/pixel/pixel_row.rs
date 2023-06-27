@@ -1,39 +1,23 @@
-use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use common_lib::math::vector::Vector2D;
 
-use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::mapper::PixelMapper;
-use crate::gop::pixel::Pixel;
-use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::pixel::{calc_pixel_pos_from_vec2d, Pixel};
+use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 
 /// フレームバッファの一行分のピクセルを表します。
 #[derive(Debug, Clone)]
 pub struct PixelRow<Convert> {
     row: Vec<Pixel>,
     converter: Convert,
-    pixels_buff: Vec<u8>,
 }
 
 
 impl<Convert: PixelMapper> PixelRow<Convert> {
     #[inline]
-    pub fn new(
-        row: Vec<Pixel>,
-        mut converter: Convert,
-        transparent_color: Option<PixelColor>,
-    ) -> Self {
-        let pixels_buff = concat_all(
-            &row,
-            &mut converter,
-            transparent_color.unwrap_or(DISPLAY_BACKGROUND_COLOR),
-        );
-        Self {
-            row,
-            converter,
-            pixels_buff,
-        }
+    pub fn new(row: Vec<Pixel>, converter: Convert) -> Self {
+        Self { row, converter }
     }
 
 
@@ -62,8 +46,8 @@ impl<Convert: PixelMapper> PixelRow<Convert> {
 
 
     #[inline]
-    pub fn pixels_buff(self) -> Vec<u8> {
-        self.pixels_buff
+    pub fn pixels_buff(mut self, back_buff: &ShadowFrameBuffer) -> Vec<u8> {
+        concat_all(&self.row, &mut self.converter, back_buff)
     }
 
 
@@ -77,22 +61,34 @@ impl<Convert: PixelMapper> PixelRow<Convert> {
 fn concat_all(
     row: &Vec<Pixel>,
     converter: &mut impl PixelMapper,
-    transparent_color: PixelColor,
+    back_buff: &ShadowFrameBuffer,
 ) -> Vec<u8> {
     let mut pixels_buff: Vec<u8> = Vec::with_capacity(row.len() * converter.pixel_len());
 
     row.iter().for_each(|pixel| {
-        let buff = converter.convert_to_buff(
-            &pixel
-                .color
-                .unwrap_or(transparent_color),
-        );
-
-        pixels_buff.extend(buff);
+        pixels_buff.extend(buff(pixel, converter, back_buff));
     });
 
 
     pixels_buff
+}
+
+
+#[inline]
+fn buff(pixel: &Pixel, converter: &mut impl PixelMapper, back_buff: &ShadowFrameBuffer) -> [u8; 4] {
+    if let Some(color) = pixel.color {
+        converter.convert_to_buff(&color)
+    } else {
+        let origin = calc_pixel_pos_from_vec2d(back_buff.config_ref(), &pixel.pos()).unwrap();
+        let buff = back_buff.raw_ref();
+
+        [
+            buff[origin],
+            buff[origin + 1],
+            buff[origin + 2],
+            buff[origin + 3],
+        ]
+    }
 }
 
 
@@ -107,11 +103,11 @@ mod tests {
 
     use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
     use crate::gop::pixel::mapper::rgb_pixel_mapper::RgbPixelMapper;
-    use crate::gop::pixel::Pixel;
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::pixel_row::PixelRow;
-    use crate::layers::cursor::cursor_buffer::{CURSOR_WIDTH, CursorBuffer};
-    use crate::layers::cursor::cursor_colors::CursorColors;
+    use crate::gop::pixel::Pixel;
+    use crate::layers::cursor::buffer::{CursorBuffer, CURSOR_WIDTH};
+    use crate::layers::cursor::colors::CursorColors;
 
     #[test]
     fn it_correct_length() {

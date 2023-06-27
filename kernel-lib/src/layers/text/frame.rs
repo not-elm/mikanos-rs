@@ -67,6 +67,7 @@ impl<Char: CharWritable> TextFrame<Char> {
     }
 
 
+    #[inline]
     pub fn frame_buff_lines(&self) -> Vec<Vec<&[u8]>> {
         self.rows
             .iter()

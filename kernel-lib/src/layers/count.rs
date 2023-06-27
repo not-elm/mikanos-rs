@@ -24,6 +24,7 @@ pub struct CountLayer {
 
 
 impl CountLayer {
+    #[inline]
     pub fn new(config: FrameBufferConfig, transform: Transform2D) -> KernelResult<Self> {
         Ok(Self {
             layers: count_layers(config, transform)?,
@@ -31,6 +32,7 @@ impl CountLayer {
     }
 
 
+    #[inline]
     pub fn write_count(&mut self, count: usize) {
         self.layers
             .find_by_key_mut("count text")
@@ -42,6 +44,7 @@ impl CountLayer {
     }
 
 
+    #[inline]
     pub fn into_enum(self) -> Layer {
         Layer::Count(self)
     }
