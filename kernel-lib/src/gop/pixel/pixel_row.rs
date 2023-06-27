@@ -69,7 +69,6 @@ fn concat_all(
         pixels_buff.extend(buff(pixel, converter, back_buff));
     });
 
-
     pixels_buff
 }
 
