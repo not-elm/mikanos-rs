@@ -4,6 +4,7 @@ use alloc::vec;
 use core::cell::OnceCell;
 use core::sync::atomic::{AtomicU8, Ordering};
 
+use crate::{interrupt, kernel_error};
 use crate::context::arch::x86_64::Context;
 use crate::error::KernelResult;
 use crate::interrupt::interrupt_message::TaskMessage;
@@ -11,7 +12,6 @@ use crate::task::list::TaskList;
 use crate::task::priority_level::PriorityLevel;
 use crate::task::status::Status;
 use crate::task::status::Status::{Pending, Running, Sleep};
-use crate::{interrupt, kernel_error};
 
 mod list;
 pub mod priority_level;
@@ -35,13 +35,11 @@ impl GlobalTaskManger {
 
 
     pub fn new_task(&mut self, priority_level: PriorityLevel, rip: u64, rsi: u64) {
-        unsafe {
-            self.0
-                .get_mut()
-                .unwrap()
-                .new_task(priority_level)
-                .init_context(rip, rsi);
-        }
+        self.0
+            .get_mut()
+            .unwrap()
+            .new_task(priority_level)
+            .init_context(rip, rsi);
     }
 
 
@@ -234,7 +232,7 @@ impl Task {
     }
 
 
-    pub unsafe fn init_context(&mut self, rip: u64, rsi: u64) {
+    pub fn init_context(&mut self, rip: u64, rsi: u64) {
         let task_end = self.stack.as_ptr_range().end as u64;
         let rsp = (task_end & !0xF) - 8;
         self.context

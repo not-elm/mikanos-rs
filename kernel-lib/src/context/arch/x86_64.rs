@@ -157,7 +157,7 @@ impl Context {
     }
 
 
-    pub unsafe fn init_context(&mut self, rip: u64, rdi: u64, rsi: u64, rsp: u64) {
+    pub fn init_context(&mut self, rip: u64, rdi: u64, rsi: u64, rsp: u64) {
         self.set_rip(rip);
         self.set_rdi(rdi);
         self.set_rsi(rsi);
@@ -166,18 +166,20 @@ impl Context {
         self.set_cs(1 << 3);
         self.set_ss(2 << 3);
         self.set_rsp(rsp);
-        self
-            .fx_save_area
-            .as_mut_ptr()
-            .add(24)
-            .cast::<u32>()
-            .write_volatile(0x1F80);
+        unsafe {
+            self
+                .fx_save_area
+                .as_mut_ptr()
+                .add(24)
+                .cast::<u32>()
+                .write_volatile(0x1F80);
+        }
     }
 
 
     #[inline(always)]
     pub fn switch_to(&self, next_task: &Context) {
-        asm_switch_context(&next_task, self);
+        asm_switch_context(next_task, self);
     }
 
 
