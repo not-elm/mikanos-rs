@@ -72,20 +72,11 @@ mod tests {
         let pixels = buff.cursor_pixels(
             Vector2D::zeros(),
             None,
-            CursorColors::new(
-                PixelColor::white(),
-                PixelColor::yellow(),
-                Some(PixelColor::black()),
-            ),
+            CursorColors::new(PixelColor::white(), PixelColor::yellow()),
         );
 
-        let mut pixel_frame = PixelFrame::new(
-            pixels,
-            EnumPixelMapper::new(PixelFormat::Bgr),
-            Some(PixelColor::black()),
-        );
+        let mut pixel_frame = PixelFrame::new(pixels, EnumPixelMapper::new(PixelFormat::Bgr));
         let row = pixel_frame.next();
-
 
         assert!(row.is_some_and(|row| row.pixels_len() == CURSOR_WIDTH));
     }

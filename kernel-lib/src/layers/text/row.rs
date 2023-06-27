@@ -47,8 +47,7 @@ impl TextRow {
         colors: &TextColors,
         char_writer: &mut impl CharWritable,
     ) -> KernelResult<bool> {
-        if self.need_new_line()
-        {
+        if self.need_new_line() {
             return Ok(true);
         }
 
@@ -67,9 +66,7 @@ impl TextRow {
     }
 
 
-    pub fn delete_last(
-        &mut self,
-    ) {
+    pub fn delete_last(&mut self) {
         self.texts.pop();
         let pos = Vector2D::new(self.texts.len() * self.font_unit.width(), 0);
         let draw_area = Rectangle::from_pos_and_size(pos, self.font_unit);
@@ -81,10 +78,11 @@ impl TextRow {
 
     #[inline(always)]
     pub fn need_new_line(&self) -> bool {
-        self.max_text_len <= self.texts.len() || self
-            .texts
-            .last()
-            .is_some_and(|c| *c == '\n')
+        self.max_text_len <= self.texts.len()
+            || self
+                .texts
+                .last()
+                .is_some_and(|c| *c == '\n')
     }
 
 
@@ -97,7 +95,7 @@ impl TextRow {
         Some(lines)
     }
 
-    
+
     #[inline]
     pub fn frame_buff_line(&self, y: usize) -> &[u8] {
         let origin = y * self.max_buff_width();
@@ -193,7 +191,7 @@ mod tests {
         pixel_format: PixelFormat,
         text_buff: &[u8],
     ) -> Vec<u8> {
-        let v = *EnumPixelMapper::new(pixel_format).convert_to_buff(background);
+        let v = EnumPixelMapper::new(pixel_format).convert_to_buff(background);
         let mut buf = vec![v; padding * font_unit.width() * 4]
             .flatten()
             .to_vec();
@@ -214,7 +212,7 @@ mod tests {
             &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(row.buff_width(), writer.font_unit().width() * 4);
         assert!(row
@@ -280,8 +278,7 @@ mod tests {
 
         const PADDING_LEN: usize = 8;
         assert!(array_eq(
-            vec![[0xFF, 0xFF, 0x00, 0x00]; PADDING_LEN / 4]
-                .flatten(),
+            vec![[0xFF, 0xFF, 0x00, 0x00]; PADDING_LEN / 4].flatten(),
             &buf[0..PADDING_LEN],
         ));
     }

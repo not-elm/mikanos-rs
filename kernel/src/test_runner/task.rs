@@ -1,6 +1,5 @@
 use kernel_lib::context::arch::x86_64::Context;
 use kernel_lib::serial_println;
-use kernel_lib::task::TaskManager;
 
 #[test_case]
 #[allow(clippy::fn_to_numeric_cast)]
@@ -26,4 +25,3 @@ fn it_switch_task_context() {
         serial_println!("2. Back to Task A");
     }
 }
-

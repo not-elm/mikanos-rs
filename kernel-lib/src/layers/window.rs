@@ -1,9 +1,9 @@
 use auto_delegate::Delegate;
 
-use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transformable2D};
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
+use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transformable2D};
 
 use crate::error::KernelResult;
 use crate::gop::pixel::pixel_color::PixelColor;
@@ -51,32 +51,31 @@ impl WindowLayer {
             .map_err(|e| kernel_error!(e))?;
 
         self.layers.new_layer(layer);
-
         Ok(self)
     }
 
 
-    pub fn activate(&mut self) {
-        self
-            .layers
+    pub fn activate(&mut self) -> KernelResult {
+        self.layers
             .force_find_by_key_mut(TOOLBAR_LAYER_KEY)
             .require_toolbar()
             .unwrap()
-            .activate();
+            .activate()?;
 
         self.active = true;
+        Ok(())
     }
 
 
-    pub fn deactivate(&mut self) {
-        self
-            .layers
+    pub fn deactivate(&mut self) -> KernelResult {
+        self.layers
             .force_find_by_key_mut(TOOLBAR_LAYER_KEY)
             .require_toolbar()
             .unwrap()
-            .deactivate();
+            .deactivate()?;
 
         self.active = false;
+        Ok(())
     }
 
 
@@ -98,8 +97,8 @@ fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey 
         ShapeDrawer::new(config, PixelColor::black()),
         Transform2D::new(Vector2D::zeros(), transform.size()),
     )
-        .into_enum()
-        .into_layer_key("window shadow")
+    .into_enum()
+    .into_layer_key("window shadow")
 }
 
 
@@ -111,8 +110,8 @@ fn window_background_layer(config: FrameBufferConfig, transform: &Transform2D) -
             Size::new(transform.size().width() - 1, transform.size().height() - 1),
         ),
     )
-        .into_enum()
-        .into_layer_key("window background")
+    .into_enum()
+    .into_layer_key("window background")
 }
 
 

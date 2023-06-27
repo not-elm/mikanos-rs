@@ -68,7 +68,7 @@ fn update_window_layer(
                         .require_window()
                         .unwrap();
 
-                    window.activate();
+                    let _ = window.activate();
                     window
                         .move_to_relative(relative)
                         .unwrap_or(());

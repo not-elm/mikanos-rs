@@ -46,7 +46,7 @@ impl<Convert: PixelMapper> PixelRow<Convert> {
 
 
     #[inline]
-    pub fn pixels_buff(mut self, back_buff: &ShadowFrameBuffer) -> Vec<u8> {
+    pub fn pixels_buff(&mut self, back_buff: &ShadowFrameBuffer) -> Vec<u8> {
         concat_all(&self.row, &mut self.converter, back_buff)
     }
 
@@ -97,7 +97,7 @@ mod tests {
     use alloc::vec::Vec;
 
     use common_lib::array::array_eq;
-    use common_lib::frame_buffer::PixelFormat;
+    use common_lib::frame_buffer::{FrameBufferConfig, PixelFormat};
     use common_lib::math::vector::Vector2D;
 
     use crate::gop::pixel::mapper::enum_pixel_mapper::EnumPixelMapper;
@@ -105,6 +105,7 @@ mod tests {
     use crate::gop::pixel::pixel_color::PixelColor;
     use crate::gop::pixel::pixel_row::PixelRow;
     use crate::gop::pixel::Pixel;
+    use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
     use crate::layers::cursor::buffer::{CursorBuffer, CURSOR_WIDTH};
     use crate::layers::cursor::colors::CursorColors;
 
@@ -116,7 +117,6 @@ mod tests {
                 Pixel::default(),
             ],
             RgbPixelMapper::default(),
-            None,
         );
 
 
@@ -129,10 +129,7 @@ mod tests {
         let cursor_buff = CursorBuffer::default();
         let pixel_frame = cursor_buff.pixel_frame(
             Vector2D::zeros(),
-            None,
-            CursorColors::default()
-                .change_border(PixelColor::yellow())
-                .change_transparent(PixelColor::black()),
+            CursorColors::default().change_border(PixelColor::yellow()),
             EnumPixelMapper::new(PixelFormat::Rgb),
         );
 
@@ -144,7 +141,8 @@ mod tests {
         expect[1] = 0xFF;
 
         assert_eq!(row.pixels_len_per_row(), expect.len());
-        let row_pixels_buff = row.pixels_buff();
-        assert!(array_eq(row_pixels_buff, &expect));
+        let back_buff = ShadowFrameBuffer::new(FrameBufferConfig::mock());
+        let row_pixels_buff = row.pixels_buff(&back_buff);
+        assert!(array_eq(&row_pixels_buff, &expect));
     }
 }

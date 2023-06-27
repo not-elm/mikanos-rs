@@ -5,7 +5,6 @@ use common_lib::math::abs::abs;
 use common_lib::math::rectangle::Rectangle;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::transform2d::Transformable2D;
 
 use crate::error::KernelResult;
 use crate::gop::pixel::calc_pixel_pos;
@@ -65,7 +64,7 @@ impl CursorDrawer {
                 .pixel_format,
         );
 
-        for (y, row) in self
+        for (y, mut row) in self
             .cursor_buff
             .pixel_frame(origin, self.colors, pixel_mapper)
             .enumerate()
