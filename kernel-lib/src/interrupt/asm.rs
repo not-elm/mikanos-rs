@@ -1,23 +1,28 @@
 use core::arch::asm;
 
 use crate::interrupt::idt_descriptor::IdtDescriptor;
-use crate::register::rflags::RFlags;
 
 #[inline(always)]
 pub fn without_interrupt<F, Output>(f: F) -> Output
-where
-    F: FnOnce() -> Output,
+    where
+        F: FnOnce() -> Output,
 {
-    let enable = RFlags::read().are_enable_interrupt();
+    #[cfg(test)]
+    { f() }
+    #[cfg(not(test))]
+    {
+        use crate::register::rflags::RFlags;
+        let enable = RFlags::read().are_enable_interrupt();
 
-    cli();
-    let ret = f();
+        cli();
+        let ret = f();
 
-    if enable {
-        sti();
+        if enable {
+            sti();
+        }
+
+        ret
     }
-
-    ret
 }
 
 

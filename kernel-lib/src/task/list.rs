@@ -1,7 +1,7 @@
 use alloc::vec::Vec;
 
-use crate::kernel_error;
 use crate::error::{KernelError, KernelResult};
+use crate::kernel_error;
 use crate::task::status::Status;
 use crate::task::status::Status::Pending;
 use crate::task::switch::SwitchCommand;
@@ -276,9 +276,9 @@ mod tests {
         assert_task!(0, 1, 3);
         assert_task!(1, 2, 3);
         assert_task!(2, 4, 3);
-        assert_task!(3, 5, 2);
-        assert_task!(4, 3, 1);
         // Running tasks are moved to the end of the same level group.
-        assert_task!(5, 0, 1);
+        assert_task!(3, 0, 3);
+        assert_task!(4, 5, 2);
+        assert_task!(5, 3, 1);
     }
 }

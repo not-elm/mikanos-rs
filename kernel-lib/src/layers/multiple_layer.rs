@@ -141,9 +141,9 @@ mod tests {
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
+    use crate::gop::pixel::pixel_color::PixelColor;
     use crate::layers::layer::Layer;
     use crate::layers::multiple_layer::MultipleLayer;
-    use crate::layers::shape::shape_colors::ShapeColor;
     use crate::layers::shape::shape_drawer::ShapeDrawer;
     use crate::layers::shape::ShapeLayer;
 
@@ -156,10 +156,10 @@ mod tests {
 
         layer.new_layer(
             Layer::Shape(ShapeLayer::new(
-                ShapeDrawer::new(FrameBufferConfig::mock(), ShapeColor::default()),
+                ShapeDrawer::new(FrameBufferConfig::mock(), PixelColor::black()),
                 Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
             ))
-            .into_layer_key(""),
+                .into_layer_key(""),
         );
 
         layer
