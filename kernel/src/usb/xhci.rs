@@ -60,7 +60,7 @@ fn start_xhc_controller(
         MouseDriver::new(mouse_subscriber),
         build_keyboard_driver(),
     )
-        .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
+    .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
 
     xhc_controller
         .reset_port()

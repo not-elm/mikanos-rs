@@ -20,7 +20,9 @@ impl<T> PreemptiveMutex<T> {
                 return resource;
             }
             unsafe {
-                TASK_MANAGER.switch().unwrap();
+                TASK_MANAGER
+                    .switch_ignore_priority()
+                    .unwrap();
             }
         }
     }

@@ -10,6 +10,7 @@
 #![allow(clippy::identity_op)]
 #![feature(thread_local)]
 #![feature(asm_const)]
+#![feature(atomic_bool_fetch_not)]
 
 
 #[cfg(feature = "alloc")]
@@ -31,9 +32,9 @@ pub mod paging;
 pub mod register;
 pub mod segmentation;
 pub mod serial;
+pub mod sync;
 pub mod task;
 pub mod timer;
-pub mod sync;
 
 pub mod volatile_bits {
     pub use volatile_bits::*;

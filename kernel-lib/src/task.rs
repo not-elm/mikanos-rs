@@ -16,10 +16,10 @@ use crate::task::status::Status;
 use crate::task::status::Status::{Pending, Running, Sleep};
 
 mod list;
+pub mod message;
 pub mod priority_level;
 mod status;
 mod switch;
-pub mod message;
 
 
 pub static mut TASK_MANAGER: PreemptiveTaskManager = PreemptiveTaskManager::new();
@@ -92,6 +92,17 @@ impl PreemptiveTaskManager {
 
     #[inline(always)]
     pub fn switch(&mut self) -> KernelResult {
+        interrupt::asm::without_interrupt(|| {
+            self.task_manager
+                .get_mut()
+                .unwrap()
+                .switch_task()
+        })
+    }
+
+
+    #[inline(always)]
+    pub fn switch_ignore_priority(&mut self) -> KernelResult {
         interrupt::asm::without_interrupt(|| {
             self.task_manager
                 .get_mut()
@@ -270,8 +281,7 @@ impl Task {
 
 impl Debug for Task {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        f
-            .debug_struct("Task")
+        f.debug_struct("Task")
             .field("id", &self.id)
             .field("priority_level", &self.priority_level)
             .finish()

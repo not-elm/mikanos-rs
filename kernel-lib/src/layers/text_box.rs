@@ -1,4 +1,5 @@
 use core::fmt::Write;
+use core::sync::atomic::{AtomicBool, Ordering};
 
 use auto_delegate::Delegate;
 
@@ -10,12 +11,12 @@ use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
-use crate::layers::LAYERS;
 use crate::layers::multiple_layer::MultipleLayer;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
 use crate::layers::text::colors::TextColors;
 use crate::layers::text::TextLayer;
+use crate::layers::LAYERS;
 use crate::timer::handler::TimeHandle;
 
 const TEXT_LAYER_KEY: &str = "Text Box Text";
@@ -46,8 +47,7 @@ impl TextBoxLayer {
 
     #[inline(always)]
     pub fn delete_last(&mut self) {
-        self
-            .text_layer()
+        self.text_layer()
             .delete_last();
 
         self.update_text_cursor_pos();
@@ -57,9 +57,11 @@ impl TextBoxLayer {
     pub fn update_text_cursor_color(&mut self) {
         self.visible_text_cursor = !self.visible_text_cursor;
         if self.visible_text_cursor {
-            self.text_cursor_layer().set_color(PixelColor::black());
+            self.text_cursor_layer()
+                .set_color(PixelColor::black());
         } else {
-            self.text_cursor_layer().set_color(PixelColor::white());
+            self.text_cursor_layer()
+                .set_color(PixelColor::white());
         }
     }
 
@@ -83,8 +85,7 @@ impl TextBoxLayer {
 
     #[inline(always)]
     fn text_cursor_layer(&mut self) -> &mut ShapeLayer {
-        self
-            .layers
+        self.layers
             .force_find_by_key_mut(CURSOR_LAYER_KEY)
             .require_shape()
             .unwrap()
@@ -93,8 +94,7 @@ impl TextBoxLayer {
 
     #[inline(always)]
     fn text_layer(&mut self) -> &mut TextLayer {
-        self
-            .layers
+        self.layers
             .force_find_by_key_mut(TEXT_LAYER_KEY)
             .require_text()
             .unwrap()
@@ -104,8 +104,7 @@ impl TextBoxLayer {
 
 impl Write for TextBoxLayer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        self
-            .text_layer()
+        self.text_layer()
             .write_str(s)?;
 
         self.update_text_cursor_pos();
@@ -115,12 +114,12 @@ impl Write for TextBoxLayer {
 }
 
 
-fn text_box_layers(config: FrameBufferConfig, transform: Transform2D) -> (MultipleLayer, TimeHandle) {
+fn text_box_layers(
+    config: FrameBufferConfig,
+    transform: Transform2D,
+) -> (MultipleLayer, TimeHandle) {
     let mut layers = MultipleLayer::new(transform);
-    layers.new_layer(inner_shadow(
-        config,
-        layers.transform(),
-    ));
+    layers.new_layer(inner_shadow(config, layers.transform()));
     layers.new_layer(drop_shadow(config, layers.transform()));
     layers.new_layer(background(config, layers.transform()));
     layers.new_layer(text(config));
@@ -181,22 +180,24 @@ fn text(config: FrameBufferConfig) -> LayerKey {
 
 
 fn cursor(config: FrameBufferConfig) -> (LayerKey, TimeHandle) {
-    let cursor_handle = TimeHandle::start_dispatch_on_main(70, || {
+    let visible = AtomicBool::new(true);
+    let cursor_handle = TimeHandle::start_dispatch_on_main(70, move || {
         LAYERS
             .lock()
-            .update_layer("WINDOW TEXT", |layer| {
-                layer
-                    .require_text_box()
-                    .unwrap()
-                    .update_text_cursor_color();
+            .update_layer(CURSOR_LAYER_KEY, |layer| {
+                let text = layer.require_shape().unwrap();
+                if visible.fetch_not(Ordering::Relaxed) {
+                    text.set_color(PixelColor::black())
+                } else {
+                    text.set_color(PixelColor::white())
+                }
             })
             .unwrap();
     });
 
     let transform = Transform2D::new(Vector2D::new(3, 3), Size::new(1, 14));
     let layer = ShapeLayer::new(ShapeDrawer::new(config, PixelColor::black()), transform);
-    let layer_key = Layer::Shape(layer)
-        .into_layer_key(CURSOR_LAYER_KEY);
+    let layer_key = Layer::Shape(layer).into_layer_key(CURSOR_LAYER_KEY);
 
     (layer_key, cursor_handle)
 }
