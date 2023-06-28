@@ -2,6 +2,7 @@ use alloc::vec::Vec;
 
 use common_lib::frame_buffer::PixelFormat;
 use common_lib::math::size::Size;
+use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
@@ -12,6 +13,7 @@ pub struct TextFrame<Char> {
     rows: Vec<TextRow>,
     colors: TextColors,
     text_frame_size: Size,
+    text_unit: Size,
     pixel_format: PixelFormat,
     char_writer: Char,
 }
@@ -22,6 +24,7 @@ impl<Char: CharWritable> TextFrame<Char> {
         colors: TextColors,
         char_writer: Char,
         text_frame_size: Size,
+        text_unit: Size,
         pixel_format: PixelFormat,
     ) -> Self {
         let mut me = Self {
@@ -29,10 +32,19 @@ impl<Char: CharWritable> TextFrame<Char> {
             char_writer,
             colors,
             text_frame_size,
+            text_unit,
             pixel_format,
         };
         me.add_row();
         me
+    }
+
+
+    pub fn text_cursor_pos(&self) -> Vector2D<usize> {
+        let x = self.rows.last().unwrap().texts().len() * self.text_unit.width();
+        let y = (self.rows.len() - 1) * self.text_unit.height();
+
+        Vector2D::new(x, y)
     }
 
 

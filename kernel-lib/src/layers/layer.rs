@@ -12,6 +12,7 @@ use crate::layers::layer_key::LayerKey;
 use crate::layers::layer_updatable::LayerUpdatable;
 use crate::layers::shape::ShapeLayer;
 use crate::layers::text::TextLayer;
+use crate::layers::text_box::TextBoxLayer;
 use crate::layers::window::toolbar::ToolbarLayer;
 use crate::layers::window::WindowLayer;
 
@@ -29,7 +30,9 @@ pub enum Layer {
     Multiple(MultipleLayer),
     Count(CountLayer),
     Toolbar(ToolbarLayer),
+    TextBox(TextBoxLayer),
 }
+
 
 impl Display for Layer {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
@@ -60,6 +63,15 @@ impl Layer {
     pub fn require_text(&mut self) -> KernelResult<&mut TextLayer> {
         match self {
             Self::Text(text) => Ok(text),
+            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+        }
+    }
+
+
+    #[inline]
+    pub fn require_text_box(&mut self) -> KernelResult<&mut TextBoxLayer> {
+        match self {
+            Self::TextBox(text_box) => Ok(text_box),
             _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
         }
     }
@@ -112,9 +124,9 @@ impl Layer {
 
     #[inline]
     pub fn is_active_window(&self) -> bool {
-        if let Layer::Window(window) = self{
+        if let Layer::Window(window) = self {
             window.is_active()
-        }else{
+        } else {
             false
         }
     }

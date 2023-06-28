@@ -1,4 +1,7 @@
 use alloc::vec::Vec;
+use core::cell::OnceCell;
+
+use spin::MutexGuard;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
@@ -6,12 +9,13 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::builder::Transform2DBuilder;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
-use crate::error::KernelResult;
+use crate::error::{KernelError, KernelResult, LayerReason};
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::kernel_error;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::window::WindowLayer;
+use crate::sync::preemptive_mutex::PreemptiveMutex;
 
 pub mod close_button;
 pub mod count;
@@ -24,6 +28,35 @@ pub mod plain;
 pub mod shape;
 pub mod text;
 pub mod window;
+pub mod text_box;
+
+
+pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
+
+pub struct GlobalLayers(OnceCell<PreemptiveMutex<Layers>>);
+
+
+impl GlobalLayers {
+    pub const fn new_uninit() -> GlobalLayers {
+        Self(OnceCell::new())
+    }
+
+    pub fn init(&self, frame_buffer_config: FrameBufferConfig) -> KernelResult {
+        let layers = Layers::new(frame_buffer_config);
+
+        self.0
+            .set(PreemptiveMutex::new(layers))
+            .map_err(|_| KernelError::FailedOperateLayer(LayerReason::FailedInitialize))
+    }
+
+
+    pub fn lock(&self) -> MutexGuard<Layers> {
+        self.0.get().unwrap().lock()
+    }
+}
+
+
+unsafe impl Sync for GlobalLayers {}
 
 
 pub fn frame_buffer_layer_transform(frame_buffer_config: FrameBufferConfig) -> Transform2D {
@@ -83,8 +116,7 @@ impl Layers {
     pub fn update_layer(&mut self, key: &str, fun: impl FnOnce(&mut Layer)) -> KernelResult {
         let prev = self
             .layer_ref(key)?
-            .transform_ref()
-            .clone();
+            .transform();
 
         let frame_rect = self.frame_rect();
         let layer = self.layer_mut(key)?;

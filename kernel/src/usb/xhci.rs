@@ -1,4 +1,6 @@
-use kernel_lib::interrupt::interrupt_message::TaskMessage;
+use kernel_lib::layers::LAYERS;
+use kernel_lib::task::message::TaskMessage;
+use kernel_lib::task::TASK_MANAGER;
 use kernel_lib::timer::TIME_HANDLE_MANAGER;
 use pci::class_driver::mouse::driver::MouseDriver;
 use pci::class_driver::mouse::subscribable::MouseSubscribable;
@@ -8,8 +10,6 @@ use pci::xhc::registers::memory_mapped_addr::MemoryMappedAddr;
 use pci::xhc::XhcController;
 
 use crate::apic::TIMER_200_MILLI_INTERVAL;
-use crate::interrupt::timer::TASK_MANAGER;
-use crate::layers::LAYERS;
 use crate::task::task_message_iter::TaskMessageIter;
 use crate::usb::keyboard::build_keyboard_driver;
 
@@ -34,6 +34,10 @@ pub fn start_xhci_host_controller(
 
         TaskMessage::Count { count, layer_key } => {
             update_count(count, &layer_key);
+        }
+
+        TaskMessage::Dispatch(handler) => {
+            handler();
         }
 
         _ => {}

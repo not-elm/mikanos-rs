@@ -38,7 +38,6 @@ mod interrupt;
 mod layers;
 mod paging;
 mod qemu;
-pub mod sync;
 mod task;
 #[cfg(test)]
 mod test_runner;

@@ -1,7 +1,8 @@
 use spin::{Mutex, MutexGuard};
 
-use crate::interrupt::timer::TASK_MANAGER;
-use kernel_lib::interrupt;
+
+use crate::interrupt;
+use crate::task::TASK_MANAGER;
 
 #[repr(transparent)]
 pub struct PreemptiveMutex<T: ?Sized>(Mutex<T>);

@@ -1,3 +1,5 @@
+use core::cell::Cell;
+
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::rectangle::Rectangle;
 
@@ -9,7 +11,7 @@ use crate::layers::layer_updatable::LayerUpdatable;
 
 #[derive(Debug, Clone)]
 pub struct ShapeDrawer {
-    color: PixelColor,
+    color: Cell<PixelColor>,
     pixel_writer: FrameBufferPixelWriter,
 }
 
@@ -18,15 +20,15 @@ impl ShapeDrawer {
     #[inline(always)]
     pub const fn new(config: FrameBufferConfig, color: PixelColor) -> Self {
         Self {
-            color,
+            color: Cell::new(color),
             pixel_writer: FrameBufferPixelWriter::new(config),
         }
     }
 
 
     #[inline]
-    pub fn set_color(&mut self, color: PixelColor) {
-        self.color = color;
+    pub fn set_color(&self, color: PixelColor) {
+        self.color.replace(color);
     }
 }
 
@@ -39,6 +41,6 @@ impl LayerUpdatable for ShapeDrawer {
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
         self.pixel_writer
-            .fill_rect(shadow_frame, draw_area, &self.color)
+            .fill_rect(shadow_frame, draw_area, &self.color.get())
     }
 }

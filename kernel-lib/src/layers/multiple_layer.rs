@@ -118,8 +118,8 @@ impl Transformable2D for MultipleLayer {
 
 
     #[inline(always)]
-    fn transform_ref(&self) -> &Transform2D {
-        self.transform.transform_ref()
+    fn transform(&self) -> Transform2D {
+        self.transform.transform()
     }
 
 

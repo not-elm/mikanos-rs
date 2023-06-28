@@ -2,7 +2,6 @@ use crate::task::status::Status;
 use crate::task::status::Status::Running;
 use crate::task::Task;
 
-#[derive(Debug)]
 pub struct SwitchCommand<'t> {
     running: &'t Task,
     next: &'t Task,

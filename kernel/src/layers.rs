@@ -1,29 +1,21 @@
-use core::cell::OnceCell;
 use core::fmt::Write;
-
-use spin::MutexGuard;
 
 use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::vector::Vector2D;
-use kernel_lib::error::{KernelError, KernelResult, LayerReason};
-use kernel_lib::layers::Layers;
+use kernel_lib::error::KernelResult;
+use kernel_lib::layers::LAYERS;
 
 use crate::layers::console::console;
 use crate::layers::mouse::mouse;
 use crate::layers::screen::screen_background;
 use crate::layers::time_count::time_count_window;
 use crate::layers::window_keyboard::window_keyboard;
-use crate::sync::preemptive_mutex::PreemptiveMutex;
 
 mod console;
 mod mouse;
 mod screen;
 mod time_count;
 mod window_keyboard;
-
-pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
-
-pub struct GlobalLayers(OnceCell<PreemptiveMutex<Layers>>);
 
 
 pub const BACKGROUND_LAYER_KEY: &str = "BACKGROUND";
@@ -33,29 +25,6 @@ pub const WINDOW_KEYBOARD: &str = "WINDOW KEYBOARD";
 pub const KEYBOARD_TEXT: &str = "WINDOW TEXT";
 pub const MOUSE_LAYER_KEY: &str = "MOUSE_CURSOR";
 pub const CONSOLE_LAYER_KEY: &str = "CONSOLE";
-
-
-impl GlobalLayers {
-    pub const fn new_uninit() -> GlobalLayers {
-        Self(OnceCell::new())
-    }
-
-    pub fn init(&self, frame_buffer_config: FrameBufferConfig) -> KernelResult {
-        let layers = Layers::new(frame_buffer_config);
-
-        self.0
-            .set(PreemptiveMutex::new(layers))
-            .map_err(|_| KernelError::FailedOperateLayer(LayerReason::FailedInitialize))
-    }
-
-
-    pub fn lock(&self) -> MutexGuard<Layers> {
-        self.0.get().unwrap().lock()
-    }
-}
-
-
-unsafe impl Sync for GlobalLayers {}
 
 
 pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
@@ -68,6 +37,7 @@ pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
     layers.new_layer(time_count_window(config, "Count1", Vector2D::new(100, 100), COUNT_TEXT_LAYER_KEY, "Count Window 1")?);
     layers.new_layer(time_count_window(config, "Count2", Vector2D::new(100, 200), COUNT_TEXT_LAYER2_KEY, "Count Window 2")?);
     layers.new_layer(window_keyboard(config)?);
+
     layers.new_layer(mouse(config));
 
     layers.draw_all_layer()

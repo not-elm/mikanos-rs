@@ -1,4 +1,3 @@
-use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use core::cell::RefCell;
 use core::sync::atomic::{AtomicUsize, Ordering};

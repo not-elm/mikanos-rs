@@ -20,7 +20,7 @@ pub trait Transformable2D {
     fn pos(&self) -> Vector2D<usize>;
 
 
-    fn transform_ref(&self) -> &Transform2D;
+    fn transform(&self) -> Transform2D;
 
 
     fn store_transform(&mut self, transform: &Transform2D) {
@@ -102,7 +102,7 @@ impl Transformable2D for Transform2D {
     }
 
 
-    fn transform_ref(&self) -> &Transform2D {
-        self
+    fn transform(&self) -> Transform2D {
+        self.clone()
     }
 }

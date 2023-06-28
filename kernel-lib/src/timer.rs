@@ -1,5 +1,3 @@
-use core::sync::atomic::Ordering;
-
 use crate::timer::handler::manager::TimeHandleManager;
 
 pub mod apic;

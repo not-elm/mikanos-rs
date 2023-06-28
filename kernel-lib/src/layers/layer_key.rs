@@ -44,6 +44,7 @@ impl LayerKey {
         match &self.layer {
             Layer::Multiple(multi) => multi.find_by_key(key),
             Layer::Window(window) => window.find_by_key(key),
+            Layer::TextBox(textbox) => textbox.find_by_key(key),
             _ => None,
         }
     }
@@ -57,6 +58,7 @@ impl LayerKey {
         match &mut self.layer {
             Layer::Multiple(multi) => multi.find_by_key_mut(key),
             Layer::Window(window) => window.find_by_key_mut(key),
+            Layer::TextBox(textbox) => textbox.find_by_key_mut(key),
             _ => None,
         }
     }

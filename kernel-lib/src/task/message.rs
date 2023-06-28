@@ -1,6 +1,6 @@
+use alloc::boxed::Box;
 use alloc::string::String;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum TaskMessage {
     Xhci,
 
@@ -15,6 +15,8 @@ pub enum TaskMessage {
         layer_key: String,
         text: String,
     },
+
+    Dispatch(Box<dyn Fn()>),
 }
 
 
@@ -34,5 +36,11 @@ impl TaskMessage {
             layer_key,
             text,
         }
+    }
+
+
+    #[inline(always)]
+    pub fn dispatch(f: impl Fn() + 'static) -> Self {
+        TaskMessage::Dispatch(Box::new(f))
     }
 }

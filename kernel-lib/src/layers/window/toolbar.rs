@@ -89,7 +89,7 @@ fn toolbar_layer(config: FrameBufferConfig, transform: Transform2D, title: &str)
 
     layer.new_layer(toolbar_background_layer(config, transform));
     layer.new_layer(toolbar_title_layer(config, title));
-    layer.new_layer(toolbar_close_button(config, layer.transform_ref()));
+    layer.new_layer(toolbar_close_button(config, &layer.transform()));
 
     layer
 }

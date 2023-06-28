@@ -30,7 +30,7 @@ impl ShapeLayer {
 
 
     #[inline]
-    pub fn set_color(&mut self, color: PixelColor) {
+    pub fn set_color(&self, color: PixelColor) {
         self.drawer.set_color(color);
     }
 

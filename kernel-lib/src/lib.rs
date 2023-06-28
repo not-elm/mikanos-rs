@@ -33,6 +33,7 @@ pub mod segmentation;
 pub mod serial;
 pub mod task;
 pub mod timer;
+pub mod sync;
 
 pub mod volatile_bits {
     pub use volatile_bits::*;

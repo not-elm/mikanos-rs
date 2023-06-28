@@ -1,10 +1,10 @@
 use alloc::string::ToString;
 
 use kernel_lib::interrupt::asm::sti_and_hlt;
-use kernel_lib::interrupt::interrupt_message::TaskMessage;
+use kernel_lib::task::message::TaskMessage;
 use kernel_lib::task::priority_level::PriorityLevel;
+use kernel_lib::task::TASK_MANAGER;
 
-use crate::interrupt::timer::TASK_MANAGER;
 use crate::layers::{COUNT_TEXT_LAYER2_KEY, COUNT_TEXT_LAYER_KEY};
 use crate::task::idle::idle;
 

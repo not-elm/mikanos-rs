@@ -48,7 +48,7 @@ impl TextLayer {
 
         Self {
             transform,
-            text_frame: TextFrame::new(colors, ascii, text_frame_size, config.pixel_format),
+            text_frame: TextFrame::new(colors, ascii, text_frame_size, text_unit, config.pixel_format),
             config,
         }
     }
@@ -71,6 +71,13 @@ impl TextLayer {
     pub fn change_colors(&mut self, colors: TextColors) -> KernelResult {
         self.text_frame
             .change_colors(colors)
+    }
+
+
+    #[inline(always)]
+    pub fn text_cursor_pos(&self,) -> Vector2D<usize> {
+        self.text_frame
+            .text_cursor_pos()
     }
 
 
@@ -113,7 +120,7 @@ pub(crate) fn update<'a>(
     back_buff: &mut ShadowFrameBuffer,
     draw_area: &Rectangle<usize>,
     origin: Vector2D<usize>,
-    src_buff: impl Iterator<Item = &'a [u8]>,
+    src_buff: impl Iterator<Item=&'a [u8]>,
 ) -> KernelResult {
     let diff_y = abs(origin.y() as isize - draw_area.origin().y() as isize);
     let diff_x = abs(origin.x() as isize - draw_area.origin().x() as isize);

@@ -1,5 +1,5 @@
 use kernel_lib::interrupt::asm::{cli, sti};
-use kernel_lib::interrupt::interrupt_message::TaskMessage;
+use kernel_lib::task::message::TaskMessage;
 
 use crate::task::TASK_MANAGER;
 

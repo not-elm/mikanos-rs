@@ -54,7 +54,7 @@ impl CountLayer {
 fn count_layers(config: FrameBufferConfig, transform: Transform2D) -> KernelResult<MultipleLayer> {
     let mut layers = MultipleLayer::new(transform);
 
-    layers.new_layer(text_layer(config, layers.transform_ref())?);
+    layers.new_layer(text_layer(config, &layers.transform())?);
 
     Ok(layers)
 }
@@ -95,7 +95,7 @@ mod tests {
             FrameBufferConfig::mock(),
             Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
         )
-        .unwrap();
+            .unwrap();
         count.write_count(100);
     }
 }

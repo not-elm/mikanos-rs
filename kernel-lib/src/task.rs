@@ -2,12 +2,14 @@ use alloc::boxed::Box;
 use alloc::collections::VecDeque;
 use alloc::vec;
 use core::cell::OnceCell;
+use core::fmt::{Debug, Formatter};
 use core::sync::atomic::{AtomicU8, Ordering};
 
-use crate::{interrupt, kernel_error};
+use message::TaskMessage;
+
 use crate::context::arch::x86_64::Context;
 use crate::error::KernelResult;
-use crate::interrupt::interrupt_message::TaskMessage;
+use crate::interrupt;
 use crate::task::list::TaskList;
 use crate::task::priority_level::PriorityLevel;
 use crate::task::status::Status;
@@ -17,72 +19,87 @@ mod list;
 pub mod priority_level;
 mod status;
 mod switch;
+pub mod message;
 
 
-pub struct GlobalTaskManger(OnceCell<TaskManager>);
+pub static mut TASK_MANAGER: PreemptiveTaskManager = PreemptiveTaskManager::new();
 
 
-impl GlobalTaskManger {
-    #[inline(always)]
-    pub const fn uninit() -> Self {
-        Self(OnceCell::new())
-    }
+pub struct PreemptiveTaskManager {
+    task_manager: OnceCell<TaskManager>,
+}
 
 
-    pub fn init(&self) -> Result<(), TaskManager> {
-        self.0.set(TaskManager::new())
-    }
-
-
-    pub fn new_task(&mut self, priority_level: PriorityLevel, rip: u64, rsi: u64) {
-        self.0
-            .get_mut()
-            .unwrap()
-            .new_task(priority_level)
-            .init_context(rip, rsi);
-    }
-
-
-    pub fn switch_task(&mut self) {
-        if let Some(manager) = self.0.get_mut() {
-            manager.switch_task().unwrap();
+impl PreemptiveTaskManager {
+    pub const fn new() -> Self {
+        Self {
+            task_manager: OnceCell::new(),
         }
     }
 
 
+    #[inline(always)]
+    pub fn init(&self) {
+        self.task_manager
+            .set(TaskManager::new())
+            .unwrap();
+    }
+
+
     pub fn send_message_at(&mut self, task_id: u64, message: TaskMessage) -> KernelResult {
-        self.lock()?
-            .send_message_at(task_id, message)
+        interrupt::asm::without_interrupt(|| {
+            self.task_manager
+                .get_mut()
+                .unwrap()
+                .send_message_at(task_id, message)
+        })
     }
 
 
     pub fn receive_message_at(&mut self, task_id: u64) -> Option<TaskMessage> {
-        self.lock()
-            .ok()?
+        self.task_manager
+            .get_mut()?
             .receive_message_at(task_id)
     }
 
 
-    pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
-        self.lock()?.sleep_at(task_id)
+    pub fn new_task(&mut self, priority_level: PriorityLevel, rip: u64, rsi: u64) {
+        self.task_manager
+            .get_mut()
+            .unwrap()
+            .new_task(priority_level)
+            .init_context(rip, rsi)
     }
 
 
+    #[inline(always)]
+    pub fn sleep_at(&mut self, task_id: u64) -> KernelResult {
+        self.task_manager
+            .get_mut()
+            .unwrap()
+            .sleep_at(task_id)
+    }
+
+
+    #[inline(always)]
     pub fn wakeup_at(&mut self, task_id: u64) -> KernelResult {
-        self.lock()?
+        self.task_manager
+            .get_mut()
+            .unwrap()
             .wakeup_at(task_id)
     }
 
 
-    fn lock(&mut self) -> KernelResult<&mut TaskManager> {
-        self.0
-            .get_mut()
-            .ok_or(kernel_error!("Not Initialized Task Manager"))
+    #[inline(always)]
+    pub fn switch(&mut self) -> KernelResult {
+        interrupt::asm::without_interrupt(|| {
+            self.task_manager
+                .get_mut()
+                .unwrap()
+                .switch_ignore_priority()
+        })
     }
 }
-
-
-unsafe impl Sync for GlobalTaskManger {}
 
 
 #[derive(Default, Debug)]
@@ -167,7 +184,6 @@ impl TaskManager {
 }
 
 
-#[derive(Debug)]
 pub struct Task {
     id: u64,
     priority_level: PriorityLevel,
@@ -248,6 +264,17 @@ impl Task {
     pub fn send_message(&mut self, message: TaskMessage) {
         self.messages
             .push_back(message);
+    }
+}
+
+
+impl Debug for Task {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        f
+            .debug_struct("Task")
+            .field("id", &self.id)
+            .field("priority_level", &self.priority_level)
+            .finish()
     }
 }
 

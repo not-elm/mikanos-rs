@@ -4,10 +4,11 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::layers::cursor::colors::CursorColors;
-use pci::class_driver::mouse::subscribable::MouseSubscribable;
+use kernel_lib::layers::LAYERS;
 use pci::class_driver::mouse::MouseButton;
+use pci::class_driver::mouse::subscribable::MouseSubscribable;
 
-use crate::layers::{LAYERS, MOUSE_LAYER_KEY};
+use crate::layers::MOUSE_LAYER_KEY;
 
 #[derive(Debug, Clone)]
 pub struct MouseSubscriber;
