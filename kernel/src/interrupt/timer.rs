@@ -2,7 +2,6 @@ use core::cell::OnceCell;
 use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering::Relaxed;
 
-use spin::Mutex;
 use x86_64::structures::idt::InterruptStackFrame;
 
 use kernel_lib::apic::LocalApicRegisters;
@@ -11,54 +10,9 @@ use kernel_lib::interrupt;
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
 use kernel_lib::task::priority_level::PriorityLevel;
 use kernel_lib::task::TaskManager;
-
-pub struct Timer {
-    interval: Mutex<Option<usize>>,
-    tick: AtomicUsize,
-}
-
-
-impl Timer {
-    #[inline(always)]
-    pub const fn new() -> Self {
-        Self {
-            interval: Mutex::new(None),
-            tick: AtomicUsize::new(0),
-        }
-    }
-
-
-    pub fn set(&self, interval: usize) {
-        *self.interval.lock() = Some(interval);
-    }
-
-
-    pub fn tick(&self) -> bool {
-        if let Some(interval) = *self.interval.lock() {
-            let next_tick = self
-                .tick
-                .fetch_add(1, Relaxed);
-
-            if interval <= next_tick {
-                self.reset();
-                return true;
-            }
-
-            false
-        } else {
-            false
-        }
-    }
-
-
-    #[inline(always)]
-    pub fn reset(&self) {
-        self.tick.store(0, Relaxed);
-    }
-}
+use kernel_lib::timer::TIME_HANDLE_MANAGER;
 
 pub struct PreemptiveTaskManager {
-    timer: Timer,
     task_manager: OnceCell<TaskManager>,
 }
 
@@ -66,7 +20,6 @@ pub struct PreemptiveTaskManager {
 impl PreemptiveTaskManager {
     pub const fn new() -> Self {
         Self {
-            timer: Timer::new(),
             task_manager: OnceCell::new(),
         }
     }
@@ -77,12 +30,6 @@ impl PreemptiveTaskManager {
         self.task_manager
             .set(TaskManager::new())
             .unwrap();
-    }
-
-
-    #[inline(always)]
-    pub fn set_interval(&self, interval: usize) {
-        self.timer.set(interval);
     }
 
 
@@ -130,23 +77,9 @@ impl PreemptiveTaskManager {
     }
 
 
-    pub fn switch_if_timeout(&mut self) -> KernelResult {
-        if self.timer.tick() {
-            self.task_manager
-                .get_mut()
-                .unwrap()
-                .switch_task()?;
-        }
-
-        Ok(())
-    }
-
-
     #[inline(always)]
     pub fn switch(&mut self) -> KernelResult {
         interrupt::asm::without_interrupt(|| {
-            self.timer.reset();
-
             self.task_manager
                 .get_mut()
                 .unwrap()
@@ -163,9 +96,5 @@ pub extern "x86-interrupt" fn interrupt_timer_handler(_stack_frame: InterruptSta
         .end_of_interrupt()
         .notify();
 
-    unsafe {
-        TASK_MANAGER
-            .switch_if_timeout()
-            .unwrap();
-    }
+    TIME_HANDLE_MANAGER.tick();
 }

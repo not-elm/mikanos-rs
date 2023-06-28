@@ -1,4 +1,5 @@
 use kernel_lib::interrupt::interrupt_message::TaskMessage;
+use kernel_lib::timer::TIME_HANDLE_MANAGER;
 use pci::class_driver::mouse::driver::MouseDriver;
 use pci::class_driver::mouse::subscribable::MouseSubscribable;
 use pci::xhc::allocator::mikanos_pci_memory_allocator::MikanOSPciMemoryAllocator;
@@ -18,7 +19,9 @@ pub fn start_xhci_host_controller(
 ) -> anyhow::Result<()> {
     unsafe {
         crate::task::init();
-        TASK_MANAGER.set_interval(TIMER_200_MILLI_INTERVAL);
+        TIME_HANDLE_MANAGER.entry(TIMER_200_MILLI_INTERVAL, || {
+            TASK_MANAGER.switch().unwrap();
+        });
     }
 
     let mut xhc_controller = start_xhc_controller(mmio_base_addr, mouse_subscriber)?;
@@ -53,7 +56,7 @@ fn start_xhc_controller(
         MouseDriver::new(mouse_subscriber),
         build_keyboard_driver(),
     )
-    .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
+        .map_err(|_| anyhow::anyhow!("Failed initialize xhc controller"))?;
 
     xhc_controller
         .reset_port()
