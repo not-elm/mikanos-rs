@@ -37,17 +37,17 @@ macro_rules! count_task {
                 loop {
                     count += 1;
 
-                    // unsafe {
-                    //     TASK_MANAGER
-                    //         .send_message_at(
-                    //             0,
-                    //             TaskMessage::Count {
-                    //                 count,
-                    //                 layer_key: $key.to_string(),
-                    //             },
-                    //         )
-                    //         .unwrap();
-                    // }
+                    unsafe {
+                        TASK_MANAGER
+                            .send_message_at(
+                                0,
+                                TaskMessage::Count {
+                                    count,
+                                    layer_key: $key.to_string(),
+                                },
+                            )
+                            .unwrap();
+                    }
                     sti_and_hlt();
                 }
             }

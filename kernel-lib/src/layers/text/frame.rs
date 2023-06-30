@@ -8,7 +8,6 @@ use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::layers::text::colors::TextColors;
 use crate::layers::text::row::TextRow;
-use crate::serial_println;
 
 pub struct TextFrame<Char> {
     rows: Vec<TextRow>,
@@ -146,7 +145,7 @@ impl<Char: CharWritable> TextFrame<Char> {
     fn add_row(&mut self) -> KernelResult {
         let row = self.new_row()?;
         self.rows.push(row);
-        
+
         Ok(())
     }
 

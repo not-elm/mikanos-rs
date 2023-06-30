@@ -2,12 +2,11 @@ use alloc::string::ToString;
 use core::fmt::Write;
 
 use kernel_lib::layers::LAYERS;
-use kernel_lib::serial_println;
 use kernel_lib::task::TASK_MANAGER;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 
-use crate::layers::{KEYBOARD_TEXT, TERMINAL_LAYER_KEY};
+use crate::layers::TERMINAL_LAYER_KEY;
 
 pub fn build_keyboard_driver() -> KeyboardDriver {
     keyboard::builder::Builder::new()

@@ -55,9 +55,8 @@ impl TextRow {
             return Ok(true);
         }
 
-
         self.texts.push(c);
-        
+
         let pos = Vector2D::new(self.texts.len() * self.font_unit.width(), 0);
         char_writer.write(
             self.text_buffs.as_mut_slice(),

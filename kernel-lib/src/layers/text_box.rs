@@ -9,7 +9,6 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
-use crate::error::KernelResult;
 use crate::gop::config;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::layer::Layer;
@@ -229,7 +228,7 @@ fn cursor(colors: TextColors, exists_prefix: bool) -> LayerKey {
 
 fn start_cursor_timer(key: String, colors: TextColors) -> TimeHandle {
     let visible = AtomicBool::new(true);
-     TimeHandle::start_dispatch_on_main(70, move || {
+    TimeHandle::start_dispatch_on_main(70, move || {
         LAYERS
             .lock()
             .update_layer(&key, |layer| {
