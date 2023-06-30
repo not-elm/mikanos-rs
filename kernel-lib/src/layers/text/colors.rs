@@ -1,7 +1,7 @@
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct TextColors {
     foreground: PixelColor,
     background: PixelColor,

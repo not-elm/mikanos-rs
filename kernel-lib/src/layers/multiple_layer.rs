@@ -47,6 +47,12 @@ impl MultipleLayer {
 
         self.layers.push(layer);
     }
+    
+    
+    pub fn then_add(mut self,  layer: LayerKey) -> Self {
+        self.new_layer(layer);
+        self
+    }
 
 
     #[inline(always)]

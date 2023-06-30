@@ -6,7 +6,7 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
 use crate::error::KernelResult;
-use crate::gop::pixel::pixel_color::PixelColor;
+use crate::gop::config;
 use crate::layers::close_button::{CLOSE_BUTTON_HEIGHT, CLOSE_BUTTON_WIDTH, CloseButtonLayer};
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
@@ -18,30 +18,32 @@ use crate::layers::text::TextLayer;
 
 const BACKGROUND_LAYER_KAY: &str = "Window Toolbar Background";
 const TITLE_LAYER_KAY: &str = "Window Toolbar Title";
-const DEACTIVATE_COLORS: TextColors = TextColors::new(
-    PixelColor::new(0xEB, 0xEB, 0xE4),
-    PixelColor::new(0x84, 0x84, 0x84),
-);
-const ACTIVE_COLORS: TextColors = TextColors::new(
-    PixelColor::white(),
-    PixelColor::new(0x00, 0x00, 0x84),
-);
 
 
 #[derive(Delegate)]
 pub struct ToolbarLayer {
     #[to(Transformable2D, LayerUpdatable, LayerFindable)]
     layers: MultipleLayer,
+    active_colors: TextColors,
+    deactivate_colors: TextColors,
 }
 
 
 impl ToolbarLayer {
     #[inline]
-    pub fn new(config: FrameBufferConfig, transform: Transform2D, title: &str) -> Self {
+    pub fn new(
+        title: &str,
+        transform: Transform2D,
+        active_colors: TextColors,
+        deactivate_colors: TextColors,
+    ) -> Self {
         Self {
-            layers: toolbar_layer(config, transform, title),
+            layers: toolbar_layer(title, transform, deactivate_colors),
+            active_colors,
+            deactivate_colors,
         }
     }
+
 
     #[inline]
     pub fn activate(&mut self) -> KernelResult {
@@ -50,13 +52,13 @@ impl ToolbarLayer {
             .unwrap()
             .require_shape()
             .unwrap()
-            .set_color(*ACTIVE_COLORS.background());
+            .set_color(*self.active_colors.background());
 
         self.layers
             .force_find_by_key_mut(TITLE_LAYER_KAY)
             .require_text()
             .unwrap()
-            .change_colors(ACTIVE_COLORS)
+            .change_colors(self.active_colors)
     }
 
 
@@ -67,13 +69,13 @@ impl ToolbarLayer {
             .unwrap()
             .require_shape()
             .unwrap()
-            .set_color(*DEACTIVATE_COLORS.background());
+            .set_color(*self.deactivate_colors.background());
 
         self.layers
             .force_find_by_key_mut(TITLE_LAYER_KAY)
             .require_text()
             .unwrap()
-            .change_colors(DEACTIVATE_COLORS)
+            .change_colors(self.deactivate_colors)
     }
 
 
@@ -84,20 +86,27 @@ impl ToolbarLayer {
 }
 
 
-fn toolbar_layer(config: FrameBufferConfig, transform: Transform2D, title: &str) -> MultipleLayer {
+fn toolbar_layer(
+    title: &str,
+    transform: Transform2D,
+    deactivate_colors: TextColors,
+) -> MultipleLayer {
     let mut layer = MultipleLayer::new(transform.clone());
 
-    layer.new_layer(toolbar_background_layer(config, transform));
-    layer.new_layer(toolbar_title_layer(config, title));
-    layer.new_layer(toolbar_close_button(config, &layer.transform()));
+    layer.new_layer(toolbar_background_layer(transform, deactivate_colors));
+    layer.new_layer(toolbar_title_layer(title, deactivate_colors));
+    layer.new_layer(toolbar_close_button(config(), &layer.transform()));
 
     layer
 }
 
 
-fn toolbar_background_layer(config: FrameBufferConfig, transform: Transform2D) -> LayerKey {
+fn toolbar_background_layer(
+    transform: Transform2D,
+    deactivate_colors: TextColors,
+) -> LayerKey {
     ShapeLayer::new(
-        ShapeDrawer::new(config, *DEACTIVATE_COLORS.background()),
+        ShapeDrawer::new(config(), *deactivate_colors.background()),
         transform,
     )
         .into_enum()
@@ -105,12 +114,15 @@ fn toolbar_background_layer(config: FrameBufferConfig, transform: Transform2D) -
 }
 
 
-fn toolbar_title_layer(config: FrameBufferConfig, title: &str) -> LayerKey {
+fn toolbar_title_layer(
+    title: &str,
+    deactivate_colors: TextColors,
+) -> LayerKey {
     let mut text = TextLayer::new(
-        config,
+        config(),
         Vector2D::new(24, 4),
         Size::new(12, 1),
-        DEACTIVATE_COLORS,
+        deactivate_colors,
     );
 
     text.update_string(title)

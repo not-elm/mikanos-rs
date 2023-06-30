@@ -15,9 +15,9 @@ pub(crate) fn time_count_window(
     window_layer_key: &str,
 ) -> KernelResult<LayerKey> {
     let transform = Transform2D::new(pos, Size::new(160, 52));
-
-    let window = WindowLayer::new(config, transform.clone(), title)
-        .new_layer(count_layer(config, &transform, text_layer_key)?)?
+    let count = count_layer(config, &transform, text_layer_key)?;
+    let window = WindowLayer::new_default_color(title, transform)
+        .then_add(|_|count)?
         .into_enum()
         .into_layer_key(window_layer_key);
 

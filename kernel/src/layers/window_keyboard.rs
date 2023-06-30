@@ -14,15 +14,15 @@ pub(crate) fn window_keyboard() -> KernelResult<LayerKey> {
     let size = Size::new(180, 55);
 
     let transform = Transform2D::new(pos, size);
-    Ok(WindowLayer::new(config(), transform, "Text Box")
-        .new_layer(keyboard_text_box())?
+    Ok(WindowLayer::new_default_color("Text Box", transform)
+        .then_add(|_|keyboard_text_box())?
         .into_enum()
         .into_layer_key(WINDOW_KEYBOARD))
 }
 
 
 fn keyboard_text_box() -> LayerKey {
-    let pos = Vector2D::new(5, 0);
+    let pos = Vector2D::zeros();
     let size = Size::new(170, 20);
 
     TextBoxLayer::new(config(), Transform2D::new(pos, size))

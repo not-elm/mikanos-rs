@@ -17,6 +17,7 @@ mod mouse;
 mod desktop;
 mod time_count;
 mod window_keyboard;
+mod terminal;
 
 
 pub const DESKTOP_LAYER_KEY: &str = "BACKGROUND";
@@ -26,6 +27,7 @@ pub const WINDOW_KEYBOARD: &str = "WINDOW KEYBOARD";
 pub const KEYBOARD_TEXT: &str = "WINDOW TEXT";
 pub const MOUSE_LAYER_KEY: &str = "MOUSE_CURSOR";
 pub const CONSOLE_LAYER_KEY: &str = "CONSOLE";
+pub const TERMINAL_LAYER_KEY: &str = "Terminal";
 
 
 pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
@@ -40,7 +42,7 @@ pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
     layers.new_layer(time_count_window(config, "Count1", Vector2D::new(100, 100), COUNT_TEXT_LAYER_KEY, "Count Window 1")?);
     layers.new_layer(time_count_window(config, "Count2", Vector2D::new(100, 200), COUNT_TEXT_LAYER2_KEY, "Count Window 2")?);
     layers.new_layer(window_keyboard()?);
-
+    layers.new_layer(terminal::terminal());
     layers.new_layer(mouse(config));
 
     layers.draw_all_layer()

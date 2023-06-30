@@ -11,6 +11,7 @@ use crate::layers::cursor::CursorLayer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::layer_updatable::LayerUpdatable;
 use crate::layers::shape::ShapeLayer;
+use crate::layers::terminal::TerminalLayer;
 use crate::layers::text::TextLayer;
 use crate::layers::text_box::TextBoxLayer;
 use crate::layers::window::toolbar::ToolbarLayer;
@@ -31,6 +32,7 @@ pub enum Layer {
     Count(CountLayer),
     Toolbar(ToolbarLayer),
     TextBox(TextBoxLayer),
+    Terminal(TerminalLayer)
 }
 
 

@@ -29,6 +29,7 @@ pub mod shape;
 pub mod text;
 pub mod window;
 pub mod text_box;
+pub mod terminal;
 
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
