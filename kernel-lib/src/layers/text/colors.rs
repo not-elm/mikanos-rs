@@ -30,6 +30,18 @@ impl TextColors {
     }
 
 
+    #[inline]
+    pub fn set_foreground(&mut self, foreground: PixelColor) {
+        self.foreground = foreground;
+    }
+
+
+    #[inline]
+    pub fn set_background(&mut self, background: PixelColor) {
+        self.background = background;
+    }
+
+
     #[inline(always)]
     pub const fn foreground(&self) -> PixelColor {
         self.foreground

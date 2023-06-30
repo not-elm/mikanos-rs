@@ -2,19 +2,17 @@ use alloc::format;
 
 use auto_delegate::Delegate;
 
-use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
-use common_lib::transform::transform2d::{Transform2D, Transformable2D};
+use common_lib::transform::transform2d::Transform2D;
 
 use crate::error::KernelResult;
+use crate::gop;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::{LayerFindable, MultipleLayer};
-use crate::layers::text::TextLayer;
-
-use super::text::colors::TextColors;
+use crate::layers::text::{config, TextLayer};
 
 #[derive(Delegate)]
 pub struct CountLayer {
@@ -25,9 +23,9 @@ pub struct CountLayer {
 
 impl CountLayer {
     #[inline]
-    pub fn new(config: FrameBufferConfig, transform: Transform2D) -> KernelResult<Self> {
+    pub fn new(transform: Transform2D) -> KernelResult<Self> {
         Ok(Self {
-            layers: count_layers(config, transform)?,
+            layers: count_layers(transform)?,
         })
     }
 
@@ -51,28 +49,23 @@ impl CountLayer {
 }
 
 
-fn count_layers(config: FrameBufferConfig, transform: Transform2D) -> KernelResult<MultipleLayer> {
+fn count_layers(transform: Transform2D) -> KernelResult<MultipleLayer> {
     let mut layers = MultipleLayer::new(transform);
 
-    layers.new_layer(text_layer(config, &layers.transform())?);
+    layers.new_layer(text_layer()?);
 
     Ok(layers)
 }
 
 
-fn text_layer(config: FrameBufferConfig, _root_transform: &Transform2D) -> KernelResult<LayerKey> {
+fn text_layer() -> KernelResult<LayerKey> {
     let pos = Vector2D::zeros();
+    let config = config::Builder::new()
+        .foreground(PixelColor::black())
+        .background(PixelColor::window_background())
+        .build();
 
-    let mut text = TextLayer::new(
-        config,
-        pos,
-        Size::new(10, 1),
-        TextColors::default()
-            .change_foreground(PixelColor::black())
-            .change_background(PixelColor::window_background()),
-        false,
-        None
-    ).unwrap();
+    let mut text = TextLayer::new(gop::config(), pos, Size::new(10, 1), config).unwrap();
 
     text.update_string("0")?;
 
@@ -84,7 +77,7 @@ fn text_layer(config: FrameBufferConfig, _root_transform: &Transform2D) -> Kerne
 
 #[cfg(test)]
 mod tests {
-    use common_lib::frame_buffer::FrameBufferConfig;
+    use crate::gop;
     use common_lib::math::size::Size;
     use common_lib::math::vector::Vector2D;
     use common_lib::transform::transform2d::Transform2D;
@@ -93,11 +86,9 @@ mod tests {
 
     #[test]
     fn it_update_count_not_panic() {
-        let mut count = CountLayer::new(
-            FrameBufferConfig::mock(),
-            Transform2D::new(Vector2D::zeros(), Size::new(100, 100)),
-        )
-            .unwrap();
+        gop::test_init();
+        let mut count =
+            CountLayer::new(Transform2D::new(Vector2D::zeros(), Size::new(100, 100))).unwrap();
         count.write_count(100);
     }
 }

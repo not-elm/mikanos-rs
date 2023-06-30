@@ -1,21 +1,18 @@
-use crate::layers::CONSOLE_LAYER_KEY;
-use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
+use kernel_lib::gop;
 use kernel_lib::layers::layer_key::LayerKey;
-use kernel_lib::layers::text::colors::TextColors;
-use kernel_lib::layers::text::TextLayer;
+use kernel_lib::layers::text::{config, TextLayer};
 
-pub(crate) fn console(config: FrameBufferConfig) -> LayerKey {
-    TextLayer::new(
-        config,
-        Vector2D::zeros(),
-        Size::new(50, 10),
-        TextColors::default(),
-        true,
-        None
-    )
+use crate::layers::CONSOLE_LAYER_KEY;
+
+pub(crate) fn console() -> LayerKey {
+    let config = config::Builder::new()
+        .set_scrollable()
+        .build();
+
+    TextLayer::new(gop::config(), Vector2D::zeros(), Size::new(50, 10), config)
         .unwrap()
-    .into_enum()
-    .into_layer_key(CONSOLE_LAYER_KEY)
+        .into_enum()
+        .into_layer_key(CONSOLE_LAYER_KEY)
 }

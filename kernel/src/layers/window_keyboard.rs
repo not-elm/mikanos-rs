@@ -3,6 +3,7 @@ use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
 use kernel_lib::error::KernelResult;
 use kernel_lib::layers::layer_key::LayerKey;
+use kernel_lib::layers::text::config;
 use kernel_lib::layers::text_box::TextBoxLayer;
 use kernel_lib::layers::window::WindowLayer;
 
@@ -23,8 +24,11 @@ pub(crate) fn window_keyboard() -> KernelResult<LayerKey> {
 fn keyboard_text_box() -> LayerKey {
     let pos = Vector2D::zeros();
     let size = Size::new(170, 20);
+    let config = config::Builder::new()
+        .set_scrollable()
+        .build();
 
-    TextBoxLayer::new_light(Transform2D::new(pos, size), true, None)
+    TextBoxLayer::new_light(Transform2D::new(pos, size), config)
         .into_enum()
         .into_layer_key(KEYBOARD_TEXT)
 }

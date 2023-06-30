@@ -19,7 +19,10 @@ unsafe impl Sync for GlobalFrameBufferConfig {}
 
 /// Initialize Frame Buffer Config State
 pub fn init(config: FrameBufferConfig) {
-    FRAME_BUFFER_CONFIG.0.set(config).unwrap();
+    FRAME_BUFFER_CONFIG
+        .0
+        .set(config)
+        .unwrap();
 }
 
 
@@ -30,9 +33,16 @@ pub fn init(config: FrameBufferConfig) {
 /// Panic if not called [`init`]
 #[inline(always)]
 pub fn config() -> FrameBufferConfig {
-    *FRAME_BUFFER_CONFIG.0.get().unwrap()
+    *FRAME_BUFFER_CONFIG
+        .0
+        .get()
+        .unwrap()
 }
 
 
-
-
+#[cfg(test)]
+pub fn test_init() {
+    let _ = FRAME_BUFFER_CONFIG
+        .0
+        .set(FrameBufferConfig::mock());
+}

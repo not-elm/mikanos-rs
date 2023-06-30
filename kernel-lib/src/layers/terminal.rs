@@ -1,3 +1,4 @@
+use alloc::string::ToString;
 use core::fmt::Write;
 
 use auto_delegate::Delegate;
@@ -13,6 +14,8 @@ use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::LayerFindable;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
+use crate::layers::text::command::{Command, CommandResult};
+use crate::layers::text::config;
 use crate::layers::text_box::TextBoxLayer;
 use crate::layers::window::WindowLayer;
 
@@ -33,9 +36,7 @@ impl TerminalLayer {
             .then_add(text)
             .unwrap();
 
-        Self {
-            window,
-        }
+        Self { window }
     }
 
 
@@ -53,8 +54,7 @@ impl TerminalLayer {
 
     #[inline]
     pub fn delete_last(&mut self) {
-        self
-            .window
+        self.window
             .find_by_key_mut(TEXT_BOX_LAYER_KEY)
             .unwrap()
             .require_text_box()
@@ -91,11 +91,36 @@ fn text_background(size: Size) -> LayerKey {
 
 fn text(size: Size) -> LayerKey {
     let pos = Vector2D::zeros();
-    let text = TextBoxLayer::new_dark(Transform2D::new(pos, size), true, Some('>'));
+    let config = config::Builder::new()
+        .set_scrollable()
+        .prefix('>')
+        .add_command(Command::new("echo", echo))
+        .build();
 
-    text
-        .into_enum()
+    let text = TextBoxLayer::new_dark(Transform2D::new(pos, size), config);
+    text.into_enum()
         .into_layer_key(TEXT_BOX_LAYER_KEY)
 }
 
 
+fn echo(args: &[&str]) -> CommandResult {
+    if args.is_empty() {
+        return Err("Not Command Args".to_string());
+    }
+
+    Ok(args[0].to_string())
+}
+
+
+#[cfg(test)]
+mod tests {
+    use alloc::string::ToString;
+
+    use crate::layers::terminal::echo;
+
+    #[test]
+    fn it_echo() {
+        let output = echo(&["aaa"]);
+        assert_eq!(output, Ok("aaa".to_string()));
+    }
+}

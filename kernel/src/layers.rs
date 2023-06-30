@@ -13,11 +13,11 @@ use crate::layers::time_count::time_count_window;
 use crate::layers::window_keyboard::window_keyboard;
 
 mod console;
-mod mouse;
 mod desktop;
+mod mouse;
+mod terminal;
 mod time_count;
 mod window_keyboard;
-mod terminal;
 
 
 pub const DESKTOP_LAYER_KEY: &str = "BACKGROUND";
@@ -38,9 +38,19 @@ pub fn init_layers(config: FrameBufferConfig) -> KernelResult {
     let mut layers = LAYERS.lock();
 
     layers.new_layer(desktop());
-    layers.new_layer(console(config));
-    layers.new_layer(time_count_window(config, "Count1", Vector2D::new(100, 100), COUNT_TEXT_LAYER_KEY, "Count Window 1")?);
-    layers.new_layer(time_count_window(config, "Count2", Vector2D::new(100, 200), COUNT_TEXT_LAYER2_KEY, "Count Window 2")?);
+    layers.new_layer(console());
+    layers.new_layer(time_count_window(
+        "Count1",
+        Vector2D::new(100, 100),
+        COUNT_TEXT_LAYER_KEY,
+        "Count Window 1",
+    )?);
+    layers.new_layer(time_count_window(
+        "Count2",
+        Vector2D::new(100, 200),
+        COUNT_TEXT_LAYER2_KEY,
+        "Count Window 2",
+    )?);
     layers.new_layer(window_keyboard()?);
     layers.new_layer(terminal::terminal());
     layers.new_layer(mouse(config));

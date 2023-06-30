@@ -17,7 +17,7 @@ use crate::layers::text::colors::TextColors;
 pub struct TextRow {
     text_buffs: Vec<u8>,
     buff_pixel_writer: BuffPixelWriter,
-    font_unit: Size,
+    text_unit: Size,
     texts: Vec<char>,
     max_text_len: usize,
     background: PixelColor,
@@ -27,14 +27,14 @@ pub struct TextRow {
 impl TextRow {
     pub fn new(
         background: PixelColor,
-        font_unit: Size,
+        text_unit: Size,
         max_text_len: usize,
         pixel_format: PixelFormat,
     ) -> Self {
         Self::new_with_buff(
-            new_text_row_buff(&background, &font_unit, max_text_len, pixel_format),
+            new_text_row_buff(&background, &text_unit, max_text_len, pixel_format),
             max_text_len,
-            font_unit,
+            text_unit,
             pixel_format,
             background,
         )
@@ -55,9 +55,8 @@ impl TextRow {
             return Ok(true);
         }
 
-        self.texts.push(c);
 
-        let pos = Vector2D::new(self.texts.len() * self.font_unit.width(), 0);
+        let pos = Vector2D::new(self.texts.len() * self.text_unit.width(), 0);
         char_writer.write(
             self.text_buffs.as_mut_slice(),
             c,
@@ -66,14 +65,16 @@ impl TextRow {
             &mut self.buff_pixel_writer,
         )?;
 
+        self.texts.push(c);
+
         Ok(false)
     }
 
 
     pub fn delete_last(&mut self) {
         self.texts.pop();
-        let pos = Vector2D::new(self.texts.len() * self.font_unit.width(), 0);
-        let draw_area = Rectangle::from_pos_and_size(pos, self.font_unit);
+        let pos = Vector2D::new(self.texts.len() * self.text_unit.width(), 0);
+        let draw_area = Rectangle::from_pos_and_size(pos, self.text_unit);
 
         self.buff_pixel_writer
             .fill_rect(self.text_buffs.as_mut_slice(), draw_area, &self.background)
@@ -84,15 +85,15 @@ impl TextRow {
     pub fn need_new_line(&self) -> bool {
         self.max_text_len <= self.texts.len()
             || self
-            .texts
-            .last()
-            .is_some_and(|c| *c == '\n' || *c == '\x0D')
+                .texts
+                .last()
+                .is_some_and(|c| *c == '\n' || *c == '\x0D')
     }
 
 
     pub fn frame_buff_lines(&self) -> Option<Vec<&[u8]>> {
-        let mut lines = Vec::with_capacity(self.font_unit.height());
-        for y in 0..self.font_unit.height() {
+        let mut lines = Vec::with_capacity(self.text_unit.height());
+        for y in 0..self.text_unit.height() {
             lines.push(self.frame_buff_line(y));
         }
 
@@ -115,27 +116,27 @@ impl TextRow {
 
     #[cfg(test)]
     fn buff_width(&self) -> usize {
-        self.texts.len() * font_buff_width(&self.font_unit)
+        self.texts.len() * font_buff_width(&self.text_unit)
     }
 
 
     #[inline]
     fn max_buff_width(&self) -> usize {
-        self.max_text_len * font_buff_width(&self.font_unit)
+        self.max_text_len * font_buff_width(&self.text_unit)
     }
 
 
     fn new_with_buff(
         text_buffs: Vec<u8>,
         max_text_len: usize,
-        font_unit: Size,
+        text_unit: Size,
         pixel_format: PixelFormat,
         background: PixelColor,
     ) -> Self {
-        let buff_size = text_buffer_size(max_text_len, &font_unit);
+        let buff_size = text_buffer_size(max_text_len, &text_unit);
 
         Self {
-            font_unit,
+            text_unit,
             text_buffs,
             buff_pixel_writer: BuffPixelWriter::new(buff_size, pixel_format),
             max_text_len,
@@ -217,7 +218,7 @@ mod tests {
             &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(row.buff_width(), writer.font_unit().width() * 4);
         assert!(row

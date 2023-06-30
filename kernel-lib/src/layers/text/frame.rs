@@ -5,50 +5,50 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 
 use crate::error::KernelResult;
+use crate::gop::char::ascii_char_writer::AscIICharWriter;
 use crate::gop::char::char_writable::CharWritable;
+use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::text::colors::TextColors;
+use crate::layers::text::config::TextConfig;
 use crate::layers::text::row::TextRow;
 
-pub struct TextFrame<Char> {
+pub struct TextFrame {
     rows: Vec<TextRow>,
-    colors: TextColors,
     text_frame_size: Size,
-    text_unit: Size,
     pixel_format: PixelFormat,
-    char_writer: Char,
-    scrollable: bool,
-    prefix: Option<char>,
+    char_writer: AscIICharWriter,
+    config: TextConfig,
 }
 
 
-impl<Char: CharWritable> TextFrame<Char> {
+impl TextFrame {
     pub fn new(
-        colors: TextColors,
-        char_writer: Char,
+        char_writer: AscIICharWriter,
         text_frame_size: Size,
-        text_unit: Size,
         pixel_format: PixelFormat,
-        scrollable: bool,
-        prefix: Option<char>,
-    ) -> KernelResult<TextFrame<Char>> {
+        config: TextConfig,
+    ) -> KernelResult<TextFrame> {
         let mut me = Self {
             rows: Vec::new(),
             char_writer,
-            colors,
             text_frame_size,
-            text_unit,
             pixel_format,
-            scrollable,
-            prefix,
+            config,
         };
-        me.add_row()?;
+        me.add_row(true)?;
         Ok(me)
     }
 
 
     pub fn text_cursor_pos(&self) -> Vector2D<usize> {
-        let x = self.rows.last().unwrap().texts().len() * self.text_unit.width();
-        let y = (self.rows.len() - 1) * self.text_unit.height();
+        let text_len = self
+            .rows
+            .last()
+            .unwrap()
+            .texts()
+            .len();
+        let x = text_len * self.config.text_unit.width();
+        let y = (self.rows.len() - 1) * self.config.text_unit.height();
 
         Vector2D::new(x, y)
     }
@@ -56,7 +56,7 @@ impl<Char: CharWritable> TextFrame<Char> {
 
     pub fn update_string(&mut self, str: &str) -> KernelResult {
         self.rows.remove(0);
-        self.add_row()?;
+        self.add_row(true)?;
         self.append_string(str)
     }
 
@@ -67,9 +67,10 @@ impl<Char: CharWritable> TextFrame<Char> {
         }
 
         for c in str.chars() {
-            if self.write_char(c)? {
-                self.new_line()?;
-                self.write_char(c)?;
+            if self.write_char(self.config.colors, c)? {
+                self.execute_command_if_need()?;
+                self.new_line(true)?;
+                self.write_char(self.config.colors, c)?;
             }
         }
 
@@ -87,21 +88,26 @@ impl<Char: CharWritable> TextFrame<Char> {
 
 
     pub fn delete_last(&mut self) {
-        self.rows
-            .last_mut()
-            .unwrap()
-            .delete_last()
+        if self.need_back_line() {
+            self.rows
+                .remove(self.rows.len() - 1);
+        } else {
+            self.rows
+                .last_mut()
+                .unwrap()
+                .delete_last();
+        }
     }
 
 
     pub fn change_colors(&mut self, colors: TextColors) -> KernelResult {
-        self.colors = colors;
+        self.config.colors = colors;
         let mut rows = Vec::with_capacity(self.rows.len());
 
         for i in 0..self.rows.len() {
-            let mut row = self.new_row()?;
+            let mut row = self.new_row_with_prefix_if_exists()?;
             for c in self.rows[i].texts() {
-                row.write_char(*c, &self.colors, &mut self.char_writer)?;
+                row.write_char(*c, &self.config.colors, &mut self.char_writer)?;
             }
             rows.push(row);
         }
@@ -112,38 +118,114 @@ impl<Char: CharWritable> TextFrame<Char> {
     }
 
 
-    fn new_line(&mut self) -> KernelResult {
-        if self.text_frame_size.height() <= self.rows.len() {
-            self.scroll()?;
+    fn need_back_line(&self) -> bool {
+        let row = self.rows.last().unwrap();
+        let text_len = row.texts().len();
+        if self.config.exists_prefix() {
+            text_len <= 1
         } else {
-            self.add_row()?;
+            text_len == 0
+        }
+    }
+
+
+    fn new_line(&mut self, with_prefix: bool) -> KernelResult {
+        if self.text_frame_size.height() <= self.rows.len() {
+            self.scroll(with_prefix)?;
+        } else {
+            self.add_row(with_prefix)?;
         }
 
         Ok(())
     }
 
 
-    fn scroll(&mut self) -> KernelResult {
-        if self.scrollable {
+    fn execute_command_if_need(&mut self) -> KernelResult {
+        if self
+            .config
+            .not_exists_command()
+        {
+            return Ok(());
+        }
+
+
+        let chars: Vec<char> = self
+            .rows
+            .last()
+            .unwrap()
+            .texts()
+            .to_vec();
+
+        let i = self
+            .config
+            .prefix
+            .map(|_| 1)
+            .unwrap_or(0);
+
+
+        match self
+            .config
+            .try_execute_command(&chars[i..])
+        {
+            Ok(output) => {
+                self.new_line(false)?;
+                self.output(&output, self.config.colors)?;
+            }
+            Err(message) => {
+                self.new_line(false)?;
+                let colors = TextColors::new(
+                    PixelColor::red(),
+                    self.config
+                        .colors
+                        .background(),
+                );
+                self.output(&message, colors)?;
+            }
+        }
+
+
+        Ok(())
+    }
+
+
+    fn output(&mut self, output: &str, colors: TextColors) -> KernelResult {
+        for c in output.chars() {
+            if self.write_char(colors, c)? {
+                self.new_line(false)?;
+                self.write_char(colors, c)?;
+            }
+        }
+
+        Ok(())
+    }
+
+
+    fn scroll(&mut self, with_prefix: bool) -> KernelResult {
+        if self.config.scrollable {
             self.rows.remove(0);
-            self.add_row()?;
+            self.add_row(with_prefix)?;
         }
 
         Ok(())
     }
 
 
-    fn write_char(&mut self, c: char) -> KernelResult<bool> {
+    fn write_char(&mut self, colors: TextColors, c: char) -> KernelResult<bool> {
         self.rows
             .last_mut()
             .unwrap()
-            .write_char(c, &self.colors, &mut self.char_writer)
+            .write_char(c, &colors, &mut self.char_writer)
     }
 
 
     #[inline]
-    fn add_row(&mut self) -> KernelResult {
-        let row = self.new_row()?;
+    fn add_row(&mut self, with_prefix: bool) -> KernelResult {
+        let row = if with_prefix {
+            self.new_row_with_prefix_if_exists()?
+        } else {
+            self.new_row()
+        };
+
         self.rows.push(row);
 
         Ok(())
@@ -151,19 +233,28 @@ impl<Char: CharWritable> TextFrame<Char> {
 
 
     #[inline]
-    fn new_row(&mut self) -> KernelResult<TextRow> {
-        let mut row = TextRow::new(
-            *self.colors.background_ref(),
-            self.char_writer.font_unit(),
-            self.text_frame_size.width(),
-            self.pixel_format,
-        );
-
-        if let Some(prefix) = self.prefix {
-            row.write_char(prefix, &self.colors, &mut self.char_writer)?;
+    fn new_row_with_prefix_if_exists(&mut self) -> KernelResult<TextRow> {
+        let mut row = self.new_row();
+        if let Some(prefix) = self.config.prefix {
+            row.write_char(prefix, &self.config.colors, &mut self.char_writer)?;
         }
 
         Ok(row)
+    }
+
+
+    fn new_row(&self) -> TextRow {
+        let background = self
+            .config
+            .colors
+            .background();
+
+        TextRow::new(
+            background,
+            self.char_writer.font_unit(),
+            self.text_frame_size.width(),
+            self.pixel_format,
+        )
     }
 }
 
@@ -173,21 +264,26 @@ mod tests {
     use common_lib::frame_buffer::PixelFormat;
     use common_lib::math::size::Size;
 
+    use crate::gop;
     use crate::gop::char::ascii_char_writer::AscIICharWriter;
-    use crate::layers::text::colors::TextColors;
+    use crate::layers::text::config;
     use crate::layers::text::frame::TextFrame;
 
     #[test]
     fn it_keeping_max_lines() {
+        gop::test_init();
+
+        let config = config::Builder::new()
+            .set_scrollable()
+            .build();
+
         let mut frame = TextFrame::new(
-            TextColors::default(),
             AscIICharWriter::new(),
             Size::new(100, 3),
-            Size::new(8, 16),
             PixelFormat::Rgb,
-            true,
-            None,
-        ).unwrap();
+            config,
+        )
+        .unwrap();
         frame.new_line().unwrap();
         frame.new_line().unwrap();
         frame.new_line().unwrap();
@@ -200,15 +296,19 @@ mod tests {
 
     #[test]
     fn it_new_line() {
+        gop::test_init();
+
+        let config = config::Builder::new()
+            .set_scrollable()
+            .build();
+
         let mut frame = TextFrame::new(
-            TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
-            Size::new(8, 16),
             PixelFormat::Rgb,
-            true,
-            None,
-        ).unwrap();
+            config,
+        )
+        .unwrap();
 
         frame
             .append_string("ABC")
@@ -224,15 +324,19 @@ mod tests {
 
     #[test]
     fn it_frame_buffer_lines_2_rows() {
+        gop::test_init();
+
+        let config = config::Builder::new()
+            .set_scrollable()
+            .build();
+
         let mut frame = TextFrame::new(
-            TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
-            Size::new(8, 16),
             PixelFormat::Rgb,
-            true,
-            None,
-        ).unwrap();
+            config,
+        )
+        .unwrap();
 
         frame
             .append_string("Hello")

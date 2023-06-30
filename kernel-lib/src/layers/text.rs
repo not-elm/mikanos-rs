@@ -17,12 +17,15 @@ use crate::gop::pixel::calc_pixel_pos;
 use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::layers::layer::Layer;
 use crate::layers::layer_updatable::LayerUpdatable;
+use crate::layers::text::config::TextConfig;
 
 use self::colors::TextColors;
 use self::frame::TextFrame;
 
 pub mod colors;
-mod frame;
+pub mod command;
+pub mod config;
+pub mod frame;
 mod row;
 
 
@@ -30,19 +33,17 @@ mod row;
 pub struct TextLayer {
     #[to(Transformable2D)]
     transform: Transform2D,
-    config: FrameBufferConfig,
-    text_frame: TextFrame<AscIICharWriter>,
+    frame_buffer_config: FrameBufferConfig,
+    text_frame: TextFrame,
 }
 
 
 impl TextLayer {
     pub fn new(
-        config: FrameBufferConfig,
+        frame_buffer_config: FrameBufferConfig,
         pos: Vector2D<usize>,
         text_frame_size: Size,
-        colors: TextColors,
-        scrollable: bool,
-        prefix: Option<char>,
+        config: TextConfig,
     ) -> KernelResult<Self> {
         let ascii = AscIICharWriter::new();
         let text_unit = ascii.font_unit();
@@ -51,15 +52,12 @@ impl TextLayer {
         Ok(Self {
             transform,
             text_frame: TextFrame::new(
-                colors,
                 ascii,
                 text_frame_size,
-                text_unit,
-                config.pixel_format,
-                scrollable,
-                prefix,
+                frame_buffer_config.pixel_format,
+                config,
             )?,
-            config,
+            frame_buffer_config,
         })
     }
 
@@ -120,7 +118,13 @@ impl LayerUpdatable for TextLayer {
             .into_iter()
             .flatten();
 
-        update(&self.config, back_buff, draw_area, self.pos(), src_buff)
+        update(
+            &self.frame_buffer_config,
+            back_buff,
+            draw_area,
+            self.pos(),
+            src_buff,
+        )
     }
 }
 
@@ -130,7 +134,7 @@ pub(crate) fn update<'a>(
     back_buff: &mut ShadowFrameBuffer,
     draw_area: &Rectangle<usize>,
     origin: Vector2D<usize>,
-    src_buff: impl Iterator<Item=&'a [u8]>,
+    src_buff: impl Iterator<Item = &'a [u8]>,
 ) -> KernelResult {
     let diff_y = abs(origin.y() as isize - draw_area.origin().y() as isize);
     let diff_x = abs(origin.x() as isize - draw_area.origin().x() as isize);
@@ -163,19 +167,21 @@ mod tests {
 
     use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
     use crate::layers::layer_updatable::LayerUpdatable;
-    use crate::layers::text::colors::TextColors;
-    use crate::layers::text::TextLayer;
+    use crate::layers::text::{config, TextLayer};
 
     #[test]
     fn it_layer_size() {
+        let config = config::Builder::new()
+            .set_scrollable()
+            .build();
+
         let console = TextLayer::new(
             FrameBufferConfig::mock(),
             Vector2D::zeros(),
             Size::new(10, 10),
-            TextColors::default(),
-            true,
-            None,
-        ).unwrap();
+            config,
+        )
+        .unwrap();
 
         let size = console.rect().size();
         assert_eq!(size, Size::new(80, 160));
@@ -189,14 +195,16 @@ mod tests {
 
     #[test]
     fn it_update() {
+        let config = config::Builder::new()
+            .set_scrollable()
+            .build();
         let mut layer = TextLayer::new(
             FrameBufferConfig::mock(),
             Vector2D::zeros(),
             Size::new(10, 10),
-            TextColors::default(),
-            true,
-            None,
-        ).unwrap();
+            config,
+        )
+        .unwrap();
         let mut back_buff = ShadowFrameBuffer::new(FrameBufferConfig::mock());
 
         layer

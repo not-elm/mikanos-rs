@@ -46,13 +46,13 @@ fn update_text_box_keys(keycode: char) {
 
 unsafe fn operate_count_task_if_need(keycode: char) {
     match keycode {
-        's' => TASK_MANAGER
-            .sleep_at(1)
-            .unwrap(),
+        's' => {
+            let _ = TASK_MANAGER.sleep_at(1);
+        }
 
-        'w' => TASK_MANAGER
-            .wakeup_at(1)
-            .unwrap(),
+        'w' => {
+            let _ = TASK_MANAGER.wakeup_at(1);
+        }
 
         _ => {}
     }
