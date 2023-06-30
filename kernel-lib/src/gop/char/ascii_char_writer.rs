@@ -39,9 +39,9 @@ impl CharWritable for AscIICharWriter {
                 let is_need_write_bit = ((line << dx) & 0x80u8) != 0;
                 let pos = pos + Vector2D::new(dx, dy);
                 let color = if is_need_write_bit {
-                    colors.foreground()
+                    colors.foreground_ref()
                 } else {
-                    colors.background()
+                    colors.background_ref()
                 };
                 unsafe {
                     pixel_writer

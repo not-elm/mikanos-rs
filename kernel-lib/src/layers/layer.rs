@@ -32,7 +32,7 @@ pub enum Layer {
     Count(CountLayer),
     Toolbar(ToolbarLayer),
     TextBox(TextBoxLayer),
-    Terminal(TerminalLayer)
+    Terminal(TerminalLayer),
 }
 
 
@@ -126,10 +126,11 @@ impl Layer {
 
     #[inline]
     pub fn is_active_window(&self) -> bool {
-        if let Layer::Window(window) = self {
-            window.is_active()
-        } else {
-            false
+        match self {
+            Layer::Window(window) => {
+                window.is_active()
+            }
+            _ => false
         }
     }
 

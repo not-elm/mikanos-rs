@@ -22,6 +22,8 @@ pub(crate) mod toolbar;
 const TOOLBAR_HEIGHT: usize = 24;
 const TOOLBAR_LAYER_KEY: &str = "Window Toolbar";
 
+const PADDING_HEIGHT: usize = 5;
+const PADDING_WIDTH: usize = 3;
 
 #[derive(Delegate)]
 pub struct WindowLayer {
@@ -76,7 +78,7 @@ impl WindowLayer {
     {
         let mut layer = f(self.content_frame_size());
         layer
-            .move_to_relative(Vector2D::new(1, TOOLBAR_HEIGHT as isize + 5))
+            .move_to_relative(Vector2D::new(PADDING_WIDTH as isize, TOOLBAR_HEIGHT as isize + PADDING_HEIGHT as isize))
             .map_err(|e| kernel_error!(e))?;
 
         self.layers.new_layer(layer);
@@ -110,8 +112,8 @@ impl WindowLayer {
 
     pub fn content_frame_size(&self) -> Size {
         let window_size = self.layers.transform().size();
-        let width = window_size.width() - 2;
-        let height = window_size.height() - TOOLBAR_HEIGHT - 10;
+        let width = window_size.width() - PADDING_WIDTH * 2;
+        let height = window_size.height() - TOOLBAR_HEIGHT - PADDING_HEIGHT * 2;
 
         Size::new(width, height)
     }

@@ -1,5 +1,17 @@
-use crate::math::size::Size;
 use core::ops::Div;
+
+use crate::math::size::Size;
+
+impl Div for Size {
+    type Output = Size;
+
+
+    #[inline(always)]
+    fn div(self, rhs: Self) -> Self::Output {
+        Self::new(self.width() / rhs.width(), self.height() / rhs.height())
+    }
+}
+
 
 impl Div<usize> for Size {
     type Output = Size;

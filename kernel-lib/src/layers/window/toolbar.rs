@@ -52,7 +52,7 @@ impl ToolbarLayer {
             .unwrap()
             .require_shape()
             .unwrap()
-            .set_color(*self.active_colors.background());
+            .set_color(*self.active_colors.background_ref());
 
         self.layers
             .force_find_by_key_mut(TITLE_LAYER_KAY)
@@ -69,7 +69,7 @@ impl ToolbarLayer {
             .unwrap()
             .require_shape()
             .unwrap()
-            .set_color(*self.deactivate_colors.background());
+            .set_color(*self.deactivate_colors.background_ref());
 
         self.layers
             .force_find_by_key_mut(TITLE_LAYER_KAY)
@@ -106,7 +106,7 @@ fn toolbar_background_layer(
     deactivate_colors: TextColors,
 ) -> LayerKey {
     ShapeLayer::new(
-        ShapeDrawer::new(config(), *deactivate_colors.background()),
+        ShapeDrawer::new(config(), *deactivate_colors.background_ref()),
         transform,
     )
         .into_enum()

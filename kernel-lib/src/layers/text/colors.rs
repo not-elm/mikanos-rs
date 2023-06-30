@@ -9,6 +9,7 @@ pub struct TextColors {
 
 
 impl TextColors {
+    #[inline]
     pub const fn new(foreground: PixelColor, background: PixelColor) -> Self {
         Self {
             foreground,
@@ -17,26 +18,44 @@ impl TextColors {
     }
 
 
+    #[inline(always)]
     pub const fn change_foreground(self, foreground: PixelColor) -> Self {
         Self::new(foreground, self.background)
     }
 
+
+    #[inline(always)]
     pub const fn change_background(self, background: PixelColor) -> Self {
         Self::new(self.foreground, background)
     }
 
 
-    pub const fn foreground(&self) -> &PixelColor {
+    #[inline(always)]
+    pub const fn foreground(&self) -> PixelColor {
+        self.foreground
+    }
+
+
+    #[inline(always)]
+    pub const fn background(&self) -> PixelColor {
+        self.background
+    }
+
+
+    #[inline(always)]
+    pub const fn foreground_ref(&self) -> &PixelColor {
         &self.foreground
     }
 
 
-    pub const fn background(&self) -> &PixelColor {
+    #[inline(always)]
+    pub const fn background_ref(&self) -> &PixelColor {
         &self.background
     }
 }
 
 impl Default for TextColors {
+    #[inline]
     fn default() -> Self {
         Self::new(PixelColor::yellow(), DISPLAY_BACKGROUND_COLOR)
     }

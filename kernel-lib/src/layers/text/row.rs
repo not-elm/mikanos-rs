@@ -47,6 +47,10 @@ impl TextRow {
         colors: &TextColors,
         char_writer: &mut impl CharWritable,
     ) -> KernelResult<bool> {
+        if c == '\0' {
+            return Ok(false);
+        }
+
         if self.need_new_line() {
             return Ok(true);
         }
@@ -80,9 +84,9 @@ impl TextRow {
     pub fn need_new_line(&self) -> bool {
         self.max_text_len <= self.texts.len()
             || self
-                .texts
-                .last()
-                .is_some_and(|c| *c == '\n')
+            .texts
+            .last()
+            .is_some_and(|c| *c == '\n')
     }
 
 
@@ -201,6 +205,7 @@ mod tests {
         buf
     }
 
+
     #[test]
     fn it_write_char() {
         let mut writer = AscIICharWriter::new();
@@ -212,7 +217,7 @@ mod tests {
             &TextColors::default().change_foreground(PixelColor::white()),
             &mut writer,
         )
-        .unwrap();
+            .unwrap();
 
         assert_eq!(row.buff_width(), writer.font_unit().width() * 4);
         assert!(row

@@ -1,45 +1,70 @@
+use alloc::format;
+use alloc::string::{String, ToString};
 use core::fmt::Write;
-use core::sync::atomic::{AtomicBool, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use auto_delegate::Delegate;
 
-use common_lib::frame_buffer::FrameBufferConfig;
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
+use crate::gop::config;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
+use crate::layers::LAYERS;
 use crate::layers::multiple_layer::MultipleLayer;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
 use crate::layers::text::colors::TextColors;
 use crate::layers::text::TextLayer;
-use crate::layers::LAYERS;
 use crate::timer::handler::TimeHandle;
 
 const TEXT_LAYER_KEY: &str = "Text Box Text";
-const CURSOR_LAYER_KEY: &str = "Text Box Cursor";
 
 #[derive(Delegate)]
 pub struct TextBoxLayer {
     #[to(LayerUpdatable, Transformable2D, LayerFindable)]
     pub layers: MultipleLayer,
-
-    visible_text_cursor: bool,
-
+    text_cursor_key: String,
     _cursor_handle: TimeHandle,
 }
 
 
 impl TextBoxLayer {
-    pub fn new(config: FrameBufferConfig, transform: Transform2D) -> Self {
-        let (layers, cursor_handle) = text_box_layers(config, transform);
+    pub fn new_light(
+        transform: Transform2D,
+    ) -> Self {
+        Self::new(
+            transform,
+            TextColors::new(PixelColor::black(), PixelColor::white()),
+            true
+        )
+    }
+
+
+    pub fn new_dark(
+        transform: Transform2D,
+    ) -> Self {
+        Self::new(
+            transform,
+            TextColors::new(PixelColor::white(), PixelColor::black()),
+            false
+        )
+    }
+
+
+    pub fn new(
+        transform: Transform2D,
+        colors: TextColors,
+        with_shadow: bool,
+    ) -> Self {
+        let (layers, text_cursor_key, cursor_handle) = text_box_layers(transform, colors, with_shadow);
 
         Self {
             layers,
-            visible_text_cursor: true,
+            text_cursor_key,
             _cursor_handle: cursor_handle,
         }
     }
@@ -51,18 +76,6 @@ impl TextBoxLayer {
             .delete_last();
 
         self.update_text_cursor_pos();
-    }
-
-
-    pub fn update_text_cursor_color(&mut self) {
-        self.visible_text_cursor = !self.visible_text_cursor;
-        if self.visible_text_cursor {
-            self.text_cursor_layer()
-                .set_color(PixelColor::black());
-        } else {
-            self.text_cursor_layer()
-                .set_color(PixelColor::white());
-        }
     }
 
 
@@ -86,7 +99,7 @@ impl TextBoxLayer {
     #[inline(always)]
     fn text_cursor_layer(&mut self) -> &mut ShapeLayer {
         self.layers
-            .force_find_by_key_mut(CURSOR_LAYER_KEY)
+            .force_find_by_key_mut(&self.text_cursor_key)
             .require_shape()
             .unwrap()
     }
@@ -115,38 +128,45 @@ impl Write for TextBoxLayer {
 
 
 fn text_box_layers(
-    config: FrameBufferConfig,
     transform: Transform2D,
-) -> (MultipleLayer, TimeHandle) {
+    colors: TextColors,
+    with_shadow: bool,
+) -> (MultipleLayer, String, TimeHandle) {
     let mut layers = MultipleLayer::new(transform);
-    layers.new_layer(inner_shadow(config, layers.transform()));
-    layers.new_layer(drop_shadow(config, layers.transform()));
-    layers.new_layer(background(config, layers.transform()));
-    layers.new_layer(text(config));
-    let (cursor, handle) = cursor(config);
+    if with_shadow {
+        layers.new_layer(inner_shadow(layers.transform()));
+        layers.new_layer(drop_shadow(layers.transform()));
+        layers.new_layer(background(layers.transform(), 1,colors.background()));
+    } else {
+        layers.new_layer(background(layers.transform(), 0 ,colors.background()));
+    }
+
+    layers.new_layer(text(colors));
+    let (cursor, handle) = cursor(colors);
+    let cursor_key = cursor.key().to_string();
     layers.new_layer(cursor);
 
-    (layers, handle)
+    (layers, cursor_key, handle)
 }
 
 
-fn inner_shadow(config: FrameBufferConfig, root_transform: Transform2D) -> LayerKey {
+fn inner_shadow(root_transform: Transform2D) -> LayerKey {
     let transform = Transform2D::new(Vector2D::zeros(), root_transform.size());
     let layer = ShapeLayer::new(
-        ShapeDrawer::new(config, PixelColor::new(0x84, 0x84, 0x84)),
+        ShapeDrawer::new(config(), PixelColor::new(0x84, 0x84, 0x84)),
         transform,
     );
 
     layer
         .into_enum()
-        .into_layer_key("Text Box Background")
+        .into_layer_key("Text Box Inner Shadow")
 }
 
 
-fn drop_shadow(config: FrameBufferConfig, root_transform: Transform2D) -> LayerKey {
+fn drop_shadow(root_transform: Transform2D) -> LayerKey {
     let transform = Transform2D::new(Vector2D::unit(), root_transform.size());
     let layer = ShapeLayer::new(
-        ShapeDrawer::new(config, PixelColor::new(0xC6, 0xC6, 0xC6)),
+        ShapeDrawer::new(config(), PixelColor::new(0xC6, 0xC6, 0xC6)),
         transform,
     );
 
@@ -156,48 +176,49 @@ fn drop_shadow(config: FrameBufferConfig, root_transform: Transform2D) -> LayerK
 }
 
 
-fn background(config: FrameBufferConfig, root_transform: Transform2D) -> LayerKey {
-    let transform = Transform2D::new(Vector2D::unit(), root_transform.size() - 2);
-    let layer = ShapeLayer::new(ShapeDrawer::new(config, PixelColor::white()), transform);
+fn background(root_transform: Transform2D, sub_size: usize, color: PixelColor) -> LayerKey {
+    let transform = Transform2D::new(Vector2D::unit(), root_transform.size() - sub_size);
+    let layer = ShapeLayer::new(ShapeDrawer::new(config(), color), transform);
 
     layer
         .into_enum()
-        .into_layer_key("Text Box Outline")
+        .into_layer_key("Text Box Background")
 }
 
 
-fn text(config: FrameBufferConfig) -> LayerKey {
+fn text(colors: TextColors) -> LayerKey {
     let pos = Vector2D::new(5, 2);
     let text_frame_size = Size::new(20, 1);
-    let colors = TextColors::default()
-        .change_foreground(PixelColor::black())
-        .change_background(PixelColor::white());
 
-    TextLayer::new(config, pos, text_frame_size, colors)
+    TextLayer::new(config(), pos, text_frame_size, colors)
         .into_enum()
         .into_layer_key(TEXT_LAYER_KEY)
 }
 
 
-fn cursor(config: FrameBufferConfig) -> (LayerKey, TimeHandle) {
+fn cursor(colors: TextColors) -> (LayerKey, TimeHandle) {
     let visible = AtomicBool::new(true);
+    static ID: AtomicUsize = AtomicUsize::new(0);
+    let key = format!("Text Box Cursor{}", ID.fetch_add(1, Ordering::Relaxed));
+
+    let key_copy = key.clone();
     let cursor_handle = TimeHandle::start_dispatch_on_main(70, move || {
         LAYERS
             .lock()
-            .update_layer(CURSOR_LAYER_KEY, |layer| {
+            .update_layer(&key_copy, |layer| {
                 let text = layer.require_shape().unwrap();
                 if visible.fetch_not(Ordering::Relaxed) {
-                    text.set_color(PixelColor::black())
+                    text.set_color(colors.foreground())
                 } else {
-                    text.set_color(PixelColor::white())
+                    text.set_color(colors.background())
                 }
             })
             .unwrap();
     });
 
-    let transform = Transform2D::new(Vector2D::new(3, 3), Size::new(1, 14));
-    let layer = ShapeLayer::new(ShapeDrawer::new(config, PixelColor::black()), transform);
-    let layer_key = Layer::Shape(layer).into_layer_key(CURSOR_LAYER_KEY);
+    let transform = Transform2D::new(Vector2D::new(3, 3), Size::new(3, 14));
+    let layer = ShapeLayer::new(ShapeDrawer::new(config(), colors.foreground()), transform);
+    let layer_key = Layer::Shape(layer).into_layer_key(&key);
 
     (layer_key, cursor_handle)
 }

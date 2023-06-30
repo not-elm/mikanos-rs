@@ -1,4 +1,4 @@
-use core::ops::{Div, Mul, MulAssign};
+use core::ops::{Mul, MulAssign};
 
 use crate::math::pixel_with_in_rect_iter::PointsWithInRectIter;
 use crate::math::rectangle::Rectangle;
@@ -69,17 +69,6 @@ impl MulAssign<usize> for Size {
     #[inline(always)]
     fn mul_assign(&mut self, rhs: usize) {
         *self = *self * rhs;
-    }
-}
-
-
-impl Div for Size {
-    type Output = Size;
-
-
-    #[inline(always)]
-    fn div(self, rhs: Self) -> Self::Output {
-        Self::new(self.width() / rhs.width(), self.height() / rhs.height())
     }
 }
 

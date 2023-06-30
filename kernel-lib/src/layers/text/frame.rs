@@ -146,7 +146,7 @@ impl<Char: CharWritable> TextFrame<Char> {
     #[inline]
     fn new_row(&self) -> TextRow {
         TextRow::new(
-            *self.colors.background(),
+            *self.colors.background_ref(),
             self.char_writer.font_unit(),
             self.text_frame_size.width(),
             self.pixel_format,
@@ -170,6 +170,7 @@ mod tests {
             TextColors::default(),
             AscIICharWriter::new(),
             Size::new(100, 3),
+            Size::new(8, 16),
             PixelFormat::Rgb,
         );
         frame.new_line();
@@ -188,6 +189,7 @@ mod tests {
             TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
+            Size::new(8, 16),
             PixelFormat::Rgb,
         );
         frame
@@ -208,6 +210,7 @@ mod tests {
             TextColors::default(),
             AscIICharWriter::new(),
             Size::new(3, 3),
+            Size::new(8, 16),
             PixelFormat::Rgb,
         );
         frame

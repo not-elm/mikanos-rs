@@ -32,7 +32,7 @@ pub struct TextLayer {
     transform: Transform2D,
     config: FrameBufferConfig,
     text_frame: TextFrame<AscIICharWriter>,
-    colors: TextColors,
+
 }
 
 
@@ -51,7 +51,6 @@ impl TextLayer {
             transform,
             text_frame: TextFrame::new(colors, ascii, text_frame_size, text_unit, config.pixel_format),
             config,
-            colors,
         }
     }
 
@@ -106,8 +105,6 @@ impl LayerUpdatable for TextLayer {
         back_buff: &mut ShadowFrameBuffer,
         draw_area: &Rectangle<usize>,
     ) -> KernelResult {
-        back_buff.fill_rect(draw_area, *self.colors.background())?;
-
         let src_buff = self
             .text_frame
             .frame_buff_lines()
