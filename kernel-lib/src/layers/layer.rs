@@ -80,6 +80,15 @@ impl Layer {
 
 
     #[inline]
+    pub fn require_terminal(&mut self) -> KernelResult<&mut TerminalLayer> {
+        match self {
+            Self::Terminal(terminal) => Ok(terminal),
+            _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
+        }
+    }
+
+
+    #[inline]
     pub fn require_toolbar(&mut self) -> KernelResult<&mut ToolbarLayer> {
         match self {
             Self::Toolbar(toolbar) => Ok(toolbar),
@@ -101,6 +110,7 @@ impl Layer {
     pub fn require_window(&mut self) -> KernelResult<&mut WindowLayer> {
         match self {
             Self::Window(window) => Ok(window),
+            Self::Terminal(terminal) => Ok(terminal.window_mut()),
             _ => Err(KernelError::FailedOperateLayer(LayerReason::IllegalLayer)),
         }
     }
@@ -120,7 +130,7 @@ impl Layer {
 
     #[inline]
     pub fn is_window(&self) -> bool {
-        matches!(self, Self::Window(_))
+        matches!(self, Self::Window(_) | Self::Terminal(_))
     }
 
 
@@ -129,6 +139,9 @@ impl Layer {
         match self {
             Layer::Window(window) => {
                 window.is_active()
+            }
+            Layer::Terminal(terminal) => {
+                terminal.is_active()
             }
             _ => false
         }

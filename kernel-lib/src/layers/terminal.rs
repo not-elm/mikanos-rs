@@ -16,13 +16,12 @@ use crate::layers::shape::ShapeLayer;
 use crate::layers::text_box::TextBoxLayer;
 use crate::layers::window::WindowLayer;
 
-const TEXT_LAYER_KEY: &str = "Terminal Text";
+const TEXT_BOX_LAYER_KEY: &str = "Terminal Text";
 
 #[derive(Delegate)]
 pub struct TerminalLayer {
     #[to(Transformable2D, LayerUpdatable, LayerFindable)]
     window: WindowLayer,
-
 }
 
 
@@ -40,8 +39,32 @@ impl TerminalLayer {
     }
 
 
+    #[inline]
     pub fn into_enum(self) -> Layer {
         Layer::Terminal(self)
+    }
+
+
+    #[inline]
+    pub(crate) fn window_mut(&mut self) -> &mut WindowLayer {
+        &mut self.window
+    }
+
+
+    #[inline]
+    pub fn delete_last(&mut self) {
+        self
+            .window
+            .find_by_key_mut(TEXT_BOX_LAYER_KEY)
+            .unwrap()
+            .require_text_box()
+            .unwrap()
+            .delete_last()
+    }
+
+    #[inline]
+    pub fn is_active(&self) -> bool {
+        self.window.is_active()
     }
 }
 
@@ -49,7 +72,7 @@ impl TerminalLayer {
 impl Write for TerminalLayer {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.window
-            .find_by_key_mut(TEXT_LAYER_KEY)
+            .find_by_key_mut(TEXT_BOX_LAYER_KEY)
             .unwrap()
             .require_text_box()
             .unwrap()
@@ -68,14 +91,11 @@ fn text_background(size: Size) -> LayerKey {
 
 fn text(size: Size) -> LayerKey {
     let pos = Vector2D::zeros();
-    let text_frame_size = size / Size::new(8, 16);
-
-    let mut text = TextBoxLayer::new_dark(Transform2D::new(pos, text_frame_size));
-    text.write_str(">").unwrap();
+    let text = TextBoxLayer::new_dark(Transform2D::new(pos, size), true, Some('>'));
 
     text
         .into_enum()
-        .into_layer_key(TEXT_LAYER_KEY)
+        .into_layer_key(TEXT_BOX_LAYER_KEY)
 }
 
 

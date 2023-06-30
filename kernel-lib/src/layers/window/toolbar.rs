@@ -123,7 +123,9 @@ fn toolbar_title_layer(
         Vector2D::new(24, 4),
         Size::new(12, 1),
         deactivate_colors,
-    );
+        false,
+        None
+    ).unwrap();
 
     text.update_string(title)
         .unwrap();

@@ -12,7 +12,10 @@ pub(crate) fn console(config: FrameBufferConfig) -> LayerKey {
         Vector2D::zeros(),
         Size::new(50, 10),
         TextColors::default(),
+        true,
+        None
     )
+        .unwrap()
     .into_enum()
     .into_layer_key(CONSOLE_LAYER_KEY)
 }

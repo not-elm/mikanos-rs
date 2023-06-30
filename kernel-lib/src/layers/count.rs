@@ -70,7 +70,9 @@ fn text_layer(config: FrameBufferConfig, _root_transform: &Transform2D) -> Kerne
         TextColors::default()
             .change_foreground(PixelColor::black())
             .change_background(PixelColor::window_background()),
-    );
+        false,
+        None
+    ).unwrap();
 
     text.update_string("0")?;
 

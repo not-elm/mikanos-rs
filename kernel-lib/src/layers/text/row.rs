@@ -51,10 +51,13 @@ impl TextRow {
             return Ok(false);
         }
 
-        if self.need_new_line() {
+        if c == '\n' || c == '\x0D' || self.need_new_line() {
             return Ok(true);
         }
 
+
+        self.texts.push(c);
+        
         let pos = Vector2D::new(self.texts.len() * self.font_unit.width(), 0);
         char_writer.write(
             self.text_buffs.as_mut_slice(),
@@ -63,8 +66,6 @@ impl TextRow {
             colors,
             &mut self.buff_pixel_writer,
         )?;
-
-        self.texts.push(c);
 
         Ok(false)
     }
@@ -86,7 +87,7 @@ impl TextRow {
             || self
             .texts
             .last()
-            .is_some_and(|c| *c == '\n')
+            .is_some_and(|c| *c == '\n' || *c == '\x0D')
     }
 
 

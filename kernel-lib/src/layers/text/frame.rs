@@ -8,6 +8,7 @@ use crate::error::KernelResult;
 use crate::gop::char::char_writable::CharWritable;
 use crate::layers::text::colors::TextColors;
 use crate::layers::text::row::TextRow;
+use crate::serial_println;
 
 pub struct TextFrame<Char> {
     rows: Vec<TextRow>,
@@ -16,6 +17,8 @@ pub struct TextFrame<Char> {
     text_unit: Size,
     pixel_format: PixelFormat,
     char_writer: Char,
+    scrollable: bool,
+    prefix: Option<char>,
 }
 
 
@@ -26,7 +29,9 @@ impl<Char: CharWritable> TextFrame<Char> {
         text_frame_size: Size,
         text_unit: Size,
         pixel_format: PixelFormat,
-    ) -> Self {
+        scrollable: bool,
+        prefix: Option<char>,
+    ) -> KernelResult<TextFrame<Char>> {
         let mut me = Self {
             rows: Vec::new(),
             char_writer,
@@ -34,9 +39,11 @@ impl<Char: CharWritable> TextFrame<Char> {
             text_frame_size,
             text_unit,
             pixel_format,
+            scrollable,
+            prefix,
         };
-        me.add_row();
-        me
+        me.add_row()?;
+        Ok(me)
     }
 
 
@@ -50,7 +57,7 @@ impl<Char: CharWritable> TextFrame<Char> {
 
     pub fn update_string(&mut self, str: &str) -> KernelResult {
         self.rows.remove(0);
-        self.add_row();
+        self.add_row()?;
         self.append_string(str)
     }
 
@@ -59,18 +66,10 @@ impl<Char: CharWritable> TextFrame<Char> {
         if str.is_empty() {
             return Ok(());
         }
-        if self
-            .rows
-            .last()
-            .unwrap()
-            .need_new_line()
-        {
-            self.new_line();
-        }
 
         for c in str.chars() {
             if self.write_char(c)? {
-                self.new_line();
+                self.new_line()?;
                 self.write_char(c)?;
             }
         }
@@ -101,7 +100,7 @@ impl<Char: CharWritable> TextFrame<Char> {
         let mut rows = Vec::with_capacity(self.rows.len());
 
         for i in 0..self.rows.len() {
-            let mut row = self.new_row();
+            let mut row = self.new_row()?;
             for c in self.rows[i].texts() {
                 row.write_char(*c, &self.colors, &mut self.char_writer)?;
             }
@@ -114,18 +113,24 @@ impl<Char: CharWritable> TextFrame<Char> {
     }
 
 
-    fn new_line(&mut self) {
+    fn new_line(&mut self) -> KernelResult {
         if self.text_frame_size.height() <= self.rows.len() {
-            self.scroll();
+            self.scroll()?;
         } else {
-            self.add_row();
+            self.add_row()?;
         }
+
+        Ok(())
     }
 
 
-    fn scroll(&mut self) {
-        self.rows.remove(0);
-        self.add_row();
+    fn scroll(&mut self) -> KernelResult {
+        if self.scrollable {
+            self.rows.remove(0);
+            self.add_row()?;
+        }
+
+        Ok(())
     }
 
 
@@ -138,19 +143,28 @@ impl<Char: CharWritable> TextFrame<Char> {
 
 
     #[inline]
-    fn add_row(&mut self) {
-        self.rows.push(self.new_row())
+    fn add_row(&mut self) -> KernelResult {
+        let row = self.new_row()?;
+        self.rows.push(row);
+        
+        Ok(())
     }
 
 
     #[inline]
-    fn new_row(&self) -> TextRow {
-        TextRow::new(
+    fn new_row(&mut self) -> KernelResult<TextRow> {
+        let mut row = TextRow::new(
             *self.colors.background_ref(),
             self.char_writer.font_unit(),
             self.text_frame_size.width(),
             self.pixel_format,
-        )
+        );
+
+        if let Some(prefix) = self.prefix {
+            row.write_char(prefix, &self.colors, &mut self.char_writer)?;
+        }
+
+        Ok(row)
     }
 }
 
@@ -172,13 +186,15 @@ mod tests {
             Size::new(100, 3),
             Size::new(8, 16),
             PixelFormat::Rgb,
-        );
-        frame.new_line();
-        frame.new_line();
-        frame.new_line();
+            true,
+            None,
+        ).unwrap();
+        frame.new_line().unwrap();
+        frame.new_line().unwrap();
+        frame.new_line().unwrap();
         assert_eq!(frame.rows.len(), 3);
-        frame.new_line();
-        frame.new_line();
+        frame.new_line().unwrap();
+        frame.new_line().unwrap();
         assert_eq!(frame.rows.len(), 3);
     }
 
@@ -191,7 +207,10 @@ mod tests {
             Size::new(3, 3),
             Size::new(8, 16),
             PixelFormat::Rgb,
-        );
+            true,
+            None,
+        ).unwrap();
+
         frame
             .append_string("ABC")
             .unwrap();
@@ -212,7 +231,10 @@ mod tests {
             Size::new(3, 3),
             Size::new(8, 16),
             PixelFormat::Rgb,
-        );
+            true,
+            None,
+        ).unwrap();
+
         frame
             .append_string("Hello")
             .unwrap();

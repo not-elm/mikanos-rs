@@ -2,11 +2,12 @@ use alloc::string::ToString;
 use core::fmt::Write;
 
 use kernel_lib::layers::LAYERS;
+use kernel_lib::serial_println;
 use kernel_lib::task::TASK_MANAGER;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 
-use crate::layers::KEYBOARD_TEXT;
+use crate::layers::{KEYBOARD_TEXT, TERMINAL_LAYER_KEY};
 
 pub fn build_keyboard_driver() -> KeyboardDriver {
     keyboard::builder::Builder::new()
@@ -25,9 +26,9 @@ fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
 fn update_text_box_keys(keycode: char) {
     LAYERS
         .lock()
-        .update_layer(KEYBOARD_TEXT, |layer| {
+        .update_layer(TERMINAL_LAYER_KEY, |layer| {
             let text_layer = layer
-                .require_text_box()
+                .require_terminal()
                 .unwrap();
             match keycode {
                 '\x7F' => {

@@ -32,7 +32,6 @@ pub struct TextLayer {
     transform: Transform2D,
     config: FrameBufferConfig,
     text_frame: TextFrame<AscIICharWriter>,
-
 }
 
 
@@ -42,16 +41,26 @@ impl TextLayer {
         pos: Vector2D<usize>,
         text_frame_size: Size,
         colors: TextColors,
-    ) -> Self {
+        scrollable: bool,
+        prefix: Option<char>,
+    ) -> KernelResult<Self> {
         let ascii = AscIICharWriter::new();
         let text_unit = ascii.font_unit();
         let transform = Transform2D::new(pos, text_unit * text_frame_size);
 
-        Self {
+        Ok(Self {
             transform,
-            text_frame: TextFrame::new(colors, ascii, text_frame_size, text_unit, config.pixel_format),
+            text_frame: TextFrame::new(
+                colors,
+                ascii,
+                text_frame_size,
+                text_unit,
+                config.pixel_format,
+                scrollable,
+                prefix,
+            )?,
             config,
-        }
+        })
     }
 
 
@@ -164,7 +173,9 @@ mod tests {
             Vector2D::zeros(),
             Size::new(10, 10),
             TextColors::default(),
-        );
+            true,
+            None,
+        ).unwrap();
 
         let size = console.rect().size();
         assert_eq!(size, Size::new(80, 160));
@@ -183,7 +194,9 @@ mod tests {
             Vector2D::zeros(),
             Size::new(10, 10),
             TextColors::default(),
-        );
+            true,
+            None,
+        ).unwrap();
         let mut back_buff = ShadowFrameBuffer::new(FrameBufferConfig::mock());
 
         layer

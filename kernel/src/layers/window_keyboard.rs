@@ -24,7 +24,7 @@ fn keyboard_text_box() -> LayerKey {
     let pos = Vector2D::zeros();
     let size = Size::new(170, 20);
 
-    TextBoxLayer::new_light(Transform2D::new(pos, size))
+    TextBoxLayer::new_light(Transform2D::new(pos, size), true, None)
         .into_enum()
         .into_layer_key(KEYBOARD_TEXT)
 }
