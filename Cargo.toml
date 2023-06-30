@@ -23,3 +23,4 @@ derive-getters = "0.3.0"
 volatile-bits = { git = "https://github.com/elm-register/volatile-bits", branch = "master" }
 paste = "1.0.12"
 memoffset = "0.9.0"
+once_cell = { version = "1.18.0", default-features = false }

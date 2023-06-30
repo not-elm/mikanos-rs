@@ -61,7 +61,7 @@ unsafe impl Sync for GlobalLayers {}
 
 pub fn frame_buffer_layer_transform(frame_buffer_config: FrameBufferConfig) -> Transform2D {
     Transform2DBuilder::new()
-        .size(frame_buffer_config.frame_size())
+        .size(frame_buffer_config.screen_size())
         .build()
 }
 
@@ -138,7 +138,7 @@ impl Layers {
 
         self.flush(&Rectangle::from_size(
             self.frame_buffer_config
-                .frame_size(),
+                .screen_size(),
         ))
     }
 

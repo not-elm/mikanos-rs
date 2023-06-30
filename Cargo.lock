@@ -139,6 +139,7 @@ dependencies = [
  "memoffset",
  "modular-bitfield",
  "once",
+ "once_cell",
  "paste",
  "spin 0.9.5",
  "uart_16550",
@@ -239,6 +240,12 @@ name = "once"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60bfe75a40f755f162b794140436c57845cb106fd1467598631c76c6fff08e28"
+
+[[package]]
+name = "once_cell"
+version = "1.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "paste"

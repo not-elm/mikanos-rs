@@ -19,7 +19,7 @@ anyhow = { workspace = true }
 derive-getters = { workspace = true }
 volatile-bits = { workspace = true }
 memoffset = { workspace = true }
-
+once_cell = { workspace = true }
 
 [build-dependencies]
 cc = { version = "1.0" }

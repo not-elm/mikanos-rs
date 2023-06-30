@@ -43,14 +43,14 @@ impl FrameBufferConfig {
 
 
     #[inline(always)]
-    pub fn frame_size(&self) -> Size {
+    pub fn screen_size(&self) -> Size {
         Size::new(self.horizontal_resolution, self.vertical_resolution)
     }
 
 
     #[inline(always)]
     pub fn frame_rect(&self) -> Rectangle<usize> {
-        Rectangle::from_size(self.frame_size())
+        Rectangle::from_size(self.screen_size())
     }
 
 
