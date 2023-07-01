@@ -1,12 +1,14 @@
+use core::fmt::{Debug, Formatter};
+
 use kernel_lib::io::asm::{fetch_config_data, write_config_addr};
 use kernel_lib::io::config_address_register::ConfigAddrRegister;
 
 use crate::configuration_space::common_header::class_code::ClassCode;
 use crate::configuration_space::common_header::common_header_holdable::CommonHeaderHoldable;
 use crate::configuration_space::common_header::sub_class::Subclass;
-use crate::configuration_space::device::function::Function;
 use crate::configuration_space::device::function::multiple_function_device::MultipleFunctionDevice;
 use crate::configuration_space::device::function::single_function_device::SingleFunctionDevice;
+use crate::configuration_space::device::function::Function;
 use crate::configuration_space::device::header_type::general_header::GeneralHeader;
 use crate::configuration_space::device::header_type::pci_to_pci_bride_header::PciToPciBridgeHeader;
 
@@ -14,7 +16,7 @@ pub mod common_header;
 pub mod device;
 pub mod msi;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[repr(C)]
 pub struct ConfigurationSpace {
     bus: u8,
@@ -98,6 +100,23 @@ fn select_single_function_device(config_space: ConfigurationSpace) -> Function {
     };
 
     Function::Single(device_header)
+}
+
+
+impl Debug for ConfigurationSpace {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "{:X}.{:X}.{:X} vendor={:X} head={:X} class={:X} subclass={:?}",
+            self.bus,
+            self.device_slot,
+            self.function,
+            self.vendor_id(),
+            self.header_type(),
+            self.class_code(),
+            self.sub_class()
+        )
+    }
 }
 
 

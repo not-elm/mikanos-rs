@@ -14,8 +14,7 @@ use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::LayerFindable;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
-use crate::layers::text::command::{Command, CommandAction, CommandArgs, CommandResult};
-use crate::layers::text::config;
+use crate::layers::text::config::TextConfig;
 use crate::layers::text_box::TextBoxLayer;
 use crate::layers::window::WindowLayer;
 
@@ -29,11 +28,11 @@ pub struct TerminalLayer {
 
 
 impl TerminalLayer {
-    pub fn new(transform: Transform2D) -> TerminalLayer {
+    pub fn new(transform: Transform2D, config: TextConfig) -> TerminalLayer {
         let window = WindowLayer::new_dark_color("", transform)
             .then_add(text_background)
             .unwrap()
-            .then_add(text)
+            .then_add(|size| text(size, config))
             .unwrap();
 
         Self { window }
@@ -89,44 +88,10 @@ fn text_background(size: Size) -> LayerKey {
 }
 
 
-fn text(size: Size) -> LayerKey {
+fn text(size: Size, config: TextConfig) -> LayerKey {
     let pos = Vector2D::zeros();
-    let config = config::Builder::new()
-        .set_scrollable()
-        .prefix('>')
-        .add_command(Command::new("echo", echo))
-        .add_command(Command::new("clear", clear))
-        .build();
 
     let text = TextBoxLayer::new_dark(Transform2D::new(pos, size), config);
     text.into_enum()
         .into_layer_key(TEXT_BOX_LAYER_KEY)
-}
-
-
-fn echo(args: CommandArgs) -> CommandResult {
-    if args.is_empty() {
-        return Err("Not Command Args".to_string());
-    }
-
-    Ok(CommandAction::Output(args[0].to_string()))
-}
-
-
-fn clear(_args: CommandArgs) -> CommandResult {
-    Ok(CommandAction::Clear)
-}
-
-
-#[cfg(test)]
-mod tests {
-    use alloc::string::ToString;
-
-    use crate::layers::terminal::echo;
-
-    #[test]
-    fn it_echo() {
-        let output = echo(&["aaa"]);
-        assert_eq!(output, Ok("aaa".to_string()));
-    }
 }

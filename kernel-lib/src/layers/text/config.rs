@@ -30,6 +30,13 @@ impl Builder {
     }
 
 
+    pub fn terminal() -> Self {
+        Self::new()
+            .set_scrollable()
+            .prefix('>')
+    }
+
+
     pub fn set_scrollable(mut self) -> Self {
         self.scrollable = true;
         self

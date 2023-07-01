@@ -6,37 +6,60 @@ use crate::configuration_space::ConfigurationSpace;
 
 pub trait CommonHeaderHoldable {
     fn device_slot(&self) -> u16 {
-        convert_to_device_id(self.as_config_space().fetch_data_offset_at(0))
+        convert_to_device_id(
+            self.as_config_space()
+                .fetch_data_offset_at(0),
+        )
     }
+
+
     fn vendor_id(&self) -> VendorId {
         VendorId::new(convert_to_vendor_id(
-            self.as_config_space().fetch_data_offset_at(0),
+            self.as_config_space()
+                .fetch_data_offset_at(0),
         ))
     }
 
+
     fn class_code(&self) -> ClassCode {
-        let code = self.as_config_space().fetch_data_offset_at(0x8);
+        let code = self
+            .as_config_space()
+            .fetch_data_offset_at(0x8);
 
         ClassCode::try_from(convert_to_class_code(code)).unwrap_or(ClassCode::NoSupport)
     }
+
+
     fn sub_class(&self) -> Subclass {
-        let offset_8 = self.as_config_space().fetch_data_offset_at(0x08);
+        let offset_8 = self
+            .as_config_space()
+            .fetch_data_offset_at(0x08);
 
         let sub_class = convert_to_sub_class(offset_8);
 
         Subclass::from_class_code(self.class_code(), sub_class)
     }
+
+
     fn status(&self) -> u16 {
-        (self.as_config_space().fetch_data_offset_at(0x04) >> 16) as u16
+        (self
+            .as_config_space()
+            .fetch_data_offset_at(0x04)
+            >> 16) as u16
     }
+
+
     fn header_type(&self) -> HeaderType {
         HeaderType::new(convert_to_header_type(
-            self.as_config_space().fetch_data_offset_at(0x0C),
+            self.as_config_space()
+                .fetch_data_offset_at(0x0C),
         ))
     }
 
+
     fn as_config_space(&self) -> &ConfigurationSpace;
 }
+
 
 pub(crate) fn convert_to_vendor_id(data_offset_0: u32) -> u16 {
     (data_offset_0 & 0xFF) as u16

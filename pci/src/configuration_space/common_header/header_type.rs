@@ -1,19 +1,33 @@
+use core::fmt::{Formatter, UpperHex};
+
 #[repr(transparent)]
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct HeaderType(u8);
+
 
 impl HeaderType {
     pub fn new(header_type: u8) -> Self {
         Self(header_type)
     }
+
+
     pub fn is_multiple_function(&self) -> bool {
         last_bit(self.0) == 1
     }
 }
 
+
 fn last_bit(header_type: u8) -> u8 {
     header_type >> 7
 }
+
+
+impl UpperHex for HeaderType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{:X}", self.0)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

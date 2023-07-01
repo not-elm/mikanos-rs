@@ -1,3 +1,4 @@
+use core::fmt::{Formatter, Pointer, UpperHex};
 use core::ops::Deref;
 
 #[repr(transparent)]
@@ -12,6 +13,14 @@ impl VendorId {
         self.0 != 0xFF
     }
 }
+
+
+impl UpperHex for VendorId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{:X}", self.0)
+    }
+}
+
 
 impl Deref for VendorId {
     type Target = u16;

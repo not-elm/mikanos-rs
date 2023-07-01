@@ -19,11 +19,13 @@ pub struct PciDeviceSearcher {
     class_code: Option<ClassCode>,
 }
 
+
 impl Default for PciDeviceSearcher {
     fn default() -> Self {
         PciDeviceSearcher::new()
     }
 }
+
 
 impl PciDeviceSearcher {
     pub fn new() -> Self {

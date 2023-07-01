@@ -1,8 +1,9 @@
+use core::fmt::{Formatter, UpperHex};
 use enum_try_from::impl_enum_try_from_be;
 
 impl_enum_try_from_be! {
     #[repr(u8)]
-    #[derive(Debug,PartialEq, Eq)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     pub enum ClassCode {
         MassStorage = 0x01,
         NetworkController = 0x02,
@@ -22,6 +23,14 @@ impl_enum_try_from_be! {
     (),
     ()
 }
+
+
+impl UpperHex for ClassCode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{:X}", (*self) as u8)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
