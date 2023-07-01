@@ -1,4 +1,3 @@
-use kernel_lib::layers::LAYERS;
 use kernel_lib::task::message::TaskMessage;
 use kernel_lib::task::TASK_MANAGER;
 use kernel_lib::timer::TIME_HANDLE_MANAGER;
@@ -32,15 +31,9 @@ pub fn start_xhci_host_controller(
             xhc_controller.process_all_events();
         }
 
-        TaskMessage::Count { count, layer_key } => {
-            update_count(count, &layer_key);
-        }
-
         TaskMessage::Dispatch(handler) => {
             handler();
         }
-
-        _ => {}
     });
 
     Ok(())
@@ -67,16 +60,4 @@ fn start_xhc_controller(
         .map_err(|e| e.inner())?;
 
     Ok(xhc_controller)
-}
-
-
-#[inline(always)]
-fn update_count(count: usize, key: &str) {
-    LAYERS
-        .lock()
-        .update_layer(key, |layer| {
-            let window = layer.require_count().unwrap();
-            window.write_count(count);
-        })
-        .unwrap();
 }

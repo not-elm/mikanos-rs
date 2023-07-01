@@ -25,6 +25,13 @@ mod switch;
 pub static mut TASK_MANAGER: PreemptiveTaskManager = PreemptiveTaskManager::new();
 
 
+pub fn dispatch(f: impl Fn() + 'static)  {
+    unsafe { TASK_MANAGER
+        .send_message_at(0, TaskMessage::dispatch(f))
+        .unwrap() }
+}
+
+
 pub struct PreemptiveTaskManager {
     task_manager: OnceCell<TaskManager>,
 }
