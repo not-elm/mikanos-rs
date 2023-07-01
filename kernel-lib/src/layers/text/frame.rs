@@ -9,6 +9,7 @@ use crate::gop::char::ascii_char_writer::AscIICharWriter;
 use crate::gop::char::char_writable::CharWritable;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::text::colors::TextColors;
+use crate::layers::text::command::CommandAction;
 use crate::layers::text::config::TextConfig;
 use crate::layers::text::row::TextRow;
 
@@ -162,14 +163,12 @@ impl TextFrame {
             .map(|_| 1)
             .unwrap_or(0);
 
-
         match self
             .config
             .try_execute_command(&chars[i..])
         {
-            Ok(output) => {
-                self.new_line(false)?;
-                self.output(&output, self.config.colors)?;
+            Ok(action) => {
+                self.action(action)?;
             }
             Err(message) => {
                 self.new_line(false)?;
@@ -183,6 +182,20 @@ impl TextFrame {
             }
         }
 
+        Ok(())
+    }
+
+
+    fn action(&mut self, action: CommandAction) -> KernelResult {
+        match action {
+            CommandAction::Clear => {
+                self.rows.clear();
+            }
+            CommandAction::Output(output) => {
+                self.new_line(false)?;
+                self.output(&output, self.config.colors)?;
+            }
+        }
 
         Ok(())
     }

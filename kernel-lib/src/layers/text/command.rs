@@ -1,7 +1,16 @@
 use alloc::rc::Rc;
 use alloc::string::{String, ToString};
 
-pub type CommandResult = Result<String, String>;
+
+pub enum CommandAction {
+    Clear,
+    Output(String),
+}
+
+
+pub type CommandArgs<'a> = &'a [&'a str];
+
+pub type CommandResult = Result<CommandAction, String>;
 
 
 #[derive(Clone)]
@@ -13,7 +22,7 @@ pub struct Command {
 
 
 impl Command {
-    pub fn new(name: &str, execute: impl Fn(&[&str]) -> CommandResult + 'static) -> Self {
+    pub fn new(name: &str, execute: impl Fn(CommandArgs) -> CommandResult + 'static) -> Self {
         Self {
             name: name.to_string(),
             f: Rc::new(execute),
@@ -33,15 +42,15 @@ impl Command {
 
 
 pub trait Executable {
-    fn execute(&self, args: &[&str]) -> CommandResult;
+    fn execute(&self, args: CommandArgs) -> CommandResult;
 }
 
 
 impl<F> Executable for F
 where
-    F: Fn(&[&str]) -> CommandResult,
+    F: Fn(CommandArgs) -> CommandResult,
 {
-    fn execute(&self, args: &[&str]) -> CommandResult {
+    fn execute(&self, args: CommandArgs) -> CommandResult {
         self(args)
     }
 }

@@ -14,7 +14,7 @@ use crate::layers::layer_key::LayerKey;
 use crate::layers::multiple_layer::LayerFindable;
 use crate::layers::shape::shape_drawer::ShapeDrawer;
 use crate::layers::shape::ShapeLayer;
-use crate::layers::text::command::{Command, CommandResult};
+use crate::layers::text::command::{Command, CommandAction, CommandArgs, CommandResult};
 use crate::layers::text::config;
 use crate::layers::text_box::TextBoxLayer;
 use crate::layers::window::WindowLayer;
@@ -95,6 +95,7 @@ fn text(size: Size) -> LayerKey {
         .set_scrollable()
         .prefix('>')
         .add_command(Command::new("echo", echo))
+        .add_command(Command::new("clear", clear))
         .build();
 
     let text = TextBoxLayer::new_dark(Transform2D::new(pos, size), config);
@@ -103,12 +104,17 @@ fn text(size: Size) -> LayerKey {
 }
 
 
-fn echo(args: &[&str]) -> CommandResult {
+fn echo(args: CommandArgs) -> CommandResult {
     if args.is_empty() {
         return Err("Not Command Args".to_string());
     }
 
-    Ok(args[0].to_string())
+    Ok(CommandAction::Output(args[0].to_string()))
+}
+
+
+fn clear(_args: CommandArgs) -> CommandResult {
+    Ok(CommandAction::Clear)
 }
 
 
