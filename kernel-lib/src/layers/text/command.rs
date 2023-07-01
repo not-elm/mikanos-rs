@@ -8,6 +8,13 @@ pub enum CommandAction {
 }
 
 
+impl CommandAction {
+    pub fn output(message: impl Into<String>) -> Self {
+        CommandAction::Output(message.into())
+    }
+}
+
+
 pub type CommandArgs<'a> = &'a [&'a str];
 
 pub type CommandResult = Result<CommandAction, String>;

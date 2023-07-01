@@ -1,6 +1,6 @@
 use alloc::format;
 use alloc::string::{String, ToString};
-use alloc::vec::Vec;
+
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
@@ -8,6 +8,8 @@ use kernel_lib::layers::layer_key::LayerKey;
 use kernel_lib::layers::terminal::TerminalLayer;
 use kernel_lib::layers::text::command::{Command, CommandAction, CommandArgs, CommandResult};
 use kernel_lib::layers::text::config;
+use kernel_lib::task;
+
 use pci::pci_device_searcher::PciDeviceSearcher;
 
 use crate::layers::TERMINAL_LAYER_KEY;
@@ -20,6 +22,8 @@ pub(crate) fn terminal() -> LayerKey {
         .add_command(Command::new("echo", echo))
         .add_command(Command::new("clear", clear))
         .add_command(Command::new("lspci", lspci))
+        .add_command(Command::new("sleep", sleep))
+        .add_command(Command::new("wakeup", wakeup))
         .build();
 
     TerminalLayer::new(transform, config)
@@ -58,4 +62,29 @@ fn lspci(_args: CommandArgs) -> CommandResult {
     } else {
         Err("Not found Pci Devices".to_string())
     }
+}
+
+
+fn sleep(args: CommandArgs) -> CommandResult {
+    let task_id = parse_task_id(args)?;
+
+    task::sleep(task_id).map_err(|e| format!("{e:?}"))?;
+
+    Ok(CommandAction::output(format!("sleep to {task_id}")))
+}
+
+
+fn wakeup(args: CommandArgs) -> CommandResult {
+    let task_id = parse_task_id(args)?;
+
+    task::wakeup(task_id).map_err(|e| format!("{e:?}"))?;
+
+    Ok(CommandAction::output(format!("wakeup to {task_id}")))
+}
+
+
+fn parse_task_id(args: CommandArgs) -> Result<u64, String> {
+    args.first()
+        .and_then(|task_id| task_id.parse::<u64>().ok())
+        .ok_or("Must be specify correct task id".to_string())
 }

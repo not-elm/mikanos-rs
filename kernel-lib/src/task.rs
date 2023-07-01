@@ -25,10 +25,22 @@ mod switch;
 pub static mut TASK_MANAGER: PreemptiveTaskManager = PreemptiveTaskManager::new();
 
 
-pub fn dispatch(f: impl Fn() + 'static)  {
-    unsafe { TASK_MANAGER
-        .send_message_at(0, TaskMessage::dispatch(f))
-        .unwrap() }
+pub fn dispatch(f: impl Fn() + 'static) {
+    unsafe {
+        TASK_MANAGER
+            .send_message_at(0, TaskMessage::dispatch(f))
+            .unwrap()
+    }
+}
+
+
+pub fn sleep(task_id: u64) -> KernelResult {
+    unsafe { TASK_MANAGER.sleep_at(task_id) }
+}
+
+
+pub fn wakeup(task_id: u64) -> KernelResult {
+    unsafe { TASK_MANAGER.wakeup_at(task_id) }
 }
 
 

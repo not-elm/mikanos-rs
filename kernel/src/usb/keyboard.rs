@@ -2,7 +2,6 @@ use alloc::string::ToString;
 use core::fmt::Write;
 
 use kernel_lib::layers::LAYERS;
-use kernel_lib::task::TASK_MANAGER;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 
@@ -17,8 +16,6 @@ pub fn build_keyboard_driver() -> KeyboardDriver {
 
 fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
     update_text_box_keys(keycode);
-
-    unsafe { operate_count_task_if_need(keycode) };
 }
 
 
@@ -41,19 +38,4 @@ fn update_text_box_keys(keycode: char) {
             }
         })
         .unwrap();
-}
-
-
-unsafe fn operate_count_task_if_need(keycode: char) {
-    match keycode {
-        's' => {
-            let _ = TASK_MANAGER.sleep_at(1);
-        }
-
-        'w' => {
-            let _ = TASK_MANAGER.wakeup_at(1);
-        }
-
-        _ => {}
-    }
 }
