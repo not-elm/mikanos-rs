@@ -1,5 +1,7 @@
 use alloc::rc::Rc;
 
+use crate::class_driver::keyboard::keycode::Keycode;
+
 #[derive(Debug, Copy, Clone)]
 pub enum KeyModifier {
     LeftCtrl,
@@ -43,15 +45,15 @@ pub trait KeyboardSubscribable {
     /// - 0b0010_0000 = Right Shift
     /// - 0b0100_0000 = Right Alt
     /// - 0b1000_0000 = Right Gui
-    fn subscribe(&self, modifier_bits: u8, keycode: char);
+    fn subscribe(&self, modifier_bits: u8, keycode: Keycode);
 }
 
 
 impl<F> KeyboardSubscribable for F
 where
-    F: Fn(u8, char),
+    F: Fn(u8, Keycode),
 {
-    fn subscribe(&self, modifier_bit: u8, keycode: char) {
+    fn subscribe(&self, modifier_bit: u8, keycode: Keycode) {
         self(modifier_bit, keycode)
     }
 }

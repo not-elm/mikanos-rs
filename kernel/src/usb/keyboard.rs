@@ -1,9 +1,13 @@
 use alloc::string::ToString;
 use core::fmt::Write;
+use uefi::proto::console::text::Key;
 
+use kernel_lib::layers::terminal::TerminalLayer;
 use kernel_lib::layers::LAYERS;
+use kernel_lib::serial_println;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
+use pci::class_driver::keyboard::Keycode;
 
 use crate::layers::TERMINAL_LAYER_KEY;
 
@@ -14,28 +18,36 @@ pub fn build_keyboard_driver() -> KeyboardDriver {
 }
 
 
-fn keyboard_subscribe(_modifier_bits: u8, keycode: char) {
-    update_text_box_keys(keycode);
-}
-
-
-fn update_text_box_keys(keycode: char) {
+fn keyboard_subscribe(_modifier_bits: u8, keycode: Keycode) {
     LAYERS
         .lock()
         .update_layer(TERMINAL_LAYER_KEY, |layer| {
-            let text_layer = layer
+            let terminal = layer
                 .require_terminal()
                 .unwrap();
             match keycode {
-                '\x7F' => {
-                    text_layer.delete_last();
-                }
-                _ => {
-                    text_layer
-                        .write_str(keycode.to_string().as_str())
-                        .unwrap();
-                }
+                Keycode::ArrowDown => terminal
+                    .history_down()
+                    .unwrap(),
+
+                Keycode::ArrowUp => terminal.history_up().unwrap(),
+
+                Keycode::Ascii(key) => input_key(key, terminal),
             }
         })
         .unwrap();
+}
+
+
+fn input_key(key: char, terminal: &mut TerminalLayer) {
+    match key {
+        '\x7F' => {
+            terminal.delete_last();
+        }
+        _ => {
+            terminal
+                .write_str(key.to_string().as_str())
+                .unwrap();
+        }
+    }
 }

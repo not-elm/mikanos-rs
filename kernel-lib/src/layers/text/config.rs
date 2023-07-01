@@ -1,5 +1,5 @@
 use alloc::format;
-use alloc::string::String;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use common_lib::math::size::Size;
@@ -7,7 +7,7 @@ use common_lib::math::size::Size;
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::text::colors::TextColors;
-use crate::layers::text::command::{Command, CommandResult};
+use crate::layers::text::command::{Command, CommandAction};
 
 pub struct Builder {
     colors: TextColors,
@@ -87,6 +87,12 @@ impl Builder {
 }
 
 
+pub struct Data {
+    pub command_name: String,
+    pub action: CommandAction,
+}
+
+
 #[derive(Clone)]
 pub struct TextConfig {
     pub colors: TextColors,
@@ -110,7 +116,7 @@ impl TextConfig {
     }
 
 
-    pub fn try_execute_command(&self, chars: &[char]) -> CommandResult {
+    pub fn try_execute_command(&self, chars: &[char]) -> Result<Data, String> {
         let command: String = chars.iter().collect();
         let args: Vec<&str> = command.split(' ').collect();
         if let Some(command) = self
@@ -118,7 +124,11 @@ impl TextConfig {
             .iter()
             .find(|c| c.name() == args[0])
         {
-            command.execute(&args[1..])
+            let action = command.execute(&args[1..])?;
+            Ok(Data {
+                command_name: command.name().to_string(),
+                action,
+            })
         } else {
             Err(format!("No such command `{}`", args[0]))
         }

@@ -9,6 +9,7 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::{Transform2D, Transformable2D};
 
+use crate::error::KernelResult;
 use crate::gop;
 use crate::gop::config;
 use crate::gop::pixel::pixel_color::PixelColor;
@@ -79,11 +80,31 @@ impl TextBoxLayer {
     }
 
 
+    #[inline]
+    pub fn history_up(&mut self) -> KernelResult {
+        self.text_layer()
+            .history_up()?;
+        self.update_text_cursor_pos();
+
+        Ok(())
+    }
+
+
+    #[inline]
+    pub fn history_down(&mut self) -> KernelResult {
+        self.text_layer()
+            .history_down()?;
+
+        self.update_text_cursor_pos();
+
+        Ok(())
+    }
+
+
     fn update_text_cursor_pos(&mut self) {
         let pos = self
             .text_layer()
             .text_cursor_pos();
-        // const TEXT_WIDTH: Vector2D<usize> = Vector2D::new(8, 0);
         let pos = self.pos() + pos + PADDING_TEXT_CURSOR;
 
         self.text_cursor_layer()

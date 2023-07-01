@@ -1,3 +1,4 @@
+use alloc::string::ToString;
 use alloc::vec::Vec;
 
 use common_lib::frame_buffer::PixelFormat;
@@ -10,6 +11,8 @@ use crate::gop::char::char_writable::CharWritable;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::text::colors::TextColors;
 use crate::layers::text::command::CommandAction;
+use crate::layers::text::command_history::CommandHistory;
+use crate::layers::text::config;
 use crate::layers::text::config::TextConfig;
 use crate::layers::text::row::TextRow;
 
@@ -19,6 +22,7 @@ pub struct TextFrame {
     pixel_format: PixelFormat,
     char_writer: AscIICharWriter,
     config: TextConfig,
+    command_history: CommandHistory,
 }
 
 
@@ -35,6 +39,7 @@ impl TextFrame {
             text_frame_size,
             pixel_format,
             config,
+            command_history: CommandHistory::new(),
         };
         me.add_row(true)?;
         Ok(me)
@@ -56,7 +61,8 @@ impl TextFrame {
 
 
     pub fn update_string(&mut self, str: &str) -> KernelResult {
-        self.rows.remove(0);
+        self.rows
+            .remove(self.rows.len() - 1);
         self.add_row(true)?;
         self.append_string(str)
     }
@@ -89,10 +95,7 @@ impl TextFrame {
 
 
     pub fn delete_last(&mut self) {
-        if self.need_back_line() {
-            self.rows
-                .remove(self.rows.len() - 1);
-        } else {
+        if !self.need_back_line() {
             self.rows
                 .last_mut()
                 .unwrap()
@@ -116,6 +119,32 @@ impl TextFrame {
         self.rows = rows;
 
         Ok(())
+    }
+
+
+    pub fn history_down(&mut self) -> KernelResult {
+        if let Some(command_name) = self
+            .command_history
+            .history_down()
+            .map(|name| name.to_string())
+        {
+            self.update_string(&command_name)
+        } else {
+            Ok(())
+        }
+    }
+
+
+    pub fn history_up(&mut self) -> KernelResult {
+        if let Some(command_name) = self
+            .command_history
+            .history_up()
+            .map(|name| name.to_string())
+        {
+            self.update_string(&command_name)
+        } else {
+            Ok(())
+        }
     }
 
 
@@ -149,7 +178,6 @@ impl TextFrame {
             return Ok(());
         }
 
-
         let chars: Vec<char> = self
             .rows
             .last()
@@ -167,9 +195,10 @@ impl TextFrame {
             .config
             .try_execute_command(&chars[i..])
         {
-            Ok(action) => {
-                self.action(action)?;
+            Ok(data) => {
+                self.action(data)?;
             }
+
             Err(message) => {
                 self.new_line(false)?;
                 let colors = TextColors::new(
@@ -186,8 +215,11 @@ impl TextFrame {
     }
 
 
-    fn action(&mut self, action: CommandAction) -> KernelResult {
-        match action {
+    fn action(&mut self, data: config::Data) -> KernelResult {
+        self.command_history
+            .entry(data.command_name);
+
+        match data.action {
             CommandAction::Clear => {
                 self.rows.clear();
             }
@@ -297,12 +329,12 @@ mod tests {
             config,
         )
         .unwrap();
-        frame.new_line().unwrap();
-        frame.new_line().unwrap();
-        frame.new_line().unwrap();
+        frame.new_line(true).unwrap();
+        frame.new_line(true).unwrap();
+        frame.new_line(true).unwrap();
         assert_eq!(frame.rows.len(), 3);
-        frame.new_line().unwrap();
-        frame.new_line().unwrap();
+        frame.new_line(true).unwrap();
+        frame.new_line(true).unwrap();
         assert_eq!(frame.rows.len(), 3);
     }
 

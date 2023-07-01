@@ -1,8 +1,9 @@
-use crate::class_driver::keyboard::keycode::Keycode;
+use crate::class_driver::keyboard::keycode::{Keycode, KeycodeParser};
 use crate::class_driver::keyboard::subscribe::{BoxedKeyboardSubscriber, LEFT_SHIFT, RIGHT_SHIFT};
 use crate::class_driver::ClassDriverOperate;
 use crate::error::PciResult;
 use alloc::vec::Vec;
+
 
 #[derive(Clone)]
 pub struct KeyboardDriver {
@@ -24,7 +25,7 @@ impl KeyboardDriver {
     }
 
 
-    fn keycodes(&self) -> Vec<char> {
+    fn keycodes(&self) -> Vec<Keycode> {
         self.data_buff[2..]
             .iter()
             .filter(|key| !self.prev_buf[2..].contains(key))
@@ -33,11 +34,11 @@ impl KeyboardDriver {
     }
 
 
-    fn keycode(&self, b: u8) -> Option<char> {
+    fn keycode(&self, b: u8) -> Option<Keycode> {
         if self.auto_upper && self.pushing_shift() {
-            Keycode::new(b).upper_char()
+            KeycodeParser::new(b).upper_char()
         } else {
-            Keycode::new(b).char()
+            KeycodeParser::new(b).char()
         }
     }
 
@@ -80,6 +81,7 @@ mod tests {
     use alloc::vec;
 
     use crate::class_driver::keyboard::builder::Builder;
+    use crate::class_driver::keyboard::keycode::Keycode;
     use crate::class_driver::keyboard::subscribe::{LEFT_SHIFT, RIGHT_SHIFT};
 
     #[test]
@@ -88,7 +90,13 @@ mod tests {
 
         keyboard.data_buff = [0, 0, 0x04, 0x2F, 0, 0, 0, 0];
         assert_eq!(keyboard.keycodes().len(), 2);
-        assert_eq!(keyboard.keycodes(), vec!['a', '{']);
+        assert_eq!(
+            keyboard.keycodes(),
+            vec![
+                Keycode::Ascii('a'),
+                Keycode::Ascii('{')
+            ]
+        );
     }
 
 
@@ -109,6 +117,14 @@ mod tests {
             0,
         ];
         assert_eq!(keyboard.keycodes().len(), 4);
-        assert_eq!(keyboard.keycodes(), vec!['A', '{', 'B', 'C']);
+        assert_eq!(
+            keyboard.keycodes(),
+            vec![
+                Keycode::Ascii('A'),
+                Keycode::Ascii('{'),
+                Keycode::Ascii('B'),
+                Keycode::Ascii('C')
+            ]
+        );
     }
 }

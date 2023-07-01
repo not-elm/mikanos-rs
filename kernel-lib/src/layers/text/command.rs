@@ -1,7 +1,6 @@
 use alloc::rc::Rc;
 use alloc::string::{String, ToString};
 
-
 pub enum CommandAction {
     Clear,
     Output(String),

@@ -2,6 +2,7 @@ use alloc::rc::Rc;
 
 use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::keyboard::subscribe::KeyboardSubscribable;
+use crate::class_driver::keyboard::Keycode;
 
 #[derive(Debug)]
 pub struct Builder {
@@ -40,5 +41,5 @@ pub struct MockSubscriber;
 
 #[cfg(test)]
 impl KeyboardSubscribable for MockSubscriber {
-    fn subscribe(&self, _: u8, _: char) {}
+    fn subscribe(&self, _: u8, _: Keycode) {}
 }

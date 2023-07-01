@@ -1,4 +1,3 @@
-use alloc::string::ToString;
 use core::fmt::Write;
 
 use auto_delegate::Delegate;
@@ -7,6 +6,7 @@ use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
 
+use crate::error::KernelResult;
 use crate::gop::config;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::layer::Layer;
@@ -53,17 +53,38 @@ impl TerminalLayer {
 
     #[inline]
     pub fn delete_last(&mut self) {
+        self.text_box_layer()
+            .delete_last()
+    }
+
+
+    #[inline]
+    pub fn history_up(&mut self) -> KernelResult {
+        self.text_box_layer()
+            .history_up()
+    }
+
+
+    #[inline]
+    pub fn history_down(&mut self) -> KernelResult {
+        self.text_box_layer()
+            .history_down()
+    }
+
+
+    #[inline]
+    pub fn is_active(&self) -> bool {
+        self.window.is_active()
+    }
+
+
+    #[inline]
+    fn text_box_layer(&mut self) -> &mut TextBoxLayer {
         self.window
             .find_by_key_mut(TEXT_BOX_LAYER_KEY)
             .unwrap()
             .require_text_box()
             .unwrap()
-            .delete_last()
-    }
-
-    #[inline]
-    pub fn is_active(&self) -> bool {
-        self.window.is_active()
     }
 }
 

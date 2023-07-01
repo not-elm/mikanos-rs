@@ -24,6 +24,7 @@ use self::frame::TextFrame;
 
 pub mod colors;
 pub mod command;
+mod command_history;
 pub mod config;
 pub mod frame;
 mod row;
@@ -86,6 +87,17 @@ impl TextLayer {
     pub fn text_cursor_pos(&self) -> Vector2D<usize> {
         self.text_frame
             .text_cursor_pos()
+    }
+
+    #[inline]
+    pub fn history_up(&mut self) -> KernelResult {
+        self.text_frame.history_up()
+    }
+
+
+    #[inline]
+    pub fn history_down(&mut self) -> KernelResult {
+        self.text_frame.history_down()
     }
 
 

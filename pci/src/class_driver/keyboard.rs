@@ -1,6 +1,6 @@
+pub use keycode::Keycode;
+
 pub mod builder;
 pub mod driver;
-pub mod subscribe;
 mod keycode;
-
-
+pub mod subscribe;
