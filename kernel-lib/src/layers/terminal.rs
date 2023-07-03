@@ -29,7 +29,7 @@ pub struct TerminalLayer {
 
 impl TerminalLayer {
     pub fn new(transform: Transform2D, config: TextConfig) -> TerminalLayer {
-        let window = WindowLayer::new_dark_color("", transform)
+        let window = WindowLayer::new_default_color("", transform)
             .then_add(text_background)
             .unwrap()
             .then_add(|size| text(size, config))

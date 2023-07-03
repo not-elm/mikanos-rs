@@ -5,8 +5,8 @@ use common_lib::transform::transform2d::Transformable2D;
 use kernel_lib::gop::pixel::pixel_color::PixelColor;
 use kernel_lib::layers::cursor::colors::CursorColors;
 use kernel_lib::layers::LAYERS;
-use pci::class_driver::mouse::MouseButton;
 use pci::class_driver::mouse::subscribable::MouseSubscribable;
+use pci::class_driver::mouse::MouseButton;
 
 use crate::layers::MOUSE_LAYER_KEY;
 
@@ -61,6 +61,10 @@ fn update_window_layer(
 
             layers
                 .bring_to_front(MOUSE_LAYER_KEY)
+                .map_err(|e| anyhow::anyhow!("{e:?}"))?;
+
+            layers
+                .deactivate()
                 .map_err(|e| anyhow::anyhow!("{e:?}"))?;
 
             layers

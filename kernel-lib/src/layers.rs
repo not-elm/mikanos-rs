@@ -1,3 +1,4 @@
+use alloc::string::ToString;
 use alloc::vec::Vec;
 use core::cell::OnceCell;
 
@@ -14,7 +15,6 @@ use crate::gop::shadow_frame_buffer::ShadowFrameBuffer;
 use crate::kernel_error;
 use crate::layers::layer::Layer;
 use crate::layers::layer_key::LayerKey;
-use crate::layers::window::WindowLayer;
 use crate::sync::preemptive_mutex::PreemptiveMutex;
 
 pub mod close_button;
@@ -26,10 +26,10 @@ pub mod layer_updatable;
 pub mod multiple_layer;
 pub mod plain;
 pub mod shape;
-pub mod text;
-pub mod window;
-pub mod text_box;
 pub mod terminal;
+pub mod text;
+pub mod text_box;
+pub mod window;
 
 
 pub static LAYERS: GlobalLayers = GlobalLayers::new_uninit();
@@ -114,6 +114,16 @@ impl Layers {
     }
 
 
+    pub fn update_active_layer(&mut self, fun: impl FnOnce(&mut Layer)) -> KernelResult {
+        if let Some(key) = self.find_active_window_layer_ref() {
+            let key = &key.key().to_string();
+            self.update_layer(key, fun)?;
+        }
+
+        Ok(())
+    }
+
+
     pub fn update_layer(&mut self, key: &str, fun: impl FnOnce(&mut Layer)) -> KernelResult {
         let prev = self
             .layer_ref(key)?
@@ -121,6 +131,7 @@ impl Layers {
 
         let frame_rect = self.frame_rect();
         let layer = self.layer_mut(key)?;
+
         fun(layer);
 
         if !frame_rect.with_in_rect(&layer.rect()) {
@@ -153,11 +164,18 @@ impl Layers {
 
 
     #[inline]
-    pub fn find_active_window_layer_mut(&mut self) -> Option<&mut WindowLayer> {
+    pub fn find_active_window_layer_ref(&self) -> Option<&LayerKey> {
+        self.layers
+            .iter()
+            .find(|layer| layer.is_active_window())
+    }
+
+
+    #[inline]
+    pub fn find_active_window_layer_mut(&mut self) -> Option<&mut LayerKey> {
         self.layers
             .iter_mut()
             .find(|layer| layer.is_active_window())
-            .and_then(|layer| layer.layer_mut().require_window().ok())
     }
 
 
@@ -211,6 +229,28 @@ impl Layers {
             &self.frame_buffer_config,
             area,
         )
+    }
+
+
+    pub fn deactivate(&mut self) -> KernelResult {
+        // if !(layer.is_active_window() && layer.key() != current_active_key) {
+        //     return Ok(());
+        // }
+
+        if let Some(window) = self.find_active_window_layer_mut() {
+            window
+                .layer_mut()
+                .require_window()
+                .unwrap()
+                .deactivate()?;
+
+            let draw_area = &window.layer_ref().rect();
+            let key = window.key().to_string();
+
+            self.update_back_buffer_in_area(draw_area, Some(&key), None)?;
+        }
+
+        Ok(())
     }
 
 

@@ -1,9 +1,9 @@
 use auto_delegate::Delegate;
 
-use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transformable2D};
 use common_lib::math::size::Size;
 use common_lib::math::vector::Vector2D;
 use common_lib::transform::transform2d::Transform2D;
+use common_lib::{frame_buffer::FrameBufferConfig, transform::transform2d::Transformable2D};
 
 use crate::error::KernelResult;
 use crate::gop::config;
@@ -36,49 +36,35 @@ pub struct WindowLayer {
 
 impl WindowLayer {
     pub fn new_default_color(title: &str, transform: Transform2D) -> Self {
-        let active_colors = TextColors::new(
-            PixelColor::white(),
-            PixelColor::new(0x00, 0x00, 0x84),
-        );
+        let active_colors = TextColors::new(PixelColor::white(), PixelColor::new(0x00, 0x00, 0x84));
         let deactivate_colors = TextColors::new(
             PixelColor::new(0xEB, 0xEB, 0xE4),
             PixelColor::new(0x84, 0x84, 0x84),
         );
 
-        Self::new(
-            title,
-            transform,
-            active_colors,
-            deactivate_colors,
-        )
+        Self::new(title, transform, active_colors, deactivate_colors)
     }
 
 
     pub fn new_dark_color(title: &str, transform: Transform2D) -> Self {
-        let active_colors = TextColors::new(
-            PixelColor::white(),
-            PixelColor::black(),
-        );
-        let deactivate_colors = TextColors::new(
-            PixelColor::new(0xEB, 0xEB, 0xE4),
-            PixelColor::black(),
-        );
+        let active_colors = TextColors::new(PixelColor::white(), PixelColor::black());
+        let deactivate_colors =
+            TextColors::new(PixelColor::new(0xEB, 0xEB, 0xE4), PixelColor::black());
 
-        Self::new(
-            title,
-            transform,
-            active_colors,
-            deactivate_colors,
-        )
+        Self::new(title, transform, active_colors, deactivate_colors)
     }
 
 
     pub fn then_add<F>(mut self, f: F) -> KernelResult<Self>
-        where F: FnOnce(Size) -> LayerKey
+    where
+        F: FnOnce(Size) -> LayerKey,
     {
         let mut layer = f(self.content_frame_size());
         layer
-            .move_to_relative(Vector2D::new(PADDING_WIDTH as isize, TOOLBAR_HEIGHT as isize + PADDING_HEIGHT as isize))
+            .move_to_relative(Vector2D::new(
+                PADDING_WIDTH as isize,
+                TOOLBAR_HEIGHT as isize + PADDING_HEIGHT as isize,
+            ))
             .map_err(|e| kernel_error!(e))?;
 
         self.layers.new_layer(layer);
@@ -141,7 +127,12 @@ impl WindowLayer {
 
         multiple_layer.new_layer(shadow_layer(config(), &transform));
         multiple_layer.new_layer(window_background_layer(&transform));
-        multiple_layer.new_layer(toolbar_layer(title, &transform, active_colors, deactivate_colors));
+        multiple_layer.new_layer(toolbar_layer(
+            title,
+            &transform,
+            active_colors,
+            deactivate_colors,
+        ));
 
         Self {
             active: false,
@@ -156,14 +147,12 @@ fn shadow_layer(config: FrameBufferConfig, transform: &Transform2D) -> LayerKey 
         ShapeDrawer::new(config, PixelColor::black()),
         Transform2D::new(Vector2D::zeros(), transform.size()),
     )
-        .into_enum()
-        .into_layer_key("window shadow")
+    .into_enum()
+    .into_layer_key("window shadow")
 }
 
 
-fn window_background_layer(
-    transform: &Transform2D,
-) -> LayerKey {
+fn window_background_layer(transform: &Transform2D) -> LayerKey {
     ShapeLayer::new(
         ShapeDrawer::new(config(), PixelColor::window_background()),
         Transform2D::new(
@@ -171,8 +160,8 @@ fn window_background_layer(
             Size::new(transform.size().width() - 1, transform.size().height() - 1),
         ),
     )
-        .into_enum()
-        .into_layer_key("window background")
+    .into_enum()
+    .into_layer_key("window background")
 }
 
 
@@ -187,12 +176,7 @@ fn toolbar_layer(
         Size::new(transform.size().width() - 3, TOOLBAR_HEIGHT),
     );
 
-    ToolbarLayer::new(
-        title,
-        toolbar_transform,
-        active_colors,
-        deactivate_colors,
-    )
+    ToolbarLayer::new(title, toolbar_transform, active_colors, deactivate_colors)
         .into_enum()
         .into_layer_key(TOOLBAR_LAYER_KEY)
 }

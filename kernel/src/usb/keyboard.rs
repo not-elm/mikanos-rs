@@ -1,15 +1,15 @@
 use alloc::string::ToString;
 use core::fmt::Write;
-use uefi::proto::console::text::Key;
 
+use kernel_lib::layers::multiple_layer::LayerFindable;
 use kernel_lib::layers::terminal::TerminalLayer;
+use kernel_lib::layers::window::WindowLayer;
 use kernel_lib::layers::LAYERS;
-use kernel_lib::serial_println;
 use pci::class_driver::keyboard;
 use pci::class_driver::keyboard::driver::KeyboardDriver;
 use pci::class_driver::keyboard::Keycode;
 
-use crate::layers::TERMINAL_LAYER_KEY;
+use crate::layers::KEYBOARD_TEXT;
 
 pub fn build_keyboard_driver() -> KeyboardDriver {
     keyboard::builder::Builder::new()
@@ -21,21 +21,50 @@ pub fn build_keyboard_driver() -> KeyboardDriver {
 fn keyboard_subscribe(_modifier_bits: u8, keycode: Keycode) {
     LAYERS
         .lock()
-        .update_layer(TERMINAL_LAYER_KEY, |layer| {
-            let terminal = layer
-                .require_terminal()
-                .unwrap();
-            match keycode {
-                Keycode::ArrowDown => terminal
-                    .history_down()
-                    .unwrap(),
+        .update_active_layer(|layer| {
+            if let Ok(terminal) = layer.require_terminal() {
+                return input_terminal(keycode, terminal);
+            }
 
-                Keycode::ArrowUp => terminal.history_up().unwrap(),
-
-                Keycode::Ascii(key) => input_key(key, terminal),
+            if let Ok(window) = layer.require_window() {
+                keyboard_text_box(keycode, window)
             }
         })
         .unwrap();
+}
+
+
+fn keyboard_text_box(keycode: Keycode, window: &mut WindowLayer) {
+    if let Keycode::Ascii(c) = keycode {
+        if let Some(text_box) = window.find_by_key_mut(KEYBOARD_TEXT) {
+            let text_box = text_box
+                .require_text_box()
+                .unwrap();
+            match c {
+                '\x7F' => {
+                    text_box.delete_last();
+                }
+                c => {
+                    text_box
+                        .write_str(c.to_string().as_str())
+                        .unwrap();
+                }
+            }
+        }
+    }
+}
+
+
+fn input_terminal(keycode: Keycode, terminal: &mut TerminalLayer) {
+    match keycode {
+        Keycode::ArrowDown => terminal
+            .history_down()
+            .unwrap(),
+
+        Keycode::ArrowUp => terminal.history_up().unwrap(),
+
+        Keycode::Ascii(key) => input_key(key, terminal),
+    }
 }
 
 
