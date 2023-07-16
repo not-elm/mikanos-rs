@@ -28,10 +28,10 @@ impl Default for ElfLoader {
 impl ExecuteFileLoadable for ElfLoader {
     fn load(
         &mut self,
-        kernel_buff: &mut [u8],
+        file_buff: &mut [u8],
         allocator: &mut impl Allocatable,
     ) -> CommonResult<EntryPointAddr> {
-        let ehdr = ElfHeaderPtr::from_file_buff(kernel_buff);
+        let ehdr = ElfHeaderPtr::from_file_buff(file_buff);
         let (load_segment_start_addr, load_segment_last_addr) = ehdr
             .phdr_table()
             .calc_load_address_range();

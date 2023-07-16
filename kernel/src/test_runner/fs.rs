@@ -22,3 +22,15 @@ fn it_read_root_dir() {
         "HELLO.TXT"
     );
 }
+
+
+#[test_case]
+fn it_exists_hlt_elf() {
+    let hlt = fs::open_file("HLT.ELF")
+        .unwrap()
+        .name()
+        .unwrap();
+
+    let name = hlt.to_str().unwrap();
+    assert_eq!(name, "HLT.ELF");
+}

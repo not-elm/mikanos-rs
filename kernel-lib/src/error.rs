@@ -1,21 +1,47 @@
+use core::fmt::Display;
 use core::num::TryFromIntError;
 
+use simple_fat::error::FatError;
+use thiserror_no_std::Error;
+
+use common_lib::error::CommonError;
 use common_lib::math::rectangle::Rectangle;
 
 pub type KernelResult<T = ()> = Result<T, KernelError>;
 
 
 /// Errors emitted from kernel-lib
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum KernelError {
-    Anyhow(anyhow::Error),
+    #[error(transparent)]
+    Common(#[from] CommonError),
+
+    #[error(transparent)]
+    Fat(#[from] FatError),
+
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
+
+    #[error("Exceeded frame buffer size")]
     ExceededFrameBufferSize,
+
+    #[error("Not supported character")]
     NotSupportCharacter,
+
+    #[error("Failed cast")]
     FailedCast,
+
+    #[error("Num size over")]
     NumSizeOver,
-    FailedOperateLayer(LayerReason),
-    FailedAllocate(AllocateReason),
-    TryFromIntError(TryFromIntError),
+
+    #[error(transparent)]
+    FailedOperateLayer(#[from] LayerReason),
+
+    #[error(transparent)]
+    FailedAllocate(#[from] AllocateReason),
+
+    #[error(transparent)]
+    TryFromIntError(#[from] TryFromIntError),
 }
 
 
@@ -44,23 +70,30 @@ macro_rules! kernel_bail {
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Error)]
 pub enum LayerReason {
+    #[error("Failed initialize")]
     FailedInitialize,
+    #[error("Not exists key")]
     NotExistsKey,
+    #[error("Illegal layer")]
     IllegalLayer,
+    #[error("Window size over expected: {0:?}")]
     WindowSizeOver(Rectangle<usize>),
 }
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Error)]
 pub enum AllocateReason {
+    #[error("Failed initialize global allocator")]
     InitializeGlobalAllocator,
+
+    #[error("over frame id: max-frame-id={max_frame_id} but was={frame_id}")]
     OverFrame {
         max_frame_id: usize,
         frame_id: usize,
     },
-    OverAddress {
-        address: u64,
-    },
+
+    #[error("Over address: 0x{address:X}")]
+    OverAddress { address: u64 },
 }

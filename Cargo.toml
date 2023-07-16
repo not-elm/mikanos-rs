@@ -17,7 +17,7 @@ xhci = "0.9.1"
 modular-bitfield = "0.11.2"
 uefi = { version = "0.24.0", features = ["alloc", "unstable"] }
 uefi-services = "0.21.0"
-auto-delegate = "0.0.7"
+auto-delegate = { git = "https://github.com/elm-register/auto-delegate", branch = "nightly" }
 anyhow = { version = "1.0.71", default-features = false }
 derive-getters = "0.3.0"
 volatile-bits = { git = "https://github.com/elm-register/volatile-bits", branch = "master" }

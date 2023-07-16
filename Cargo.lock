@@ -10,9 +10,9 @@ checksum = "bd8b2abd55bf1f9cffbf00fd594566c51a9d31402553284920c1309ca8351086"
 
 [[package]]
 name = "anyhow"
-version = "1.0.71"
+version = "1.0.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c7d0618f0e0b7e8ff11427422b64564d5fb0be1940354bfe2e0529b18a9d9b8"
+checksum = "3b13c32d80ecc7ab747b80c3784bce54ee8a7a0cc4fbda9bf4cda2cf6fe90854"
 
 [[package]]
 name = "auto-delegate"
@@ -26,29 +26,9 @@ dependencies = [
 [[package]]
 name = "auto-delegate"
 version = "0.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "763554a8473104d2a71f500bbe3ab75e29e5b1ae70d93aa99eb04d275288be7c"
-dependencies = [
- "auto-delegate-impl 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "auto-delegate"
-version = "0.0.7"
 source = "git+https://github.com/elm-register/auto-delegate?branch=nightly#7252385480572b1a1fa45597013c1534eea6025c"
 dependencies = [
- "auto-delegate-impl 0.0.7 (git+https://github.com/elm-register/auto-delegate?branch=nightly)",
-]
-
-[[package]]
-name = "auto-delegate-impl"
-version = "0.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fabc4ed571944480bcb92085829306ebb1918fab25a72bc64593c67ee11263a8"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.26",
+ "auto-delegate-impl",
 ]
 
 [[package]]
@@ -132,7 +112,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "common-lib"
 version = "0.1.0"
 dependencies = [
- "auto-delegate 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "auto-delegate 0.0.7",
  "thiserror-no-std",
 ]
 
@@ -177,7 +157,7 @@ name = "kernel-lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "auto-delegate 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "auto-delegate 0.0.7",
  "cc",
  "common-lib",
  "derive-getters",
@@ -189,6 +169,7 @@ dependencies = [
  "paste",
  "simple-fat",
  "spin 0.9.8",
+ "thiserror-no-std",
  "uart_16550",
  "uefi",
  "volatile-bits",
@@ -313,9 +294,9 @@ checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "paste"
-version = "1.0.13"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4b27ab7be369122c218afc2079489cdcb4b517c0a3fc386ff11e1fedfcc2b35"
+checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
 
 [[package]]
 name = "pci"
@@ -341,9 +322,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.64"
+version = "1.0.65"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78803b62cbf1f46fde80d7c0e803111524b9877184cfe7c3033659490ac7a7da"
+checksum = "92de25114670a878b1261c79c9f8f729fb97e95bac93f6312f583c60dd6a1dfe"
 dependencies = [
  "unicode-ident",
 ]
@@ -370,18 +351,18 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.29"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "573015e8ab27661678357f27dc26460738fd2b6c86e46f386fde94cb5d913105"
+checksum = "5907a1b7c277254a8b15170f6e7c97cfa60ee7872a3217663bb81151e48184bb"
 dependencies = [
  "proc-macro2",
 ]
 
 [[package]]
 name = "rustversion"
-version = "1.0.13"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc31bd9b61a32c31f9650d18add92aa83a49ba979c143eefd27fe7177b05bd5f"
+checksum = "7ffc183a10b4478d04cbbbfc96d0873219d962dd5accaff2ffbd4ceb7df837f4"
 
 [[package]]
 name = "scopeguard"
@@ -394,7 +375,7 @@ name = "simple-fat"
 version = "0.1.0"
 source = "git+https://github.com/elm-register/simple-fat?branch=master#502d405f9987776c371a436fa25d58f91acfc3a0"
 dependencies = [
- "auto-delegate 0.0.7 (git+https://github.com/elm-register/auto-delegate?branch=nightly)",
+ "auto-delegate 0.0.7",
  "num_enum",
  "spin 0.9.8",
  "thiserror-no-std",
@@ -548,9 +529,9 @@ checksum = "16dfbd255defbd727b3a30e8950695d2e6d045841ee250ff0f1f7ced17917f8d"
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.10"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22049a19f4a68748a168c0fc439f9516686aa045927ff767eca0a85101fb6e73"
+checksum = "301abaae475aa91687eb82514b328ab47a211a533026cb25fc3e519b86adfc3c"
 
 [[package]]
 name = "volatile"

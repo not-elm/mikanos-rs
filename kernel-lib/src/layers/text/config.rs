@@ -4,10 +4,11 @@ use alloc::vec::Vec;
 
 use common_lib::math::size::Size;
 
+use crate::fs;
 use crate::gop::console::DISPLAY_BACKGROUND_COLOR;
 use crate::gop::pixel::pixel_color::PixelColor;
 use crate::layers::text::colors::TextColors;
-use crate::layers::text::command::{Command, CommandAction};
+use crate::layers::text::command::{Command, CommandAction, CommandResult};
 
 pub struct Builder {
     colors: TextColors,
@@ -130,8 +131,26 @@ impl TextConfig {
                 action,
             })
         } else {
-            // TODO: 実行ファイルの処理を実行
-            Err(format!("No such command `{}`", args[0]))
+            Ok(Data {
+                command_name: args[0].to_string(),
+                action: execute_file_if_exists(args[0])?,
+            })
         }
+    }
+}
+
+
+fn execute_file_if_exists(command: &str) -> CommandResult {
+    let file_name = if command.ends_with(".ELF") {
+        command.to_string()
+    } else {
+        format!("{command}.ELF")
+    };
+
+    if let Ok(file) = fs::open_file(&file_name) {
+        fs::execute_elf(file).map_err(|e| e.to_string())?;
+        Ok(CommandAction::Output("executed".to_string()))
+    } else {
+        Err(format!("No such command `{}`", command))
     }
 }

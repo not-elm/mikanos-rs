@@ -66,8 +66,6 @@ pub extern "sysv64" fn kernel_main(
     apic::start_timer(*rsdp, TIMER_FREQ).unwrap();
 
     fs::init(fat_volume);
-    let hello_txt_file = fs::open_file("HELLO.TXT").unwrap();
-    println!("{:?}", hello_txt_file.read_boxed());
 
     #[cfg(test)]
     test_main();

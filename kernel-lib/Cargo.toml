@@ -21,6 +21,7 @@ volatile-bits = { workspace = true }
 memoffset = { workspace = true }
 once_cell = { workspace = true }
 simple-fat = { workspace = true }
+thiserror-no-std = { workspace = true }
 
 [build-dependencies]
 cc = { version = "1.0" }

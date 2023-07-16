@@ -2,41 +2,58 @@ use core::cell::OnceCell;
 
 use simple_fat::bpb::BpbFat32;
 use simple_fat::dir::data::file::RegularFile;
-use simple_fat::error::{FatDeviceError, FatResult};
-use simple_fat::{Fat, FatDeviceAccessible};
 use simple_fat::dir::data::DataEntries;
+use simple_fat::error::FatDeviceError;
+use simple_fat::{Fat, FatDeviceAccessible};
 
-use crate::serial_println;
+use common_lib::loader::elf::ElfLoader;
+use common_lib::loader::ExecuteFileLoadable;
+
+use crate::error::KernelResult;
+use crate::fs::alloc::FsAllocator;
+
+mod alloc;
 
 static FS: FileSystem = FileSystem::uninit();
 
 pub fn init(fat_volume: *mut u8) {
     FS.init(fat_volume);
-    let root_dir =
-        FS.0.get()
-            .unwrap()
-            .root_dir()
-            .unwrap();
-
-    use simple_fat::dir::entry::short::ShortDirEntryReadable;
-
-    for r in root_dir {
-        serial_println!("{:?}", r.name_buff().unwrap());
-    }
 }
 
 
-pub fn open_file(file_name: &str) -> FatResult<RegularFile<BpbFat32<FatDevice>>> {
-    FS.0.get()
+pub fn open_file(file_name: &str) -> KernelResult<RegularFile<BpbFat32<FatDevice>>> {
+    Ok(FS
+        .0
+        .get()
         .unwrap()
-        .open_file(file_name)
+        .open_file(file_name)?)
 }
 
 
-pub fn root_dir() -> FatResult<DataEntries<BpbFat32<FatDevice>>> {
-    FS.0.get()
+pub fn root_dir() -> KernelResult<DataEntries<BpbFat32<FatDevice>>> {
+    Ok(FS
+        .0
+        .get()
         .unwrap()
-        .root_dir()
+        .root_dir()?)
+}
+
+
+pub fn execute_elf_from_name(file_name: &str) -> KernelResult {
+    let file = open_file(file_name)?;
+    execute_elf(file)
+}
+
+
+pub fn execute_elf(file: RegularFile<BpbFat32<FatDevice>>) -> KernelResult {
+    let mut buff = file.read_boxed()?;
+
+    let entry_point_addr = ElfLoader::new().load(&mut buff, &mut FsAllocator)?;
+    let entry_point_ptr = *entry_point_addr as *const ();
+    let entry_point: extern "sysv64" fn() -> () = unsafe { core::mem::transmute(entry_point_ptr) };
+
+    entry_point();
+    Ok(())
 }
 
 
