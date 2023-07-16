@@ -69,12 +69,10 @@ pub extern "sysv64" fn kernel_main(
     let hello_txt_file = fs::open_file("HELLO.TXT").unwrap();
     println!("{:?}", hello_txt_file.read_boxed());
 
-
     #[cfg(test)]
     test_main();
     serial_println!("Hello Serial Port!");
     println!("Hello Mikan OS RS!");
-
 
     let devices = serial_bus_usb_devices();
     let xhc_general_header = devices.first().unwrap();

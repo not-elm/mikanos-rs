@@ -26,3 +26,4 @@ memoffset = "0.9.0"
 spin = "0.9.8"
 once_cell = { version = "1.18.0", default-features = false }
 simple-fat = { git = "https://github.com/elm-register/simple-fat", branch = "master" }
+thiserror-no-std = "2.0.2"

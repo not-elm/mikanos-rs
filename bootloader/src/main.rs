@@ -5,12 +5,10 @@
 
 extern crate alloc;
 
-use alloc::ffi::CString;
-use uefi::{CStr16, CString16};
-
 use uefi::fs::Path;
 use uefi::prelude::*;
 use uefi::proto::media::file::File;
+use uefi::CString16;
 use uefi_services::println;
 
 use crate::file::open_file_system;
@@ -29,7 +27,6 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     uefi_services::init(&mut system_table).unwrap();
 
     println!("Hello, Mikan Rust World!");
-
 
     let mut disk_buff = system_table
         .boot_services()

@@ -5,6 +5,5 @@
 
 extern crate alloc;
 
-pub mod elf;
 pub mod error;
 pub mod kernel;

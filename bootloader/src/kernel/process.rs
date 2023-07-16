@@ -2,16 +2,18 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::ffi::c_void;
 
+use bootloader_lib::error::BootLoaderResult;
 use uefi::fs::{FileSystem, Path};
 use uefi::prelude::{Boot, SystemTable};
 use uefi::table::boot::MemoryDescriptor;
 use uefi::table::cfg::ACPI2_GUID;
 use uefi::CString16;
 
-use bootloader_lib::error::LibResult;
 use bootloader_lib::kernel::entry_point::EntryPoint;
-use bootloader_lib::kernel::loaders::elf_loader::ElfLoader;
-use bootloader_lib::kernel::loaders::{Allocatable, KernelLoadable};
+
+use common_lib::error::CommonResult;
+use common_lib::loader::elf::ElfLoader;
+use common_lib::loader::{Allocatable, ExecuteFileLoadable};
 
 use crate::gop::{obtain_frame_buffer_config, open_gop};
 
@@ -19,10 +21,13 @@ pub fn load_kernel(
     fs: &mut FileSystem,
     kernel_file_path: &str,
     allocator: &mut impl Allocatable,
-) -> LibResult<EntryPoint> {
+) -> BootLoaderResult<EntryPoint> {
     let mut kernel_buff = fs.read(Path::new(&CString16::try_from("kernel.elf").unwrap()))?;
-    ElfLoader::new().load(kernel_buff.as_mut_slice(), allocator)
+    let entry_point_addr = ElfLoader::new().load(kernel_buff.as_mut_slice(), allocator)?;
+
+    Ok(EntryPoint::new(entry_point_addr))
 }
+
 
 pub fn execute_kernel(
     entry_point: EntryPoint,

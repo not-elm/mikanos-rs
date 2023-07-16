@@ -8,6 +8,6 @@ edition = "2021"
 [dependencies]
 uefi = { workspace = true }
 uefi-services = { workspace = true }
-
+thiserror-no-std = { workspace = true }
 common-lib = { path = "../common-lib" }
 

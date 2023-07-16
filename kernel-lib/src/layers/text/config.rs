@@ -130,6 +130,7 @@ impl TextConfig {
                 action,
             })
         } else {
+            // TODO: 実行ファイルの処理を実行
             Err(format!("No such command `{}`", args[0]))
         }
     }
