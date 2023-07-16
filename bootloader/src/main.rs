@@ -7,7 +7,6 @@ extern crate alloc;
 
 use uefi::fs::Path;
 use uefi::prelude::*;
-use uefi::proto::media::file::File;
 use uefi::CString16;
 use uefi_services::println;
 
@@ -37,7 +36,7 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
 
     let entry_point = kernel::process::load_kernel(
         &mut open_file_system(handle, unsafe { &system_table.unsafe_clone() }).unwrap(),
-        &"kernel.elf",
+        "kernel.elf",
         &mut BootAllocator::new(&mut system_table),
     )
     .unwrap();
@@ -51,9 +50,10 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
     Status::SUCCESS
 }
 
+
 #[allow(dead_code)]
 fn fill_display_with_white(system_table: &SystemTable<Boot>) -> uefi::Result<()> {
-    let mut gop = open_gop(&system_table)?;
+    let mut gop = open_gop(system_table)?;
     const WHITE_COLOR: u8 = 0xFF;
     unsafe {
         write_all_pixels_with_same(&mut gop, WHITE_COLOR);

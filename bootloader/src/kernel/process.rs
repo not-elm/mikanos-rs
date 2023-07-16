@@ -10,8 +10,6 @@ use uefi::table::cfg::ACPI2_GUID;
 use uefi::CString16;
 
 use bootloader_lib::kernel::entry_point::EntryPoint;
-
-use common_lib::error::CommonResult;
 use common_lib::loader::elf::ElfLoader;
 use common_lib::loader::{Allocatable, ExecuteFileLoadable};
 
@@ -22,7 +20,7 @@ pub fn load_kernel(
     kernel_file_path: &str,
     allocator: &mut impl Allocatable,
 ) -> BootLoaderResult<EntryPoint> {
-    let mut kernel_buff = fs.read(Path::new(&CString16::try_from("kernel.elf").unwrap()))?;
+    let mut kernel_buff = fs.read(Path::new(&CString16::try_from(kernel_file_path).unwrap()))?;
     let entry_point_addr = ElfLoader::new().load(kernel_buff.as_mut_slice(), allocator)?;
 
     Ok(EntryPoint::new(entry_point_addr))

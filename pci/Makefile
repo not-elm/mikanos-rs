@@ -8,3 +8,6 @@ build:
 
 test:
 	cargo test
+
+clippy:
+	cargo clippy --all-features

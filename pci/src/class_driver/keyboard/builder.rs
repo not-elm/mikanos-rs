@@ -2,7 +2,7 @@ use alloc::rc::Rc;
 
 use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::keyboard::subscribe::KeyboardSubscribable;
-use crate::class_driver::keyboard::Keycode;
+
 
 #[derive(Debug)]
 pub struct Builder {

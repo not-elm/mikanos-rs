@@ -1,4 +1,4 @@
-use core::fmt::{Formatter, Pointer, UpperHex};
+use core::fmt::{Formatter, UpperHex};
 use core::ops::Deref;
 
 #[repr(transparent)]

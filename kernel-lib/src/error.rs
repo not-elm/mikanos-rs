@@ -1,4 +1,3 @@
-use core::fmt::Display;
 use core::num::TryFromIntError;
 
 use simple_fat::error::FatError;

@@ -1,10 +1,8 @@
+use common_lib::error::{CommonError, CommonResult};
+use common_lib::loader::Allocatable;
 use uefi::prelude::Boot;
 use uefi::table::boot::{AllocateType, MemoryType};
 use uefi::table::SystemTable;
-
-use bootloader_lib::error::BootLoaderError;
-use common_lib::error::{CommonError, CommonResult};
-use common_lib::loader::Allocatable;
 
 pub struct BootAllocator<'a>(&'a mut SystemTable<Boot>);
 

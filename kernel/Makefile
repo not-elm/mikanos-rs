@@ -9,3 +9,6 @@ build:
 
 test-build:
 	cargo test --no-run
+
+clippy:
+	cargo clippy --all-features

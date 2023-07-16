@@ -28,7 +28,7 @@ impl KeycodeParser {
         match self.0 {
             0x51 => Some(Keycode::ArrowDown),
             0x52 => Some(Keycode::ArrowUp),
-            code => {
+            _ => {
                 const NUL: char = '\0';
                 const ENT: char = '\r';
                 const ESC: char = '\x1B';
@@ -51,7 +51,7 @@ impl KeycodeParser {
                     .get(self.0 as usize)
                     .copied()
                     .and_then(|c| if c != NUL { Some(c) } else { None })
-                    .map(|code| Keycode::Ascii(code))
+                    .map(Keycode::Ascii)
             }
         }
     }

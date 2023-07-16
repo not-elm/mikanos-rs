@@ -30,6 +30,9 @@ clean: $(subdirs)
 	cargo clean
 	rm -r -f target
 
+.PHONY: clippy $(subdirs)
+clippy: $(subdirs)
+
 $(subdirs):
 	make $(MAKECMDGOALS) -C $@
 

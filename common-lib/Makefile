@@ -5,3 +5,6 @@ clean:
 
 build:
 	cargo build
+
+clippy:
+	cargo clippy --all-features

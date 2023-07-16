@@ -1,4 +1,3 @@
-use core::fmt::{Display, Formatter};
 use thiserror_no_std::Error;
 
 use common_lib::error::CommonError;
