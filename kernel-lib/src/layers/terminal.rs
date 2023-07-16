@@ -90,6 +90,7 @@ impl TerminalLayer {
 
 
 impl Write for TerminalLayer {
+    #[inline]
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
         self.window
             .find_by_key_mut(TEXT_BOX_LAYER_KEY)

@@ -32,7 +32,9 @@ sudo rm -r -f
 sudo mkdir -p mnt
 sudo mount -o loop ${img} mnt
 sudo mkdir -p mnt/EFI/BOOT
+sudo cp fat_disk ./mnt/fat_disk
 sudo cp "$HOME"/workspace/mikanos-rs/target/x86_64-unknown-uefi/debug/bootloader.efi ./mnt/EFI/BOOT/BOOTX64.EFI
 sudo cp "$kernel" ./mnt/kernel.elf
 sudo umount mnt
+
 rm -r -f mnt

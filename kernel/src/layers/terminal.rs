@@ -8,8 +8,8 @@ use kernel_lib::layers::layer_key::LayerKey;
 use kernel_lib::layers::terminal::TerminalLayer;
 use kernel_lib::layers::text::command::{Command, CommandAction, CommandArgs, CommandResult};
 use kernel_lib::layers::text::config;
-use kernel_lib::task;
-
+use kernel_lib::simple_fat::dir::entry::short::ShortDirEntryReadable;
+use kernel_lib::{fs, task};
 use pci::pci_device_searcher::PciDeviceSearcher;
 
 use crate::layers::TERMINAL_LAYER_KEY;
@@ -24,6 +24,7 @@ pub(crate) fn terminal() -> LayerKey {
         .add_command(Command::new("lspci", lspci))
         .add_command(Command::new("sleep", sleep))
         .add_command(Command::new("wakeup", wakeup))
+        .add_command(Command::new("ls", ls))
         .build();
 
     TerminalLayer::new(transform, config)
@@ -87,4 +88,20 @@ fn parse_task_id(args: CommandArgs) -> Result<u64, String> {
     args.first()
         .and_then(|task_id| task_id.parse::<u64>().ok())
         .ok_or("Must be specify correct task id".to_string())
+}
+
+
+fn ls(_args: CommandArgs) -> CommandResult {
+    let dir = fs::root_dir().map_err(|e| e.to_string())?;
+    let output = dir
+        .map(|data| data.name())
+        .filter_map(|name| name.ok())
+        .filter_map(|name| {
+            name.to_str()
+                .map(|name| format!("{}\n", name))
+                .ok()
+        })
+        .collect::<String>();
+
+    Ok(CommandAction::Output(output))
 }

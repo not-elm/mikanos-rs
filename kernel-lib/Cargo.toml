@@ -11,7 +11,7 @@ modular-bitfield = { workspace = true }
 lazy_static = { workspace = true }
 common-lib = { path = "../common-lib" }
 once = "0.3.4"
-spin = "0.9.5"
+spin = { workspace = true }
 uart_16550 = "0.2.0"
 paste = { workspace = true }
 auto-delegate = { workspace = true }
@@ -20,6 +20,7 @@ derive-getters = { workspace = true }
 volatile-bits = { workspace = true }
 memoffset = { workspace = true }
 once_cell = { workspace = true }
+simple-fat = { workspace = true }
 
 [build-dependencies]
 cc = { version = "1.0" }

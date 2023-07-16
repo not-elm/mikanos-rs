@@ -8,6 +8,7 @@ use crate::serial_println;
 mod msi;
 mod register;
 mod task;
+mod fs;
 
 
 pub trait Testable {

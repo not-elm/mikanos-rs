@@ -2,48 +2,44 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::ffi::c_void;
 
+use uefi::fs::{FileSystem, Path};
 use uefi::prelude::{Boot, SystemTable};
-use uefi::proto::media::file::{Directory, File, FileInfo, FileMode, RegularFile};
 use uefi::table::boot::MemoryDescriptor;
 use uefi::table::cfg::ACPI2_GUID;
+use uefi::CString16;
 
 use bootloader_lib::error::LibResult;
 use bootloader_lib::kernel::entry_point::EntryPoint;
 use bootloader_lib::kernel::loaders::elf_loader::ElfLoader;
 use bootloader_lib::kernel::loaders::{Allocatable, KernelLoadable};
 
-use crate::file::open_file;
 use crate::gop::{obtain_frame_buffer_config, open_gop};
 
 pub fn load_kernel(
-    root_dir: &mut Directory,
+    fs: &mut FileSystem,
     kernel_file_path: &str,
     allocator: &mut impl Allocatable,
 ) -> LibResult<EntryPoint> {
-    let mut kernel_file = open_file(root_dir, kernel_file_path, FileMode::Read)
-        .map(|file_handle| file_handle.into_regular_file())
-        .expect("should open kernel.libs")
-        .unwrap();
-
-    let kernel_file_size = get_kernel_file_size(&mut kernel_file) as usize;
-
-    let mut kernel_vec = read_kernel_buff(&mut kernel_file, kernel_file_size);
-
-    let result = ElfLoader::new().load(kernel_vec.as_mut_slice(), allocator);
-
-    kernel_file.close();
-    result
+    let mut kernel_buff = fs.read(Path::new(&CString16::try_from("kernel.elf").unwrap()))?;
+    ElfLoader::new().load(kernel_buff.as_mut_slice(), allocator)
 }
 
-pub fn execute_kernel(entry_point: EntryPoint, system_table: SystemTable<Boot>) -> Result<(), ()> {
+pub fn execute_kernel(
+    entry_point: EntryPoint,
+    system_table: SystemTable<Boot>,
+    fat_volume: *mut u8,
+) -> Result<(), ()> {
     let memory_map_vec = new_memory_map_vec(&system_table);
-
     let frame_buffer_config = obtain_frame_buffer_config(&mut open_gop(&system_table).unwrap());
-
     let rsdp_ptr = find_rsdp_pointer(&system_table);
     let (_, memory_map) = system_table.exit_boot_services();
 
-    entry_point.execute(&frame_buffer_config, &memory_map.entries(), &rsdp_ptr);
+    entry_point.execute(
+        &frame_buffer_config,
+        &memory_map.entries(),
+        &rsdp_ptr,
+        fat_volume,
+    );
     core::mem::forget(memory_map_vec);
     Ok(())
 }
@@ -57,26 +53,6 @@ fn find_rsdp_pointer(system_table: &SystemTable<Boot>) -> Option<*const c_void> 
         .map(|config| config.address)
 }
 
-
-fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
-    // カーネルファイルの大きさを知るため、ファイル情報を読み取る
-    const FILE_INFO_SIZE: usize = 4000;
-
-    let mut buff = vec![0u8; FILE_INFO_SIZE];
-    let info = kernel_file
-        .get_info::<FileInfo>(buff.as_mut_slice())
-        .expect("should obtain kernel libs info");
-
-    info.file_size()
-}
-
-fn read_kernel_buff(kernel_file: &mut RegularFile, kernel_file_size: usize) -> Vec<u8> {
-    let mut v = vec![0; kernel_file_size];
-    kernel_file
-        .read(v.as_mut_slice())
-        .unwrap();
-    v
-}
 
 fn new_memory_map_vec(system_table: &SystemTable<Boot>) -> Vec<u8> {
     let memory_map_size = system_table

@@ -23,6 +23,7 @@ pub mod apic;
 pub mod context;
 pub mod control_registers;
 pub mod error;
+pub mod fs;
 pub mod gop;
 pub mod interrupt;
 pub mod io;
@@ -35,6 +36,12 @@ pub mod serial;
 pub mod sync;
 pub mod task;
 pub mod timer;
+
+
+pub mod simple_fat {
+    pub use simple_fat::*;
+}
+
 
 pub mod volatile_bits {
     pub use volatile_bits::*;

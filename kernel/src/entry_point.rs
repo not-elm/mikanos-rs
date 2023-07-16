@@ -28,7 +28,8 @@ macro_rules! kernel_entry_point {
         pub extern "sysv64" fn kernel_entry_point(
             frame_buffer_config: &common_lib::frame_buffer::FrameBufferConfig,
             memory_map: &uefi::table::boot::MemoryMapIter<'static>,
-            rsdp: &Option<*const core::ffi::c_void>
+            rsdp: &Option<*const core::ffi::c_void>,
+            fat_volume: *mut u8
         ){
             let kernel_stack_end_addr = KERNEL_STACK.end_addr();
 
@@ -41,6 +42,7 @@ macro_rules! kernel_entry_point {
                     in("rdi") frame_buffer_config,
                     in("esi") memory_map,
                     in("edx") rsdp,
+                    in("rcx") fat_volume,
                     clobber_abi("sysv64")
                 )
             }

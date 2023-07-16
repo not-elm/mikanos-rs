@@ -2,7 +2,7 @@ use uefi::prelude::Boot;
 use uefi::table::boot::{AllocateType, MemoryType};
 use uefi::table::SystemTable;
 
-use bootloader_lib::error::{LibError, LibResult};
+use bootloader_lib::error::{BootLoaderError, LibResult};
 use bootloader_lib::kernel::loaders::Allocatable;
 
 pub struct BootAllocator<'a>(&'a mut SystemTable<Boot>);
@@ -16,13 +16,17 @@ impl<'a> BootAllocator<'a> {
 impl Allocatable for BootAllocator<'_> {
     fn copy_mem(&self, dest: *mut u8, src: *const u8, size: usize) {
         unsafe {
-            self.0.boot_services().memmove(dest, src, size);
+            self.0
+                .boot_services()
+                .memmove(dest, src, size);
         }
     }
 
     fn set_mem(&mut self, buff: *mut u8, size: usize, value: u8) {
         unsafe {
-            self.0.boot_services().set_mem(buff, size, value);
+            self.0
+                .boot_services()
+                .set_mem(buff, size, value);
         };
     }
 
@@ -34,7 +38,10 @@ impl Allocatable for BootAllocator<'_> {
     }
 
     fn free_pool(&self, addr: *mut u8) {
-        self.0.boot_services().free_pool(addr).unwrap();
+        self.0
+            .boot_services()
+            .free_pool(addr)
+            .unwrap();
     }
     fn allocate_pages(&mut self, phys_addr: u64, count: usize) -> LibResult {
         self.0
@@ -44,7 +51,7 @@ impl Allocatable for BootAllocator<'_> {
                 MemoryType::LOADER_DATA,
                 count,
             )
-            .map_err(|_| LibError::FailedToAllocatePages(phys_addr))?;
+            .map_err(|_| BootLoaderError::FailedToAllocatePages(phys_addr))?;
         Ok(())
     }
 }

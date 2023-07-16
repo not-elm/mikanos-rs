@@ -15,12 +15,14 @@ x86_64 = "0.14.10"
 lazy_static = "1.4.0"
 xhci = "0.9.1"
 modular-bitfield = "0.11.2"
-uefi = { version = "0.20.0", features = ["alloc"] }
-uefi-services = "0.17.0"
+uefi = { version = "0.24.0", features = ["alloc", "unstable"] }
+uefi-services = "0.21.0"
 auto-delegate = "0.0.7"
 anyhow = { version = "1.0.71", default-features = false }
 derive-getters = "0.3.0"
 volatile-bits = { git = "https://github.com/elm-register/volatile-bits", branch = "master" }
 paste = "1.0.12"
 memoffset = "0.9.0"
+spin = "0.9.8"
 once_cell = { version = "1.18.0", default-features = false }
+simple-fat = { git = "https://github.com/elm-register/simple-fat", branch = "master" }

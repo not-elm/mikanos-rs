@@ -29,7 +29,15 @@ version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "763554a8473104d2a71f500bbe3ab75e29e5b1ae70d93aa99eb04d275288be7c"
 dependencies = [
- "auto-delegate-impl",
+ "auto-delegate-impl 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "auto-delegate"
+version = "0.0.7"
+source = "git+https://github.com/elm-register/auto-delegate?branch=nightly#7252385480572b1a1fa45597013c1534eea6025c"
+dependencies = [
+ "auto-delegate-impl 0.0.7 (git+https://github.com/elm-register/auto-delegate?branch=nightly)",
 ]
 
 [[package]]
@@ -40,7 +48,17 @@ checksum = "fabc4ed571944480bcb92085829306ebb1918fab25a72bc64593c67ee11263a8"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.16",
+ "syn 2.0.26",
+]
+
+[[package]]
+name = "auto-delegate-impl"
+version = "0.0.7"
+source = "git+https://github.com/elm-register/auto-delegate?branch=nightly#7252385480572b1a1fa45597013c1534eea6025c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.26",
 ]
 
 [[package]]
@@ -51,7 +69,7 @@ checksum = "4918e7cdf358940b83279f96bd6865d0eaef7f0e93d680d2ce186bdbf9ca1e59"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.16",
+ "syn 2.0.26",
 ]
 
 [[package]]
@@ -71,6 +89,12 @@ name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+
+[[package]]
+name = "bitflags"
+version = "2.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "630be753d4e58660abd17930c71b647fe46c27ea6b63cc59e1e3851406972e42"
 
 [[package]]
 name = "bootloader"
@@ -107,7 +131,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "common-lib"
 version = "0.1.0"
 dependencies = [
- "auto-delegate 0.0.7",
+ "auto-delegate 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -140,7 +164,7 @@ dependencies = [
  "paste",
  "pci",
  "pic8259",
- "spin 0.9.5",
+ "spin 0.9.8",
  "uefi",
  "x86_64",
  "xhci",
@@ -151,7 +175,7 @@ name = "kernel-lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "auto-delegate 0.0.7",
+ "auto-delegate 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "cc",
  "common-lib",
  "derive-getters",
@@ -161,7 +185,8 @@ dependencies = [
  "once",
  "once_cell",
  "paste",
- "spin 0.9.5",
+ "simple-fat",
+ "spin 0.9.8",
  "uart_16550",
  "uefi",
  "volatile-bits",
@@ -188,9 +213,9 @@ dependencies = [
 
 [[package]]
 name = "lock_api"
-version = "0.4.9"
+version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "435011366fe56583b16cf956f9df0095b405b82d76425bc8981c0e22e60ec4df"
+checksum = "c1cc9717a20b1bb222f333e6a92fd32f7d8a18ddc5a3191a11af45dcbf4dcd16"
 dependencies = [
  "autocfg",
  "scopeguard",
@@ -198,12 +223,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.17"
+version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
-dependencies = [
- "cfg-if",
-]
+checksum = "b06a4cde4c0f271a446782e3eff8de789548ce57dbc8eca9292c27f4a42004b4"
 
 [[package]]
 name = "memoffset"
@@ -256,6 +278,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "num_enum"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a015b430d3c108a207fd776d2e2196aaf8b1cf8cf93253e3a097ff3085076a1"
+dependencies = [
+ "num_enum_derive",
+]
+
+[[package]]
+name = "num_enum_derive"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96667db765a921f7b295ffee8b60472b686a51d4f21c2ee4ffdb94c7013b65a6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.26",
+]
+
+[[package]]
 name = "once"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -269,9 +311,9 @@ checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "paste"
-version = "1.0.12"
+version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
+checksum = "b4b27ab7be369122c218afc2079489cdcb4b517c0a3fc386ff11e1fedfcc2b35"
 
 [[package]]
 name = "pci"
@@ -288,18 +330,18 @@ dependencies = [
 
 [[package]]
 name = "pic8259"
-version = "0.10.3"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "761e92187c0fc0c3db574a512609df5fd99b0ee237132858281d68a0cdc189c8"
+checksum = "cb844b5b01db1e0b17938685738f113bfc903846f18932b378bc0eabfa40e194"
 dependencies = [
  "x86_64",
 ]
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.56"
+version = "1.0.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b63bdb0cd06f1f4dedf69b254734f9b45af66e4a031e42a7480257d9898b435"
+checksum = "78803b62cbf1f46fde80d7c0e803111524b9877184cfe7c3033659490ac7a7da"
 dependencies = [
  "unicode-ident",
 ]
@@ -326,24 +368,35 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.26"
+version = "1.0.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4424af4bf778aae2051a77b60283332f386554255d722233d09fbfc7e30da2fc"
+checksum = "573015e8ab27661678357f27dc26460738fd2b6c86e46f386fde94cb5d913105"
 dependencies = [
  "proc-macro2",
 ]
 
 [[package]]
 name = "rustversion"
-version = "1.0.12"
+version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f3208ce4d8448b3f3e7d168a73f5e0c43a61e32930de3bceeccedb388b6bf06"
+checksum = "dc31bd9b61a32c31f9650d18add92aa83a49ba979c143eefd27fe7177b05bd5f"
 
 [[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
+
+[[package]]
+name = "simple-fat"
+version = "0.1.0"
+source = "git+https://github.com/elm-register/simple-fat?branch=master#502d405f9987776c371a436fa25d58f91acfc3a0"
+dependencies = [
+ "auto-delegate 0.0.7 (git+https://github.com/elm-register/auto-delegate?branch=nightly)",
+ "num_enum",
+ "spin 0.9.8",
+ "thiserror-no-std",
+]
 
 [[package]]
 name = "spin"
@@ -353,9 +406,9 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "spin"
-version = "0.9.5"
+version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dccf47db1b41fa1573ed27ccf5e08e3ca771cb994f776668c5ebda893b248fc"
+checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 dependencies = [
  "lock_api",
 ]
@@ -388,9 +441,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.16"
+version = "2.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6f671d4b5ffdb8eadec19c0ae67fe2639df8684bd7bc4b83d986b8db549cf01"
+checksum = "45c3457aacde3c65315de5031ec191ce46604304d2446e803d71ade03308d970"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -398,12 +451,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "uart_16550"
-version = "0.2.18"
+name = "thiserror-impl-no-std"
+version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b074eb9300ad949edd74c529c0e8d451625af71bb948e6b65fe69f72dc1363d9"
+checksum = "58e6318948b519ba6dc2b442a6d0b904ebfb8d411a3ad3e07843615a72249758"
 dependencies = [
- "bitflags",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "thiserror-no-std"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3ad459d94dd517257cc96add8a43190ee620011bb6e6cdc82dafd97dfafafea"
+dependencies = [
+ "thiserror-impl-no-std",
+]
+
+[[package]]
+name = "uart_16550"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "614ff2a87880d4bd4374722268598a970bbad05ced8bf630439417347254ab2e"
+dependencies = [
+ "bitflags 1.3.2",
  "rustversion",
  "x86_64",
 ]
@@ -419,33 +492,46 @@ dependencies = [
 
 [[package]]
 name = "uefi"
-version = "0.20.0"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab39d5e7740f21ed4c46d6659f31038bbe3fe7a8be1f702d8a984348837c43b1"
+checksum = "3b63e82686b4bdb0db74f18b2abbd60a0470354fb640aa69e115598d714d0a10"
 dependencies = [
- "bitflags",
+ "bitflags 2.3.3",
  "log",
  "ptr_meta",
  "ucs2",
  "uefi-macros",
+ "uefi-raw",
+ "uguid",
 ]
 
 [[package]]
 name = "uefi-macros"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0caeb0e7b31b9f1f347e541106be10aa8c66c76fa722a3298a4cd21433fabd4"
+checksum = "023d94ef8e135d068b9a3bd94614ef2610b2b0419ade0a9d8f3501fa9cd08e95"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.26",
+]
+
+[[package]]
+name = "uefi-raw"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62642516099c6441a5f41b0da8486d5fc3515a0603b0fdaea67b31600e22082e"
+dependencies = [
+ "bitflags 2.3.3",
+ "ptr_meta",
+ "uguid",
 ]
 
 [[package]]
 name = "uefi-services"
-version = "0.17.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42d8ffbcc532083312224b4540737c1102ede6a81360fa9320a60deff329a3a1"
+checksum = "44b32954ebbb4be5ebfde0df6699c2091f04e9f9c3762c65f3435dfb1a90a668"
 dependencies = [
  "cfg-if",
  "log",
@@ -453,10 +539,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "unicode-ident"
-version = "1.0.8"
+name = "uguid"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5464a87b239f13a63a501f2701565754bae92d243d4bb7eb12f6d57d2269bf4"
+checksum = "16dfbd255defbd727b3a30e8950695d2e6d045841ee250ff0f1f7ced17917f8d"
+
+[[package]]
+name = "unicode-ident"
+version = "1.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22049a19f4a68748a168c0fc439f9516686aa045927ff767eca0a85101fb6e73"
 
 [[package]]
 name = "volatile"
@@ -480,7 +572,7 @@ source = "git+https://github.com/elm-register/volatile-bits?branch=master#115a2c
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.16",
+ "syn 2.0.26",
 ]
 
 [[package]]
@@ -490,7 +582,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "100555a863c0092238c2e0e814c1096c1e5cf066a309c696a87e907b5f8c5d69"
 dependencies = [
  "bit_field",
- "bitflags",
+ "bitflags 1.3.2",
  "rustversion",
  "volatile",
 ]

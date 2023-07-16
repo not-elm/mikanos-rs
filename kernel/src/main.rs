@@ -19,7 +19,7 @@ use uefi::table::boot::MemoryMapIter;
 
 use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::serial_println;
+use kernel_lib::{fs, serial_println};
 
 use crate::apic::TIMER_FREQ;
 use crate::gdt::init_gdt;
@@ -52,6 +52,7 @@ pub extern "sysv64" fn kernel_main(
     frame_buffer_config: &FrameBufferConfig,
     memory_map: &MemoryMapIter<'static>,
     rsdp: &Option<*const c_void>,
+    fat_volume: *mut u8,
 ) {
     init_gdt();
 
@@ -60,15 +61,20 @@ pub extern "sysv64" fn kernel_main(
     init_paging_table();
 
     init_alloc(memory_map.clone()).unwrap();
-
     init_layers(*frame_buffer_config).unwrap();
 
     apic::start_timer(*rsdp, TIMER_FREQ).unwrap();
+
+    fs::init(fat_volume);
+    let hello_txt_file = fs::open_file("HELLO.TXT").unwrap();
+    println!("{:?}", hello_txt_file.read_boxed());
+
 
     #[cfg(test)]
     test_main();
     serial_println!("Hello Serial Port!");
     println!("Hello Mikan OS RS!");
+
 
     let devices = serial_bus_usb_devices();
     let xhc_general_header = devices.first().unwrap();
