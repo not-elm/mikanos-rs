@@ -3,6 +3,9 @@ use alloc::vec;
 use common_lib::error::CommonResult;
 use common_lib::loader;
 
+use crate::paging::linear_address::LinearAddress;
+use crate::paging::setup_page_maps;
+
 pub struct FsAllocator;
 
 
@@ -39,7 +42,11 @@ impl loader::alloc::Allocatable for FsAllocator {
 
 
     #[inline]
-    fn allocate_pages(&mut self, _phys_addr: u64, _count: usize) -> CommonResult {
+    fn allocate_pages(&mut self, addr: u64, count: usize) -> CommonResult {
+        setup_page_maps(
+            LinearAddress::new(addr),
+            count,
+        );
         Ok(())
     }
 }

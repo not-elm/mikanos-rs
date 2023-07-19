@@ -1,4 +1,10 @@
 use crate::control_registers::{read_cr3, set_cr3};
+use crate::paging::entry::PageMapEntryPtr;
+use crate::paging::linear_address::LinearAddress;
+use crate::serial_println;
+
+mod entry;
+pub mod linear_address;
 
 const PAGE_SIZE_4K: usize = 4096;
 pub const PAGE_SIZE_2M: usize = 512 * PAGE_SIZE_4K;
@@ -49,4 +55,40 @@ pub fn setup_identity_page_table() {
         set_cr3(cr3);
         assert_eq!(read_cr3(), cr3);
     }
+}
+
+
+pub fn setup_page_maps(
+    addr: LinearAddress,
+    pages: usize,
+) {
+    let pml4_table = PageMapEntryPtr::from_addr(read_cr3());
+    setup_page_map(pml4_table, 4, addr, pages);
+}
+
+
+fn setup_page_map(
+    entry: PageMapEntryPtr,
+    page_map_level: usize,
+    addr: LinearAddress,
+    pages: usize,
+) -> usize {
+    let mut pages = pages;
+    serial_println!("pages {:?}", pages);
+    while pages > 0 {
+        let entry_idx = addr.part(page_map_level);
+        let mut entry = entry.add(entry_idx);
+        let child = entry.child();
+        entry.update(|et| {
+            et.set_writable(true);
+        });
+
+        if page_map_level > 1 {
+            pages = setup_page_map(child, page_map_level - 1, addr, pages);
+        } else {
+            pages -= 1;
+        }
+    }
+
+    pages
 }

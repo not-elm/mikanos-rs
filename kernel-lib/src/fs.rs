@@ -1,16 +1,19 @@
 use core::cell::OnceCell;
 
-use simple_fat::bpb::BpbFat32;
-use simple_fat::dir::data::file::RegularFile;
-use simple_fat::dir::data::DataEntries;
-use simple_fat::error::FatDeviceError;
 use simple_fat::{Fat, FatDeviceAccessible};
+use simple_fat::bpb::BpbFat32;
+use simple_fat::dir::data::DataEntries;
+use simple_fat::dir::data::file::RegularFile;
+use simple_fat::error::FatDeviceError;
 
 use common_lib::loader::elf::ElfLoader;
 use common_lib::loader::ExecuteFileLoadable;
 
 use crate::error::KernelResult;
 use crate::fs::alloc::FsAllocator;
+use crate::paging::linear_address::LinearAddress;
+use crate::paging::setup_page_maps;
+use crate::serial_println;
 
 mod alloc;
 
@@ -51,6 +54,11 @@ pub fn execute_elf(file: RegularFile<BpbFat32<FatDevice>>) -> KernelResult {
     let entry_point_addr = ElfLoader::new().load(&mut buff, &mut FsAllocator)?;
     let entry_point_ptr = *entry_point_addr as *const ();
     let entry_point: extern "sysv64" fn() -> () = unsafe { core::mem::transmute(entry_point_ptr) };
+    serial_println!("E {:X}", entry_point_addr);
+    setup_page_maps(
+        LinearAddress::new(*entry_point_addr),
+        1,
+    );
 
     entry_point();
     Ok(())
