@@ -11,7 +11,7 @@
 #![feature(thread_local)]
 #![feature(asm_const)]
 #![feature(atomic_bool_fetch_not)]
-
+#![feature(ptr_as_uninit)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;

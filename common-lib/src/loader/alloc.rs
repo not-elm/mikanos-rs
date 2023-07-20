@@ -1,7 +1,7 @@
 use crate::error::CommonResult;
 
 pub trait Allocatable {
-    fn copy_mem(&self, dest: *mut u8, src: *const u8, size: usize);
+    fn copy_mem(&mut self, dest: *mut u8, src: *const u8, size: usize);
 
     fn set_mem(&mut self, buff: *mut u8, size: usize, value: u8);
 

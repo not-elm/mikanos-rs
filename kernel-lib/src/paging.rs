@@ -62,31 +62,47 @@ pub fn setup_page_maps(
     addr: LinearAddress,
     pages: usize,
 ) {
+    serial_println!("Start setup page map address = {:X}", addr);
+
     let pml4_table = PageMapEntryPtr::from_addr(read_cr3());
     setup_page_map(pml4_table, 4, addr, pages);
+    serial_println!("End setup page map");
 }
 
 
 fn setup_page_map(
     entry: PageMapEntryPtr,
     page_map_level: usize,
-    addr: LinearAddress,
+    mut addr: LinearAddress,
     pages: usize,
 ) -> usize {
     let mut pages = pages;
-    serial_println!("pages {:?}", pages);
+
     while pages > 0 {
         let entry_idx = addr.part(page_map_level);
         let mut entry = entry.add(entry_idx);
         let child = entry.child();
+
         entry.update(|et| {
             et.set_writable(true);
+            et.set_present(true);
         });
+        serial_println!("idx = {} parent = {:?}, child = {:?}", entry_idx, entry, child);
 
-        if page_map_level > 1 {
+
+        if page_map_level != 1 {
             pages = setup_page_map(child, page_map_level - 1, addr, pages);
         } else {
             pages -= 1;
+        }
+
+        if entry_idx == 511 {
+            break;
+        }
+
+        addr.write(page_map_level, entry_idx + 1);
+        for l in page_map_level - 1..0 {
+            addr.write(l, 0);
         }
     }
 

@@ -1,14 +1,28 @@
-use alloc::vec;
-use core::mem;
+use alloc::format;
+use alloc::boxed::Box;
+use core::fmt::{Debug, Formatter};
 
 use modular_bitfield::bitfield;
-use modular_bitfield::prelude::B3;
-use modular_bitfield::specifiers::{B12, B40};
+use modular_bitfield::prelude::{B12, B3, B40};
 
-#[derive(Debug)]
+use crate::allocator::FRAME_ITER;
+use crate::serial_println;
+
 #[repr(transparent)]
 pub struct PageMapEntryPtr(u64);
 
+impl Debug for PageMapEntryPtr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        f
+            .debug_struct("PageMapEntryPtr")
+            .field("addr", &format!("0x{:X}", self.0))
+            .field("entry", &self.read())
+            .finish()
+    }
+}
+
+#[repr(align(4096))]
+struct A(Box<[u8]>);
 
 impl PageMapEntryPtr {
     #[inline]
@@ -19,18 +33,19 @@ impl PageMapEntryPtr {
 
     #[inline]
     pub fn new() -> Self {
-        let buff = vec![0; 64 * 512];
-        let addr = buff.as_ptr() as u64;
-        mem::forget(buff);
+        let frame = unsafe { FRAME_ITER.0.get_mut().unwrap().next() };
+
+        // let buff = ManuallyDrop::new(A(Vec:: [0u8; 4096].into_boxed_slice()));
+        let addr = frame.unwrap().base_phys_addr().raw();
 
         Self::from_addr(addr)
     }
 
 
-    #[inline]
     pub fn child(&mut self) -> Self {
         if self.read().present() {
-            Self::from_addr(self.read().addr())
+            serial_println!("ADDR = {:X} {:X}", self.read().addr(),  self.read().addr() << 12);
+            Self::from_addr(self.read().addr() << 12)
         } else {
             let child = Self::new();
             self.set_child(&child);
@@ -43,19 +58,22 @@ impl PageMapEntryPtr {
 
 
     pub fn set_child(&mut self, child: &PageMapEntryPtr) {
-        self.set_addr(child.addr())
+        self.set_addr(child.0)
     }
 
 
     pub fn add(&self, index: usize) -> PageMapEntryPtr {
-        Self::from_addr(self.0 + (index as u64) * 64)
+        Self::from_addr(self.0 + (index * core::mem::size_of::<u64>()) as u64)
     }
 
 
     pub fn update<F: FnOnce(&mut PageMapEntry)>(&mut self, f: F) {
         let mut entry = self.read();
         f(&mut entry);
-        unsafe { core::ptr::write(self.0 as *mut PageMapEntry, entry) }
+
+        unsafe {
+            (self.0 as *mut PageMapEntry).write_volatile(entry);
+        }
     }
 
 
@@ -72,14 +90,13 @@ impl PageMapEntryPtr {
 
 
     fn read(&self) -> PageMapEntry {
-        unsafe { core::ptr::read(self.0 as *const PageMapEntry) }
+        unsafe { core::ptr::read(self.0 as *mut PageMapEntry) }
     }
 }
 
 
 #[bitfield]
 #[repr(u64)]
-#[derive(Debug)]
 pub struct PageMapEntry {
     pub present: bool,
     pub writable: bool,
@@ -90,9 +107,20 @@ pub struct PageMapEntry {
     pub dirty: bool,
     pub huga_page: bool,
     pub global: bool,
-    #[skip]
-    __: B3,
+
+    _r: B3,
     pub addr: B40,
     #[skip]
     __: B12,
+}
+
+
+impl Debug for PageMapEntry {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        f
+            .debug_struct("PageMapEntry")
+            .field("present", &self.present())
+            .field("addr", &format!("0x{:X}", self.addr() >> 12))
+            .finish()
+    }
 }

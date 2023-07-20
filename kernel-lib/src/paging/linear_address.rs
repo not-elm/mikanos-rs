@@ -1,6 +1,17 @@
+use core::fmt::{Formatter, UpperHex};
+use modular_bitfield::bitfield;
+use modular_bitfield::prelude::{B12, B16, B9};
+
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
 pub struct LinearAddress(u64);
+
+
+impl UpperHex for LinearAddress {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{:X}", self.0)
+    }
+}
 
 
 impl LinearAddress {
@@ -13,33 +24,56 @@ impl LinearAddress {
         let parts = self.read();
 
         match page_map_level {
-            0 => parts.offset,
-            1 => parts.page,
-            2 => parts.dir,
-            3 => parts.pdp,
-            4 => parts.pml4,
+            0 => parts.offset() as usize,
+            1 => parts.page() as usize,
+            2 => parts.dir() as usize,
+            3 => parts.pdp() as usize,
+            4 => parts.pml4() as usize,
             _ => 0
         }
     }
 
     fn read(&self) -> Parts {
-        Parts {
-            offset: (self.0 & 0b1111_1111_1111) as usize,
-            page: ((self.0 >> 12) & 0b1_1111_1111) as usize,
-            dir: ((self.0 >> 21) & 0b1_1111_1111) as usize,
-            pdp: ((self.0 >> 30) & 0b1_1111_1111) as usize,
-            pml4: ((self.0 >> 39) & 0b1_1111_1111) as usize,
+        Parts::from(self.0)
+    }
+
+
+    pub fn write(&mut self, level: usize, v: usize) {
+        let mut parts = self.read();
+        match level {
+            0 => {
+                parts.set_offset(v as u16);
+            }
+            1 => {
+                parts.set_page(v as u16);
+            }
+            2 => {
+                parts.set_dir(v as u16);
+            }
+            3 => {
+                parts.set_pdp(v as u16);
+            }
+            4 => {
+                parts.set_pml4(v as u16);
+            }
+            _ => {}
         }
+
+        self.0 = parts.into();
     }
 }
 
 
+#[bitfield]
+#[repr(u64)]
 struct Parts {
-    offset: usize,
-    page: usize,
-    dir: usize,
-    pdp: usize,
-    pml4: usize,
+    offset: B12,
+    page: B9,
+    dir: B9,
+    pdp: B9,
+    pml4: B9,
+    #[skip]
+    __: B16,
 }
 
 

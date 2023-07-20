@@ -1,9 +1,9 @@
 use crate::elf::ehdr::elf_header_ptr::ElfHeaderPtr;
-use crate::elf::phdr::program_header::{PType, ProgramHeader};
+use crate::elf::phdr::program_header::{ProgramHeader, PType};
 use crate::elf::phdr::program_header_table::ProgramHeaderTable;
 use crate::error::CommonResult;
-use crate::loader::entry_point::EntryPointAddr;
 use crate::loader::{Allocatable, ExecuteFileLoadable};
+use crate::loader::entry_point::EntryPointAddr;
 
 #[derive(Debug, Clone)]
 pub struct ElfLoader;
@@ -40,6 +40,7 @@ impl ExecuteFileLoadable for ElfLoader {
         let phdr_table = ehdr.phdr_table();
 
         copy_load_segments(&ehdr, phdr_table, allocator);
+
         let entry_point_addr_ptr = (load_segment_start_addr + 24) as *const u64;
         let entry_point_addr = unsafe { *entry_point_addr_ptr };
         Ok(EntryPointAddr::new(entry_point_addr))
@@ -73,6 +74,7 @@ fn copy_load_segments(
 
 
 fn copy_mem(ehdr: &ElfHeaderPtr, phdr: &ProgramHeader, system_table: &mut impl Allocatable) {
+
     let load_destination_addr = phdr.p_vaddr as *mut u8;
     let loadable_segment = ehdr.segment_at(phdr.p_offset);
     system_table.copy_mem(

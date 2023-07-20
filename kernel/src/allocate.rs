@@ -4,10 +4,10 @@ use linked_list_allocator::LockedHeap;
 use uefi::table::boot::MemoryMapIter;
 
 use common_lib::math::Align;
+use kernel_lib::allocator::{FRAME_ITER, MAX_MEMORY_SIZE};
 use kernel_lib::allocator::memory_map::frame_iter::FrameIter;
-use kernel_lib::allocator::MAX_MEMORY_SIZE;
-use kernel_lib::error::AllocateReason::InitializeGlobalAllocator;
 use kernel_lib::error::{KernelError, KernelResult};
+use kernel_lib::error::AllocateReason::InitializeGlobalAllocator;
 use kernel_lib::interrupt;
 
 //
@@ -35,7 +35,10 @@ pub fn init_alloc(memory_map: MemoryMapIter<'static>) -> KernelResult {
         let mut memory_map_range = FrameIter::new(memory_map)
             .ok_or(KernelError::FailedAllocate(InitializeGlobalAllocator))?;
 
-        let frame = memory_map_range
+        FRAME_ITER.0.set(memory_map_range).unwrap();
+
+        let frame = FRAME_ITER.0.get_mut()
+            .unwrap()
             .next()
             .unwrap();
 

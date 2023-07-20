@@ -1,4 +1,4 @@
-use uefi::table::boot::{MemoryDescriptor, MemoryMapIter, MemoryType};
+use uefi::table::boot::{MemoryDescriptor, MemoryMapIter};
 
 use common_lib::physical_address::PhysicalAddress;
 
@@ -89,6 +89,6 @@ fn next_available(memory_map: &mut MemoryMapIter) -> Option<MemoryDescriptor> {
 fn is_available(memory_descriptor: &MemoryDescriptor) -> bool {
     matches!(
         memory_descriptor.ty,
-        MemoryType::CONVENTIONAL
+        uefi::table::boot::MemoryType::CONVENTIONAL 
     )
 }

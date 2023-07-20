@@ -1,8 +1,9 @@
-use common_lib::error::{CommonError, CommonResult};
-use common_lib::loader::Allocatable;
 use uefi::prelude::Boot;
 use uefi::table::boot::{AllocateType, MemoryType};
 use uefi::table::SystemTable;
+
+use common_lib::error::{CommonError, CommonResult};
+use common_lib::loader::Allocatable;
 
 pub struct BootAllocator<'a>(&'a mut SystemTable<Boot>);
 
@@ -15,7 +16,7 @@ impl<'a> BootAllocator<'a> {
 
 
 impl Allocatable for BootAllocator<'_> {
-    fn copy_mem(&self, dest: *mut u8, src: *const u8, size: usize) {
+    fn copy_mem(&mut self, dest: *mut u8, src: *const u8, size: usize) {
         unsafe {
             self.0
                 .boot_services()
@@ -50,6 +51,9 @@ impl Allocatable for BootAllocator<'_> {
 
 
     fn allocate_pages(&mut self, phys_addr: u64, count: usize) -> CommonResult {
+        self.0
+            .boot_services()
+            .free_pages(phys_addr, count);
         self.0
             .boot_services()
             .allocate_pages(
