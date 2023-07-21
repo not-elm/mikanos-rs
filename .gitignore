@@ -7,4 +7,4 @@
 *.dtmp
 *.csv
 /.vscode/
-fat_disk
+scripts/fat_disk

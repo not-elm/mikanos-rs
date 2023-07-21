@@ -12,6 +12,7 @@ use common_lib::loader::ExecuteFileLoadable;
 
 use crate::error::KernelResult;
 use crate::fs::alloc::FsAllocator;
+use crate::serial_println;
 use crate::tss::STACK;
 
 mod alloc;
@@ -51,25 +52,25 @@ pub fn execute_elf(file: RegularFile<BpbFat32<FatDevice>>) -> KernelResult {
     let mut buff = file.read_boxed()?;
 
     let entry_point_addr = ElfLoader::new().load(&mut buff, &mut FsAllocator)?;
-
+    serial_println!("Entry {:X}", entry_point_addr);
     let entry_point_ptr = *entry_point_addr as *const ();
     let entry_point: extern "sysv64" fn() -> () = unsafe { core::mem::transmute(entry_point_ptr) };
-    unsafe {
-        asm!(
-        "push rbp",
-        "mov rbp, rsp",
-        "push {ss:r} //SS",
-        "push {rsp:r} //RSP",
-        "push {cs:r} //CS",
-        "push {rip:r} //RIP",
-        "retfq",
-        cs = in(reg) 4 << 3 | 3,
-        ss = in(reg) 3 << 3 | 3,
-        rip = in(reg) *entry_point_addr,
-        rsp = in(reg) STACK.as_ptr() as u64 + 4096  - 8
-        )
-    }
-    // entry_point();
+    // unsafe {
+    //     asm!(
+    //     "push rbp",
+    //     "mov rbp, rsp",
+    //     "push {ss:r} //SS",
+    //     "push {rsp:r} //RSP",
+    //     "push {cs:r} //CS",
+    //     "push {rip:r} //RIP",
+    //     "retfq",
+    //     cs = in(reg) 4 << 3 | 3,
+    //     ss = in(reg) 3 << 3 | 3,
+    //     rip = in(reg) *entry_point_addr,
+    //     rsp = in(reg) STACK.as_ptr() as u64 + 4096  - 8
+    //     )
+    // }
+     entry_point();
     Ok(())
 }
 

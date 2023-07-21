@@ -43,6 +43,7 @@ impl ExecuteFileLoadable for ElfLoader {
 
         let entry_point_addr_ptr = (load_segment_start_addr + 24) as *const u64;
         let entry_point_addr = unsafe { *entry_point_addr_ptr };
+
         Ok(EntryPointAddr::new(entry_point_addr))
     }
 }
