@@ -1,15 +1,27 @@
+use alloc::alloc::alloc;
 use alloc::format;
-use alloc::boxed::Box;
+use core::alloc::Layout;
 use core::fmt::{Debug, Formatter};
 
 use modular_bitfield::bitfield;
 use modular_bitfield::prelude::{B12, B3, B40};
 
-use crate::allocator::FRAME_ITER;
-use crate::serial_println;
-
 #[repr(transparent)]
+#[derive(Clone)]
 pub struct PageMapEntryPtr(u64);
+
+impl PageMapEntryPtr {
+    pub fn free(self) {
+        unsafe {
+            let ptr = self.0 as *mut u64;
+            if !ptr.is_null() {
+                *ptr = 0;
+                ptr.drop_in_place();
+            }
+        }
+    }
+}
+
 
 impl Debug for PageMapEntryPtr {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
@@ -21,8 +33,6 @@ impl Debug for PageMapEntryPtr {
     }
 }
 
-#[repr(align(4096))]
-struct A(Box<[u8]>);
 
 impl PageMapEntryPtr {
     #[inline]
@@ -33,18 +43,31 @@ impl PageMapEntryPtr {
 
     #[inline]
     pub fn new() -> Self {
-        let frame = unsafe { FRAME_ITER.0.get_mut().unwrap().next() };
-
-        // let buff = ManuallyDrop::new(A(Vec:: [0u8; 4096].into_boxed_slice()));
-        let addr = frame.unwrap().base_phys_addr().raw();
-
-        Self::from_addr(addr)
+        unsafe {
+            let buff = alloc(Layout::from_size_align(4096, 4096).unwrap());
+            buff.write_bytes(0, 4096);
+            Self::from_addr(buff as u64)
+        }
     }
 
 
-    pub fn child(&mut self) -> Self {
+    #[inline]
+    pub fn present(&self) -> bool {
+        self.0 != 0 && unsafe { *(self.0 as *const bool) }
+    }
+
+
+    pub fn child(&self) -> Option<Self> {
+        if self.present() {
+            Some(Self::from_addr(self.read().addr() << 12))
+        } else {
+            None
+        }
+    }
+
+
+    pub fn child_get_or_create(&mut self) -> Self {
         if self.read().present() {
-            serial_println!("ADDR = {:X} {:X}", self.read().addr(),  self.read().addr() << 12);
             Self::from_addr(self.read().addr() << 12)
         } else {
             let child = Self::new();
@@ -58,12 +81,12 @@ impl PageMapEntryPtr {
 
 
     pub fn set_child(&mut self, child: &PageMapEntryPtr) {
-        self.set_addr(child.0)
+        self.set_addr(child.0 >> 12)
     }
 
 
-    pub fn add(&self, index: usize) -> PageMapEntryPtr {
-        Self::from_addr(self.0 + (index * core::mem::size_of::<u64>()) as u64)
+    pub fn entry(&self, index: usize) -> PageMapEntryPtr {
+        Self::from_addr(self.0 + (index * core::mem::size_of::<PageMapEntry>()) as u64)
     }
 
 
@@ -84,11 +107,6 @@ impl PageMapEntryPtr {
     }
 
 
-    fn addr(&self) -> u64 {
-        self.read().addr()
-    }
-
-
     fn read(&self) -> PageMapEntry {
         unsafe { core::ptr::read(self.0 as *mut PageMapEntry) }
     }
@@ -96,6 +114,7 @@ impl PageMapEntryPtr {
 
 
 #[bitfield]
+#[derive(Debug)]
 #[repr(u64)]
 pub struct PageMapEntry {
     pub present: bool,
@@ -107,20 +126,20 @@ pub struct PageMapEntry {
     pub dirty: bool,
     pub huga_page: bool,
     pub global: bool,
-
-    _r: B3,
+    #[skip]
+    __: B3,
     pub addr: B40,
     #[skip]
     __: B12,
 }
 
-
-impl Debug for PageMapEntry {
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        f
-            .debug_struct("PageMapEntry")
-            .field("present", &self.present())
-            .field("addr", &format!("0x{:X}", self.addr() >> 12))
-            .finish()
-    }
-}
+//
+// impl Debug for PageMapEntry {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+//         f
+//             .debug_struct("PageMapEntry")
+//             .field("present", &self.present())
+//             .field("addr", &format!("0x{:X}", self.addr() >> 12))
+//             .finish()
+//     }
+// }

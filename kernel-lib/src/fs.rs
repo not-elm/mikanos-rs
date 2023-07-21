@@ -11,7 +11,6 @@ use common_lib::loader::ExecuteFileLoadable;
 
 use crate::error::KernelResult;
 use crate::fs::alloc::FsAllocator;
-use crate::serial_println;
 
 mod alloc;
 
@@ -50,12 +49,9 @@ pub fn execute_elf(file: RegularFile<BpbFat32<FatDevice>>) -> KernelResult {
     let mut buff = file.read_boxed()?;
 
     let entry_point_addr = ElfLoader::new().load(&mut buff, &mut FsAllocator)?;
-    serial_println!("E {:X}", entry_point_addr);
 
-    serial_println!("Paging");
     let entry_point_ptr = *entry_point_addr as *const ();
     let entry_point: extern "sysv64" fn() -> () = unsafe { core::mem::transmute(entry_point_ptr) };
-
 
     entry_point();
     Ok(())

@@ -1,7 +1,6 @@
 use crate::control_registers::{read_cr3, set_cr3};
 use crate::paging::entry::PageMapEntryPtr;
 use crate::paging::linear_address::LinearAddress;
-use crate::serial_println;
 
 mod entry;
 pub mod linear_address;
@@ -62,11 +61,8 @@ pub fn setup_page_maps(
     addr: LinearAddress,
     pages: usize,
 ) {
-    serial_println!("Start setup page map address = {:X}", addr);
-
     let pml4_table = PageMapEntryPtr::from_addr(read_cr3());
     setup_page_map(pml4_table, 4, addr, pages);
-    serial_println!("End setup page map");
 }
 
 
@@ -80,15 +76,13 @@ fn setup_page_map(
 
     while pages > 0 {
         let entry_idx = addr.part(page_map_level);
-        let mut entry = entry.add(entry_idx);
-        let child = entry.child();
+        let mut entry = entry.entry(entry_idx);
+        let child = entry.child_get_or_create();
 
         entry.update(|et| {
             et.set_writable(true);
             et.set_present(true);
         });
-        serial_println!("idx = {} parent = {:?}, child = {:?}", entry_idx, entry, child);
-
 
         if page_map_level != 1 {
             pages = setup_page_map(child, page_map_level - 1, addr, pages);
@@ -101,10 +95,36 @@ fn setup_page_map(
         }
 
         addr.write(page_map_level, entry_idx + 1);
-        for l in page_map_level - 1..0 {
+        for l in 0..page_map_level {
             addr.write(l, 0);
         }
     }
 
     pages
+}
+
+
+pub fn clean_page_maps(addr: LinearAddress) {
+    let pml4_table = PageMapEntryPtr::from_addr(read_cr3());
+    let pml4 = pml4_table.entry(addr.part(4));
+    clean_page_map(pml4.clone(), 3);
+
+    pml4.free();
+}
+
+
+pub fn clean_page_map(entries: PageMapEntryPtr, page_level: usize) {
+    for i in 0..512 {
+        let entry = entries.entry(i);
+        if !entry.present() {
+            continue;
+        }
+
+        if page_level > 1 {
+            if let Some(child) = entry.child() {
+                clean_page_map(child, page_level - 1);
+            }
+        }
+    }
+    entries.free();
 }

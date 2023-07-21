@@ -1,6 +1,6 @@
 use core::fmt::{Formatter, UpperHex};
-use modular_bitfield::bitfield;
-use modular_bitfield::prelude::{B12, B16, B9};
+
+use crate::paging::linear_address::parts::Parts;
 
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
@@ -64,16 +64,22 @@ impl LinearAddress {
 }
 
 
-#[bitfield]
-#[repr(u64)]
-struct Parts {
-    offset: B12,
-    page: B9,
-    dir: B9,
-    pdp: B9,
-    pml4: B9,
-    #[skip]
-    __: B16,
+#[allow(unused)]
+mod parts {
+    use modular_bitfield::bitfield;
+    use modular_bitfield::prelude::{B12, B16, B9};
+
+    #[bitfield]
+    #[repr(u64)]
+    pub struct Parts {
+        pub offset: B12,
+        pub page: B9,
+        pub dir: B9,
+        pub pdp: B9,
+        pub pml4: B9,
+        #[skip]
+        __: B16,
+    }
 }
 
 

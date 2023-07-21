@@ -53,15 +53,13 @@ impl Allocatable for BootAllocator<'_> {
     fn allocate_pages(&mut self, phys_addr: u64, count: usize) -> CommonResult {
         self.0
             .boot_services()
-            .free_pages(phys_addr, count);
-        self.0
-            .boot_services()
             .allocate_pages(
                 AllocateType::Address(phys_addr),
                 MemoryType::LOADER_DATA,
                 count,
             )
             .map_err(|_| CommonError::FailedToAllocatePages(phys_addr))?;
+        
         Ok(())
     }
 }

@@ -9,6 +9,7 @@ mod msi;
 mod register;
 mod task;
 mod fs;
+mod paging;
 
 
 pub trait Testable {

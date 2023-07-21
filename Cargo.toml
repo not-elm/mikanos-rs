@@ -15,8 +15,8 @@ x86_64 = "0.14.10"
 lazy_static = "1.4.0"
 xhci = "0.9.1"
 modular-bitfield = "0.11.2"
-uefi = { version = "0.24.0", features = ["alloc", "unstable"] }
-uefi-services = "0.21.0"
+uefi = { version = "0.20.0", features = ["alloc"] }
+uefi-services = "0.17.0"
 auto-delegate = { git = "https://github.com/elm-register/auto-delegate", branch = "nightly" }
 anyhow = { version = "1.0.71", default-features = false }
 derive-getters = "0.3.0"

@@ -3,7 +3,6 @@ use alloc::rc::Rc;
 use crate::class_driver::keyboard::driver::KeyboardDriver;
 use crate::class_driver::keyboard::subscribe::KeyboardSubscribable;
 
-
 #[derive(Debug)]
 pub struct Builder {
     auto_upper: bool,
@@ -23,8 +22,8 @@ impl Builder {
 
 
     pub fn boxed_build<F>(self, subscribe: F) -> KeyboardDriver
-    where
-        F: KeyboardSubscribable + 'static,
+        where
+            F: KeyboardSubscribable + 'static,
     {
         KeyboardDriver::new(self.auto_upper, Rc::new(subscribe))
     }
@@ -41,5 +40,5 @@ pub struct MockSubscriber;
 
 #[cfg(test)]
 impl KeyboardSubscribable for MockSubscriber {
-    fn subscribe(&self, _: u8, _: Keycode) {}
+    fn subscribe(&self, _: u8, _: crate::class_driver::keyboard::Keycode) {}
 }

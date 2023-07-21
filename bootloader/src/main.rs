@@ -5,14 +5,16 @@
 
 extern crate alloc;
 
-use uefi::fs::Path;
+use alloc::vec;
+
 use uefi::prelude::*;
-use uefi::CString16;
+use uefi::proto::media::file::FileMode;
 use uefi_services::println;
 
-use crate::file::open_file_system;
+use crate::file::{open_file, open_root_dir};
 use crate::gop::{open_gop, write_all_pixels_with_same};
 use crate::kernel::boot_allocator::BootAllocator;
+use crate::memory_map::save_memory_map;
 
 mod error;
 mod file;
@@ -27,19 +29,31 @@ fn main(handle: Handle, mut system_table: SystemTable<Boot>) -> Status {
 
     println!("Hello, Mikan Rust World!");
 
-    let mut disk_buff = system_table
-        .boot_services()
-        .get_image_file_system(handle)
+    let mut root_dir = open_root_dir(handle, &system_table).unwrap();
+
+    save_memory_map(
+        open_file(&mut root_dir,
+                  "memmap",
+                  FileMode::CreateReadWrite).unwrap()
+            .into_regular_file()
+            .unwrap(),
+        &mut system_table,
+    ).unwrap();
+
+    let fat_disk = open_file(&mut root_dir, "fat_disk", FileMode::Read).unwrap();
+    let mut disk_buff = vec![0; 16 * 1024 * 1024];
+    fat_disk
+        .into_regular_file()
         .unwrap()
-        .read(Path::new(&CString16::try_from("fat_disk").unwrap()))
+        .read(disk_buff.as_mut_slice())
         .unwrap();
 
     let entry_point = kernel::process::load_kernel(
-        &mut open_file_system(handle, unsafe { &system_table.unsafe_clone() }).unwrap(),
+        &mut root_dir,
         "kernel.elf",
         &mut BootAllocator::new(&mut system_table),
     )
-    .unwrap();
+        .unwrap();
 
 
     kernel::process::execute_kernel(entry_point, system_table, disk_buff.as_mut_ptr()).unwrap();

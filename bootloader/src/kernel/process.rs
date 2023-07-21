@@ -2,28 +2,37 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::ffi::c_void;
 
-use bootloader_lib::error::BootLoaderResult;
-use uefi::fs::{FileSystem, Path};
 use uefi::prelude::{Boot, SystemTable};
+use uefi::proto::media::file::{Directory, File, FileInfo, FileMode, RegularFile};
 use uefi::table::boot::MemoryDescriptor;
 use uefi::table::cfg::ACPI2_GUID;
-use uefi::CString16;
 
+use bootloader_lib::error::BootLoaderResult;
 use bootloader_lib::kernel::entry_point::EntryPoint;
-use common_lib::loader::elf::ElfLoader;
 use common_lib::loader::{Allocatable, ExecuteFileLoadable};
+use common_lib::loader::elf::ElfLoader;
 
+use crate::file::open_file;
 use crate::gop::{obtain_frame_buffer_config, open_gop};
 
 pub fn load_kernel(
-    fs: &mut FileSystem,
+    root_dir: &mut Directory,
     kernel_file_path: &str,
     allocator: &mut impl Allocatable,
 ) -> BootLoaderResult<EntryPoint> {
-    let mut kernel_buff = fs.read(Path::new(&CString16::try_from(kernel_file_path).unwrap()))?;
-    let entry_point_addr = ElfLoader::new().load(kernel_buff.as_mut_slice(), allocator)?;
+    let mut kernel_file = open_file(root_dir, kernel_file_path, FileMode::Read)
+        .map(|file_handle| file_handle.into_regular_file())
+        .expect("should open kernel.libs")
+        .unwrap();
 
-    Ok(EntryPoint::new(entry_point_addr))
+    let kernel_file_size = get_kernel_file_size(&mut kernel_file) as usize;
+
+    let mut kernel_vec = read_kernel_buff(&mut kernel_file, kernel_file_size);
+
+    let entry_point_addr = ElfLoader::new().load(kernel_vec.as_mut_slice(), allocator);
+    kernel_file.close();
+
+    Ok(EntryPoint::new(entry_point_addr?))
 }
 
 
@@ -54,6 +63,27 @@ fn find_rsdp_pointer(system_table: &SystemTable<Boot>) -> Option<*const c_void> 
         .iter()
         .find(|config| config.guid == ACPI2_GUID)
         .map(|config| config.address)
+}
+
+
+fn get_kernel_file_size(kernel_file: &mut RegularFile) -> u64 {
+    // カーネルファイルの大きさを知るため、ファイル情報を読み取る
+    const FILE_INFO_SIZE: usize = 4000;
+
+    let mut buff = vec![0u8; FILE_INFO_SIZE];
+    let info = kernel_file
+        .get_info::<FileInfo>(buff.as_mut_slice())
+        .expect("should obtain kernel libs info");
+
+    info.file_size()
+}
+
+fn read_kernel_buff(kernel_file: &mut RegularFile, kernel_file_size: usize) -> Vec<u8> {
+    let mut v = vec![0; kernel_file_size];
+    kernel_file
+        .read(v.as_mut_slice())
+        .unwrap();
+    v
 }
 
 
