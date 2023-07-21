@@ -17,12 +17,12 @@ use core::panic::PanicInfo;
 
 use uefi::table::boot::MemoryMapIter;
 
-use allocate::init_alloc;
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::{fs, serial_println};
+use kernel_lib::{fs, gdt, serial_println, sys};
+use kernel_lib::fs::execute_elf_from_name;
 
+use crate::allocate::init_alloc;
 use crate::apic::TIMER_FREQ;
-use crate::gdt::init_gdt;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
@@ -33,7 +33,7 @@ use crate::usb::xhci::start_xhci_host_controller;
 mod allocate;
 mod apic;
 mod entry_point;
-mod gdt;
+
 mod interrupt;
 mod layers;
 mod paging;
@@ -54,18 +54,19 @@ pub extern "sysv64" fn kernel_main(
     rsdp: &Option<*const c_void>,
     fat_volume: *mut u8,
 ) {
-    init_gdt();
-
-    init_idt().unwrap();
-
-    init_paging_table();
-
     init_alloc(memory_map.clone()).unwrap();
     init_layers(*frame_buffer_config).unwrap();
 
+    gdt::init();
+
+    init_idt().unwrap();
+    init_paging_table();
+    sys::init();
     apic::start_timer(*rsdp, TIMER_FREQ).unwrap();
 
     fs::init(fat_volume);
+    serial_println!("END INIT");
+    execute_elf_from_name("APP.ELF").unwrap();
 
     #[cfg(test)]
     test_main();

@@ -11,6 +11,8 @@
 #![feature(thread_local)]
 #![feature(asm_const)]
 #![feature(atomic_bool_fetch_not)]
+#![feature(lazy_cell)]
+
 #![feature(ptr_as_uninit)]
 
 #[cfg(feature = "alloc")]
@@ -36,6 +38,9 @@ pub mod serial;
 pub mod sync;
 pub mod task;
 pub mod timer;
+pub mod tss;
+pub mod gdt;
+pub mod sys;
 
 
 pub mod simple_fat {

@@ -1,3 +1,4 @@
+use core::arch::asm;
 use core::cell::OnceCell;
 
 use simple_fat::{Fat, FatDeviceAccessible};
@@ -11,6 +12,7 @@ use common_lib::loader::ExecuteFileLoadable;
 
 use crate::error::KernelResult;
 use crate::fs::alloc::FsAllocator;
+use crate::tss::STACK;
 
 mod alloc;
 
@@ -44,7 +46,7 @@ pub fn execute_elf_from_name(file_name: &str) -> KernelResult {
     execute_elf(file)
 }
 
-
+// "CallApp:  ; void CallApp(int argc, char** argv, uint16_t cs, uint16_t ss, uint64_t rip, uint64_t rsp);
 pub fn execute_elf(file: RegularFile<BpbFat32<FatDevice>>) -> KernelResult {
     let mut buff = file.read_boxed()?;
 
@@ -52,8 +54,22 @@ pub fn execute_elf(file: RegularFile<BpbFat32<FatDevice>>) -> KernelResult {
 
     let entry_point_ptr = *entry_point_addr as *const ();
     let entry_point: extern "sysv64" fn() -> () = unsafe { core::mem::transmute(entry_point_ptr) };
-
-    entry_point();
+    unsafe {
+        asm!(
+        "push rbp",
+        "mov rbp, rsp",
+        "push {ss:r} //SS",
+        "push {rsp:r} //RSP",
+        "push {cs:r} //CS",
+        "push {rip:r} //RIP",
+        "retfq",
+        cs = in(reg) 4 << 3 | 3,
+        ss = in(reg) 3 << 3 | 3,
+        rip = in(reg) *entry_point_addr,
+        rsp = in(reg) STACK.as_ptr() as u64 + 4096  - 8
+        )
+    }
+    // entry_point();
     Ok(())
 }
 
