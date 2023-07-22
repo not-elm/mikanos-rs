@@ -57,10 +57,7 @@ pub fn setup_identity_page_table() {
 }
 
 
-pub fn setup_page_maps(
-    addr: LinearAddress,
-    pages: usize,
-) {
+pub fn setup_page_maps(addr: LinearAddress, pages: usize) {
     let pml4_table = PageMapEntryPtr::from_addr(read_cr3());
     setup_page_map(pml4_table, 4, addr, pages);
 }
@@ -82,6 +79,7 @@ fn setup_page_map(
         entry.update(|et| {
             et.set_writable(true);
             et.set_present(true);
+            et.set_user(true);
         });
 
         if page_map_level != 1 {

@@ -1,19 +1,19 @@
 use core::arch::asm;
 use core::cell::OnceCell;
 
-use simple_fat::{Fat, FatDeviceAccessible};
 use simple_fat::bpb::BpbFat32;
-use simple_fat::dir::data::DataEntries;
 use simple_fat::dir::data::file::RegularFile;
+use simple_fat::dir::data::DataEntries;
 use simple_fat::error::FatDeviceError;
+use simple_fat::{Fat, FatDeviceAccessible};
 
 use common_lib::loader::elf::ElfLoader;
 use common_lib::loader::ExecuteFileLoadable;
 
 use crate::error::KernelResult;
 use crate::fs::alloc::FsAllocator;
-use crate::serial_println;
-use crate::tss::STACK;
+use crate::paging::linear_address::LinearAddress;
+use crate::paging::setup_page_maps;
 
 mod alloc;
 
@@ -47,33 +47,49 @@ pub fn execute_elf_from_name(file_name: &str) -> KernelResult {
     execute_elf(file)
 }
 
-// "CallApp:  ; void CallApp(int argc, char** argv, uint16_t cs, uint16_t ss, uint64_t rip, uint64_t rsp);
+
 pub fn execute_elf(file: RegularFile<BpbFat32<FatDevice>>) -> KernelResult {
     let mut buff = file.read_boxed()?;
 
+    const ARGS_STACK_ADDR: u64 = 0xFFFF_FFFF_FFFF_F000;
+    const STACK_ADDR: u64 = 0xFFFF_FFFF_FFFF_E000;
+
+    setup_page_maps(LinearAddress::new(ARGS_STACK_ADDR), 2);
+    setup_page_maps(LinearAddress::new(STACK_ADDR), 2);
+    let rdx = (0xFFFF_FFFF_FFFF_F000 as *mut u8);
+    unsafe {
+        rdx.write(1);
+    }
+
     let entry_point_addr = ElfLoader::new().load(&mut buff, &mut FsAllocator)?;
-    serial_println!("Entry {:X}", entry_point_addr);
-    let entry_point_ptr = *entry_point_addr as *const ();
-    let entry_point: extern "sysv64" fn() -> () = unsafe { core::mem::transmute(entry_point_ptr) };
-    // unsafe {
-    //     asm!(
-    //     "push rbp",
-    //     "mov rbp, rsp",
-    //     "push {ss:r} //SS",
-    //     "push {rsp:r} //RSP",
-    //     "push {cs:r} //CS",
-    //     "push {rip:r} //RIP",
-    //     "retfq",
-    //     cs = in(reg) 4 << 3 | 3,
-    //     ss = in(reg) 3 << 3 | 3,
-    //     rip = in(reg) *entry_point_addr,
-    //     rsp = in(reg) STACK.as_ptr() as u64 + 4096  - 8
-    //     )
-    // }
-     entry_point();
+
+    call_app(
+        rdx as u64,
+        rdx as u64,
+        4 << 3 | 3,
+        3 << 3 | 3,
+        *entry_point_addr,
+        STACK_ADDR + 4096 - 8,
+    );
+
     Ok(())
 }
 
+#[naked]
+extern "sysv64" fn call_app(_a: u64, _b: u64, cs: u16, ss: u16, _rip: u64, _rsp: u64) {
+    unsafe {
+        asm!(
+            "push rbp",
+            "mov rbp, rsp",
+            "push rcx  // SS",
+            "push r9  // RSP",
+            "push rdx  //CS",
+            "push r8   // RIP",
+            "retfq",
+            options(noreturn)
+        )
+    }
+}
 
 #[derive(Debug)]
 struct FileSystem(OnceCell<Fat<FatDevice>>);

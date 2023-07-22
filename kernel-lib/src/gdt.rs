@@ -1,9 +1,11 @@
 use core::arch::asm;
 
 use spin::Mutex;
-use x86_64::instructions::segmentation::{CS, Segment, SS};
+use x86_64::instructions::segmentation::{Segment, CS, SS};
 use x86_64::instructions::tables::load_tss;
+use x86_64::registers::segmentation::SegmentSelector;
 use x86_64::structures::gdt::{Descriptor, GlobalDescriptorTable};
+use x86_64::PrivilegeLevel;
 
 use crate::interrupt::asm::cli;
 use crate::segmentation::asm::{read_code_segment, read_stack_segment};
@@ -19,14 +21,22 @@ pub fn init() {
 unsafe fn init_gdt_unsafe() {
     cli();
 
-    let code_segment = GDT.lock().add_entry(Descriptor::kernel_code_segment());
-    let stack_segment = GDT.lock().add_entry(Descriptor::kernel_data_segment());
-    GDT.lock().add_entry(Descriptor::user_code_segment());
-    GDT.lock().add_entry(Descriptor::user_data_segment());
-    let tss_segment = GDT.lock().add_entry(Descriptor::tss_segment(TSS.get()));
+    let code_segment = GDT
+        .lock()
+        .add_entry(Descriptor::kernel_code_segment());
+    let stack_segment = GDT
+        .lock()
+        .add_entry(Descriptor::kernel_data_segment());
+    GDT.lock()
+        .add_entry(Descriptor::user_data_segment());
+    GDT.lock()
+        .add_entry(Descriptor::user_code_segment());
+
+    GDT.lock()
+        .add_entry(Descriptor::tss_segment(TSS.get()));
 
     GDT.get_mut().load();
-    load_tss(tss_segment);
+    load_tss(SegmentSelector::new(5, PrivilegeLevel::Ring3));
     CS::set_reg(code_segment);
     SS::set_reg(stack_segment);
 

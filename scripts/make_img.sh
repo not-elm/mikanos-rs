@@ -38,4 +38,4 @@ sudo cp "$HOME"/workspace/mikanos-rs/target/x86_64-unknown-uefi/debug/bootloader
 sudo cp "$kernel" ./mnt/kernel.elf
 sudo umount mnt
 
-rm -r -f mnt
+#sudo rm -rf mnt

@@ -18,17 +18,17 @@ use core::panic::PanicInfo;
 use uefi::table::boot::MemoryMapIter;
 
 use common_lib::frame_buffer::FrameBufferConfig;
-use kernel_lib::{fs, gdt, serial_println, sys};
 use kernel_lib::fs::execute_elf_from_name;
+use kernel_lib::{fs, gdt, serial_println, sys};
 
 use crate::allocate::init_alloc;
 use crate::apic::TIMER_FREQ;
 use crate::interrupt::init_idt;
 use crate::layers::init_layers;
 use crate::paging::init_paging_table;
-use crate::usb::{enable_msi, serial_bus_usb_devices};
 use crate::usb::mouse::MouseSubscriber;
 use crate::usb::xhci::start_xhci_host_controller;
+use crate::usb::{enable_msi, serial_bus_usb_devices};
 
 mod allocate;
 mod apic;
@@ -65,14 +65,13 @@ pub extern "sysv64" fn kernel_main(
     apic::start_timer(*rsdp, TIMER_FREQ).unwrap();
 
     fs::init(fat_volume);
-    serial_println!("END INIT");
     execute_elf_from_name("APP.ELF").unwrap();
 
     #[cfg(test)]
     test_main();
     serial_println!("Hello Serial Port!");
     println!("Hello Mikan OS RS!");
-    
+
     let devices = serial_bus_usb_devices();
     let xhc_general_header = devices.first().unwrap();
 
