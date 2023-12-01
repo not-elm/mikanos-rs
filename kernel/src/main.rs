@@ -65,7 +65,6 @@ pub extern "sysv64" fn kernel_main(
     apic::start_timer(*rsdp, TIMER_FREQ).unwrap();
 
     fs::init(fat_volume);
-    execute_elf_from_name("APP.ELF").unwrap();
 
     #[cfg(test)]
     test_main();
